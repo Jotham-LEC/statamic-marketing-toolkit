@@ -2,6 +2,7 @@
 
 namespace JothamLec\Seo;
 
+use Closure;
 use Illuminate\Support\Collection;
 use JothamLec\Seo\Support\Text;
 use Statamic\Contracts\Assets\Asset;
@@ -13,6 +14,7 @@ use Statamic\Facades\Image;
 use Statamic\Facades\Markdown;
 use Statamic\Facades\Site;
 use Statamic\Fields\Value;
+use WeakMap;
 
 /**
  * The rules. Each public method works out one value for one page; a project
@@ -23,6 +25,9 @@ use Statamic\Fields\Value;
 class SiteSeo
 {
     protected Settings $settings;
+
+    /** @var WeakMap<Context, array<string, mixed>>|null values several rules ask for, per page */
+    private ?WeakMap $worked = null;
 
     public function __construct()
     {
@@ -92,12 +97,15 @@ class SiteSeo
 
     public function description(Context $context): ?string
     {
-        $text = $context->override('description')
-            ?? $context->seo()['description']
-            ?? $this->contentDescription($context)
-            ?? $this->settings->string('default_description');
+        // The meta tags and the JSON-LD nodes each ask; the body is read once per page.
+        return $this->once($context, 'description', function () use ($context) {
+            $text = $context->override('description')
+                ?? $context->seo()['description']
+                ?? $this->contentDescription($context)
+                ?? $this->settings->string('default_description');
 
-        return $text === null ? null : Text::limit(Text::plain($text), (int) config('seo.description.length', 155));
+            return $text === null ? null : Text::limit(Text::plain($text), (int) config('seo.description.length', 155));
+        });
     }
 
     /**
@@ -108,27 +116,30 @@ class SiteSeo
      */
     public function image(Context $context): ?array
     {
-        if ($url = $context->override('image')) {
-            return ['url' => $this->absolute($url), 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
-        }
+        // Asked by the meta tags and the Article node: worked out once per page.
+        return $this->once($context, 'image', function () use ($context) {
+            if ($url = $context->override('image')) {
+                return ['url' => $this->absolute($url), 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
+            }
 
-        $content = $context->content();
+            $content = $context->content();
 
-        foreach (['seo', ...$this->collectionConfig($context, 'image_fields', [])] as $field) {
-            if ($content && $asset = $this->assetFrom($content, $field)) {
+            foreach (['seo', ...$this->collectionConfig($context, 'image_fields', [])] as $field) {
+                if ($content && $asset = $this->assetFrom($content, $field)) {
+                    return $this->cropped($asset);
+                }
+            }
+
+            if ($context->entry && $context->status < 400 && $url = $this->generatedImageUrl($context->entry)) {
+                return ['url' => $url, 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
+            }
+
+            if ($asset = $this->settings->asset('default_image')) {
                 return $this->cropped($asset);
             }
-        }
 
-        if ($context->entry && $context->status < 400 && $url = $this->generatedImageUrl($context->entry)) {
-            return ['url' => $url, 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
-        }
-
-        if ($asset = $this->settings->asset('default_image')) {
-            return $this->cropped($asset);
-        }
-
-        return null;
+            return null;
+        });
     }
 
     /**
@@ -712,6 +723,24 @@ class SiteSeo
             'height' => $this->imageHeight(),
             'alt' => filled($alt) ? (string) $alt : null,
         ];
+    }
+
+    /**
+     * $work's result for this page, worked out on the first ask. Keyed by the
+     * Context itself (not Laravel's once(), which keys objects by an id PHP
+     * reuses), so a page's values go when its Context does.
+     */
+    private function once(Context $context, string $key, Closure $work): mixed
+    {
+        $this->worked ??= new WeakMap;
+        $values = $this->worked[$context] ?? [];
+
+        if (! array_key_exists($key, $values)) {
+            $values[$key] = $work();
+            $this->worked[$context] = $values;
+        }
+
+        return $values[$key];
     }
 
     protected function imageWidth(): int

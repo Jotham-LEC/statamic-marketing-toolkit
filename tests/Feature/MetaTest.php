@@ -1,5 +1,7 @@
 <?php
 
+use JothamLec\Seo\Context;
+use JothamLec\Seo\SiteSeo;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 
@@ -141,4 +143,43 @@ test('a page without an entry passes what it knows', function () {
         ->toContain('<title>Contact · Acme</title>')
         ->toContain('<meta name="description" content="Write to us.">')
         ->toContain('<link rel="canonical" href="https://example.test/contact-form">');
+});
+
+class CountingSeo extends SiteSeo
+{
+    /** @var array<string, int> */
+    public static array $calls = [];
+
+    protected function contentDescription(Context $context): ?string
+    {
+        self::$calls['body'] = (self::$calls['body'] ?? 0) + 1;
+
+        return parent::contentDescription($context);
+    }
+
+    public function generatedImageUrl(Statamic\Contracts\Entries\Entry $entry): ?string
+    {
+        self::$calls['card'] = (self::$calls['card'] ?? 0) + 1;
+
+        return parent::generatedImageUrl($entry);
+    }
+}
+
+test('the tag works out the description and the share image once per page', function () {
+    config(['seo.class' => CountingSeo::class, 'seo.collections.essays.schema' => 'Article']);
+    $entry = entryIn('essays', 'long-read', ['content' => "The first paragraph.\n\nThe second."], '2026-01-02');
+    CountingSeo::$calls = [];
+
+    $html = renderAt('/essays/long-read', '<s:seo:meta :entry="$entry" />', ['entry' => $entry]);
+
+    expect($html)->toContain('The first paragraph.')->and(CountingSeo::$calls)->toBe(['body' => 1, 'card' => 1]);
+});
+
+test('one rules object asked about page after page gives each its own values', function () {
+    $seo = app(SiteSeo::class);
+    $entries = [entryIn('pages', 'one', ['description' => 'First.']), entryIn('pages', 'two', ['description' => 'Second.'])];
+
+    $descriptions = array_map(fn ($entry) => $seo->description(Context::make($entry)), $entries);
+
+    expect($descriptions)->toBe(['First.', 'Second.']);
 });
