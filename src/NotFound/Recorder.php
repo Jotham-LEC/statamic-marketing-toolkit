@@ -28,7 +28,10 @@ class Recorder
             }
         }
 
-        return ! Str::is((array) config('seo.not_found.ignore_paths', []), $this->path($request));
+        $path = $this->path($request);
+
+        // Postgres refuses text that isn't UTF-8, and a probe is all such a path can be.
+        return self::isText($path) && ! Str::is((array) config('seo.not_found.ignore_paths', []), $path);
     }
 
     public function record(Request $request): void
@@ -39,7 +42,7 @@ class Recorder
             return;
         }
 
-        $referrer = Str::limit((string) $request->headers->get('referer'), 2048, '') ?: null;
+        $referrer = self::webAddress($request->headers->get('referer'));
         $now = now();
 
         $updated = MissingPath::query()->where('path', $path)->update(array_filter([
@@ -67,6 +70,20 @@ class Recorder
     public function path(Request $request): string
     {
         return '/'.trim(rawurldecode($request->getPathInfo()), '/');
+    }
+
+    /**
+     * An http(s) address fit to store and to link to, or null: the referrer is
+     * whatever the request says, `javascript:` included.
+     */
+    public static function webAddress(?string $url): ?string
+    {
+        return $url !== null && strlen($url) <= 2048 && self::isText($url) && preg_match('#^https?://#i', $url) ? $url : null;
+    }
+
+    private static function isText(string $value): bool
+    {
+        return mb_check_encoding($value, 'UTF-8') && ! preg_match('/[\x00-\x1F\x7F]/', $value);
     }
 
     private function trim(): void

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 – unreleased
+
+### Fixed
+- **Security:** the 404 log kept any `Referer` header, and showed it as a link, so a request with a `javascript:` referrer put a script one click away in the control panel. Only `http(s)` addresses are kept and linked now, including in rows already logged.
+- The 404 log no longer fails on Postgres for a path or referrer that isn't valid UTF-8 (`/%C3`, `/%00`); such requests aren't logged.
+
 ## 0.2.0 – 2026-10-05
 
 Run `php artisan migrate` after updating: there are new tables.

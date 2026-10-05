@@ -54,3 +54,23 @@ test('logging can be turned off', function () {
 
     expect(MissingPath::query()->count())->toBe(0);
 });
+
+test('only a web address is kept as the referrer, so the log never links to a script', function () {
+    $this->get('/missing', ['User-Agent' => 'Mozilla/5.0', 'Referer' => 'javascript:alert(document.domain)']);
+
+    expect(MissingPath::query()->sole()->referrer)->toBeNull();
+
+    // A row written before this check is not handed to the control panel as a link.
+    MissingPath::query()->create(['path' => '/older', 'referrer' => 'javascript:alert(1)', 'first_seen_at' => now(), 'last_seen_at' => now()]);
+    $this->actingAs(cpUser(['view seo']));
+
+    expect($this->getJson(cp_route('seo.404s.listing'))->json('data.*.referrer'))->toBe([null, null]);
+});
+
+test('a path or referrer that is not valid UTF-8 is not logged (Postgres would refuse it)', function () {
+    $this->get('/%C3', ['User-Agent' => 'Mozilla/5.0']);
+    $this->get('/a%00b', ['User-Agent' => 'Mozilla/5.0']);
+    $this->get('/fine', ['User-Agent' => 'Mozilla/5.0', 'Referer' => "https://elsewhere.test/\xC3"]);
+
+    expect(MissingPath::query()->pluck('referrer', 'path')->all())->toBe(['/fine' => null]);
+});
