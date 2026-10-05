@@ -9,8 +9,8 @@ use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
 /**
- * Tools → SEO in the control panel. Its children are the screens that exist:
- * the brand global here; redirects, 404s and reports join as they land.
+ * Tools → SEO in the control panel, with its screens as children. Reports
+ * join in v1.4.
  */
 class Navigation
 {
@@ -31,6 +31,8 @@ class Navigation
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
 
         return array_values(array_filter([
+            $nav->item('Redirects')->route('seo.redirects.index')->can('manage seo redirects'),
+            $nav->item('404s')->route('seo.404s.index')->can('view seo'),
             $variables ? $nav->item('Brand & defaults')->url($variables->editUrl())->can('edit', $variables) : null,
         ]));
     }

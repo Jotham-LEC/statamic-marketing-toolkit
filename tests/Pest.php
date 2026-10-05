@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use JothamLec\Seo\Commands\Install;
@@ -13,11 +15,15 @@ use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Role;
 use Statamic\Facades\Site;
+use Statamic\Facades\User;
 
 uses(TestCase::class)
     ->beforeEach(function () {
         $this->app['env'] = 'production';
+        // Production env makes Laravel's CSRF check live; the CP sends the token.
+        $this->withoutMiddleware([PreventRequestForgery::class, VerifyCsrfToken::class]);
 
         Site::setSites(['default' => ['name' => 'Default', 'url' => 'https://example.test/', 'locale' => 'en_US']]);
         AssetContainer::make('assets')->disk('assets')->save();
@@ -73,4 +79,23 @@ function renderAt(string $uri, string $blade, array $data = []): string
     app()->instance('request', Request::create('https://example.test'.$uri));
 
     return Blade::render($blade, $data);
+}
+
+/**
+ * A control panel user: a super user, or one whose role has these permissions.
+ *
+ * @param  list<string>  $permissions
+ */
+function cpUser(array $permissions = [], bool $super = false): Statamic\Contracts\Auth\User
+{
+    $user = User::make()->email(($super ? 'super' : 'editor').'@example.test');
+
+    if ($super) {
+        $user->makeSuper();
+    } else {
+        Role::make('seo-role')->permissions(['access cp', ...$permissions])->save();
+        $user->assignRole('seo-role');
+    }
+
+    return tap($user)->save();
 }

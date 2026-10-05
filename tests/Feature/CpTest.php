@@ -3,30 +3,13 @@
 use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\Seo\Cp\Navigation;
+use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\CP\Navigation\NavItem;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
-use Statamic\Facades\Role;
 use Statamic\Facades\User;
 use Statamic\Widgets\VueComponent;
-
-/**
- * @param  list<string>  $permissions
- */
-function cpUser(array $permissions = [], bool $super = false): Statamic\Contracts\Auth\User
-{
-    $user = User::make()->email('someone@example.test');
-
-    if ($super) {
-        $user->makeSuper();
-    } else {
-        Role::make('seo-role')->permissions(['access cp', ...$permissions])->save();
-        $user->assignRole('seo-role');
-    }
-
-    return tap($user)->save();
-}
 
 /**
  * The CP navigation's items under Tools, keyed by name, as the user sees them.
@@ -58,7 +41,7 @@ test('Tools → SEO opens the overview and links to the brand global', function 
 
     expect($seo)->not->toBeNull()
         ->and($seo->url())->toBe(cp_route('seo.index'))
-        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Brand & defaults']);
+        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Redirects', '404s', 'Brand & defaults']);
 
     $this->get(cp_route('seo.index'))
         ->assertOk()
@@ -91,8 +74,18 @@ test('the dashboard widget shows its empty states until reports and 404s exist',
     expect($component)->toBeInstanceOf(VueComponent::class)
         ->and($component->toArray())->toBe([
             'name' => 'seo-widget',
-            'props' => ['title' => 'SEO', 'report' => null, 'notFound' => [], 'url' => cp_route('seo.index')],
+            'props' => ['title' => 'SEO', 'report' => null, 'notFound' => [], 'url' => cp_route('seo.index'), 'notFoundUrl' => cp_route('seo.404s.index')],
         ]);
+});
+
+test('the dashboard widget lists the most recent 404s', function () {
+    $this->actingAs(cpUser(['view seo']));
+
+    foreach (['/a', '/b', '/c', '/d', '/e', '/f'] as $i => $path) {
+        MissingPath::query()->create(['path' => $path, 'hits' => $i + 1, 'first_seen_at' => now(), 'last_seen_at' => now()->addMinutes($i)]);
+    }
+
+    expect(collect((new SeoWidget)->component()->toArray()['props']['notFound'])->pluck('path')->all())->toBe(['/f', '/e', '/d', '/c', '/b']);
 });
 
 test('the dashboard widget is left out for people without "view seo"', function () {

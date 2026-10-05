@@ -1,11 +1,31 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use JothamLec\Seo\Http\Controllers\CP\ActionController;
+use JothamLec\Seo\Http\Controllers\CP\NotFoundController;
 use JothamLec\Seo\Http\Controllers\CP\OverviewController;
 use JothamLec\Seo\Http\Controllers\CP\PreviewController;
+use JothamLec\Seo\Http\Controllers\CP\RedirectsController;
 
 Route::name('seo.')->prefix('seo')->group(function () {
     Route::get('/', OverviewController::class)->name('index');
     Route::post('preview', [PreviewController::class, 'meta'])->name('preview.meta');
     Route::post('preview/card', [PreviewController::class, 'card'])->name('preview.card');
+
+    Route::get('redirects', [RedirectsController::class, 'index'])->name('redirects.index');
+    Route::get('redirects/listing', [RedirectsController::class, 'listing'])->name('redirects.listing');
+    Route::get('redirects/create', [RedirectsController::class, 'create'])->name('redirects.create');
+    Route::post('redirects', [RedirectsController::class, 'store'])->name('redirects.store');
+    Route::get('redirects/export', [RedirectsController::class, 'export'])->name('redirects.export');
+    Route::post('redirects/import', [RedirectsController::class, 'import'])->name('redirects.import');
+    Route::post('redirects/check', [RedirectsController::class, 'check'])->name('redirects.check');
+    Route::post('redirects/choice', [RedirectsController::class, 'choice'])->name('redirects.choice');
+    Route::get('redirects/{redirect}', [RedirectsController::class, 'edit'])->whereNumber('redirect')->name('redirects.edit');
+    Route::patch('redirects/{redirect}', [RedirectsController::class, 'update'])->whereNumber('redirect')->name('redirects.update');
+
+    Route::get('404s', [NotFoundController::class, 'index'])->name('404s.index');
+    Route::get('404s/listing', [NotFoundController::class, 'listing'])->name('404s.listing');
+
+    Route::post('actions', [ActionController::class, 'run'])->name('actions.run');
+    Route::post('actions/list', [ActionController::class, 'bulkActions'])->name('actions.bulk');
 });

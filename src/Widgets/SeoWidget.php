@@ -2,6 +2,8 @@
 
 namespace JothamLec\Seo\Widgets;
 
+use Illuminate\Support\Facades\Schema;
+use JothamLec\Seo\NotFound\MissingPath;
 use Statamic\Facades\User;
 use Statamic\Widgets\VueComponent;
 use Statamic\Widgets\Widget;
@@ -23,6 +25,7 @@ class SeoWidget extends Widget
             'report' => $this->latestReport(),
             'notFound' => $this->recentNotFound(),
             'url' => cp_route('seo.index'),
+            'notFoundUrl' => cp_route('seo.404s.index'),
         ]);
     }
 
@@ -40,7 +43,12 @@ class SeoWidget extends Widget
      */
     protected function recentNotFound(): array
     {
-        // 404 tracking arrives in v1.3.
-        return [];
+        if (! Schema::hasTable('seo_404s')) {
+            return [];
+        }
+
+        return MissingPath::query()->latest('last_seen_at')->limit((int) $this->config('limit', 5))->get()
+            ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits, 'last_seen' => $row->last_seen_at->toIso8601String()])
+            ->all();
     }
 }

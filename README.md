@@ -62,9 +62,21 @@ Empty fields count as unset.
 ## Control panel
 
 - **Search and share preview.** The fieldset's first field shows the Google result, the Facebook/LinkedIn/WhatsApp card and the X card, updated as the editor types, with title and description counters (limits: `seo.title.min`/`max`, `seo.description.min`/`length`). The values come from the site's own `SiteSeo` rules, run on the unsaved form, so fallbacks show as they will on the page. A generated card is drawn from the form and never cached. Add the field anywhere else as `type: seo_preview`.
-- **Tools → SEO**: what the site serves, and a link to the brand global. Redirects, 404s and reports join it as they land.
+- **Tools → SEO**: what the site serves; Redirects; 404s; a link to the brand global.
 - **Dashboard widget**: add `['type' => 'seo']` to `widgets` in `config/statamic/cp.php`. It shows the latest report score and the most recent 404s once those exist.
 - **Permissions** (Users → Roles → SEO): `view seo` (the SEO screens and the widget), `manage seo redirects`, `run seo reports`. The preview needs no SEO permission, only access to the entry.
+
+## Redirects and 404s
+
+`php artisan migrate` creates `seo_redirects` and `seo_404s`. Settings are in `config/seo.php` (`redirects`, `not_found`).
+
+- **Rules apply only to addresses that would be a 404**, so a page that exists always wins. Exact sources first, then `*` wildcards, the longest source first; `$1`, `$2`… in the target are what each `*` matched. 301, 302 or 410 (which shows the site's error page with status 410). The visitor's query string is passed on. Rules are cached and rebuilt when one changes.
+- **Tools → SEO → Redirects**: list, search, create, edit, delete; CSV export and import (`source,target,status,active`; import adds or updates by source and reports bad rows by line).
+- **Automatic 301s** when published content moves: an entry's or a term's slug or date changes, or a page moves in a collection's tree (with the pages under it). Moving or renaming a collection's mount page adds one wildcard rule for that collection's entries. Chains don't build up: rules into the old address follow it, and a rule out of an address that is live again is dropped. Edited by hand, an automatic rule becomes a manual one.
+- **The save dialog**: saving an entry or term form that changes its address asks people with `manage seo redirects` whether to add the 301 (Add redirect, Don't add, or Don't save yet). Saves without the dialog (other people, code, imports) add it.
+- **Tools → SEO → 404s**: one row per missing path (hits, first and last seen, last referrer), the most recent `max_rows` kept; bot user agents and scanner probes (`*.php`, `/wp-*`, `/.env*`…) are not logged. A row's menu creates a redirect from it.
+
+The automatic redirects compare a content item with the state it was loaded in, which needs a cache store that serializes (file, Redis, database; not `array`).
 
 ## Per-site rules
 
@@ -86,6 +98,6 @@ Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update
 
 ## Not yet built
 
-Phases 4–5 of the spec: the redirects manager and automatic slug-change redirects, 404 tracking, reports and grading (configured through Statamic's addon settings), the data behind the dashboard widget, and `sitemap.xsl`. Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
+Phase 5 of the spec: reports and grading (configured through Statamic's addon settings) and the report score on the dashboard widget; also `sitemap.xsl`, and the `seo:import-runway` command for moojing's Runway redirects (left for its rollout). Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
 
 Licence: proprietary, all rights reserved.

@@ -117,6 +117,51 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Redirects
+    |--------------------------------------------------------------------------
+    |
+    | Rules managed under Tools → SEO → Redirects, applied only to addresses the
+    | site would answer with a 404. `automatic` adds a 301 when an entry's or
+    | a term's address changes (its slug, its date, its place in a tree).
+    |
+    */
+
+    'redirects' => [
+        'enabled' => true,
+
+        'automatic' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | 404 log
+    |--------------------------------------------------------------------------
+    |
+    | One row per missing path, under Tools → SEO → 404s. Requests from these
+    | user agents (matched case-insensitively, anywhere in the string) and to
+    | these paths (`*` matches anything) are not logged.
+    |
+    */
+
+    'not_found' => [
+        'enabled' => true,
+
+        'max_rows' => 1000,
+
+        'ignore_user_agents' => [
+            'bot', 'crawler', 'spider', 'slurp', 'curl', 'wget', 'python-requests',
+            'go-http-client', 'headlesschrome', 'lighthouse', 'facebookexternalhit',
+        ],
+
+        'ignore_paths' => [
+            '*.php', '*.asp', '*.aspx', '*.cgi', '/wp-*', '/wordpress*', '/.env*',
+            '/.git*', '/.well-known/*', '/cgi-bin/*', '/vendor/*', '/xmlrpc*',
+            '*.map',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Trailing slash
     |--------------------------------------------------------------------------
     |
