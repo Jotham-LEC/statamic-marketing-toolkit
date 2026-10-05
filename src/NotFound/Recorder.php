@@ -16,7 +16,8 @@ class Recorder
 {
     public function shouldRecord(Request $request): bool
     {
-        if (! config('seo.not_found.enabled') || ! $request->isMethod('GET') && ! $request->isMethod('HEAD')) {
+        // HandleMissing only asks about GET and HEAD.
+        if (! config('seo.not_found.enabled')) {
             return false;
         }
 

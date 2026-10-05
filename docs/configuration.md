@@ -21,9 +21,7 @@ Brand details (site name, logo, colours, verification codes) are content, edited
 | Key | Default | |
 |---|---|---|
 | `title.max` | `60` | `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
-| `title.min` | `30` | Fallback for the preview counters when the addon settings have none. |
 | `description.length` | `155` | A description taken from the page is cut to this, on a word. |
-| `description.min` | `50` | Fallback for the preview counters. |
 | `description.skip_prefixes` | `[]` | A first paragraph starting with one of these isn't used as the description (e.g. `'This article first appeared'`). |
 
 ### Collections

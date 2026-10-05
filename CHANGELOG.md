@@ -16,6 +16,9 @@
 - Reports run by `seo:report`, the schedule or a queue worker no longer fail Blade pages that show validation errors (`@error`, `$errors`) with "Undefined variable $errors", which scored them 0.
 - Two reports started at the same moment (a click and the schedule) could both run; starting is now one at a time.
 
+### Removed
+- Config `seo.title.min` and `seo.description.min`. Nothing read them: the preview counters and the reports take their lengths from Tools → Addons → SEO.
+
 ## 0.2.0 – 2026-10-05
 
 Run `php artisan migrate` after updating: there are new tables.
