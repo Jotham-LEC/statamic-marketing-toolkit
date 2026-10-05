@@ -169,4 +169,4 @@ Tests run as production with an `array` cache that serializes, and render pages 
 
 The suite runs on SQLite. To run it on Postgres, as the sites do, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
 
-Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-seo`. Note the change in [CHANGELOG.md](../CHANGELOG.md).
+Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-co-seo`. Note the change in [CHANGELOG.md](../CHANGELOG.md).

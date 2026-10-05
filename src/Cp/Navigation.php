@@ -30,7 +30,7 @@ class Navigation
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
 
-        $addon = Addon::get('jotham-lec/statamic-seo');
+        $addon = Addon::get('jotham-lec/statamic-co-seo');
 
         return array_values(array_filter([
             $nav->item('Reports')->route('seo.reports.index')->can('view seo'),

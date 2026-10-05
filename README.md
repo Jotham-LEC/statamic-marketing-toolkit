@@ -1,8 +1,8 @@
-# statamic-seo
+# statamic-co-seo
 
 SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt and humans.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro.
 
-Private package (`jotham-lec/statamic-seo`), built alongside SEO Pro to compare the two and shared between Jotham's sites.
+Private package (`jotham-lec/statamic-co-seo`), built alongside SEO Pro to compare the two and shared between Jotham's sites.
 
 ## Documentation
 
@@ -22,11 +22,11 @@ composer config --global github-oauth.github.com <token>   # read access to the 
 ```
 
 ```json
-"repositories": [{ "type": "vcs", "url": "https://github.com/Jotham-LEC/statamic-seo" }]
+"repositories": [{ "type": "vcs", "url": "https://github.com/Jotham-LEC/statamic-co-seo" }]
 ```
 
 ```bash
-composer require jotham-lec/statamic-seo
+composer require jotham-lec/statamic-co-seo
 php artisan migrate
 php please seo:install
 ```
@@ -77,6 +77,6 @@ vendor/bin/pest    # needs PHP's imagick extension
 vendor/bin/pint
 ```
 
-Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-seo`.
+Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-co-seo`.
 
 Licence: proprietary, all rights reserved.

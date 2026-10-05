@@ -1,5 +1,5 @@
 {
-    "name": "jotham-lec/statamic-seo",
+    "name": "jotham-lec/statamic-co-seo",
     "description": "Meta tags, JSON-LD, sitemap, robots and generated Open Graph images for Statamic 6.",
     "type": "statamic-addon",
     "license": "proprietary",

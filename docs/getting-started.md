@@ -8,7 +8,7 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 - **PHP's `imagick` extension** for the generated share cards. Without it the cards (and their tests) fail; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
-- **A GitHub token** with read access to `Jotham-LEC/statamic-seo`, because the package is private.
+- **A GitHub token** with read access to `Jotham-LEC/statamic-co-seo`, because the package is private.
 
 ## 1. Install the package
 
@@ -21,13 +21,13 @@ composer config --global github-oauth.github.com <token>
 Add the repository to the site's `composer.json`:
 
 ```json
-"repositories": [{ "type": "vcs", "url": "https://github.com/Jotham-LEC/statamic-seo" }]
+"repositories": [{ "type": "vcs", "url": "https://github.com/Jotham-LEC/statamic-co-seo" }]
 ```
 
 Then:
 
 ```bash
-composer require jotham-lec/statamic-seo
+composer require jotham-lec/statamic-co-seo
 php artisan migrate                          # seo_redirects, seo_404s, seo_reports, seo_report_pages
 php please seo:install                       # the "SEO & brand" global set
 php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to change the defaults
@@ -35,7 +35,7 @@ php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to chan
 
 `seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. Running it again changes nothing that exists.
 
-The control panel's scripts and styles are published to `public/vendor/statamic-seo` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=seo --force`.
+The control panel's scripts and styles are published to `public/vendor/statamic-co-seo` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=seo --force`.
 
 ## 2. Add the SEO fields to your blueprints
 

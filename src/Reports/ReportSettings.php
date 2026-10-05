@@ -72,7 +72,7 @@ class ReportSettings
     private function saved(): array
     {
         try {
-            return Addon::get('jotham-lec/statamic-seo')?->settings()->all() ?? [];
+            return Addon::get('jotham-lec/statamic-co-seo')?->settings()->all() ?? [];
         } catch (\Throwable) {
             // Before Statamic has booted the addon (an early config read).
             return [];

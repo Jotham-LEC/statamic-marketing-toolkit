@@ -28,7 +28,7 @@ class ReportsController
     {
         $this->authorize('view seo');
 
-        $addon = Addon::get('jotham-lec/statamic-seo');
+        $addon = Addon::get('jotham-lec/statamic-co-seo');
 
         return Inertia::render('seo::Reports', [
             'reports' => Report::query()->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),

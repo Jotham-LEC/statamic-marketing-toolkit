@@ -6,6 +6,7 @@ use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\CP\Navigation\NavItem;
+use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Facades\User;
@@ -92,4 +93,12 @@ test('the dashboard widget is left out for people without "view seo"', function 
     $this->actingAs(cpUser());
 
     expect((new SeoWidget)->component())->toBeNull();
+});
+
+test('the addon finds itself under the package name in composer.json', function () {
+    $name = json_decode((string) file_get_contents(__DIR__.'/../../composer.json'), true)['name'];
+
+    // Navigation, ReportsController and ReportSettings look the addon up by this name.
+    expect($name)->toBe('jotham-lec/statamic-co-seo')
+        ->and(Addon::get($name)?->hasSettingsBlueprint())->toBeTrue();
 });

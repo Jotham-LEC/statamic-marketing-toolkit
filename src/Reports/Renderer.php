@@ -26,7 +26,7 @@ class Renderer
      */
     public function render(Entry|Term $content): array
     {
-        $request = Request::create((string) $content->absoluteUrl(), 'GET', server: ['HTTP_USER_AGENT' => 'jotham-lec/statamic-seo report']);
+        $request = Request::create((string) $content->absoluteUrl(), 'GET', server: ['HTTP_USER_AGENT' => 'jotham-lec/statamic-co-seo report']);
         $previous = app('request');
         $cascade = app(Cascade::class);
         $noindex = config('seo.robots.noindex_outside_production');
