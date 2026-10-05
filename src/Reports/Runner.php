@@ -72,7 +72,7 @@ class Runner
             'report_id' => $report->id,
             'url' => $content->absoluteUrl(),
             'content_type' => $content instanceof EntryContract ? 'entry' : 'term',
-            'content_id' => $content instanceof EntryContract ? $content->id() : $content->taxonomyHandle().'::'.$content->slug(),
+            'content_id' => $content->id(),
             'title' => (string) $content->get('title'),
             'in_sitemap' => $sitemap->has($content->absoluteUrl()),
         ])->values()->all()));

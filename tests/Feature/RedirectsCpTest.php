@@ -8,6 +8,8 @@ use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Redirects\Redirect;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term;
 
 test('the redirects screen and its listing: search, sort, pagination, columns', function () {
     $this->actingAs(cpUser(['manage seo redirects']));
@@ -173,6 +175,22 @@ test('the dialog\'s answer is kept for the next save of that entry', function ()
     $this->postJson(cp_route('seo.redirects.choice'), ['reference' => $entry->reference(), 'create' => false])->assertOk();
 
     Entry::find($entry->id())->syncOriginal()->slug('about-us')->save();
+
+    expect(Redirect::query()->count())->toBe(0);
+});
+
+test('the dialog works for a term too: the check, and the answer read by the term\'s save', function () {
+    Taxonomy::make('topics')->save();
+    Blueprint::make('topic')->setNamespace('taxonomies.topics')->setContents(['fields' => [['handle' => 'title', 'field' => ['type' => 'text']]]])->save();
+    $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
+    $reference = $term->in('default')->reference();
+    $this->actingAs(cpUser(super: true));
+
+    $this->postJson(cp_route('seo.redirects.check'), ['reference' => $reference, 'values' => ['title' => 'Gardens', 'slug' => 'gardening']])
+        ->assertExactJson(['changes' => true, 'from' => '/topics/gardens', 'to' => '/topics/gardening']);
+
+    $this->postJson(cp_route('seo.redirects.choice'), ['reference' => $reference, 'create' => false])->assertOk();
+    Term::find('topics::gardens')->term()->syncOriginal()->slug('gardening')->save();
 
     expect(Redirect::query()->count())->toBe(0);
 });

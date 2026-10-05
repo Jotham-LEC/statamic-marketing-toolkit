@@ -560,11 +560,11 @@ class SiteSeo
 
     public function robotsTxt(): string
     {
-        $lines = ['User-agent: *'];
-
         if (config('seo.robots.noindex_outside_production') && ! app()->isProduction()) {
             return "User-agent: *\nDisallow: /\n";
         }
+
+        $lines = ['User-agent: *'];
 
         $disallow = $this->settings->list('robots_disallow') ?: ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'];
 

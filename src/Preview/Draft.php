@@ -54,8 +54,8 @@ class Draft
         $collection = Collection::findByHandle((string) $handle);
         abort_unless($collection !== null, 422, 'Unknown collection.');
 
-        $id = self::referenced($request, 'entry');
-        $existing = $id === null ? null : Entry::find($id);
+        $existing = self::stored((string) $request->input('reference'));
+        $existing = $existing instanceof EntryContract ? $existing : null;
 
         if ($existing) {
             Gate::authorize('view', $existing);
@@ -87,10 +87,8 @@ class Draft
         $taxonomy = Taxonomy::findByHandle((string) $handle);
         abort_unless($taxonomy !== null, 422, 'Unknown taxonomy.');
 
-        // A localized term's reference is term::{taxonomy}::{slug}::{site}.
-        $reference = self::referenced($request, 'term');
-        $id = $reference === null ? null : implode('::', array_slice(explode('::', $reference), 0, 2));
-        $existing = $id === null ? null : Term::find($id)?->in($site);
+        $existing = self::stored((string) $request->input('reference'), $site);
+        $existing = $existing instanceof TermContract ? $existing : null;
 
         if ($existing) {
             Gate::authorize('view', $existing);
@@ -108,12 +106,18 @@ class Draft
     }
 
     /**
-     * The id in the form's reference ("entry::{id}"), or null on a create form.
+     * The saved entry or term a publish form's reference names ("entry::{id}",
+     * "term::{taxonomy}::{slug}::{site}"), in $site or the reference's own
+     * site; null on a create form.
      */
-    private static function referenced(Request $request, string $type): ?string
+    public static function stored(string $reference, ?string $site = null): EntryContract|TermContract|null
     {
-        $reference = (string) $request->input('reference');
+        $parts = explode('::', $reference);
 
-        return str_starts_with($reference, $type.'::') ? substr($reference, strlen($type) + 2) : null;
+        return match ($parts[0]) {
+            'entry' => isset($parts[1]) ? Entry::find($parts[1]) : null,
+            'term' => isset($parts[2]) ? Term::find($parts[1].'::'.$parts[2])?->in($site ?? $parts[3] ?? Site::default()->handle()) : null,
+            default => null,
+        };
     }
 }

@@ -4,6 +4,7 @@ namespace JothamLec\Seo\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use JothamLec\Seo\Support\StatamicRoutes;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -38,19 +39,7 @@ class TrailingSlash
 
     private function skipped(string $path): bool
     {
-        $prefixes = array_map(fn ($prefix) => '/'.trim((string) $prefix, '/'), [
-            config('statamic.cp.route', 'cp'),
-            config('statamic.routes.action', '!'),
-            config('statamic.assets.image_manipulation.route', 'img'),
-        ]);
-
-        foreach ($prefixes as $prefix) {
-            if ($path === $prefix || str_starts_with($path, $prefix.'/')) {
-                return true;
-            }
-        }
-
-        return str_contains((string) basename(rtrim($path, '/')), '.');
+        return StatamicRoutes::owns($path, images: true) || str_contains((string) basename(rtrim($path, '/')), '.');
     }
 
     private function redirect(Request $request, string $path): Response

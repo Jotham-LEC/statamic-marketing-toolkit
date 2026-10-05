@@ -5,6 +5,7 @@ namespace JothamLec\Seo\Listeners;
 use Carbon\Carbon;
 use Illuminate\Events\Dispatcher;
 use JothamLec\Seo\Redirects\AutoRedirects;
+use JothamLec\Seo\Support\Uris;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Events\CollectionTreeSaved;
@@ -13,7 +14,6 @@ use Statamic\Events\EntrySaved;
 use Statamic\Events\EntrySaving;
 use Statamic\Events\TermSaved;
 use Statamic\Events\TermSaving;
-use Statamic\Facades\Blink;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Site;
 use Statamic\Structures\CollectionTree;
@@ -90,7 +90,7 @@ class RedirectChangedUris
 
         // In a tree, the pages under this one moved with it.
         if ($page = $entry->structure()?->in($entry->locale())->findByEntry($entry->id())) {
-            $this->forgetUris();
+            Uris::forget();
 
             foreach ($page->flattenedPages() as $child) {
                 $uri = (string) $child->uri();
@@ -187,7 +187,7 @@ class RedirectChangedUris
 
     private function entryUri(Entry $entry): ?string
     {
-        $this->forgetUris();
+        Uris::forget();
 
         try {
             return $entry->uri();
@@ -207,19 +207,13 @@ class RedirectChangedUris
      */
     private function treeUris(CollectionTree $tree): array
     {
-        $this->forgetUris();
+        Uris::forget();
 
         // Walked fresh on a copy: a tree caches its pages and doesn't drop them when it changes.
         return (clone $tree)->disableUriCache()->pages()->flattenedPages()
             ->filter(fn ($page) => $page->reference())
             ->mapWithKeys(fn ($page) => [$page->reference() => (string) $page->uri()])
             ->all();
-    }
-
-    private function forgetUris(): void
-    {
-        Blink::store('entry-uris')->flush();
-        Blink::store('structure-uris')->flush();
     }
 
     /**

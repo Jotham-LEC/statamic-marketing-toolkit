@@ -70,7 +70,7 @@ class Recorder
 
     public function path(Request $request): string
     {
-        return '/'.trim(rawurldecode($request->getPathInfo()), '/');
+        return '/'.trim($request->decodedPath(), '/');
     }
 
     /**

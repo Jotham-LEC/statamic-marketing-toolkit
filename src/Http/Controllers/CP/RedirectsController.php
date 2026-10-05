@@ -11,11 +11,11 @@ use JothamLec\Seo\Preview\Draft;
 use JothamLec\Seo\Redirects\AutoRedirects;
 use JothamLec\Seo\Redirects\Csv;
 use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Support\Uris;
+use Statamic\Contracts\Entries\Entry as EntryContract;
+use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Facades\Action;
-use Statamic\Facades\Blink;
 use Statamic\Facades\Blueprint;
-use Statamic\Facades\Entry;
-use Statamic\Facades\Term;
 use Statamic\Facades\User;
 use Statamic\Fields\Blueprint as BlueprintObject;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -142,12 +142,11 @@ class RedirectsController
         $stored = $this->referenced((string) $request->input('reference'));
 
         // Only published content gets a redirect (RedirectChangedUris), before and after the save.
-        if (! $stored || ($stored instanceof \Statamic\Contracts\Entries\Entry && (! $stored->published() || ! $request->boolean('values.published', true)))) {
+        if (! $stored || ($stored instanceof EntryContract && (! $stored->published() || ! $request->boolean('values.published', true)))) {
             return ['changes' => false];
         }
 
-        Blink::store('entry-uris')->flush();
-        Blink::store('structure-uris')->flush();
+        Uris::forget();
         $from = $stored->uri();
 
         $draft = Draft::fromRequest(Request::create('/', 'POST', [
@@ -157,8 +156,7 @@ class RedirectsController
             'values' => (array) $request->input('values', []),
         ]));
 
-        Blink::store('entry-uris')->flush();
-        Blink::store('structure-uris')->flush();
+        Uris::forget();
         $to = $draft->uri();
 
         return $from && $to && Redirect::normalize($from) !== Redirect::normalize($to)
@@ -177,8 +175,7 @@ class RedirectsController
         $content = $this->referenced($request->input('reference'));
         abort_unless($content !== null, 404);
 
-        $id = $content instanceof \Statamic\Contracts\Entries\Entry ? $content->id() : $content->taxonomyHandle().'::'.$content->slug();
-        $redirects->remember((string) $id, $request->boolean('create'));
+        $redirects->remember((string) $content->id(), $request->boolean('create'));
 
         return response()->json(['saved' => true]);
     }
@@ -189,17 +186,11 @@ class RedirectsController
     }
 
     /**
-     * The saved entry or term a publish form's reference points at.
+     * The saved entry or term a publish form's reference points at, if this user may see it.
      */
-    private function referenced(string $reference): \Statamic\Contracts\Entries\Entry|\Statamic\Contracts\Taxonomies\Term|null
+    private function referenced(string $reference): EntryContract|TermContract|null
     {
-        $content = match (true) {
-            str_starts_with($reference, 'entry::') => Entry::find(substr($reference, 7)),
-            // term::{taxonomy}::{slug}::{site}
-            str_starts_with($reference, 'term::') => Term::find(implode('::', array_slice(explode('::', $reference), 1, 2)))
-                ?->in(explode('::', $reference)[3] ?? 'default'),
-            default => null,
-        };
+        $content = Draft::stored($reference);
 
         abort_if($content && User::current()?->cant('view', $content), 403);
 

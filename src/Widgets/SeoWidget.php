@@ -10,8 +10,8 @@ use Statamic\Widgets\VueComponent;
 use Statamic\Widgets\Widget;
 
 /**
- * The dashboard's SEO card: the latest report's score and the most-hit
- * missing pages. Add it in config/statamic/cp.php: `['type' => 'seo']`.
+ * The dashboard's SEO card: the latest report's score and the most recently
+ * hit missing pages. Add it in config/statamic/cp.php: `['type' => 'seo']`.
  */
 class SeoWidget extends Widget
 {

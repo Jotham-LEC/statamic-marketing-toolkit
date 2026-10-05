@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use JothamLec\Seo\NotFound\Recorder;
 use JothamLec\Seo\Redirects\Matcher;
 use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Support\StatamicRoutes;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -24,7 +25,7 @@ class HandleMissing
     {
         $response = $next($request);
 
-        if ($response->getStatusCode() !== 404 || ! in_array($request->getMethod(), ['GET', 'HEAD'], true) || $this->isControlPanel($request)) {
+        if ($response->getStatusCode() !== 404 || ! in_array($request->getMethod(), ['GET', 'HEAD'], true) || StatamicRoutes::owns($request->getPathInfo())) {
             return $response;
         }
 
@@ -64,18 +65,5 @@ class HandleMissing
         if ($request->attributes->get('seo.record_missing')) {
             $this->recorder->record($request);
         }
-    }
-
-    private function isControlPanel(Request $request): bool
-    {
-        $prefixes = array_filter([config('statamic.cp.route'), config('statamic.routes.action')]);
-
-        foreach ($prefixes as $prefix) {
-            if ($request->is(trim($prefix, '/'), trim($prefix, '/').'/*')) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

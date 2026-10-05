@@ -96,7 +96,8 @@ class ReportsController
         $labels = collect($report->summary['rules'] ?? [])->map->label->put('render', 'Page renders')->all();
         $query = $report->pages()->getQuery();
 
-        // Only a known check's name gets into the LIKE pattern, so no escaping is needed.
+        // Only a known check's name gets into the LIKE pattern. Its `_` is a LIKE
+        // wildcard, but no two checks' names differ only there.
         if (array_key_exists($rule = $request->string('rule')->toString(), $labels)) {
             $query->where('failing', 'like', '%,'.$rule.':%');
         }
