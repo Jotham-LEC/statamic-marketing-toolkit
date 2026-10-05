@@ -62,9 +62,9 @@ Empty fields count as unset.
 ## Control panel
 
 - **Search and share preview.** The fieldset's first field shows the Google result, the Facebook/LinkedIn/WhatsApp card and the X card, updated as the editor types, with title and description counters (limits: `seo.title.min`/`max`, `seo.description.min`/`length`). The values come from the site's own `SiteSeo` rules, run on the unsaved form, so fallbacks show as they will on the page. A generated card is drawn from the form and never cached. Add the field anywhere else as `type: seo_preview`.
-- **Tools → SEO**: what the site serves; Redirects; 404s; a link to the brand global.
+- **Tools → SEO**: what the site serves; Reports; Redirects; 404s; links to the brand global and the report settings.
 - **Dashboard widget**: add `['type' => 'seo']` to `widgets` in `config/statamic/cp.php`. It shows the latest report score and the most recent 404s once those exist.
-- **Permissions** (Users → Roles → SEO): `view seo` (the SEO screens and the widget), `manage seo redirects`, `run seo reports`. The preview needs no SEO permission, only access to the entry.
+- **Permissions** (Users → Roles → SEO): `view seo` (the SEO screens, reports and the widget), `manage seo redirects`, `run seo reports`. The preview needs no SEO permission, only access to the entry.
 
 ## Redirects and 404s
 
@@ -77,6 +77,12 @@ Empty fields count as unset.
 - **Tools → SEO → 404s**: one row per missing path (hits, first and last seen, last referrer), the most recent `max_rows` kept; bot user agents and scanner probes (`*.php`, `/wp-*`, `/.env*`…) are not logged. A row's menu creates a redirect from it.
 
 The automatic redirects compare a content item with the state it was loaded in, which needs a cache store that serializes (file, Redis, database; not `array`).
+
+## Reports
+
+Tools → SEO → Reports, or `php please seo:report`. A report renders every published entry (and the terms of `seo.sitemap.taxonomies`) inside the app, with no HTTP requests, and checks each page: title length and uniqueness, description length and uniqueness, one h1, a full canonical address, noindex pages left in the sitemap, image alt text, links within the site that lead nowhere or through a redirect, a share image, and JSON-LD that parses. Each check weighs 3, 2 or 1; a warning counts half; a page's score is its weighted pass rate, the site's the average. Pages marked noindex are listed but not scored. Outside production the environment's noindex is ignored, so a local report is meaningful.
+
+Settings (which checks, length thresholds, which collections to leave out, pages per step, reports to keep, schedule) are under Tools → Addons → SEO; the preview counters use the same thresholds. With a queue worker a run is queued step by step; on the `sync` queue the report's screen runs one step per progress request, so no request runs long. The schedule needs `php artisan schedule:run`.
 
 ## Per-site rules
 
@@ -98,6 +104,6 @@ Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update
 
 ## Not yet built
 
-Phase 5 of the spec: reports and grading (configured through Statamic's addon settings) and the report score on the dashboard widget; also `sitemap.xsl`, and the `seo:import-runway` command for moojing's Runway redirects (left for its rollout). Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
+`sitemap.xsl`, and the `seo:import-runway` command for moojing's Runway redirects (left for its rollout). Full documentation for new users is next. Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
 
 Licence: proprietary, all rights reserved.

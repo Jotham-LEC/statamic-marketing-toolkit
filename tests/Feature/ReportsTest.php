@@ -1,0 +1,258 @@
+<?php
+
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Queue;
+use Inertia\Testing\AssertableInertia;
+use JothamLec\Seo\Fieldtypes\SeoPreview;
+use JothamLec\Seo\Reports\Report;
+use JothamLec\Seo\Reports\ReportPage;
+use JothamLec\Seo\Reports\ReportSettings;
+use JothamLec\Seo\Reports\Runner;
+use JothamLec\Seo\Reports\RunReportStep;
+use JothamLec\Seo\ServiceProvider;
+use JothamLec\Seo\Widgets\SeoWidget;
+use Statamic\Facades\Collection;
+
+beforeEach(fn () => seoGlobal(['site_name' => 'Acme']));
+
+/**
+ * @param  array<string, mixed>  $values
+ */
+function reportSettings(array $values = []): ReportSettings
+{
+    $settings = new ReportSettings($values);
+    app()->instance(ReportSettings::class, $settings);
+
+    return $settings;
+}
+
+function fullReport(): Report
+{
+    $runner = app(Runner::class);
+
+    return $runner->runToEnd($runner->start());
+}
+
+function reportPage(Report $report, string $path): ReportPage
+{
+    return $report->pages()->where('url', 'https://example.test'.$path)->sole();
+}
+
+test('a report renders every published page, runs the checks and scores the site', function () {
+    entryIn('home', 'home', ['title' => 'Home', 'description' => 'The home page of the Acme site, where it all starts.']);
+    entryIn('pages', 'about', ['title' => 'About the Acme company', 'description' => 'Who we are, what we make and why we make it, in brief.']);
+    entryIn('pages', 'team', ['title' => 'About the Acme company', 'description' => 'The people behind Acme and what each of them does here.', 'body' => '<a href="/nowhere">x</a><img src="/a.jpg">']);
+    entryIn('pages', 'hidden', ['seo' => ['noindex' => true]]);
+    entryIn('pages', 'draft')->published(false)->save();
+
+    $report = fullReport();
+
+    expect($report->status)->toBe(Report::DONE)
+        ->and($report->pages_total)->toBe(4)
+        ->and($report->pages_done)->toBe(4)
+        ->and($report->summary)->toMatchArray(['scored' => 3, 'noindex' => 1, 'errors' => 0])
+        ->and($report->summary['rules']['title_unique'])->toMatchArray(['fail' => 2, 'warn' => 0])
+        ->and($report->summary['rules']['broken_links']['fail'])->toBe(1)
+        ->and($report->pages()->pluck('url')->all())->not->toContain('https://example.test/draft');
+
+    $team = reportPage($report, '/team');
+    expect($team->results['title_unique'])->toBe(['status' => 'fail', 'message' => 'Same title as /about.'])
+        ->and($team->results['broken_links']['message'])->toContain('/nowhere')
+        ->and($team->results['image_alt']['status'])->toBe('fail')
+        ->and($team->results['canonical']['status'])->toBe('pass')
+        ->and($team->results['og_image']['status'])->toBe('pass')
+        ->and($team->results['json_ld']['status'])->toBe('pass')
+        ->and($team->failing)->toContain(',title_unique:fail,')
+        ->and($team->score)->toBeLessThan(reportPage($report, '/about')->score);
+
+    // Hidden from search engines: listed and checked against the sitemap, not scored.
+    $hidden = reportPage($report, '/hidden');
+    expect($hidden->score)->toBeNull()->and(array_keys($hidden->results))->toBe(['noindex_in_sitemap']);
+
+    $scores = $report->pages()->whereNotNull('score')->pluck('score');
+    expect($report->score)->toBe((int) round($scores->avg()));
+});
+
+test('outside production the environment’s noindex is ignored, so a local report means something', function () {
+    $this->app['env'] = 'local';
+    entryIn('pages', 'about');
+
+    $facts = reportPage(fullReport(), '/about')->facts();
+
+    expect($facts->noindex())->toBeFalse()->and(config('seo.robots.noindex_outside_production'))->toBeTrue();
+});
+
+test('a report runs in steps of the chunk size', function () {
+    reportSettings(['chunk_size' => 2]);
+    foreach (['a', 'b', 'c', 'd', 'e'] as $slug) {
+        entryIn('pages', $slug);
+    }
+
+    $runner = app(Runner::class);
+    $report = $runner->start();
+
+    expect($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'running', 'pages_done' => 2])
+        ->and($runner->step($report)->pages_done)->toBe(4)
+        ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
+});
+
+test('turned-off checks, left-out collections and the page limit', function () {
+    reportSettings(['rule_og_image' => false, 'excluded_collections' => ['essays'], 'max_pages' => 2]);
+    entryIn('essays', 'left-out', date: '2026-01-01');
+    foreach (['a', 'b', 'c'] as $slug) {
+        entryIn('pages', $slug);
+    }
+
+    $report = fullReport();
+
+    expect($report->pages_total)->toBe(2)
+        ->and($report->summary['rules'])->not->toHaveKey('og_image')
+        ->and($report->pages()->first()->results)->not->toHaveKey('og_image')
+        ->and($report->pages()->pluck('url')->all())->not->toContain('https://example.test/essays/left-out');
+});
+
+test('a page that fails to render scores zero and says why', function () {
+    Collection::make('broken')->routes('broken/{slug}')->template('missing-template')->save();
+    entryIn('broken', 'page');
+
+    $report = fullReport();
+    $page = reportPage($report, '/broken/page');
+
+    expect($page->score)->toBe(0)
+        ->and($page->results['render']['status'])->toBe('fail')
+        ->and($report->summary['errors'])->toBe(1);
+});
+
+test('only the newest reports are kept', function () {
+    reportSettings(['keep_reports' => 2]);
+    entryIn('pages', 'about');
+
+    $ids = [fullReport()->id, fullReport()->id, fullReport()->id];
+
+    expect(Report::query()->pluck('id')->all())->toBe(array_slice($ids, 1))
+        ->and(ReportPage::query()->distinct()->pluck('report_id')->sort()->values()->all())->toBe(array_slice($ids, 1));
+});
+
+test('starting while a report runs returns that report; one that stopped moving is given up', function () {
+    entryIn('pages', 'about');
+    $runner = app(Runner::class);
+
+    $running = $runner->start();
+    expect($runner->start()->id)->toBe($running->id);
+
+    $running->forceFill(['updated_at' => now()->subHour()])->saveQuietly();
+    $next = $runner->start();
+
+    expect($next->id)->not->toBe($running->id)
+        ->and($running->fresh()->status)->toBe(Report::FAILED);
+});
+
+test('php please seo:report runs a whole report and prints the scores', function () {
+    entryIn('pages', 'about');
+
+    $this->artisan('statamic:seo:report')
+        ->expectsOutputToContain('score')
+        ->expectsOutputToContain('Unique title')
+        ->assertSuccessful();
+
+    expect(Report::query()->sole()->status)->toBe(Report::DONE);
+});
+
+test('without a queue worker the CP advances a report one step per progress request', function () {
+    reportSettings(['chunk_size' => 1]);
+    entryIn('pages', 'a');
+    entryIn('pages', 'b');
+    $this->actingAs(cpUser(['view seo', 'run seo reports']));
+
+    $started = $this->postJson(cp_route('seo.reports.run'))->assertOk()->json();
+    expect($started)->toMatchArray(['status' => 'running', 'pages_total' => 2, 'pages_done' => 0]);
+
+    $this->postJson($started['progress_url'])->assertJson(['status' => 'running', 'pages_done' => 1]);
+    $this->postJson($started['progress_url'])->assertJson(['status' => 'done', 'pages_done' => 2]);
+});
+
+test('with a queue worker the run is queued, and each step queues the next', function () {
+    config(['queue.default' => 'database', 'queue.connections.database.driver' => 'database']);
+    Queue::fake();
+    reportSettings(['chunk_size' => 1]);
+    entryIn('pages', 'a');
+    entryIn('pages', 'b');
+    $this->actingAs(cpUser(['view seo', 'run seo reports']));
+
+    $report = $this->postJson(cp_route('seo.reports.run'))->json();
+    Queue::assertPushed(RunReportStep::class, fn ($job) => $job->reportId === $report['id']);
+
+    // The progress request only reads when a worker does the work.
+    $this->postJson($report['progress_url'])->assertJson(['pages_done' => 0]);
+
+    (new RunReportStep($report['id']))->handle(app(Runner::class));
+    Queue::assertPushed(RunReportStep::class, 2);
+});
+
+test('the reports screens and a report’s pages, filtered by a check', function () {
+    entryIn('pages', 'about', ['title' => 'Same']);
+    entryIn('pages', 'team', ['title' => 'Same']);
+    entryIn('pages', 'unique-page', ['title' => 'A title of its very own here']);
+    $report = fullReport();
+    $this->actingAs(cpUser(super: true));
+
+    $this->get(cp_route('seo.reports.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('seo::Reports', false)
+        ->where('reports.0.id', $report->id)
+        ->where('canRun', true));
+
+    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('seo::Report', false)
+        ->where('report.score', $report->score)
+        ->where('counts.scored', 3));
+
+    $flagged = $this->getJson(cp_route('seo.reports.pages', [$report, 'rule' => 'title_unique']))->assertOk();
+    expect($flagged->json('data.*.path'))->toEqualCanonicalizing(['/about', '/team'])
+        ->and($flagged->json('data.0.issues.0'))->toMatchArray(['label' => 'Unique title', 'status' => 'fail'])
+        ->and($flagged->json('data.0.edit_url'))->toContain('/cp/collections/pages/entries/');
+
+    $sorted = $this->getJson(cp_route('seo.reports.pages', [$report, 'sort' => 'score', 'order' => 'asc']))->json('data.*.score');
+    expect($sorted)->toBe(collect($sorted)->sort()->values()->all());
+});
+
+test('viewing reports needs "view seo"; running one needs "run seo reports"', function () {
+    entryIn('pages', 'about');
+    $report = fullReport();
+
+    $this->actingAs(cpUser(['view seo']));
+    $this->get(cp_route('seo.reports.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('canRun', false));
+    $this->get(cp_route('seo.reports.show', $report))->assertOk();
+    $this->postJson(cp_route('seo.reports.run'))->assertForbidden();
+});
+
+test('the dashboard widget shows the latest finished report', function () {
+    entryIn('pages', 'about');
+    $report = fullReport();
+    $this->actingAs(cpUser(['view seo']));
+
+    expect((new SeoWidget)->component()->toArray()['props']['report'])->toMatchArray([
+        'score' => $report->score,
+        'pages' => 1,
+        'url' => cp_route('seo.reports.show', $report),
+    ]);
+});
+
+test('reports run on the schedule set in the addon settings', function () {
+    $events = function (array $settings) {
+        reportSettings($settings);
+        $schedule = new Schedule;
+        (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
+
+        return collect($schedule->events())->map(fn ($event) => $event->expression)->all();
+    };
+
+    expect($events(['schedule' => 'off']))->toBe([])
+        ->and($events(['schedule' => 'daily', 'schedule_time' => '04:30']))->toBe(['30 4 * * *'])
+        ->and($events(['schedule' => 'weekly', 'schedule_day' => 'wednesday', 'schedule_time' => '03:00']))->toBe(['0 3 * * 3']);
+});
+
+test('the preview counters use the report thresholds', function () {
+    reportSettings(['title_min' => 20, 'title_max' => 70, 'description_min' => 80, 'description_max' => 150]);
+
+    expect((new SeoPreview)->preload()['limits'])->toBe(['title' => [20, 70], 'description' => [80, 150]]);
+});

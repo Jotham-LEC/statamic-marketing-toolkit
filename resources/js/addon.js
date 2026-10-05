@@ -5,6 +5,8 @@ import SeoWidget from './components/SeoWidget.vue';
 import NotFound from './pages/NotFound.vue';
 import Overview from './pages/Overview.vue';
 import RedirectForm from './pages/RedirectForm.vue';
+import Report from './pages/Report.vue';
+import Reports from './pages/Reports.vue';
 import Redirects from './pages/Redirects.vue';
 
 /**
@@ -79,6 +81,8 @@ Statamic.booting(() => {
     Statamic.$inertia.register('seo::Redirects', Redirects);
     Statamic.$inertia.register('seo::RedirectForm', RedirectForm);
     Statamic.$inertia.register('seo::NotFound', NotFound);
+    Statamic.$inertia.register('seo::Reports', Reports);
+    Statamic.$inertia.register('seo::Report', Report);
 
     router.on('navigate', (event) => {
         page = event.detail.page;

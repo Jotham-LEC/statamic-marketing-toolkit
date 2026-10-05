@@ -5,12 +5,14 @@ namespace JothamLec\Seo;
 use JothamLec\Seo\Actions\CreateRedirect;
 use JothamLec\Seo\Actions\DeleteSeoRecords;
 use JothamLec\Seo\Commands\Install;
+use JothamLec\Seo\Commands\Report;
 use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\Fieldtypes\SeoPreview;
 use JothamLec\Seo\Http\Middleware\HandleMissing;
 use JothamLec\Seo\Http\Middleware\TrailingSlash;
 use JothamLec\Seo\Listeners\FlushSitemap;
 use JothamLec\Seo\Listeners\RedirectChangedUris;
+use JothamLec\Seo\Reports\ReportSettings;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Events\CollectionTreeSaved;
@@ -28,7 +30,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $tags = [Seo::class];
 
-    protected $commands = [Install::class];
+    protected $commands = [Install::class, Report::class];
 
     protected $fieldtypes = [SeoPreview::class];
 
@@ -61,6 +63,8 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class') ?: SiteSeo::class));
 
+        $this->app->bind(ReportSettings::class, fn () => new ReportSettings);
+
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
     }
@@ -80,5 +84,23 @@ class ServiceProvider extends AddonServiceProvider
         }));
 
         Navigation::register();
+    }
+
+    /**
+     * Reports on the schedule set under Tools → Addons → SEO.
+     */
+    protected function schedule($schedule)
+    {
+        $settings = app(ReportSettings::class);
+        $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
+        $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);
+
+        $event = match ($settings->get('schedule')) {
+            'daily' => $schedule->command('statamic:seo:report')->dailyAt($time),
+            'weekly' => $schedule->command('statamic:seo:report')->weeklyOn($day === false ? 1 : $day, $time),
+            default => null,
+        };
+
+        $event?->withoutOverlapping()->runInBackground();
     }
 }

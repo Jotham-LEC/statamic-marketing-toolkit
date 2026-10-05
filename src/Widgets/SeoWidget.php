@@ -4,6 +4,7 @@ namespace JothamLec\Seo\Widgets;
 
 use Illuminate\Support\Facades\Schema;
 use JothamLec\Seo\NotFound\MissingPath;
+use JothamLec\Seo\Reports\Report;
 use Statamic\Facades\User;
 use Statamic\Widgets\VueComponent;
 use Statamic\Widgets\Widget;
@@ -34,8 +35,18 @@ class SeoWidget extends Widget
      */
     protected function latestReport(): ?array
     {
-        // Reports arrive in v1.4.
-        return null;
+        if (! Schema::hasTable('seo_reports')) {
+            return null;
+        }
+
+        $report = Report::query()->where('status', Report::DONE)->latest('id')->first();
+
+        return $report === null ? null : [
+            'score' => (int) $report->score,
+            'pages' => (int) ($report->summary['scored'] ?? $report->pages_total),
+            'created_at' => $report->finished_at?->toIso8601String() ?? $report->created_at->toIso8601String(),
+            'url' => cp_route('seo.reports.show', $report),
+        ];
     }
 
     /**

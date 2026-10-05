@@ -1,0 +1,60 @@
+<?php
+
+namespace JothamLec\Seo\Reports;
+
+/**
+ * What one rendered page says about itself, as the checks need it.
+ */
+final readonly class PageFacts
+{
+    /**
+     * @param  list<string>  $h1s
+     * @param  list<string>  $brokenLinks  paths on this site that lead nowhere
+     * @param  list<string>  $redirectedLinks  paths answered by a redirect rule
+     * @param  list<string>  $jsonLdErrors
+     * @param  bool  $inSitemap  whether the sitemap lists the page (not read from the HTML)
+     */
+    public function __construct(
+        public int $status = 200,
+        public ?string $error = null,
+        public ?string $title = null,
+        public ?string $description = null,
+        public array $h1s = [],
+        public ?string $canonical = null,
+        public ?string $robots = null,
+        public int $images = 0,
+        public int $imagesWithoutAlt = 0,
+        public array $brokenLinks = [],
+        public array $redirectedLinks = [],
+        public ?string $ogImage = null,
+        public int $jsonLd = 0,
+        public array $jsonLdErrors = [],
+        public bool $inSitemap = false,
+    ) {}
+
+    public function rendered(): bool
+    {
+        return $this->status === 200 && $this->error === null;
+    }
+
+    public function noindex(): bool
+    {
+        return str_contains(strtolower((string) $this->robots), 'noindex');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(): array
+    {
+        return get_object_vars($this);
+    }
+
+    /**
+     * @param  array<string, mixed>  $facts
+     */
+    public static function fromArray(array $facts): self
+    {
+        return new self(...array_intersect_key($facts, get_class_vars(self::class)));
+    }
+}

@@ -2,6 +2,7 @@
 
 namespace JothamLec\Seo\Fieldtypes;
 
+use JothamLec\Seo\Reports\ReportSettings;
 use Statamic\Fields\Fieldtype;
 
 /**
@@ -16,14 +17,17 @@ class SeoPreview extends Fieldtype
 
     public function preload(): array
     {
+        $settings = app(ReportSettings::class);
+
         return [
             'urls' => [
                 'meta' => cp_route('seo.preview.meta'),
                 'card' => cp_route('seo.preview.card'),
             ],
+            // The report's thresholds (Tools → Addons → SEO), so the counters and the reports agree.
             'limits' => [
-                'title' => [(int) config('seo.title.min', 30), (int) config('seo.title.max', 60)],
-                'description' => [(int) config('seo.description.min', 50), (int) config('seo.description.length', 155)],
+                'title' => [$settings->int('title_min'), $settings->int('title_max')],
+                'description' => [$settings->int('description_min'), $settings->int('description_max')],
             ],
             'og' => (bool) config('seo.og.enabled'),
         ];

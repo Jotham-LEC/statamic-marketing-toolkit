@@ -43,7 +43,7 @@ test('the fieldtype is in the SEO fieldset, hands the form its routes and limits
     expect($fields->has('seo_preview'))->toBeTrue()
         ->and($fieldtype->preload())->toMatchArray([
             'urls' => ['meta' => cp_route('seo.preview.meta'), 'card' => cp_route('seo.preview.card')],
-            'limits' => ['title' => [30, 60], 'description' => [50, 155]],
+            'limits' => ['title' => [30, 60], 'description' => [50, 160]],
             'og' => true,
         ])
         ->and($fields->addValues(['title' => 'About', 'seo_preview' => 'anything'])->process()->values()['seo_preview'])->toBeNull();

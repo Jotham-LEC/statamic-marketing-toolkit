@@ -1,5 +1,6 @@
 <script setup>
 import { Widget } from '@statamic/cms/ui';
+import When from './When.vue';
 
 defineProps({
     title: { type: String, default: 'SEO' },
@@ -17,7 +18,7 @@ defineProps({
                 <h3 class="mb-1 text-xs font-medium uppercase text-gray-500">Latest report</h3>
                 <a v-if="report" :href="report.url" class="block">
                     <span class="text-3xl font-semibold">{{ report.score }}</span><span class="text-gray-500">/100</span>
-                    <span class="block text-xs text-gray-500">{{ report.pages }} pages · {{ report.created_at }}</span>
+                    <span class="block text-xs text-gray-500">{{ report.pages }} pages · <When :value="report.created_at" /></span>
                 </a>
                 <p v-else class="text-sm text-gray-500">No report yet.</p>
             </section>

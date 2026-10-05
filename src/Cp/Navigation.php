@@ -4,13 +4,13 @@ namespace JothamLec\Seo\Cp;
 
 use Statamic\CP\Navigation\Nav;
 use Statamic\CP\Navigation\NavItem;
+use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav as NavFacade;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
 /**
- * Tools → SEO in the control panel, with its screens as children. Reports
- * join in v1.4.
+ * Tools → SEO in the control panel, with its screens as children.
  */
 class Navigation
 {
@@ -30,10 +30,14 @@ class Navigation
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
 
+        $addon = Addon::get('jotham-lec/statamic-seo');
+
         return array_values(array_filter([
+            $nav->item('Reports')->route('seo.reports.index')->can('view seo'),
             $nav->item('Redirects')->route('seo.redirects.index')->can('manage seo redirects'),
             $nav->item('404s')->route('seo.404s.index')->can('view seo'),
             $variables ? $nav->item('Brand & defaults')->url($variables->editUrl())->can('edit', $variables) : null,
+            $addon?->hasSettingsBlueprint() ? $nav->item('Report settings')->url($addon->settingsUrl())->can('editSettings', $addon) : null,
         ]));
     }
 }

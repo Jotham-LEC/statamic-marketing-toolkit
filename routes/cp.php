@@ -6,6 +6,7 @@ use JothamLec\Seo\Http\Controllers\CP\NotFoundController;
 use JothamLec\Seo\Http\Controllers\CP\OverviewController;
 use JothamLec\Seo\Http\Controllers\CP\PreviewController;
 use JothamLec\Seo\Http\Controllers\CP\RedirectsController;
+use JothamLec\Seo\Http\Controllers\CP\ReportsController;
 
 Route::name('seo.')->prefix('seo')->group(function () {
     Route::get('/', OverviewController::class)->name('index');
@@ -25,6 +26,12 @@ Route::name('seo.')->prefix('seo')->group(function () {
 
     Route::get('404s', [NotFoundController::class, 'index'])->name('404s.index');
     Route::get('404s/listing', [NotFoundController::class, 'listing'])->name('404s.listing');
+
+    Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
+    Route::post('reports', [ReportsController::class, 'run'])->name('reports.run');
+    Route::get('reports/{report}', [ReportsController::class, 'show'])->whereNumber('report')->name('reports.show');
+    Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
+    Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');
 
     Route::post('actions', [ActionController::class, 'run'])->name('actions.run');
     Route::post('actions/list', [ActionController::class, 'bulkActions'])->name('actions.bulk');
