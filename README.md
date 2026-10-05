@@ -59,6 +59,13 @@ Empty fields count as unset.
 - **Editors** change the card's text (Card title, Card subtitle), pick another template (Card template), or upload a Share image, which replaces the card.
 - **Developers** add templates: extend `JothamLec\Seo\Og\Template`, return a the-og `Image` built from the `Card`, and register it in `seo.og.templates`. A collection picks one with `og_template`. Bump `version()` when the design changes.
 
+## Control panel
+
+- **Search and share preview.** The fieldset's first field shows the Google result, the Facebook/LinkedIn/WhatsApp card and the X card, updated as the editor types, with title and description counters (limits: `seo.title.min`/`max`, `seo.description.min`/`length`). The values come from the site's own `SiteSeo` rules, run on the unsaved form, so fallbacks show as they will on the page. A generated card is drawn from the form and never cached. Add the field anywhere else as `type: seo_preview`.
+- **Tools → SEO**: what the site serves, and a link to the brand global. Redirects, 404s and reports join it as they land.
+- **Dashboard widget**: add `['type' => 'seo']` to `widgets` in `config/statamic/cp.php`. It shows the latest report score and the most recent 404s once those exist.
+- **Permissions** (Users → Roles → SEO): `view seo` (the SEO screens and the widget), `manage seo redirects`, `run seo reports`. The preview needs no SEO permission, only access to the entry.
+
 ## Per-site rules
 
 Extend `JothamLec\Seo\SiteSeo` and set `seo.class`. Each value is one public method: override `extraNodes()` for Product/Offer JSON-LD, `shouldNoindex()` for an empty listing, `additionalSitemapUrls()` for controller pages, `title()`, `description()`, and so on. Per collection, `config/seo.php` sets `og_type`, `schema` (Article…), `page_schema`, `description_fields`, `image_fields`, `faq_field` and `og_template`.
@@ -67,14 +74,18 @@ Extend `JothamLec\Seo\SiteSeo` and set `seo.class`. Each value is one public met
 
 ```bash
 composer install
-vendor/bin/pest
+npm install
+npm run build      # the CP's Vue components → resources/dist/build (committed; sites don't run npm)
+vendor/bin/pest    # the share-card tests need PHP's imagick extension
 vendor/bin/pint
 ```
+
+Sites pick up new CP assets on `composer update` (Statamic republishes them); otherwise run `php artisan vendor:publish --tag=seo --force`.
 
 Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-seo`.
 
 ## Not yet built
 
-Phase 3–5 of the spec: the live SERP/social preview fieldtype, the redirects manager and automatic slug-change redirects, 404 tracking, reports and grading (configured through Statamic's addon settings), dashboard widgets, and `sitemap.xsl`. Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
+Phases 4–5 of the spec: the redirects manager and automatic slug-change redirects, 404 tracking, reports and grading (configured through Statamic's addon settings), the data behind the dashboard widget, and `sitemap.xsl`. Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
 
 Licence: proprietary, all rights reserved.

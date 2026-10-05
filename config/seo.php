@@ -35,10 +35,16 @@ return [
     'title' => [
         // Appended as "{title}{separator}{site name}" only when the result fits.
         'max' => 60,
+
+        // Shorter than this is flagged in the CP preview.
+        'min' => 30,
     ],
 
     'description' => [
         'length' => 155,
+
+        // Shorter than this is flagged in the CP preview.
+        'min' => 50,
 
         // A first paragraph starting with one of these is skipped when the
         // description falls back to the body (e.g. "This article first appeared").

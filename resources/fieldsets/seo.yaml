@@ -1,6 +1,13 @@
 title: SEO
 fields:
   -
+    handle: seo_preview
+    field:
+      type: seo_preview
+      display: 'Search and share preview'
+      instructions: 'How this page shows in Google and when shared, with the defaults filled in. Updates as you type.'
+      listable: false
+  -
     handle: seo
     field:
       type: group
@@ -14,7 +21,7 @@ fields:
             type: text
             display: 'Title'
             character_limit: 70
-            instructions: 'Replaces the whole <title>. Empty: "{Title} · {Site}".'
+            instructions: 'Replaces the whole `<title>`. Empty: "{Title} · {Site}".'
         -
           handle: description
           field:
