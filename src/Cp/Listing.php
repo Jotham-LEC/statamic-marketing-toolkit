@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Statamic\CP\Column;
 
 /**
@@ -20,9 +21,10 @@ final class Listing
      * @param  array<string, string>  $columns  field => label; the first is the default sort
      * @param  list<string>  $searchable
      * @param  Closure(Model): array<string, mixed>  $row
+     * @param  (Closure(Collection<int, Model>): void)|null  $preload  given the page's rows first, to load what $row needs in one go
      * @return array{data: list<array<string, mixed>>, meta: array<string, mixed>}
      */
-    public static function respond(Builder $query, Request $request, array $columns, array $searchable, Closure $row, string $defaultOrder = 'asc'): array
+    public static function respond(Builder $query, Request $request, array $columns, array $searchable, Closure $row, string $defaultOrder = 'asc', ?Closure $preload = null): array
     {
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function (Builder $query) use ($searchable, $search) {
@@ -35,6 +37,10 @@ final class Listing
         $sort = array_key_exists((string) $request->input('sort'), $columns) ? $request->input('sort') : array_key_first($columns);
         $order = in_array($request->input('order'), ['asc', 'desc'], true) ? $request->input('order') : $defaultOrder;
         $page = $query->orderBy($sort, $order)->orderBy('id')->paginate(min(500, max(10, (int) $request->input('perPage', 50))));
+
+        if ($preload) {
+            $preload($page->getCollection());
+        }
 
         return [
             'data' => $page->getCollection()->map($row)->values()->all(),

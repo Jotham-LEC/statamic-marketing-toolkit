@@ -3,6 +3,7 @@
 namespace JothamLec\Seo\Http\Controllers\CP;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\Seo\Cp\Listing;
@@ -94,6 +95,7 @@ class ReportsController
         $this->authorize('view seo');
 
         $labels = collect($report->summary['rules'] ?? [])->map->label->put('render', 'Page renders')->all();
+        $editUrls = [];
         $query = $report->pages()->getQuery();
 
         // Only a known check's name gets into the LIKE pattern. Its `_` is a LIKE
@@ -107,22 +109,28 @@ class ReportsController
             $request,
             ['score' => 'Score', 'title' => 'Page', 'in_sitemap' => 'In sitemap'],
             ['title', 'url'],
-            fn (ReportPage $page) => [
-                'id' => $page->id,
-                'title' => $page->title ?: $page->url,
-                'url' => $page->url,
-                'path' => parse_url($page->url, PHP_URL_PATH) ?: '/',
-                'score' => $page->score,
-                'in_sitemap' => $page->in_sitemap,
-                'noindex' => $page->facts()->noindex(),
-                'issues' => collect($page->results ?? [])
-                    ->reject(fn ($result) => $result['status'] === 'pass')
-                    ->map(fn ($result, $handle) => ['label' => $labels[$handle] ?? $handle, ...$result])
-                    ->sortBy(fn ($issue) => $issue['status'] === 'fail' ? 0 : 1)
-                    ->values()
-                    ->all(),
-                'edit_url' => $this->editUrl($page),
-            ],
+            // Not an arrow function: it must see $editUrls once preload has filled it.
+            function (ReportPage $page) use ($labels, &$editUrls) {
+                return [
+                    'id' => $page->id,
+                    'title' => $page->title ?: $page->url,
+                    'url' => $page->url,
+                    'path' => parse_url($page->url, PHP_URL_PATH) ?: '/',
+                    'score' => $page->score,
+                    'in_sitemap' => $page->in_sitemap,
+                    'noindex' => $page->facts()->noindex(),
+                    'issues' => collect($page->results ?? [])
+                        ->reject(fn ($result) => $result['status'] === 'pass')
+                        ->map(fn ($result, $handle) => ['label' => $labels[$handle] ?? $handle, ...$result])
+                        ->sortBy(fn ($issue) => $issue['status'] === 'fail' ? 0 : 1)
+                        ->values()
+                        ->all(),
+                    'edit_url' => $editUrls[$page->id] ?? null,
+                ];
+            },
+            preload: function ($pages) use (&$editUrls) {
+                $editUrls = $this->editUrls($pages);
+            },
         );
     }
 
@@ -145,11 +153,21 @@ class ReportsController
         ];
     }
 
-    private function editUrl(ReportPage $page): ?string
+    /**
+     * Where to fix each page, for those the user may edit: one query for the entries.
+     *
+     * @param  Collection<int, ReportPage>  $pages
+     * @return array<int, string> report page id => edit URL
+     */
+    private function editUrls($pages): array
     {
-        $content = $page->content_type === 'entry' ? Entry::find($page->content_id) : Term::find($page->content_id);
+        $entries = Entry::query()->whereIn('id', $pages->where('content_type', 'entry')->pluck('content_id')->all())->get()->keyBy->id();
 
-        return $content && User::current()?->can('edit', $content) ? $content->editUrl() : null;
+        return $pages
+            ->mapWithKeys(fn (ReportPage $page) => [$page->id => $page->content_type === 'entry' ? $entries->get($page->content_id) : Term::find($page->content_id)])
+            ->filter(fn ($content) => $content && User::current()?->can('edit', $content))
+            ->map->editUrl()
+            ->all();
     }
 
     private function authorize(string $permission): void

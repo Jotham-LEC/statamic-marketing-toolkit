@@ -15,6 +15,8 @@ use JothamLec\Seo\Reports\RunReportStep;
 use JothamLec\Seo\ServiceProvider;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Facades\Collection;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term;
 
 beforeEach(fn () => seoGlobal(['site_name' => 'Acme']));
 
@@ -280,4 +282,31 @@ test('only one report starts at a time', function () {
     $other->release();
     app(Runner::class)->start();
     expect(Report::query()->count())->toBe(1);
+});
+
+function reportOnAboutAndATerm(): array
+{
+    Taxonomy::make('topics')->save();
+    $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
+    $entry = entryIn('pages', 'about');
+    $report = Report::query()->create(['settings' => [], 'status' => Report::DONE, 'summary' => ['rules' => []]]);
+    $report->pages()->create(['url' => 'https://example.test/about', 'content_type' => 'entry', 'content_id' => $entry->id(), 'score' => 50, 'checked' => true]);
+    $report->pages()->create(['url' => 'https://example.test/topics/gardens', 'content_type' => 'term', 'content_id' => $term->id(), 'score' => 60, 'checked' => true]);
+
+    return [$report, $entry, $term];
+}
+
+test('a report page links to the entry or term behind it', function () {
+    [$report, $entry, $term] = reportOnAboutAndATerm();
+    $this->actingAs(cpUser(super: true));
+
+    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.edit_url'))
+        ->toBe([$entry->editUrl(), $term->in('default')->editUrl()]);
+});
+
+test('a report page has no edit link for someone who may not edit it', function () {
+    [$report] = reportOnAboutAndATerm();
+    $this->actingAs(cpUser(['view seo']));
+
+    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.edit_url'))->toBe([null, null]);
 });
