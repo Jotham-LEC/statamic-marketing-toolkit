@@ -1,7 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Event;
 use JothamLec\Seo\Redirects\AutoRedirects;
 use JothamLec\Seo\Redirects\Redirect;
+use Statamic\Events\EntrySaving;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Taxonomy;
@@ -180,6 +182,37 @@ test('automatic redirects can be turned off', function () {
     config(['seo.redirects.automatic' => false]);
 
     reloaded(entryIn('pages', 'a'))->slug('b')->save();
+
+    expect(redirectMap())->toBe([]);
+});
+
+test('a manual wildcard under the new address is kept', function () {
+    Redirect::query()->create(['source' => '/shop/*', 'target' => 'https://store.example.com/$1']);
+
+    reloaded(entryIn('pages', 'store'))->slug('shop')->save();
+
+    expect(redirectMap())->toBe(['/shop/*' => 'https://store.example.com/$1', '/store' => '/shop']);
+});
+
+test('a wildcard that would come to point at itself is dropped', function () {
+    Redirect::query()->create(['source' => '/x/*', 'target' => '/old/$1']);
+
+    reloaded(entryIn('pages', 'old'))->slug('x')->save();
+
+    expect(redirectMap())->toBe(['/old' => '/x']);
+});
+
+test('a save that is cancelled leaves nothing behind for the next save', function () {
+    $entry = reloaded(entryIn('pages', 'a'));
+    $cancel = true;
+    Event::listen(EntrySaving::class, function () use (&$cancel) {
+        return $cancel ? false : null;
+    });
+
+    expect($entry->slug('b')->save())->toBeFalse();
+
+    $cancel = false;
+    expect(reloaded($entry)->set('description', 'Edited.')->save())->toBeTrue();
 
     expect(redirectMap())->toBe([]);
 });

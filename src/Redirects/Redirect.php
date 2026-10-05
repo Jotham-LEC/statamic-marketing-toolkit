@@ -155,13 +155,11 @@ class Redirect extends Model
             return null;
         }
 
-        $source = self::normalize($source);
-        $back = 0;
-        $same = preg_replace_callback('/\*/', fn () => '$'.++$back, $source);
-
-        if (self::normalize($target) === $same) {
+        if (self::pointsBack($source, $target)) {
             return 'This sends the address back to itself.';
         }
+
+        $source = self::normalize($source);
 
         // The rule already at the target, if it leads straight back here.
         $next = str_contains($source, '*') ? null : app(Matcher::class)->match(self::normalize($target));
@@ -171,6 +169,18 @@ class Redirect extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Whether a rule sends every address it matches to that same address:
+     * `/a` to `/a`, or `/x/*` to `/x/$1`.
+     */
+    public static function pointsBack(string $source, ?string $target): bool
+    {
+        $back = 0;
+        $same = preg_replace_callback('/\*/', fn () => '$'.++$back, self::normalize($source));
+
+        return $target !== null && str_starts_with($target, '/') && self::normalize($target) === $same;
     }
 
     public function isWildcard(): bool

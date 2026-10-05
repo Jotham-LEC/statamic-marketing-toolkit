@@ -149,6 +149,10 @@ test('the save dialog\'s check: does saving the form move the entry?', function 
     $this->postJson(cp_route('seo.redirects.check'), ['reference' => null, 'values' => ['slug' => 'new']])
         ->assertExactJson(['changes' => false]);
 
+    // Unpublishing: a draft has no address to protect, so the save adds no redirect and nothing is asked.
+    $this->postJson(cp_route('seo.redirects.check'), ['reference' => $entry->reference(), 'values' => ['title' => 'About', 'slug' => 'about-us', 'published' => false]])
+        ->assertExactJson(['changes' => false]);
+
     expect(Entry::find($entry->id())->slug())->toBe('about');
 });
 

@@ -26,10 +26,13 @@ let page = (() => {
 /**
  * The saved entry or term the form being saved belongs to. Statamic's
  * `saving` hook carries only the handle and the values, so the reference
- * comes from the edit page, when the form is that page's own (not one opened
- * in a stack on top of it).
+ * comes from the edit page, when the form is that page's own. A form in a
+ * stack on top of it (a related entry, perhaps of the same collection) can't
+ * be told apart, so it isn't asked about; its save adds the redirect.
  */
 function referenceFor(payload) {
+    if (Statamic.$app.config.globalProperties.$stacks?.count() > 0) return null;
+
     const props = page?.props ?? {};
     const handle = payload?.collection ?? payload?.taxonomy;
     const owner = props.collection?.handle ?? props.collection ?? props.taxonomy?.handle ?? props.taxonomy;

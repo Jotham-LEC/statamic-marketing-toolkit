@@ -141,7 +141,8 @@ class RedirectsController
 
         $stored = $this->referenced((string) $request->input('reference'));
 
-        if (! $stored || ($stored instanceof \Statamic\Contracts\Entries\Entry && ! $stored->published())) {
+        // Only published content gets a redirect (RedirectChangedUris), before and after the save.
+        if (! $stored || ($stored instanceof \Statamic\Contracts\Entries\Entry && (! $stored->published() || ! $request->boolean('values.published', true)))) {
             return ['changes' => false];
         }
 

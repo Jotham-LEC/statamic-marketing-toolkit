@@ -22,7 +22,7 @@ class AutoRedirects
             return;
         }
 
-        $this->write($from, $to, $from, $to);
+        $this->write($from, $to, $from, $to, live: $to);
     }
 
     /**
@@ -38,22 +38,27 @@ class AutoRedirects
             return;
         }
 
-        $this->write($from.'/*', $to.'/$1', $from, $to);
+        $this->write($from.'/*', $to.'/$1', $from, $to, live: $to.'/*');
     }
 
-    private function write(string $source, string $target, string $from, string $to): void
+    /**
+     * @param  string  $live  the source of a rule the move makes wrong: the new address, or everything under it
+     */
+    private function write(string $source, string $target, string $from, string $to, string $live): void
     {
-        DB::transaction(function () use ($source, $target, $from, $to) {
+        DB::transaction(function () use ($source, $target, $from, $to, $live) {
             // The new address is live again: nothing should send it away.
-            Redirect::query()->whereIn('source', [$to, $to.'/*'])->delete();
+            Redirect::query()->where('source', $live)->delete();
 
-            // Rules into the old address, or under it, follow it to the new one.
+            // Rules into the old address, or under it, follow it to the new one,
+            // unless that brings one back to its own address (`/x/*` to `/x/$1`).
             // (LIKE only narrows the rows: `_` in a slug is a LIKE wildcard.)
             Redirect::query()->where('target', $from)->orWhere('target', 'like', $from.'/%')->get()
                 ->filter(fn (Redirect $redirect) => $redirect->target === $from || str_starts_with((string) $redirect->target, $from.'/'))
-                ->each(fn (Redirect $redirect) => $redirect->update(['target' => $to.substr($redirect->target, strlen($from))]));
-
-            Redirect::query()->whereColumn('source', 'target')->delete();
+                ->each(function (Redirect $redirect) use ($from, $to) {
+                    $redirect->target = $to.substr($redirect->target, strlen($from));
+                    Redirect::pointsBack($redirect->source, $redirect->target) ? $redirect->delete() : $redirect->save();
+                });
 
             Redirect::query()->updateOrCreate(
                 ['source' => $source],

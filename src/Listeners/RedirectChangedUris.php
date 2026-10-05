@@ -50,6 +50,7 @@ class RedirectChangedUris
     {
         $entry = $event->entry;
         $original = $entry->getOriginal();
+        $this->forget('entry', (string) $entry->id());
 
         if (! $this->enabled() || ! $entry->id() || $original === [] || ! $entry->published() || ! $entry->isDirty()) {
             return;
@@ -105,6 +106,7 @@ class RedirectChangedUris
     {
         $term = $event->term;
         $slug = $term->getOriginal('slug');
+        $this->forget('term', (string) $term->id());
 
         if (! $this->enabled() || $slug === null || $slug === $term->slug()) {
             return;
@@ -139,6 +141,7 @@ class RedirectChangedUris
     {
         $tree = $event->tree;
         $original = $tree->getOriginal('tree');
+        unset($this->pending['tree:'.$tree->handle()]);
 
         if (! $this->enabled() || ! $tree instanceof CollectionTree || $original === null || $original === $tree->tree()) {
             return;
@@ -225,8 +228,18 @@ class RedirectChangedUris
     private function pull(string $type, string $id): ?array
     {
         $move = $this->pending[$type][$id] ?? null;
-        unset($this->pending[$type][$id]);
+        $this->forget($type, $id);
 
         return $move;
+    }
+
+    /**
+     * Drops what an earlier save of this content left: one that was cancelled
+     * or failed never reached its Saved event, and this instance outlives it
+     * in a queue worker or a long import.
+     */
+    private function forget(string $type, string $id): void
+    {
+        unset($this->pending[$type][$id]);
     }
 }
