@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Events\Dispatcher;
 use JothamLec\Seo\Redirects\AutoRedirects;
 use JothamLec\Seo\Support\Uris;
-use Statamic\Contracts\Entries\Entry;
+use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\CollectionTreeSaving;
@@ -15,6 +15,7 @@ use Statamic\Events\EntrySaving;
 use Statamic\Events\TermSaved;
 use Statamic\Events\TermSaving;
 use Statamic\Facades\Collection;
+use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Structures\CollectionTree;
 use Statamic\Support\Arr;
@@ -86,7 +87,7 @@ class RedirectChangedUris
         }
 
         [$from, $to] = $move;
-        $this->moved((string) $entry->id(), $from, $to);
+        $this->moved($entry, $from, $to);
 
         // In a tree, the pages under this one moved with it.
         if ($page = $entry->structure()?->in($entry->locale())->findByEntry($entry->id())) {
@@ -96,7 +97,7 @@ class RedirectChangedUris
                 $uri = (string) $child->uri();
 
                 if (str_starts_with($uri, $to.'/')) {
-                    $this->moved((string) $child->reference(), $from.substr($uri, strlen($to)), $uri);
+                    $this->moved($child->entry(), $from.substr($uri, strlen($to)), $uri);
                 }
             }
         }
@@ -161,7 +162,9 @@ class RedirectChangedUris
     public function treeSaved(CollectionTreeSaved $event): void
     {
         foreach ($this->pending['tree:'.$event->tree->handle()] ?? [] as $id => [$from, $to]) {
-            $this->moved((string) $id, $from, $to);
+            if ($entry = Entry::find($id)) {
+                $this->moved($entry, $from, $to);
+            }
         }
 
         unset($this->pending['tree:'.$event->tree->handle()]);
@@ -171,11 +174,11 @@ class RedirectChangedUris
      * The page's own 301, and when it is a collection's mount, one wildcard
      * rule for the entries that moved with it.
      */
-    private function moved(string $id, string $from, string $to): void
+    private function moved(EntryContract $entry, string $from, string $to): void
     {
         $this->redirects->create($from, $to);
 
-        if (Collection::all()->contains(fn ($collection) => $collection->mount()?->id() === $id)) {
+        if (Collection::findByMount($entry)) {
             $this->redirects->createForPrefix($from, $to);
         }
     }
@@ -185,7 +188,7 @@ class RedirectChangedUris
         return (bool) config('seo.redirects.enabled') && (bool) config('seo.redirects.automatic');
     }
 
-    private function entryUri(Entry $entry): ?string
+    private function entryUri(EntryContract $entry): ?string
     {
         Uris::forget();
 
