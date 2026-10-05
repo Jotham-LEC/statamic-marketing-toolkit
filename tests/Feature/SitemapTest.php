@@ -1,0 +1,104 @@
+<?php
+
+use JothamLec\Seo\SiteSeo;
+use Statamic\Facades\Entry;
+
+/**
+ * @return list<string>
+ */
+function sitemapLocs(string $xml): array
+{
+    $sitemap = simplexml_load_string($xml);
+
+    expect($sitemap)->not->toBeFalse();
+
+    return array_map('strval', iterator_to_array($sitemap->xpath('//*[local-name()="loc"]'), false));
+}
+
+test('lists published pages, and leaves out drafts, hidden pages, redirects and pieces canonical elsewhere', function () {
+    entryIn('home', 'home');
+    entryIn('pages', 'about');
+    entryIn('pages', 'draft')->published(false)->save();
+    entryIn('pages', 'hidden', ['seo' => ['noindex' => true]]);
+    entryIn('pages', 'unlisted', ['seo' => ['sitemap' => false]]);
+    entryIn('pages', 'moved', ['redirect' => 'https://elsewhere.example']);
+    entryIn('pages', 'reprint', ['seo' => ['canonical' => 'https://times.example/x']]);
+    entryIn('pages', 'self-canonical', ['seo' => ['canonical' => 'https://example.test/self-canonical']]);
+
+    $response = $this->get('/sitemap.xml')->assertOk()->assertHeader('Content-Type', 'text/xml; charset=UTF-8');
+
+    expect(sitemapLocs($response->getContent()))->toBe([
+        'https://example.test',
+        'https://example.test/about',
+        'https://example.test/self-canonical',
+    ])->and($response->headers->get('Set-Cookie'))->toBeNull();
+});
+
+test('each URL carries its last change', function () {
+    entryIn('pages', 'about');
+
+    expect($this->get('/sitemap.xml')->getContent())->toMatch('#<lastmod>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}</lastmod>#');
+});
+
+test('saving an entry refreshes the cached sitemap', function () {
+    entryIn('pages', 'about');
+    $this->get('/sitemap.xml');
+
+    entryIn('pages', 'new-page');
+
+    expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toContain('https://example.test/new-page');
+});
+
+test('past the page size the sitemap becomes an index of numbered pages', function () {
+    config(['seo.sitemap.per_page' => 2]);
+    collect(['a', 'b', 'c'])->each(fn ($slug) => entryIn('pages', $slug));
+
+    expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe([
+        'https://example.test/sitemap_1.xml',
+        'https://example.test/sitemap_2.xml',
+    ])
+        ->and(sitemapLocs($this->get('/sitemap_2.xml')->getContent()))->toBe(['https://example.test/c']);
+
+    $this->get('/sitemap_3.xml')->assertNotFound();
+});
+
+test('a project adds URLs that are not entries', function () {
+    config(['seo.class' => SitemapWithExtras::class]);
+
+    expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe(['https://example.test/contact']);
+});
+
+class SitemapWithExtras extends SiteSeo
+{
+    public function additionalSitemapUrls(): array
+    {
+        return [['loc' => 'https://example.test/contact', 'lastmod' => null]];
+    }
+}
+
+test('robots.txt lets crawlers in on production, names the sitemap, and shuts them out elsewhere', function () {
+    seoGlobal(['robots_extra' => "User-agent: GPTBot\nAllow: /"]);
+
+    expect($this->get('/robots.txt')->assertOk()->getContent())->toBe(
+        "User-agent: *\nDisallow: /cp/\n\nUser-agent: GPTBot\nAllow: /\n\nSitemap: https://example.test/sitemap.xml\n"
+    );
+
+    $this->app['env'] = 'staging';
+
+    expect($this->get('/robots.txt')->getContent())->toBe("User-agent: *\nDisallow: /\n");
+});
+
+test('humans.txt is served once filled in', function () {
+    $this->get('/humans.txt')->assertNotFound();
+
+    seoGlobal(['humans' => "/* TEAM */\nJotham Lim"]);
+
+    expect($this->get('/humans.txt')->assertOk()->getContent())->toBe("/* TEAM */\nJotham Lim\n");
+});
+
+test('an unpublished entry is not in the sitemap even when found by URI', function () {
+    entryIn('pages', 'later')->published(false)->save();
+
+    expect(Entry::findByUri('/later'))->not->toBeNull()
+        ->and(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe([]);
+});

@@ -1,0 +1,100 @@
+title: SEO
+fields:
+  -
+    handle: seo
+    field:
+      type: group
+      display: SEO
+      fullscreen: false
+      instructions: 'Leave any field empty to use the default.'
+      fields:
+        -
+          handle: title
+          field:
+            type: text
+            display: 'Title'
+            character_limit: 70
+            instructions: 'Replaces the whole <title>. Empty: "{Title} · {Site}".'
+        -
+          handle: description
+          field:
+            type: textarea
+            display: 'Description'
+            character_limit: 160
+            instructions: 'Empty: the entry''s description, else its first paragraph.'
+        -
+          handle: image
+          field:
+            type: assets
+            display: 'Share image'
+            max_files: 1
+            mode: list
+            instructions: 'Replaces the generated card. Cropped to 1200×630.'
+        -
+          handle: og_title
+          field:
+            type: text
+            display: 'Card title'
+            width: 50
+            instructions: 'Text on the generated card. Empty: the title.'
+        -
+          handle: og_subtitle
+          field:
+            type: text
+            display: 'Card subtitle'
+            width: 50
+            instructions: 'Empty: the description.'
+        -
+          handle: og_template
+          field:
+            type: text
+            display: 'Card template'
+            width: 50
+            instructions: 'A template key from config/seo.php. Empty: the collection''s.'
+        -
+          handle: og_type
+          field:
+            type: select
+            display: 'og:type'
+            width: 50
+            options:
+              website: Website
+              article: Article
+              profile: Profile
+              product: Product
+        -
+          handle: canonical
+          field:
+            type: text
+            input_type: url
+            display: 'Canonical URL'
+            instructions: 'Only for a piece first published elsewhere: the original''s address.'
+            validate:
+              - nullable
+              - 'url:http,https'
+        -
+          handle: noindex
+          field:
+            type: toggle
+            display: 'Hide from search engines'
+            width: 33
+        -
+          handle: nofollow
+          field:
+            type: toggle
+            display: 'Do not follow links'
+            width: 33
+        -
+          handle: sitemap
+          field:
+            type: toggle
+            display: 'In sitemap'
+            default: true
+            width: 33
+        -
+          handle: json_ld
+          field:
+            type: code
+            mode: javascript
+            display: 'Extra JSON-LD'
+            instructions: 'A JSON object or array of objects, added to the page''s @graph.'

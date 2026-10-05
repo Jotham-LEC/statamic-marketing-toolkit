@@ -1,0 +1,47 @@
+{
+    "name": "jotham-lec/statamic-seo",
+    "description": "Meta tags, JSON-LD, sitemap, robots and generated Open Graph images for Statamic 6.",
+    "type": "statamic-addon",
+    "license": "proprietary",
+    "autoload": {
+        "psr-4": {
+            "JothamLec\\Seo\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "JothamLec\\Seo\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": "^8.3",
+        "statamic/cms": "^6.30",
+        "simonhamp/the-og": "^0.8"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.8|^11.0",
+        "pestphp/pest": "^4.0",
+        "laravel/pint": "^1.20"
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": true,
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "statamic": {
+            "name": "SEO",
+            "description": "Meta tags, JSON-LD, sitemap, robots and generated Open Graph images",
+            "slug": "seo"
+        },
+        "laravel": {
+            "providers": [
+                "JothamLec\\Seo\\ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
