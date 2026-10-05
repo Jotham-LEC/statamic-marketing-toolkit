@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1 – unreleased
+## 0.2.1 – 2026-10-06
 
 ### Fixed
 - **Security:** the 404 log kept any `Referer` header, and showed it as a link, so a request with a `javascript:` referrer put a script one click away in the control panel. Only `http(s)` addresses are kept and linked now, including in rows already logged.
