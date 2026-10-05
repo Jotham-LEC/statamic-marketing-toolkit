@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 – 2026-10-05
 
 Run `php artisan migrate` after updating: there are new tables.
 
