@@ -256,3 +256,11 @@ test('the preview counters use the report thresholds', function () {
 
     expect((new SeoPreview)->preload()['limits'])->toBe(['title' => [20, 70], 'description' => [80, 150]]);
 });
+
+test('a Blade page that shows validation errors renders in a report run from the console or a queue', function () {
+    entryIn('pages', 'contact', ['template' => 'form']);
+
+    $facts = reportPage(fullReport(), '/contact')->facts();
+
+    expect($facts->error)->toBeNull()->and($facts->status)->toBe(200)->and($facts->h1s)->toBe(['Contact']);
+});

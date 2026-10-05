@@ -3,6 +3,8 @@
 namespace JothamLec\Seo\Reports;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ViewErrorBag;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\View\Cascade;
@@ -32,6 +34,10 @@ class Renderer
         app()->instance('request', $request);
         $cascade->withRequest($request);
         config(['seo.robots.noindex_outside_production' => false]);
+
+        // Outside a web request (the console, a queue worker) no middleware shares the
+        // validation errors views expect; an empty bag, as ShareErrorsFromSession gives.
+        View::share('errors', View::shared('errors') ?? new ViewErrorBag);
 
         try {
             $response = $content->toResponse($request);
