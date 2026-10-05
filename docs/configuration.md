@@ -65,7 +65,7 @@ Brand details (site name, logo, colours, verification codes) are content, edited
 | `robots_txt` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins. |
 | `humans_txt` | `true` | Serves `/humans.txt` when the global's humans.txt field is filled in. |
 
-The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another site, and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted.
+The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another site, and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
 ### Redirects and the 404 log
 

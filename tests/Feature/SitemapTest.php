@@ -1,6 +1,8 @@
 <?php
 
 use JothamLec\Seo\SiteSeo;
+use Statamic\Events\EntryScheduleReached;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 
 /**
@@ -101,4 +103,17 @@ test('an unpublished entry is not in the sitemap even when found by URI', functi
 
     expect(Entry::findByUri('/later'))->not->toBeNull()
         ->and(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe([]);
+});
+
+test('an entry whose scheduled date arrives is listed without waiting for the next save', function () {
+    Collection::make('news')->routes('news/{slug}')->dated(true)->futureDateBehavior('private')->save();
+    entryIn('news', 'soon', date: now()->addDay()->format('Y-m-d'));
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->not->toContain('/news/soon');
+
+    // Statamic's scheduler fires this once a minute for entries whose date has come.
+    $this->travel(2)->days();
+    EntryScheduleReached::dispatch(Entry::query()->where('slug', 'soon')->first());
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->toContain('https://example.test/news/soon');
 });

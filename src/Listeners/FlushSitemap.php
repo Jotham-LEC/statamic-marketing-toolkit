@@ -7,8 +7,8 @@ use JothamLec\Seo\Http\Controllers\SitemapController;
 use Statamic\Facades\Site;
 
 /**
- * Any saved or deleted entry or term, or a moved page, can change which URLs
- * the sitemap lists or their dates.
+ * Any saved or deleted entry or term, a moved page, or an entry whose
+ * scheduled date arrives can change which URLs the sitemap lists or their dates.
  */
 class FlushSitemap
 {

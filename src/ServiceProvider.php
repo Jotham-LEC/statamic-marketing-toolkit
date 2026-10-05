@@ -18,6 +18,7 @@ use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
+use Statamic\Events\EntryScheduleReached;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
@@ -50,6 +51,8 @@ class ServiceProvider extends AddonServiceProvider
     protected $listen = [
         EntrySaved::class => [FlushSitemap::class],
         EntryDeleted::class => [FlushSitemap::class],
+        // A scheduled entry going live, or an expiring one going away (Statamic's scheduler).
+        EntryScheduleReached::class => [FlushSitemap::class],
         TermSaved::class => [FlushSitemap::class],
         TermDeleted::class => [FlushSitemap::class],
         CollectionTreeSaved::class => [FlushSitemap::class],
