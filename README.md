@@ -1,44 +1,54 @@
 # statamic-seo
 
-Private Statamic 6 addon: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt, humans.txt, trailing-slash redirects, and **generated Open Graph images** with per-entry overrides. Built to compare against SEO Pro and to share between Jotham's sites. Statamic Core is enough; nothing here needs Pro.
+SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt and humans.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro.
 
-## Install
+Private package (`jotham-lec/statamic-seo`), built alongside SEO Pro to compare the two and shared between Jotham's sites.
 
-The repo is private. Composer reads it with a GitHub token that has read access to it:
+## Documentation
+
+| | |
+|---|---|
+| [Getting started](docs/getting-started.md) | Requirements, install, blueprints, the tag, permissions, and a checklist that it works. |
+| [Configuration](docs/configuration.md) | Every key of `config/seo.php`, the report settings, permissions and commands. |
+| [A guide for editors](docs/editors.md) | For the people who write the pages: the SEO fields, the preview, redirects, 404s and reports. No code. |
+| [For developers](docs/developers.md) | How values are worked out, overriding rules in a `SiteSeo` subclass, the tag, share-card templates, working on the addon. |
+| [Troubleshooting](docs/troubleshooting.md) | Problems people have hit, and their fixes. |
+| [Changelog](CHANGELOG.md) | What changed in each version. |
+
+## Quick start
 
 ```bash
-composer config --global github-oauth.github.com <token>     # once per machine
+composer config --global github-oauth.github.com <token>   # read access to the private repo
 ```
-
-In the site's `composer.json`:
 
 ```json
 "repositories": [{ "type": "vcs", "url": "https://github.com/Jotham-LEC/statamic-seo" }]
 ```
 
-Then:
-
 ```bash
 composer require jotham-lec/statamic-seo
-php please seo:install                      # creates the "SEO & brand" global set
-php artisan vendor:publish --tag=seo-config # optional: config/seo.php
+php artisan migrate
+php please seo:install
 ```
 
-CI and servers need the same token: `COMPOSER_AUTH='{"github-oauth":{"github.com":"<token>"}}'`.
+1. Import the fieldset into each blueprint that should have SEO fields: `- import: seo::seo`.
+2. Put the tag in the layout's `<head>`: `<s:seo:meta />` (Antlers: `{{ seo:meta }}`).
+3. Fill in **Globals → SEO & brand**.
 
-## Use
+[Getting started](docs/getting-started.md) covers the rest: the dashboard widget, permissions, the schedule.
 
-1. Import the fieldset into each blueprint that should have SEO fields: `- import: seo::seo` (one `seo` group: title, description, share image, card title/subtitle/template, og:type, canonical, noindex, nofollow, in sitemap, extra JSON-LD).
-2. Put the tag in the layout's `<head>`:
+## What it does
 
-   ```blade
-   <s:seo:meta />                                         {{-- reads the view's $page --}}
-   <s:seo:meta :entry="$entry" />                         {{-- a layout that is passed the entry --}}
-   <s:seo:meta title="Contact" description="Write to us." /> {{-- a page with no entry --}}
-   <s:seo:meta :canonical="false" status="404" />         {{-- an error page --}}
-   ```
-
-3. Fill in **Globals → SEO & brand**: site name, default description and image, publisher (Organization, LocalBusiness or Person), verification codes, robots.txt lines, humans.txt, share-card colours and picture.
+- **On every page**: the `<title>`, description, robots, canonical, Open Graph, X and verification tags, and one JSON-LD graph (website, publisher, page, breadcrumbs, article, FAQ and your own nodes). Escaped for HTML and JSON.
+- **Files**: `/sitemap.xml` (split above 1,000 URLs, cached, rebuilt on save), `/robots.txt` and `/humans.txt` from the global set.
+- **Share cards**: a picture drawn for each page that has none, at `/og/{uri}.png`, in the brand's colours; editors change its text or replace it with an upload.
+- **In the control panel**:
+  - a live **Google and share preview** with length counters on every page
+  - **Redirects** (wildcards, 301/302/410, CSV), added automatically when a page's address changes, with a question first
+  - a **404 log** with one-click redirects
+  - **reports** that render every page, check it against eleven rules and score the site
+  - a **dashboard widget**
+- **Rules in code**: one class, `SiteSeo`, works out every value; extend it to change one rule for one site.
 
 ## What each value falls back to
 
@@ -52,58 +62,21 @@ CI and servers need the same token: `COMPOSER_AUTH='{"github-oauth":{"github.com
 
 Empty fields count as unset.
 
-## Generated share cards
+## Not built yet
 
-`/og.png` (home) and `/og/{uri}.png` draw the entry's card with [simonhamp/the-og](https://github.com/simonhamp/the-og), cached until the entry or the colours change, served without a cookie so CDNs can cache it.
-
-- **Editors** change the card's text (Card title, Card subtitle), pick another template (Card template), or upload a Share image, which replaces the card.
-- **Developers** add templates: extend `JothamLec\Seo\Og\Template`, return a the-og `Image` built from the `Card`, and register it in `seo.og.templates`. A collection picks one with `og_template`. Bump `version()` when the design changes.
-
-## Control panel
-
-- **Search and share preview.** The fieldset's first field shows the Google result, the Facebook/LinkedIn/WhatsApp card and the X card, updated as the editor types, with title and description counters (limits: `seo.title.min`/`max`, `seo.description.min`/`length`). The values come from the site's own `SiteSeo` rules, run on the unsaved form, so fallbacks show as they will on the page. A generated card is drawn from the form and never cached. Add the field anywhere else as `type: seo_preview`.
-- **Tools → SEO**: what the site serves; Reports; Redirects; 404s; links to the brand global and the report settings.
-- **Dashboard widget**: add `['type' => 'seo']` to `widgets` in `config/statamic/cp.php`. It shows the latest report score and the most recent 404s once those exist.
-- **Permissions** (Users → Roles → SEO): `view seo` (the SEO screens, reports and the widget), `manage seo redirects`, `run seo reports`. The preview needs no SEO permission, only access to the entry.
-
-## Redirects and 404s
-
-`php artisan migrate` creates `seo_redirects` and `seo_404s`. Settings are in `config/seo.php` (`redirects`, `not_found`).
-
-- **Rules apply only to addresses that would be a 404**, so a page that exists always wins. Exact sources first, then `*` wildcards, the longest source first; `$1`, `$2`… in the target are what each `*` matched. 301, 302 or 410 (which shows the site's error page with status 410). The visitor's query string is passed on. Rules are cached and rebuilt when one changes.
-- **Tools → SEO → Redirects**: list, search, create, edit, delete; CSV export and import (`source,target,status,active`; import adds or updates by source and reports bad rows by line).
-- **Automatic 301s** when published content moves: an entry's or a term's slug or date changes, or a page moves in a collection's tree (with the pages under it). Moving or renaming a collection's mount page adds one wildcard rule for that collection's entries. Chains don't build up: rules into the old address follow it, and a rule out of an address that is live again is dropped. Edited by hand, an automatic rule becomes a manual one.
-- **The save dialog**: saving an entry or term form that changes its address asks people with `manage seo redirects` whether to add the 301 (Add redirect, Don't add, or Don't save yet). Saves without the dialog (other people, code, imports) add it.
-- **Tools → SEO → 404s**: one row per missing path (hits, first and last seen, last referrer), the most recent `max_rows` kept; bot user agents and scanner probes (`*.php`, `/wp-*`, `/.env*`…) are not logged. A row's menu creates a redirect from it.
-
-The automatic redirects compare a content item with the state it was loaded in, which needs a cache store that serializes (file, Redis, database; not `array`).
-
-## Reports
-
-Tools → SEO → Reports, or `php please seo:report`. A report renders every published entry (and the terms of `seo.sitemap.taxonomies`) inside the app, with no HTTP requests, and checks each page: title length and uniqueness, description length and uniqueness, one h1, a full canonical address, noindex pages left in the sitemap, image alt text, links within the site that lead nowhere or through a redirect, a share image, and JSON-LD that parses. Each check weighs 3, 2 or 1; a warning counts half; a page's score is its weighted pass rate, the site's the average. Pages marked noindex are listed but not scored. Outside production the environment's noindex is ignored, so a local report is meaningful.
-
-Settings (which checks, length thresholds, which collections to leave out, pages per step, reports to keep, schedule) are under Tools → Addons → SEO; the preview counters use the same thresholds. With a queue worker a run is queued step by step; on the `sync` queue the report's screen runs one step per progress request, so no request runs long. The schedule needs `php artisan schedule:run`.
-
-## Per-site rules
-
-Extend `JothamLec\Seo\SiteSeo` and set `seo.class`. Each value is one public method: override `extraNodes()` for Product/Offer JSON-LD, `shouldNoindex()` for an empty listing, `additionalSitemapUrls()` for controller pages, `title()`, `description()`, and so on. Per collection, `config/seo.php` sets `og_type`, `schema` (Article…), `page_schema`, `description_fields`, `image_fields`, `faq_field` and `og_template`.
+- `/sitemap.xsl` (a readable sitemap in the browser).
+- `php please seo:import-runway`, to move moojing's Runway redirects and 404 log over (left for its rollout).
+- Multi-site defaults and GraphQL fields: they need Statamic Pro, and none of the sites runs it.
 
 ## Develop
 
 ```bash
-composer install
-npm install
-npm run build      # the CP's Vue components → resources/dist/build (committed; sites don't run npm)
-vendor/bin/pest    # the share-card tests need PHP's imagick extension
+composer install && npm install
+npm run build      # commit resources/dist: sites don't run npm
+vendor/bin/pest    # needs PHP's imagick extension
 vendor/bin/pint
 ```
 
-Sites pick up new CP assets on `composer update` (Statamic republishes them); otherwise run `php artisan vendor:publish --tag=seo --force`.
-
 Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-seo`.
-
-## Not yet built
-
-`sitemap.xsl`, and the `seo:import-runway` command for moojing's Runway redirects (left for its rollout). Full documentation for new users is next. Multi-site defaults and GraphQL fields need Statamic Pro and are left out.
 
 Licence: proprietary, all rights reserved.
