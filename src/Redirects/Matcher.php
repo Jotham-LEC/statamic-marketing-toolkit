@@ -18,7 +18,8 @@ class Matcher
      */
     public function match(string $path, string $query = ''): ?array
     {
-        $path = Redirect::normalize($path);
+        // Already decoded and without a query string: a `?` here was `%3F`, part of the path.
+        $path = '/'.trim($path, '/');
         $rules = $this->rules();
 
         if ($rule = $rules['exact'][$path] ?? null) {
@@ -51,13 +52,14 @@ class Matcher
             [$wildcards, $exact] = $rules->partition(fn (Redirect $redirect) => $redirect->isWildcard());
 
             return [
-                'exact' => $exact->mapWithKeys(fn (Redirect $redirect) => [$redirect->source => $rule($redirect)])->all(),
+                // Normalized again for sources saved before they were decoded on save.
+                'exact' => $exact->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => $rule($redirect)])->all(),
                 // The most specific (longest) source wins when several match.
                 'wildcards' => $wildcards
                     ->sortByDesc(fn (Redirect $redirect) => strlen($redirect->source))
                     ->map(fn (Redirect $redirect) => [
                         ...$rule($redirect),
-                        'pattern' => '#^'.str_replace('\*', '(.*)', preg_quote($redirect->source, '#')).'$#',
+                        'pattern' => '#^'.str_replace('\*', '(.*)', preg_quote(Redirect::normalize($redirect->source), '#')).'$#',
                     ])
                     ->values()
                     ->all(),
@@ -75,12 +77,14 @@ class Matcher
         $target = $rule['target'];
 
         if ($target !== null) {
-            $target = preg_replace_callback('/\$(\d+)/', fn ($m) => $captures[(int) $m[1] - 1] ?? '', $target);
+            // What a `*` matched is decoded text; it goes back into an address encoded.
+            $target = preg_replace_callback('/\$(\d+)/', fn ($m) => $this->encode($captures[(int) $m[1] - 1] ?? ''), $target);
             $target = $this->withTrailingSlash($target);
 
-            // The visitor's query string travels on (utm tags, a search).
+            // The visitor's query string travels on (utm tags, a search), ahead of any fragment.
             if ($query !== '') {
-                $target .= (str_contains($target, '?') ? '&' : '?').$query;
+                [$address, $fragment] = array_pad(explode('#', $target, 2), 2, null);
+                $target = $address.(str_contains($address, '?') ? '&' : '?').$query.($fragment !== null ? '#'.$fragment : '');
             }
         }
 
@@ -97,12 +101,18 @@ class Matcher
             return $target;
         }
 
-        [$path, $query] = array_pad(explode('?', $target, 2), 2, null);
+        $end = strcspn($target, '?#');
+        $path = substr($target, 0, $end);
 
         if ($path !== '/' && ! str_ends_with($path, '/') && pathinfo($path, PATHINFO_EXTENSION) === '') {
             $path .= '/';
         }
 
-        return $path.($query !== null ? '?'.$query : '');
+        return $path.substr($target, $end);
+    }
+
+    private function encode(string $capture): string
+    {
+        return implode('/', array_map('rawurlencode', explode('/', $capture)));
     }
 }

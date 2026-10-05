@@ -94,3 +94,52 @@ test('redirects can be turned off', function () {
 
     $this->get('/old')->assertNotFound();
 });
+
+test('what a wildcard matched is passed on encoded, and an encoded ? stays part of the path', function () {
+    rule('/old/*', '/new/$1');
+    rule('/page', '/elsewhere');
+
+    expect($this->get('/old/a%3Fb')->headers->get('Location'))->toBe('http://localhost/new/a%3Fb')
+        ->and($this->get('/old/a%20b/caf%C3%A9')->headers->get('Location'))->toBe('http://localhost/new/a%20b/caf%C3%A9');
+
+    $this->get('/page%3Fx')->assertNotFound();
+});
+
+test('a source typed percent-encoded, as copied from the address bar, matches', function () {
+    $redirect = rule('/caf%C3%A9', '/x');
+    rule('/a%20b', '/y');
+
+    expect($redirect->source)->toBe('/café');
+    $this->get('/caf%C3%A9')->assertRedirect('/x');
+    $this->get('/a%20b')->assertRedirect('/y');
+});
+
+test('a source saved encoded before it was decoded on save still matches', function () {
+    Redirect::query()->insert(['source' => '/caf%C3%A9', 'target' => '/x', 'status' => 301, 'active' => true, 'automatic' => false, 'hits' => 0]);
+
+    $this->get('/caf%C3%A9')->assertRedirect('/x');
+});
+
+test('a target keeps its #fragment, after the visitor\'s query string', function () {
+    expect(rule('/old', '/faq#shipping')->target)->toBe('/faq#shipping');
+
+    expect($this->get('/old?utm=x')->headers->get('Location'))->toBe('http://localhost/faq?utm=x#shipping');
+});
+
+test('a rule that sends an address back to itself, directly or through another rule, is refused', function () {
+    $fails = fn (string $source, string $target) => Redirect::validator(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true])->fails();
+    rule('/a', '/b');
+
+    expect($fails('/same', '/same/'))->toBeTrue()
+        ->and($fails('/x/*', '/x/$1'))->toBeTrue()
+        ->and($fails('/b', '/a?ref=loop'))->toBeTrue()
+        // Under its own source is fine: the pages there may exist.
+        ->and($fails('/blog/*', '/blog/new/$1'))->toBeFalse()
+        ->and($fails('/c', '/a'))->toBeFalse();
+});
+
+test('a rule saved before that check, sending an address to itself, is not served', function () {
+    Redirect::query()->insert(['source' => '/a', 'target' => '/a/', 'status' => 301, 'active' => true, 'automatic' => false, 'hits' => 0]);
+
+    $this->get('/a')->assertNotFound();
+});

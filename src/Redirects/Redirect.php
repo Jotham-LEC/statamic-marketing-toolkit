@@ -7,6 +7,7 @@ use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 /**
  * One rule: requests for `source` go to `target` with `status` (301, 302),
@@ -56,16 +57,23 @@ class Redirect extends Model
     }
 
     /**
-     * A site path as rules store and compare it: a leading slash, no trailing
-     * slash (except the home page), no query string.
+     * A site path as rules store and compare it: decoded (so `/caf%C3%A9` and
+     * `/café` are one address, as requests are matched), a leading slash, no
+     * trailing slash (except the home page), no query string or fragment.
      */
     public static function normalize(string $path): string
     {
-        $path = strtok(trim($path), '?#') ?: '/';
+        $path = trim($path);
+        $path = substr($path, 0, strcspn($path, '?#'));
 
-        return '/'.trim($path, '/');
+        return '/'.trim(rawurldecode($path), '/');
     }
 
+    /**
+     * A target as typed, tidied: another site's address is kept as it is; a
+     * path here loses its trailing slash and keeps its query and fragment,
+     * still encoded, since it goes into the Location header as it is.
+     */
     public static function normalizeTarget(?string $target): ?string
     {
         $target = trim((string) $target);
@@ -74,14 +82,13 @@ class Redirect extends Model
             return null;
         }
 
-        // Another site's address is kept as typed.
         if (preg_match('#^https?://#i', $target)) {
             return $target;
         }
 
-        $query = str_contains($target, '?') ? '?'.substr($target, strpos($target, '?') + 1) : '';
+        $end = strcspn($target, '?#');
 
-        return self::normalize($target).$query;
+        return '/'.trim(substr($target, 0, $end), '/').substr($target, $end);
     }
 
     /**
@@ -121,18 +128,49 @@ class Redirect extends Model
             ],
             'target' => [
                 'nullable', 'required_unless:status,410', 'string', 'max:2048', 'regex:#^(/|https?://)#i',
-                function (string $attribute, mixed $value, Closure $fail) use ($source) {
+                function (string $attribute, mixed $value, Closure $fail) use ($source, $ignoreId) {
                     $wildcards = substr_count($source, '*');
                     preg_match_all('/\$(\d+)/', (string) $value, $used);
 
                     if ($used[1] !== [] && max(array_map('intval', $used[1])) > $wildcards) {
                         $fail('The target uses a $ number the source has no * for.');
+                    } elseif ($loop = self::loop($source, (string) $value, $ignoreId)) {
+                        $fail($loop);
                     }
                 },
             ],
-            'status' => ['required', 'in:301,302,410'],
+            'status' => ['required', Rule::in(self::STATUSES)],
             'active' => ['boolean'],
         ];
+    }
+
+    /**
+     * Why a rule from $source to $target would send visitors round in a
+     * circle, or null. A target under a wildcard's own source (`/blog/*` to
+     * `/blog/new/$1`) is allowed: the pages there usually exist.
+     */
+    private static function loop(string $source, string $target, ?int $ignoreId): ?string
+    {
+        if (! str_starts_with($target, '/') || $source === '') {
+            return null;
+        }
+
+        $source = self::normalize($source);
+        $back = 0;
+        $same = preg_replace_callback('/\*/', fn () => '$'.++$back, $source);
+
+        if (self::normalize($target) === $same) {
+            return 'This sends the address back to itself.';
+        }
+
+        // The rule already at the target, if it leads straight back here.
+        $next = str_contains($source, '*') ? null : app(Matcher::class)->match(self::normalize($target));
+
+        if ($next && $next['id'] !== $ignoreId && $next['target'] !== null && str_starts_with($next['target'], '/') && self::normalize($next['target']) === $source) {
+            return 'The redirect from that address leads back here, so the two would loop.';
+        }
+
+        return null;
     }
 
     public function isWildcard(): bool

@@ -28,9 +28,13 @@ class HandleMissing
             return $response;
         }
 
-        $rule = config('seo.redirects.enabled')
-            ? $this->matcher->match($this->recorder->path($request), (string) $request->getQueryString())
-            : null;
+        $path = $this->recorder->path($request);
+        $rule = config('seo.redirects.enabled') ? $this->matcher->match($path, (string) $request->getQueryString()) : null;
+
+        // A rule back to the address asked for would loop; the address is simply missing.
+        if ($rule && $rule['target'] !== null && str_starts_with($rule['target'], '/') && Redirect::normalize($rule['target']) === $path) {
+            $rule = null;
+        }
 
         if ($rule === null) {
             $request->attributes->set('seo.record_missing', $this->recorder->shouldRecord($request));
