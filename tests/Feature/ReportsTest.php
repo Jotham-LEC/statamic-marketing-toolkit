@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Sleep;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\Seo\Fieldtypes\SeoPreview;
 use JothamLec\Seo\Reports\Report;
@@ -263,4 +266,18 @@ test('a Blade page that shows validation errors renders in a report run from the
     $facts = reportPage(fullReport(), '/contact')->facts();
 
     expect($facts->error)->toBeNull()->and($facts->status)->toBe(200)->and($facts->h1s)->toBe(['Contact']);
+});
+
+test('only one report starts at a time', function () {
+    Sleep::fake(syncWithCarbon: true);
+    $other = Cache::lock('seo:reports:start', 120);
+    $other->get();
+
+    // Another process is starting one: this start waits, then gives up rather than starting a second.
+    expect(fn () => app(Runner::class)->start())->toThrow(LockTimeoutException::class)
+        ->and(Report::query()->count())->toBe(0);
+
+    $other->release();
+    app(Runner::class)->start();
+    expect(Report::query()->count())->toBe(1);
 });

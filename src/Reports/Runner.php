@@ -3,6 +3,7 @@
 namespace JothamLec\Seo\Reports;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use JothamLec\Seo\Reports\Rules\BrokenLinks;
 use JothamLec\Seo\Reports\Rules\Canonical;
 use JothamLec\Seo\Reports\Rules\DescriptionLength;
@@ -43,9 +44,15 @@ class Runner
     public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo) {}
 
     /**
-     * A new report, or the one already running.
+     * A new report, or the one already running. One start at a time: a click
+     * and the schedule at the same moment would each find nothing running.
      */
     public function start(?ReportSettings $settings = null): Report
+    {
+        return Cache::lock('seo:reports:start', 120)->block(30, fn () => $this->startOrJoin($settings));
+    }
+
+    private function startOrJoin(?ReportSettings $settings): Report
     {
         $running = Report::query()->where('status', Report::RUNNING)->latest('id')->first();
 
