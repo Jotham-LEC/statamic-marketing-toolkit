@@ -545,10 +545,13 @@ class SiteSeo
             ->whereIn('collection', $collections)
             ->where('site', Site::current()->handle())
             ->whereStatus('published')
-            ->get()
+            // In chunks, keeping only the address and date: a big site's entries needn't all be in memory.
+            ->orderBy('id')
+            ->lazy(500)
             ->filter(fn (Entry $entry) => $this->inSitemap($entry))
             ->map(fn (Entry $entry) => ['loc' => $entry->absoluteUrl(), 'lastmod' => $entry->lastModified()?->toAtomString()])
-            ->values();
+            ->values()
+            ->collect();
     }
 
     /**

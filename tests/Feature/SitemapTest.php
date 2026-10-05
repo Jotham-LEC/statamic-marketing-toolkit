@@ -1,5 +1,6 @@
 <?php
 
+use JothamLec\Seo\Reports\Runner;
 use JothamLec\Seo\SiteSeo;
 use Statamic\Events\EntryScheduleReached;
 use Statamic\Facades\Collection;
@@ -116,4 +117,17 @@ test('an entry whose scheduled date arrives is listed without waiting for the ne
     EntryScheduleReached::dispatch(Entry::query()->where('slug', 'soon')->first());
 
     expect($this->get('https://example.test/sitemap.xml')->getContent())->toContain('https://example.test/news/soon');
+});
+
+test('more entries than one read takes are all listed, once each', function () {
+    foreach (range(1, 501) as $i) {
+        Entry::make()->collection('pages')->slug('page-'.$i)->data(['title' => 'Page '.$i])->saveQuietly();
+    }
+
+    $locs = sitemapLocs($this->get('https://example.test/sitemap.xml')->getContent());
+    $report = app(Runner::class)->start();
+
+    expect($locs)->toHaveCount(501)->toBe(array_values(array_unique($locs)))
+        ->and($report->pages()->distinct()->count('url'))->toBe(501)
+        ->and($report->pages_total)->toBe(501);
 });

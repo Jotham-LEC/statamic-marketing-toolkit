@@ -68,13 +68,10 @@ class Runner
 
         $report = Report::query()->create(['settings' => $settings->all(), 'pages_total' => $targets->count()]);
 
-        $targets->chunk(500)->each(fn (Collection $chunk) => ReportPage::query()->insert($chunk->map(fn (EntryContract|TermContract $content) => [
+        $targets->chunk(500)->each(fn (Collection $chunk) => ReportPage::query()->insert($chunk->map(fn (array $page) => [
+            ...$page,
             'report_id' => $report->id,
-            'url' => $content->absoluteUrl(),
-            'content_type' => $content instanceof EntryContract ? 'entry' : 'term',
-            'content_id' => $content->id(),
-            'title' => (string) $content->get('title'),
-            'in_sitemap' => $sitemap->has($content->absoluteUrl()),
+            'in_sitemap' => $sitemap->has($page['url']),
         ])->values()->all()));
 
         if ($targets->isEmpty()) {
@@ -233,29 +230,47 @@ class Runner
     }
 
     /**
-     * Published entries and terms with an address, in the order they're checked.
+     * Published entries and terms with an address, in the order they're
+     * checked, as the rows of the report's pages. Entries are read in chunks
+     * and kept as rows, so a big site's entries needn't all be in memory.
      *
-     * @return Collection<int, EntryContract|TermContract>
+     * @return Collection<int, array{url: string, content_type: string, content_id: string, title: string}>
      */
     private function targets(ReportSettings $settings): Collection
     {
         $site = Site::current()->handle();
         $excluded = $settings->excludedCollections();
 
-        $entries = Entry::query()->where('site', $site)->whereStatus('published')->get()
+        $entries = Entry::query()->where('site', $site)->whereStatus('published')->orderBy('id')->lazy(500)
             ->filter(fn (EntryContract $entry) => ! in_array($entry->collectionHandle(), $excluded, true) && $entry->url() && ! $entry->isRedirect())
-            ->sortBy(fn (EntryContract $entry) => $entry->url());
+            ->map(fn (EntryContract $entry) => $this->row($entry))
+            ->collect()
+            ->sortBy('url');
 
         $terms = collect((array) config('seo.sitemap.taxonomies'))
             ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->get())
             ->map(fn ($term) => $term->in($site))
             ->filter(fn ($term) => $term?->url() && $term->queryEntries()->whereStatus('published')->count() > 0)
-            ->sortBy(fn ($term) => $term->url());
+            ->map(fn (TermContract $term) => $this->row($term))
+            ->sortBy('url');
 
         $targets = $entries->values()->merge($terms->values());
         $max = $settings->int('max_pages');
 
         return $max > 0 ? $targets->take($max)->values() : $targets;
+    }
+
+    /**
+     * @return array{url: string, content_type: string, content_id: string, title: string}
+     */
+    private function row(EntryContract|TermContract $content): array
+    {
+        return [
+            'url' => (string) $content->absoluteUrl(),
+            'content_type' => $content instanceof EntryContract ? 'entry' : 'term',
+            'content_id' => (string) $content->id(),
+            'title' => (string) $content->get('title'),
+        ];
     }
 
     private function content(ReportPage $page): EntryContract|TermContract|null
