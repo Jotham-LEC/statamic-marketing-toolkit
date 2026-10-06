@@ -8,12 +8,15 @@ use Inertia\Response;
 use JothamLec\Seo\Cp\Listing;
 use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\NotFound\Recorder;
+use JothamLec\Seo\Support\Sites;
 use Statamic\Facades\Action;
+use Statamic\Facades\Site;
 use Statamic\Facades\User;
 
 /**
  * Tools → SEO → 404s: the missing paths visitors hit, most recent first,
- * each with a "Create redirect" action.
+ * each with a "Create redirect" action. On a multi-site install, those of
+ * the selected site.
  */
 class NotFoundController
 {
@@ -36,13 +39,22 @@ class NotFoundController
     {
         $this->authorize();
 
+        $sites = Sites::options();
+
         return Listing::respond(
-            MissingPath::query(),
+            MissingPath::query()->shownOn(Site::selected()->handle()),
             $request,
-            ['last_seen_at' => 'Last seen', 'path' => 'Path', 'hits' => 'Hits', 'first_seen_at' => 'First seen', 'referrer' => 'Last linked from'],
+            [
+                'last_seen_at' => 'Last seen', 'path' => 'Path',
+                // The site column only where there is more than one.
+                ...(Sites::multiple() ? ['site' => 'Site'] : []),
+                'hits' => 'Hits', 'first_seen_at' => 'First seen', 'referrer' => 'Last linked from',
+            ],
             ['path', 'referrer'],
             fn (MissingPath $row) => [
                 'id' => $row->id,
+                // None: logged before there was more than one site.
+                'site' => $row->site === null ? '—' : ($sites[$row->site] ?? $row->site),
                 'path' => $row->path,
                 'hits' => $row->hits,
                 'referrer' => Recorder::webAddress($row->referrer),

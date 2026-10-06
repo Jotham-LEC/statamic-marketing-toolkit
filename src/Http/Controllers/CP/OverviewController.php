@@ -11,6 +11,8 @@ use JothamLec\Seo\SearchConsole\Client;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\SiteSeo;
+use JothamLec\Seo\Support\Sites;
+use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\Addon;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -19,7 +21,8 @@ use Statamic\Facades\User;
 /**
  * Tools → SEO: where the site stands (the latest report, redirects, recent
  * 404s, the brand defaults, the files it serves), each with a way into the
- * screen that changes it. Links the person may not use are left out.
+ * screen that changes it. Links the person may not use are left out. On a
+ * multi-site install, all of it for the site selected in the control panel.
  */
 class OverviewController
 {
@@ -28,9 +31,18 @@ class OverviewController
         $user = User::current();
         abort_unless($user?->can('view seo'), 403);
 
-        $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
+        $site = Site::selected()->handle();
+
+        // The selected site's brand values and addresses, not the control panel's domain's.
+        return Sites::as($site, fn () => $this->render($seo, $searchConsole, $user, $site));
+    }
+
+    private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
+    {
+        $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in($site);
         $addon = Addon::get('jotham-lec/statamic-co-seo');
-        $latest = Report::query()->where('status', Report::DONE)->latest('id')->first();
+        $latest = Report::query()->shownOn($site)->where('status', Report::DONE)->latest('id')->first();
+        $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
         return Inertia::render('seo::Overview', [
             'siteName' => $seo->settings()->siteName(),
@@ -51,13 +63,13 @@ class OverviewController
                 'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? $addon->settingsUrl() : null,
             ],
             'redirects' => $user->can('manage seo redirects') ? [
-                'active' => Redirect::query()->where('active', true)->count(),
-                'automatic' => Redirect::query()->where('active', true)->where('automatic', true)->count(),
+                'active' => $redirects()->count(),
+                'automatic' => $redirects()->where('automatic', true)->count(),
                 'url' => cp_route('seo.redirects.index'),
             ] : null,
             'notFound' => [
-                'paths' => MissingPath::query()->count(),
-                'recent' => MissingPath::query()->latest('last_seen_at')->limit(5)->get()
+                'paths' => MissingPath::query()->shownOn($site)->count(),
+                'recent' => MissingPath::query()->shownOn($site)->latest('last_seen_at')->limit(5)->get()
                     ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])->all(),
                 'url' => cp_route('seo.404s.index'),
             ],

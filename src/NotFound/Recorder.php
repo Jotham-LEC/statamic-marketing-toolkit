@@ -6,9 +6,12 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Support\Sites;
+use Statamic\Facades\Site;
 
 /**
- * Counts a 404 against its path. Bots (by user agent) and scanner probes (by
+ * Counts a 404 against its path (and its site, where there are several). Bots (by user agent) and scanner probes (by
  * path) are left out, and the table keeps at most `seo.not_found.max_rows`
  * paths, dropping one-off misses first, then the ones seen least recently.
  */
@@ -39,14 +42,15 @@ class Recorder
     {
         $path = $this->path($request);
 
-        if (strlen($path) > 768) {
+        if (strlen($path) > Redirect::MAX_SOURCE) {
             return;
         }
 
+        $site = Sites::scope(Site::current()->handle());
         $referrer = self::webAddress($request->headers->get('referer'));
         $now = now();
 
-        $updated = MissingPath::query()->where('path', $path)->update(array_filter([
+        $updated = MissingPath::query()->ofSite($site)->where('path', $path)->update(array_filter([
             'hits' => DB::raw('hits + 1'),
             'last_seen_at' => $now,
             'referrer' => $referrer,
@@ -57,10 +61,10 @@ class Recorder
         }
 
         try {
-            MissingPath::query()->create(['path' => $path, 'hits' => 1, 'referrer' => $referrer, 'first_seen_at' => $now, 'last_seen_at' => $now]);
+            MissingPath::query()->create(['site' => $site, 'path' => $path, 'hits' => 1, 'referrer' => $referrer, 'first_seen_at' => $now, 'last_seen_at' => $now]);
         } catch (UniqueConstraintViolationException) {
             // Another request recorded the same path a moment ago.
-            MissingPath::query()->where('path', $path)->increment('hits', 1, ['last_seen_at' => $now]);
+            MissingPath::query()->ofSite($site)->where('path', $path)->increment('hits', 1, ['last_seen_at' => $now]);
 
             return;
         }

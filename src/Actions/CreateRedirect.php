@@ -34,7 +34,8 @@ class CreateRedirect extends Action
 
     public function redirect($items, $values)
     {
-        return cp_route('seo.redirects.create', ['source' => $items->first()->path]);
+        // On the site the visitor missed it on.
+        return cp_route('seo.redirects.create', array_filter(['source' => $items->first()->path, 'site' => $items->first()->site]));
     }
 
     public function run($items, $values)

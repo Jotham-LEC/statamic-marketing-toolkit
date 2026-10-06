@@ -4,10 +4,13 @@ use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
+use JothamLec\Seo\Actions\CreateRedirect;
 use JothamLec\Seo\IndexNow\IndexNow;
+use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\Report;
 use JothamLec\Seo\Reports\Runner;
+use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
@@ -310,4 +313,54 @@ describe('reports', function () {
         $this->get(cp_route('seo.reports.index'))
             ->assertInertia(fn (AssertableInertia $page) => $page->has('reports', 1));
     });
+});
+
+test('the 404 log keeps each site\'s misses apart, and a redirect made from one starts on its site', function () {
+    $this->get('https://cothink.test/missing')->assertNotFound();
+    $this->get('https://cothink.test/missing')->assertNotFound();
+    $this->get('https://example.test/missing')->assertNotFound();
+
+    expect(MissingPath::query()->orderBy('site')->get(['site', 'path', 'hits'])->toArray())->toBe([
+        ['site' => 'cothinking', 'path' => '/missing', 'hits' => 2],
+        ['site' => 'default', 'path' => '/missing', 'hits' => 1],
+    ]);
+
+    $this->actingAs(cpUser(['view seo', 'manage seo redirects']));
+    session(['statamic.cp.selected-site' => 'cothinking']);
+    $listing = $this->getJson(cp_route('seo.404s.listing'));
+
+    expect($listing->json('data.*.site'))->toBe(['CoThinking'])
+        ->and($listing->json('meta.columns.*.field'))->toContain('site');
+
+    $row = MissingPath::query()->where('site', 'cothinking')->sole();
+    $this->postJson(cp_route('seo.actions.run'), ['action' => CreateRedirect::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])
+        ->assertJsonPath('redirect', cp_route('seo.redirects.create', ['source' => '/missing', 'site' => 'cothinking']));
+});
+
+test('the overview and the dashboard widget are of the site selected in the control panel', function () {
+    seoGlobal(['title_separator' => '|']);
+    seoGlobal(['title_separator' => '–'], 'cothinking');
+    Redirect::query()->create(['source' => '/everywhere', 'target' => '/x']);
+    Redirect::query()->create(['site' => 'cothinking', 'source' => '/here', 'target' => '/x']);
+    Redirect::query()->create(['site' => 'default', 'source' => '/there', 'target' => '/x']);
+    MissingPath::query()->create(['site' => 'default', 'path' => '/lost', 'first_seen_at' => now(), 'last_seen_at' => now()]);
+    MissingPath::query()->create(['site' => 'cothinking', 'path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()]);
+    Report::query()->create(['site' => 'default', 'settings' => [], 'status' => Report::DONE, 'score' => 50, 'summary' => ['scored' => 1]]);
+    $this->actingAs(cpUser(super: true));
+    session(['statamic.cp.selected-site' => 'cothinking']);
+
+    $this->get(cp_route('seo.index'))->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('siteName', 'CoThinking')
+            ->where('global.separator', ' – ')
+            ->where('files.0.url', 'https://cothink.test/sitemap.xml')
+            ->where('report.latest', null)
+            ->where('redirects.active', 2)
+            ->where('notFound.paths', 1)
+            ->where('notFound.recent.0.path', '/gone'));
+
+    $props = (new SeoWidget)->component()->toArray()['props'];
+
+    expect($props['report'])->toBeNull()
+        ->and(collect($props['notFound'])->pluck('path')->all())->toBe(['/gone']);
 });
