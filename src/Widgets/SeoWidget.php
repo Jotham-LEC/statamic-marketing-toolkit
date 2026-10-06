@@ -50,7 +50,7 @@ class SeoWidget extends Widget
     }
 
     /**
-     * @return list<array{path: string, hits: int, last_seen: string}>
+     * @return list<array{path: string, hits: int}>
      */
     protected function recentNotFound(): array
     {
@@ -59,7 +59,7 @@ class SeoWidget extends Widget
         }
 
         return MissingPath::query()->latest('last_seen_at')->limit((int) $this->config('limit', 5))->get()
-            ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits, 'last_seen' => $row->last_seen_at->toIso8601String()])
+            ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])
             ->all();
     }
 }

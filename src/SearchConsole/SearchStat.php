@@ -3,6 +3,7 @@
 namespace JothamLec\Seo\SearchConsole;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * One page's numbers from Google Search Console over the last import's
@@ -13,6 +14,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $impressions
  * @property float $ctr
  * @property float $position
+ * @property Carbon $from
+ * @property Carbon $to
+ * @property Carbon $fetched_at
  */
 class SearchStat extends Model
 {

@@ -42,7 +42,7 @@ class Csv
                 }
 
                 $row = [
-                    'source' => $cells[0] ?? '',
+                    'source' => $cells[0],
                     'target' => ($cells[1] ?? '') ?: null,
                     'status' => (int) (($cells[2] ?? '') ?: 301),
                     'active' => filter_var(($cells[3] ?? '') === '' ? true : $cells[3], FILTER_VALIDATE_BOOLEAN),

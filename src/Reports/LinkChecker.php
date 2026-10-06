@@ -3,7 +3,6 @@
 namespace JothamLec\Seo\Reports;
 
 use Illuminate\Http\Request;
-use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 use JothamLec\Seo\Redirects\Matcher;
 use Statamic\Facades\Asset;
@@ -63,6 +62,6 @@ class LinkChecker
         }
 
         // Statamic's front-end catch-all matches anything; it says nothing about the path.
-        return $route instanceof Route && ! str_contains($route->uri(), '{segments');
+        return ! str_contains($route->uri(), '{segments');
     }
 }

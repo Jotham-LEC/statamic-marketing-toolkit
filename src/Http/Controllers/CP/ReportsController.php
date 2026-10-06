@@ -95,6 +95,7 @@ class ReportsController
         $this->authorize('view seo');
 
         $labels = collect($report->summary['rules'] ?? [])->map->label->put('render', 'Page renders')->all();
+        /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
         $editUrls = [];
         $query = $report->pages()->getQuery();
 

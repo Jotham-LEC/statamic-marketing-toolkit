@@ -484,7 +484,7 @@ class SiteSeo
     {
         $types = $this->settings->list('publisher_type') ?: array_filter([$this->settings->string('publisher_type')]);
 
-        return array_values($types) ?: ['Organization'];
+        return $types ?: ['Organization'];
     }
 
     /**
