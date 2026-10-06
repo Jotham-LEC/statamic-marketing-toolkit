@@ -323,7 +323,8 @@ describe('reports', function () {
 });
 
 test('the 404 log keeps each site\'s misses apart, and a redirect made from one starts on its site', function () {
-    $this->get('https://cothink.test/missing')->assertNotFound();
+    // Kept out of a static cache, so the next visit is counted (and redirected) too.
+    $this->get('https://cothink.test/missing')->assertNotFound()->assertHeader('X-Statamic-Uncacheable', 'true');
     $this->get('https://cothink.test/missing')->assertNotFound();
     $this->get('https://example.test/missing')->assertNotFound();
 
