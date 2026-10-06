@@ -42,3 +42,19 @@ test('the separator gets a space on each side however it was typed', function (?
     'spaced' => [' – ', 'About – Acme'],
     'empty' => [null, 'About · Acme'],
 ]);
+
+test('--fields adds what a newer version brings, in the tabs the site kept', function () {
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => [
+        'brand' => ['display' => 'Brand', 'sections' => [['fields' => [['handle' => 'title_separator', 'field' => ['type' => 'text']]]]]],
+        'publisher' => ['display' => 'Publisher', 'sections' => [['fields' => [['handle' => 'publisher_type', 'field' => ['type' => 'select']]]]]],
+    ]])->save();
+
+    $this->artisan('statamic:seo:install')->assertSuccessful();
+    expect(Blueprint::find('globals.seo')->fields()->all()->keys())->not->toContain('street_address');
+
+    $this->artisan('statamic:seo:install', ['--fields' => true])->assertSuccessful();
+    $keys = Blueprint::find('globals.seo')->fields()->all()->keys();
+
+    expect($keys)->toContain('site_alternate_name', 'street_address', 'opening_hours', 'publisher_type')
+        ->not->toContain('og_background', 'google_verification');
+});

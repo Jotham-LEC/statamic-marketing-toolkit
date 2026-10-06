@@ -4,9 +4,12 @@ namespace JothamLec\Seo;
 
 use Closure;
 use Illuminate\Support\Collection;
+use JothamLec\Seo\Support\SchemaTypes;
 use JothamLec\Seo\Support\Text;
 use Statamic\Contracts\Assets\Asset;
+use Statamic\Contracts\Auth\User;
 use Statamic\Contracts\Entries\Entry;
+use Statamic\Contracts\Query\Builder;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Asset as Assets;
 use Statamic\Facades\Entry as Entries;
@@ -122,16 +125,13 @@ class SiteSeo
                 return ['url' => $this->absolute($url), 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
             }
 
-            $content = $context->content();
-
-            foreach (['seo', ...$this->collectionConfig($context, 'image_fields', [])] as $field) {
-                if ($content && $asset = $this->assetFrom($content, $field)) {
-                    return $this->cropped($asset);
-                }
+            if ($asset = $this->shareAsset($context)) {
+                return $this->cropped($asset);
             }
 
+            // The card shows the page's title, so that is what it says to someone who can't see it.
             if ($context->entry && $context->status < 400 && $url = $this->generatedImageUrl($context->entry)) {
-                return ['url' => $url, 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
+                return ['url' => $url, 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => $context->seo()['og_title'] ?? $this->contentTitle($context)];
             }
 
             if ($asset = $this->settings->asset('default_image')) {
@@ -140,6 +140,23 @@ class SiteSeo
 
             return null;
         });
+    }
+
+    /**
+     * The page's own uploaded share image: its SEO image, else an image field
+     * the collection names.
+     */
+    public function shareAsset(Context $context): ?Asset
+    {
+        $content = $context->content();
+
+        foreach ($content ? ['seo', ...$this->collectionConfig($context, 'image_fields', [])] : [] as $field) {
+            if ($asset = $this->assetFrom($content, $field)) {
+                return $asset;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -205,7 +222,8 @@ class SiteSeo
             return implode(', ', ['noindex', $nofollow ? 'nofollow' : 'follow']);
         }
 
-        return $nofollow ? 'nofollow' : (string) config('seo.robots.default');
+        // Not following links leaves the snippet and image previews as they were.
+        return $nofollow ? 'nofollow, '.config('seo.robots.default') : (string) config('seo.robots.default');
     }
 
     /**
@@ -304,43 +322,139 @@ class SiteSeo
     }
 
     /**
+     * The site, with its alternate name (Google's site names) when set.
+     *
      * @return array<string, mixed>
      */
     public function websiteNode(): array
     {
-        return [
+        return array_filter([
             '@type' => 'WebSite',
             '@id' => $this->home().'#website',
             'url' => $this->home(),
             'name' => $this->settings->siteName(),
+            'alternateName' => $this->settings->string('site_alternate_name'),
             'publisher' => ['@id' => $this->publisherId()],
-        ];
+        ]);
     }
 
     /**
-     * The organisation, local business or person behind the site, from the
-     * global set.
+     * Who is behind the site, from the global set: one or more schema.org
+     * types (an Organization by default; a Person; a Store, an
+     * EducationalOrganization…), with only the properties those types accept.
      *
      * @return array<string, mixed>
      */
     public function publisherNode(): array
     {
+        $types = $this->publisherTypes();
+        $person = SchemaTypes::isPerson($types);
+        $organization = SchemaTypes::isOrganization($types);
+        $local = SchemaTypes::isLocalBusiness($types);
         $logo = $this->settings->asset('publisher_logo');
-        $type = $this->settings->string('publisher_type', 'Organization');
+        $logoUrl = $logo ? $this->absolute((string) $logo->url()) : null;
 
         return array_filter([
-            '@type' => $type,
+            '@type' => count($types) === 1 ? $types[0] : $types,
             '@id' => $this->publisherId(),
             'name' => $this->settings->string('publisher_name') ?? $this->settings->siteName(),
+            'alternateName' => $this->settings->string('publisher_alternate_name'),
+            'description' => $this->settings->string('publisher_description'),
             'url' => $this->home(),
-            $type === 'Person' ? 'image' : 'logo' => $logo ? $this->absolute((string) $logo->url()) : null,
-            'jobTitle' => $type === 'Person' ? $this->settings->string('job_title') : null,
+            'logo' => $organization ? $logoUrl : null,
+            'image' => $person || $local ? $logoUrl : null,
+            'jobTitle' => $person ? $this->settings->string('job_title') : null,
             'telephone' => $this->settings->string('telephone'),
             'email' => $this->settings->string('email'),
-            'areaServed' => $this->settings->string('area_served'),
-            'priceRange' => $this->settings->string('price_range'),
+            'address' => $this->postalAddress(),
+            'areaServed' => $organization ? $this->settings->string('area_served') : null,
+            'foundingDate' => $organization ? $this->settings->string('founding_date') : null,
+            'contactPoint' => $organization ? $this->contactPoints() : null,
+            'priceRange' => $local ? $this->settings->string('price_range') : null,
+            'geo' => $local ? $this->geo() : null,
+            'openingHoursSpecification' => $local ? $this->openingHours() : null,
             'sameAs' => $this->settings->list('same_as') ?: null,
-        ], fn ($value) => $value !== null);
+        ], fn ($value) => $value !== null && $value !== []);
+    }
+
+    /**
+     * The publisher's schema.org types: a multiple select that also takes
+     * types typed in, or a single type saved before it allowed several.
+     *
+     * @return list<string>
+     */
+    public function publisherTypes(): array
+    {
+        $types = $this->settings->list('publisher_type') ?: array_filter([$this->settings->string('publisher_type')]);
+
+        return array_values($types) ?: ['Organization'];
+    }
+
+    /**
+     * @return array<string, string>|null
+     */
+    protected function postalAddress(): ?array
+    {
+        $address = array_filter([
+            'streetAddress' => $this->settings->string('street_address'),
+            'addressLocality' => $this->settings->string('address_locality'),
+            'addressRegion' => $this->settings->string('address_region'),
+            'postalCode' => $this->settings->string('postal_code'),
+            'addressCountry' => $this->settings->string('address_country'),
+        ]);
+
+        return $address === [] ? null : ['@type' => 'PostalAddress', ...$address];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function geo(): ?array
+    {
+        $latitude = $this->settings->string('latitude');
+        $longitude = $this->settings->string('longitude');
+
+        return is_numeric($latitude) && is_numeric($longitude)
+            ? ['@type' => 'GeoCoordinates', 'latitude' => (float) $latitude, 'longitude' => (float) $longitude]
+            : null;
+    }
+
+    /**
+     * Opening hours from a grid of days, opening and closing times.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function openingHours(): array
+    {
+        return collect($this->settings->rows('opening_hours'))
+            ->filter(fn (array $row) => filled($row['days'] ?? null) && filled($row['opens'] ?? null) && filled($row['closes'] ?? null))
+            ->map(fn (array $row) => [
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => array_values((array) $row['days']),
+                'opens' => (string) $row['opens'],
+                'closes' => (string) $row['closes'],
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Contact points (customer service, sales…) from a grid.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function contactPoints(): array
+    {
+        return collect($this->settings->rows('contact_points'))
+            ->filter(fn (array $row) => filled($row['telephone'] ?? null) || filled($row['email'] ?? null))
+            ->map(fn (array $row) => array_filter([
+                '@type' => 'ContactPoint',
+                'contactType' => $row['contact_type'] ?? null,
+                'telephone' => $row['telephone'] ?? null,
+                'email' => $row['email'] ?? null,
+            ]))
+            ->values()
+            ->all();
     }
 
     /**
@@ -352,14 +466,39 @@ class SiteSeo
             return null;
         }
 
+        $type = $context->isHome() ? 'WebPage' : $this->collectionConfig($context, 'page_schema', 'WebPage');
+        $image = $this->image($context);
+
         return array_filter([
-            '@type' => $context->isHome() ? 'WebPage' : $this->collectionConfig($context, 'page_schema', 'WebPage'),
+            '@type' => $type,
             '@id' => $this->url($context).'#webpage',
             'url' => $this->url($context),
             'name' => $this->ogTitle($context),
             'description' => $this->description($context),
             'isPartOf' => ['@id' => $this->home().'#website'],
             'inLanguage' => Site::current()->lang(),
+            // Where Google takes a page's thumbnail for Search and Discover from.
+            'primaryImageOfPage' => $image ? ['@type' => 'ImageObject', 'url' => $image['url'], 'width' => $image['width'], 'height' => $image['height']] : null,
+            // A profile page is about someone (Google requires it): the entry, as a Person.
+            'mainEntity' => $type === 'ProfilePage' ? $this->profileEntity($context) : null,
+        ]);
+    }
+
+    /**
+     * Who a ProfilePage is about: a Person named by the entry, with its
+     * address and picture. Override for an Organization, or to point at the
+     * publisher.
+     *
+     * @return array<string, mixed>
+     */
+    public function profileEntity(Context $context): array
+    {
+        return array_filter([
+            '@type' => 'Person',
+            '@id' => $this->url($context).'#person',
+            'name' => $this->contentTitle($context),
+            'url' => $context->content()?->absoluteUrl(),
+            'image' => $this->image($context)['url'] ?? null,
         ]);
     }
 
@@ -418,13 +557,60 @@ class SiteSeo
             '@id' => $this->url($context).'#article',
             'headline' => $this->contentTitle($context),
             'description' => $this->description($context),
-            'image' => $this->image($context)['url'] ?? null,
+            'image' => $this->articleImages($context) ?: null,
             'datePublished' => $entry->hasDate() ? $entry->date()->toAtomString() : null,
             'dateModified' => $entry->lastModified()?->toAtomString(),
-            'author' => ['@id' => $this->publisherId()],
+            'author' => $this->authors($context) ?: ['@id' => $this->publisherId()],
             'publisher' => ['@id' => $this->publisherId()],
             'mainEntityOfPage' => ['@id' => $this->canonical($context) ?? $this->url($context)],
         ]);
+    }
+
+    /**
+     * An article's images: an uploaded one in the three shapes Google asks for
+     * (16:9, 4:3, 1:1), else the share image.
+     *
+     * @return list<string>
+     */
+    public function articleImages(Context $context): array
+    {
+        if ($asset = $this->shareAsset($context)) {
+            $width = $this->imageWidth();
+
+            return [
+                $this->cropped($asset, $width, (int) round($width * 9 / 16))['url'],
+                $this->cropped($asset, $width, (int) round($width * 3 / 4))['url'],
+                $this->cropped($asset, $width, $width)['url'],
+            ];
+        }
+
+        return array_filter([$this->image($context)['url'] ?? null]);
+    }
+
+    /**
+     * The people who wrote an article, from the field the collection names
+     * (`author_field`): entries (a team collection) or users. Empty when there
+     * is none, and the publisher stands as the author.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function authors(Context $context): array
+    {
+        $field = $this->collectionConfig($context, 'author_field');
+        $value = $field ? $context->entry?->augmentedValue($field)->value() : null;
+        $value = $value instanceof Builder ? $value->get() : $value;
+        $items = is_iterable($value) ? collect($value) : collect(array_filter([$value]));
+
+        return $items
+            ->map(fn ($author) => match (true) {
+                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->get('title'), 'url' => $author->absoluteUrl()],
+                $author instanceof User => ['@type' => 'Person', 'name' => (string) ($author->name() ?: $author->get('name')), 'url' => $author->get('url')],
+                default => null,
+            })
+            ->filter(fn ($author) => $author && filled($author['name']))
+            ->map(fn (array $author) => array_filter($author))
+            ->values()
+            ->all();
     }
 
     /**
@@ -703,14 +889,17 @@ class SiteSeo
      *
      * @return array{url: string, width: int, height: int, alt: ?string}
      */
-    protected function cropped(Asset $asset): array
+    protected function cropped(Asset $asset, ?int $width = null, ?int $height = null): array
     {
+        $width ??= $this->imageWidth();
+        $height ??= $this->imageHeight();
+
         // Fluently, not as an array: only fit() turns `crop_focal` into Glide's
         // `crop-{x}-{y}`. Glide takes an unknown fit as `contain`, which neither
         // fills the card nor enlarges a small image.
         $url = Image::manipulate($asset)
-            ->width($this->imageWidth())
-            ->height($this->imageHeight())
+            ->width($width)
+            ->height($height)
             ->fit('crop_focal')
             ->format('jpg')
             ->quality(85)
@@ -720,8 +909,8 @@ class SiteSeo
 
         return [
             'url' => $this->absolute((string) $url),
-            'width' => $this->imageWidth(),
-            'height' => $this->imageHeight(),
+            'width' => $width,
+            'height' => $height,
             'alt' => filled($alt) ? (string) $alt : null,
         ];
     }

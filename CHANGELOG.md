@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.6.0 – 2026-10-06
+
+Structured data checked against Google's current documentation (September 2026).
+
+### Added
+- **The publisher can be any schema.org type, or several**: a Store, an EducationalOrganization, EducationalOrganization and LocalBusiness… (typed in, or picked from common ones). New fields: other name, description, founding date, address, contact points, and for a local business coordinates and opening hours. Each property is printed only for types that accept it.
+- **Other site name** (`WebSite.alternateName`), which Google's site names use.
+- **`primaryImageOfPage`** on the page node: Google takes Search and Discover thumbnails from it (March 2026).
+- **Article authors** from a collection's `author_field` (an entries or users field), as Persons with a name and address; the publisher remains the author otherwise.
+- **Article images in three shapes**, 16:9, 4:3 and 1:1, from an uploaded image, as Google recommends.
+- `php please seo:install --fields` adds the new fields to an existing SEO & brand blueprint, in the tabs it still has.
+
+### Fixed
+- A ProfilePage (`page_schema`) has the `mainEntity` Google requires: the entry, as a Person (`profileEntity()`).
+- `priceRange` and `areaServed` are no longer printed for a Person, and `priceRange` only for a local business.
+- A page set not to follow links keeps the default snippet and large-image robots values.
+- A generated share card has alt text (its title), printed as `og:image:alt` and `twitter:image:alt`; `twitter:image:alt` is printed for uploads with alt text too.
+
+### Changed
+- The docs say that FAQPage markup is still valid but that Google no longer shows FAQ rich results (2026).
+
+### Upgrading
+Run `php please seo:install --fields` to add the new SEO & brand fields to an installed site. A publisher type saved before as one value still reads.
+
 ## 0.5.1 – 2026-10-06
 
 ### Fixed

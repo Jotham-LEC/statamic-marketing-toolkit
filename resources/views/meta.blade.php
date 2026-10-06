@@ -42,6 +42,9 @@
 @endif
 @if ($meta->image)
 <meta name="twitter:image" content="{{ $meta->image['url'] }}">
+@if ($meta->image['alt'])
+<meta name="twitter:image:alt" content="{{ $meta->image['alt'] }}">
+@endif
 @endif
 @if ($jsonLd = $meta->jsonLd())
 <script type="application/ld+json">{!! $jsonLd !!}</script>

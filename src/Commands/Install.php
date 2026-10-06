@@ -10,6 +10,7 @@ use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
+use Statamic\Fields\Blueprint as BlueprintContents;
 use Statamic\Structures\Page;
 
 /**
@@ -21,9 +22,24 @@ use Statamic\Structures\Page;
  */
 class Install extends Command
 {
+    /** Common choices; any other schema.org type can be typed in. */
+    private const array PUBLISHER_TYPES = [
+        'Organization' => 'Organization',
+        'Corporation' => 'Corporation',
+        'EducationalOrganization' => 'Educational organization',
+        'NGO' => 'Non-profit',
+        'LocalBusiness' => 'Local business',
+        'Store' => 'Store',
+        'ProfessionalService' => 'Professional service',
+        'Restaurant' => 'Restaurant',
+        'Person' => 'Person',
+    ];
+
+    private const array DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image}';
+    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image} {--fields : Add fields a newer version brings to an existing blueprint}';
 
     protected $description = 'Create the SEO & brand global set';
 
@@ -45,6 +61,8 @@ class Install extends Command
                 ->save();
 
             $this->components->info("Blueprint globals.{$handle} created.");
+        } elseif ($this->option('fields') && $added = $this->addMissingFields(Blueprint::find("globals.{$handle}"), $container)) {
+            $this->components->info('Fields added: '.implode(', ', $added).'.');
         }
 
         if (! GlobalSet::findByHandle($handle)) {
@@ -60,6 +78,44 @@ class Install extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Adds to an existing blueprint the fields it lacks, each in its tab and
+     * section as a fresh install has them. A tab the site removed stays
+     * removed: only tabs the blueprint still has receive fields.
+     *
+     * @return list<string> the fields added
+     */
+    private function addMissingFields(BlueprintContents $blueprint, string $container): array
+    {
+        $contents = $blueprint->contents();
+        $existing = $blueprint->fields()->all()->keys()->all();
+        $added = [];
+
+        foreach (self::tabs($container) as $tab => $config) {
+            if (! isset($contents['tabs'][$tab])) {
+                continue;
+            }
+
+            foreach ($config['sections'] as $index => $section) {
+                foreach ($section['fields'] as $field) {
+                    if (in_array($field['handle'], $existing, true)) {
+                        continue;
+                    }
+
+                    $contents['tabs'][$tab]['sections'][$index] ??= array_diff_key($section, ['fields' => true]) + ['fields' => []];
+                    $contents['tabs'][$tab]['sections'][$index]['fields'][] = $field;
+                    $added[] = $field['handle'];
+                }
+            }
+        }
+
+        if ($added !== []) {
+            $blueprint->setContents($contents)->save();
+        }
+
+        return $added;
     }
 
     /**
@@ -110,19 +166,46 @@ class Install extends Command
                 $field('title_separator', ['type' => 'text', 'display' => 'Title separator', 'width' => 50, 'placeholder' => '·', 'instructions' => 'Between the page title and the site name, with a space on each side.']),
                 $field('default_description', ['type' => 'textarea', 'display' => 'Default description', 'character_limit' => 160, 'instructions' => 'For pages with no description and no first paragraph.']),
                 $field('default_image', $asset('Default share image', 'For pages without an image or a generated card. 1200×630.')),
+                $field('site_alternate_name', ['type' => 'text', 'display' => 'Other site name', 'width' => 50, 'instructions' => 'A shorter name or acronym search engines may show instead.']),
                 $field('twitter_handle', ['type' => 'text', 'display' => 'X handle', 'width' => 50, 'prepend' => '@']),
             ]]]],
-            'publisher' => ['display' => 'Publisher', 'sections' => [['instructions' => 'Who is behind the site, for search engines (JSON-LD).', 'fields' => [
-                $field('publisher_type', ['type' => 'select', 'display' => 'Type', 'width' => 50, 'default' => 'Organization', 'options' => ['Organization' => 'Organization', 'LocalBusiness' => 'Local business', 'Person' => 'Person']]),
-                $field('publisher_name', ['type' => 'text', 'display' => 'Name', 'width' => 50]),
-                $field('publisher_logo', $asset('Logo or portrait')),
-                $field('job_title', ['type' => 'text', 'display' => 'Job title', 'width' => 50, 'if' => ['publisher_type' => 'equals Person']]),
-                $field('telephone', ['type' => 'text', 'display' => 'Telephone', 'width' => 50]),
-                $field('email', ['type' => 'text', 'input_type' => 'email', 'display' => 'Email', 'width' => 50]),
-                $field('area_served', ['type' => 'text', 'display' => 'Area served', 'width' => 50]),
-                $field('price_range', ['type' => 'text', 'display' => 'Price range', 'width' => 50, 'placeholder' => '$$']),
-                $field('same_as', ['type' => 'list', 'display' => 'Profiles elsewhere', 'instructions' => 'Full URLs: LinkedIn, Instagram, Google Business Profile…']),
-            ]]]],
+            'publisher' => ['display' => 'Publisher', 'sections' => [
+                ['instructions' => 'Who is behind the site, for search engines (JSON-LD). Each value is printed only where its type accepts it.', 'fields' => [
+                    $field('publisher_type', ['type' => 'select', 'display' => 'Type', 'width' => 50, 'multiple' => true, 'taggable' => true, 'default' => ['Organization'], 'options' => self::PUBLISHER_TYPES, 'instructions' => 'The most specific schema.org type, or two (EducationalOrganization and LocalBusiness). Type any other schema.org type.']),
+                    $field('publisher_name', ['type' => 'text', 'display' => 'Name', 'width' => 50]),
+                    $field('publisher_alternate_name', ['type' => 'text', 'display' => 'Other name', 'width' => 50, 'instructions' => 'An abbreviation or former name.']),
+                    $field('founding_date', ['type' => 'date', 'display' => 'Founded', 'width' => 50]),
+                    $field('publisher_description', ['type' => 'textarea', 'display' => 'Description']),
+                    $field('publisher_logo', $asset('Logo or portrait')),
+                    $field('job_title', ['type' => 'text', 'display' => 'Job title', 'width' => 50, 'if' => ['publisher_type' => 'contains Person']]),
+                    $field('telephone', ['type' => 'text', 'display' => 'Telephone', 'width' => 50]),
+                    $field('email', ['type' => 'text', 'input_type' => 'email', 'display' => 'Email', 'width' => 50]),
+                    $field('area_served', ['type' => 'text', 'display' => 'Area served', 'width' => 50]),
+                    $field('same_as', ['type' => 'list', 'display' => 'Profiles elsewhere', 'instructions' => 'Full URLs: LinkedIn, Instagram, Google Business Profile…']),
+                    $field('contact_points', ['type' => 'grid', 'display' => 'Contact points', 'mode' => 'table', 'add_row' => 'Add a contact point', 'fields' => [
+                        $field('contact_type', ['type' => 'text', 'display' => 'For', 'placeholder' => 'customer service']),
+                        $field('telephone', ['type' => 'text', 'display' => 'Telephone']),
+                        $field('email', ['type' => 'text', 'display' => 'Email']),
+                    ]]),
+                ]],
+                ['display' => 'Address', 'instructions' => 'Required for a local business with premises; leave empty for one that only serves an area.', 'fields' => [
+                    $field('street_address', ['type' => 'text', 'display' => 'Street address']),
+                    $field('address_locality', ['type' => 'text', 'display' => 'City', 'width' => 50]),
+                    $field('address_region', ['type' => 'text', 'display' => 'State or region', 'width' => 50]),
+                    $field('postal_code', ['type' => 'text', 'display' => 'Postcode', 'width' => 50]),
+                    $field('address_country', ['type' => 'text', 'display' => 'Country code', 'width' => 50, 'placeholder' => 'MY, AU, US…']),
+                ]],
+                ['display' => 'Local business', 'instructions' => 'For a Store, a Restaurant or another LocalBusiness type.', 'fields' => [
+                    $field('price_range', ['type' => 'text', 'display' => 'Price range', 'width' => 33, 'placeholder' => '$$']),
+                    $field('latitude', ['type' => 'text', 'display' => 'Latitude', 'width' => 33]),
+                    $field('longitude', ['type' => 'text', 'display' => 'Longitude', 'width' => 33]),
+                    $field('opening_hours', ['type' => 'grid', 'display' => 'Opening hours', 'mode' => 'table', 'add_row' => 'Add hours', 'fields' => [
+                        $field('days', ['type' => 'checkboxes', 'display' => 'Days', 'inline' => true, 'options' => array_combine(self::DAYS, array_map(fn (string $day) => substr($day, 0, 3), self::DAYS))]),
+                        $field('opens', ['type' => 'time', 'display' => 'Opens']),
+                        $field('closes', ['type' => 'time', 'display' => 'Closes']),
+                    ]]),
+                ]],
+            ]],
             'share_cards' => ['display' => 'Share cards', 'sections' => [['instructions' => 'Colours and picture for generated share images.', 'fields' => [
                 $field('og_background', ['type' => 'color', 'display' => 'Background', 'width' => 33]),
                 $field('og_text', ['type' => 'color', 'display' => 'Text', 'width' => 33]),

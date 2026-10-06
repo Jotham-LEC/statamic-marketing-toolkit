@@ -32,10 +32,11 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
     'essays' => [
         'og_type' => 'article',            // og:type (default 'website')
         'schema' => 'Article',             // adds an Article, NewsArticle or BlogPosting node
-        'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage…)
+        'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage: about the entry, as a Person)
         'description_fields' => ['intro'], // tried before the body's first paragraph
         'image_fields' => ['hero'],        // tried before the generated card
-        'faq_field' => 'faqs',             // a grid of question / answer rows → FAQPage
+        'faq_field' => 'faqs',             // a grid of question / answer rows → FAQPage (valid markup; Google shows no FAQ results since 2026)
+        'author_field' => 'authors',       // an entries or users field → the Article's authors (else the publisher)
         'og_template' => 'default',        // a key of og.templates
     ],
 ],
@@ -119,5 +120,6 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 
 | Command | |
 |---|---|
+| `php please seo:install [--container=] [--fields]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has. |
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:report` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. |

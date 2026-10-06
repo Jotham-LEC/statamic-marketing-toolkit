@@ -16,9 +16,10 @@ The overview: the latest report's score, recent 404s, redirects, and the brand d
 - **Title separator**: what goes between the page title and the site name, with a space added on each side. Leave empty for "·".
 - **Default description**: used for pages that have no description and no text to borrow one from.
 - **Default share image**: shown when a page is shared and has no picture of its own. 1200 × 630 pixels works best.
+- **Other site name**: a shorter name or acronym search engines may show instead of the site name.
 - **X handle**: your account on X (Twitter), without the @.
 
-**Publisher tab.** Who is behind the site, so search engines can show it correctly: an organisation, a local business or a person, with name, logo, phone, email, area served, price range, and links to your profiles elsewhere (LinkedIn, Instagram, Google Business Profile…).
+**Publisher tab.** Who is behind the site, so search engines can show it correctly. Pick the most specific **type** (a Store rather than a Local business; an Educational organization), or two (Educational organization and Local business), or type any other schema.org type. Then the name, another name, when it was founded, a description, logo or portrait, phone, email, area served, profiles elsewhere and contact points. **Address**: needed for a business people visit; leave it empty for one that only delivers or serves an area. **Local business**: price range, map coordinates and opening hours. Each value only goes out where the type accepts it, so filling in more than applies does no harm.
 
 **Share cards tab.** The background, text and accent colours of the generated share pictures, and a logo or portrait to put on every card.
 

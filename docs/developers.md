@@ -73,6 +73,7 @@ The methods you're most likely to override:
 | `shouldNoindex(Context)` | Extra reasons to noindex (an empty listing, a thank-you page). Return `parent::shouldNoindex($context) || …`. |
 | `ogType(Context)` | og:type. |
 | `graph(Context)` | Every JSON-LD node. Usually you override one of the node methods instead. |
+| `publisherTypes()`, `profileEntity(Context)`, `authors(Context)`, `articleImages(Context)` | The publisher's schema.org types; who a ProfilePage is about; an Article's authors; its images in three shapes. |
 | `websiteNode()`, `publisherNode()`, `webPageNode(Context)`, `breadcrumbNode(Context)`, `articleNode(Context)`, `faqNode(Context)` | One node each; return `null` to leave it out. |
 | `extraNodes(Context)` | Your own nodes (Product, Offer, Event…). Empty by default. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |

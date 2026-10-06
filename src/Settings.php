@@ -35,6 +35,23 @@ class Settings
         return array_values(array_filter(is_array($value) ? $value : [], fn ($item) => filled($item) && is_string($item)));
     }
 
+    /**
+     * A grid's rows, without empty values: e.g. opening hours or contact points.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function rows(string $key): array
+    {
+        $value = $this->variables()?->get($key);
+
+        return collect(is_array($value) ? $value : [])
+            ->filter(fn ($row) => is_array($row))
+            ->map(fn (array $row) => array_filter($row, fn ($cell) => filled($cell)))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     public function asset(string $key): ?Asset
     {
         $value = $this->variables()?->augmentedValue($key)?->value();

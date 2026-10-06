@@ -51,10 +51,11 @@ return [
     |
     |   'og_type' => 'article',            // og:type; default 'website'
     |   'schema' => 'Article',             // adds an Article / NewsArticle / BlogPosting node
-    |   'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage…)
+    |   'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage: about the entry, as a Person)
     |   'description_fields' => ['intro'], // tried before the body's first paragraph
     |   'image_fields' => ['hero'],        // tried before the generated card
-    |   'faq_field' => 'faqs',             // a grid of question / answer → FAQPage
+    |   'faq_field' => 'faqs',             // a grid of question / answer → FAQPage (valid markup; Google shows no FAQ results since 2026)
+    |   'author_field' => 'authors',       // an entries or users field → the Article's authors (else the publisher)
     |   'og_template' => 'default',        // a key of og.templates
     |
     */
