@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
@@ -34,7 +35,8 @@ uses(TestCase::class)
         // Nothing leaves the test run: IndexNow is faked where it is tested.
         Http::preventStrayRequests();
         // Production env makes Laravel's CSRF check live; the CP sends the token.
-        $this->withoutMiddleware([PreventRequestForgery::class, VerifyCsrfToken::class]);
+        // PreventRequestForgery is Laravel 13's; ValidateCsrfToken is Laravel 12's.
+        $this->withoutMiddleware([PreventRequestForgery::class, ValidateCsrfToken::class, VerifyCsrfToken::class]);
 
         Site::setSites(['default' => ['name' => 'Acme', 'url' => 'https://example.test/', 'locale' => 'en_US']]);
         AssetContainer::make('assets')->disk('assets')->save();

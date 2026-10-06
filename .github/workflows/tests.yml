@@ -14,10 +14,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The oldest PHP, Statamic and Laravel composer.json allows. Not
-          # --prefer-lowest across the board: Laravel 12.40's lowest Guzzle
-          # doesn't load on its own.
-          - { php: '8.3', statamic: '6.34.0', laravel: '^12.40', db: sqlite, imagick: true }
+          # The oldest PHP and Statamic composer.json allows, on Laravel 12 (12.69
+          # is its first release without a security advisory, which Composer
+          # won't install). Not --prefer-lowest across the board: the lowest
+          # Guzzle doesn't load with Laravel 12.
+          - { php: '8.3', statamic: '6.34.0', laravel: '^12.69', db: sqlite, imagick: true }
           - { php: '8.4', statamic: latest, db: sqlite, imagick: true }
           - { php: '8.4', statamic: latest, db: pgsql, imagick: true }
           # Favicons drawn with GD; the share-card tests skip.

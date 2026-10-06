@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.19.0 – 2026-10-07
+
+Fixes from a second audit, a licence, and the requirements stated and tested.
+
+### Upgrading
+- **Statamic 6.34 or later.** Earlier 6.x releases fail parts of the addon (addon settings, Features, lead tracking), and 6.30 and earlier carry a security advisory (CVE-2026-71293) that Composer won't install.
+- **PHP's `curl`, `dom`, `mbstring` and `openssl` extensions are required** in `composer.json`; almost every PHP build has them. `imagick` (share cards, favicons) or `gd` (favicons) are suggested. See the README's Requirements.
+- **`seo.tracking.class` is gone.** A site that set it binds its subclass in its own service provider instead: `$this->app->bind(Tracking::class, MyTracking::class)` (see the developers' docs).
+- A Search Console key uploaded in the control panel is now stored encrypted. Keys saved before keep working; after a change of `APP_KEY`, upload the key again.
+
+### Security
+- **Redirects keep to the sites a user may work on.** With several sites, someone who may manage redirects but only on some sites can no longer list, export, edit, import or delete another site's rules; rules for all sites stay theirs to manage.
+- Search Console shows people who may only view SEO whether each site is connected, not its property, and lists only the sites they may access.
+- A new Search Console key for the same account signs in afresh instead of reusing the old key's token, and an empty token is never kept.
+
+### Fixed
+- **Saving a redirect no longer rewrites its target's query.** Every save of a campaign-capable form rebuilt the query string: `?q=$1` became `?q=%241` (the wildcard stopped filling in), `a.b` became `a_b`, `+` became a space, a bare `?flag` gained `=`. Only the `utm_*` tags are touched now, and only when they change.
+- **A CSV cell in quotes may hold a line break**; it split the row in two. Errors now name the row rather than the line.
+- Importing a large CSV checks for redirect loops against rules read once, not the whole table per row.
+- **Sites that share a domain keep their own Search Console numbers** (`example.com/` and `example.com/fr/`): each page counts for the site whose address it starts with.
+- The CSV export lists each address's all-sites rule first on Postgres too.
+- A report runs one step at a time, however many tabs or workers ask, and a second click on **Run** while it starts queues no second run.
+- The 404 log keeps a one-off address only when one of the site's own pages links to it; a made-up `Referer` header no longer protects it.
+- Answering the "add a redirect?" question twice (a double click) counts the first answer only.
+- The control panel preview could say a generated share card wasn't generated when the second ticked over between two reads.
+
+### Changed
+- `LICENSE.md` sets out the terms: Free on any number of sites, Pro per production site for a major version (a 0.x licence also covers 1.x), with the third-party software it relies on.
+- The docs list every request the addon sends out, what goes with it and when (configuration → What it sends where).
+- The Composer package leaves out the tests, docs and build files.
+- Errors behind a silent fallback (edition, Features, Search Console, favicons) are reported to the log; a failed Search Console check shows a plain message, not the raw exception.
+
+### Developers
+- `SiteSeo` is split into traits by area (`src/Concerns`); every method keeps its name, visibility and signature, so subclasses work unchanged. New overridable `hiddenOutsideProduction()`.
+- The SEO & brand blueprint `seo:install` writes lives in `resources/install/seo.yaml`.
+- `composer test` runs the suite in parallel (about a minute); GitHub Actions runs it on PHP 8.3 with Statamic 6.34, PHP 8.4 with the latest, on Postgres and without Imagick, plus Pint and PHPStan.
+- Dead code out: duplicate registrations Statamic autoloads, thirteen identical rule labels, unused methods and constants, config fallbacks the merged config always has.
+
 ## 0.18.4 – 2026-10-06
 
 Fixes from an audit: access, speed, accessibility and a leaner control panel.
