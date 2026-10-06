@@ -12,7 +12,7 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## The editions
 
-Marketing Toolkit comes as **Free** and **Pro**. Pro is $75 per site, a perpetual licence.
+Marketing Toolkit comes as **Free** and **Pro**. Pro is $39 per site. A licence covers every release of one major version (all of 1.x, for example), and one bought during 0.x also covers 1.x. A new major version needs a new licence.
 
 | | Free | Pro |
 |---|:---:|:---:|

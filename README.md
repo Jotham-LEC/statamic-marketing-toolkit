@@ -24,7 +24,7 @@ The marketing fundamentals for a Statamic website, in one addon: SEO with a scor
 
 ## Free and Pro
 
-The free edition is free on any site. Pro is **$75 per site, a perpetual licence**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. Local and staging sites don't need a licence. The free edition shows Pro's features in the control panel as cards you can upgrade from; nothing you set up is lost when you switch. See [the editions](docs/getting-started.md#the-editions) for the full list.
+The free edition is free on any site. Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. A licence covers every release of one major version, and one bought during 0.x also covers 1.x; a new major version needs a new licence. Local and staging sites don't need a licence. The free edition shows Pro's features in the control panel as cards you can upgrade from; nothing you set up is lost when you switch. See [the editions](docs/getting-started.md#the-editions) for the full list.
 
 ## Documentation
 

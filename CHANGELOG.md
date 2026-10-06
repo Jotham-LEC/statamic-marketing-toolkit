@@ -2,7 +2,14 @@
 
 ## 0.18.1 – 2026-10-06
 
-Two fixes from Co-SEO 0.13.2 and 0.13.3 that 0.18.0 left out.
+Two fixes from Co-SEO 0.13.2 and 0.13.3 that 0.18.0 left out, two security fixes, and a new price.
+
+### Changed
+- **Pro is $39 per site.** A licence covers every release of one major version; one bought during 0.x also covers 1.x.
+
+### Security
+- The Search Console setup screen printed the uploaded key's email as HTML, so a crafted key could run a script for other admins. The email must now be an email address, and the screen escapes it.
+- The Redirects and 404s action endpoint ran any action registered on the site, if that action didn't check permissions itself. It now runs only the addon's own actions (Delete, Create redirect).
 
 ### Fixed
 - With Runway installed, the Redirects and 404s listings answered 500: Statamic asks every registered action whether it applies to a row, and Runway's Publish and Unpublish assume any database row is one of theirs. The listings now offer only the addon's own actions (Delete, Create redirect).
