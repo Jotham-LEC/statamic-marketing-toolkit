@@ -40,14 +40,15 @@ class Seo extends SiteSeo
 {
     public function extraNodes(Context $context): array
     {
-        if ($context->entry?->collectionHandle() !== 'products') {
+        if ($context->entry?->collectionHandle() !== 'events') {
             return [];
         }
 
         return [[
-            '@type' => 'Product',
+            '@type' => 'Event',
             'name' => $context->entry->get('title'),
-            'offers' => ['@type' => 'Offer', 'price' => $context->entry->get('price'), 'priceCurrency' => 'USD'],
+            'startDate' => $context->entry->date()->toAtomString(),
+            'location' => ['@type' => 'Place', 'name' => $context->entry->get('venue')],
         ]];
     }
 }
@@ -74,8 +75,8 @@ The methods you're most likely to override:
 | `ogType(Context)` | og:type. |
 | `graph(Context)` | Every JSON-LD node. Usually you override one of the node methods instead. |
 | `publisherTypes()`, `profileEntity(Context)`, `authors(Context)`, `articleImages(Context)` | The publisher's schema.org types; who a ProfilePage is about; an Article's authors; its images in three shapes. |
-| `websiteNode()`, `publisherNode()`, `webPageNode(Context)`, `breadcrumbNode(Context)`, `articleNode(Context)`, `faqNode(Context)` | One node each; return `null` to leave it out. |
-| `extraNodes(Context)` | Your own nodes (Product, Offer, Event…). Empty by default. |
+| `websiteNode()`, `publisherNode()`, `webPageNode(Context)`, `breadcrumbNode(Context)`, `articleNode(Context)`, `productNode(Context)`, `faqNode(Context)` | One node each; return `null` to leave it out. Products come from a collection's `product` config. |
+| `extraNodes(Context)` | Your own nodes (Event, Course…). Empty by default. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
 | `robotsTxt()` | robots.txt. |
@@ -170,4 +171,4 @@ Tests run as production with an `array` cache that serializes, and render pages 
 
 The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
 
-Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-co-seo`. Note the change in [CHANGELOG.md](../CHANGELOG.md).
+Release: `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`; sites update with `composer update jotham-lec/statamic-co-seo`. Note the change in [CHANGELOG.md](../CHANGELOG.md).

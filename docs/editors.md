@@ -137,7 +137,7 @@ What the checks look for:
 | Image descriptions | 1 | Describe each image in its "alt text" (in the asset's settings), for people who can't see it and for search engines. |
 | Share image | 1 | Pages without a picture when shared. |
 | Linked from another page | 2 | A page in the sitemap that no other page links to (a warning): link to it from a related page, so search engines and readers find it. The home page is exempt. |
-| Links to other sites | 1 | Off unless your administrator turns it on, since it asks each linked site: links to pages that no longer exist (404, 410) or to sites that are gone. |
+| Links to other sites | 1 | Off unless your administrator turns it on, since it asks each linked site: links to pages that no longer exist (404, 410), even after a redirect, or to sites that are gone. Links to `localhost` or a private network aren't checked. |
 
 A **warning** counts half. Pages set to hide from search engines are listed but not scored.
 

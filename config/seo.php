@@ -25,8 +25,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | The global set editors fill in (create it with `php please seo:install`):
-    | site name, default description and image, the publisher for JSON-LD,
-    | verification codes, robots.txt lines and the OG card colours.
+    | title separator, default description and image, the publisher for
+    | JSON-LD, verification codes, robots.txt lines and the OG card colours.
+    | The site's name is Statamic's own (Settings → Sites, else APP_NAME).
     |
     */
 
@@ -203,9 +204,9 @@ return [
     |--------------------------------------------------------------------------
     |
     | A page without an uploaded share image gets a card drawn at
-    | /og/{uri}.png (home: /og.png) by simonhamp/the-og. Editors override the
-    | card's text or template per entry in the SEO fieldset, or replace it
-    | outright with an uploaded image.
+    | /og/{uri}.png (home: /og.png) by simonhamp/the-og. Editors change the
+    | card's text per entry in the SEO fieldset, or replace it outright with
+    | an uploaded image; a collection picks a template with `og_template`.
     |
     */
 

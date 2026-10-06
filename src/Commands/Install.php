@@ -15,8 +15,8 @@ use Statamic\Structures\Page;
 
 /**
  * `php please seo:install`: creates the "SEO & brand" global set and its
- * blueprint through Statamic's API, so editors can fill in the site name,
- * defaults, publisher, verification codes, robots.txt and the
+ * blueprint through Statamic's API, so editors can fill in the title
+ * separator, defaults, publisher, verification codes, robots.txt and the
  * share-card colours in the control panel. Safe to rerun: it adds nothing
  * that already exists.
  */

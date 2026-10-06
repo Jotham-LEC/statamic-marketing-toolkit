@@ -17,9 +17,7 @@ final class Uris
      */
     public static function normalizePath(string $path): string
     {
-        $path = '/'.trim(rawurldecode((string) parse_url($path, PHP_URL_PATH)), '/');
-
-        return $path;
+        return '/'.trim(rawurldecode((string) parse_url($path, PHP_URL_PATH)), '/');
     }
 
     public static function forget(): void

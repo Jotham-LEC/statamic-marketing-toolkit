@@ -77,6 +77,6 @@ vendor/bin/pest    # needs PHP's imagick extension
 vendor/bin/pint
 ```
 
-Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-co-seo`.
+Release: `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`; sites update with `composer update jotham-lec/statamic-co-seo`.
 
 Licence: proprietary, all rights reserved.

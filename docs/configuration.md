@@ -68,7 +68,7 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
 | `robots_txt` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins. |
 
-The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another site, and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
+The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `seo.sitemap` changes, and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
 ### Redirects and the 404 log
 

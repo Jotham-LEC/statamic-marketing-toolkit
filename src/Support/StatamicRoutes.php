@@ -4,17 +4,13 @@ namespace JothamLec\Seo\Support;
 
 /**
  * Paths Statamic answers itself, outside the front end: the control panel,
- * its action routes (`/!/…`) and, if asked, Glide's images.
+ * and its action routes (`/!/…`).
  */
 final class StatamicRoutes
 {
-    public static function owns(string $path, bool $images = false): bool
+    public static function owns(string $path): bool
     {
         $prefixes = [config('statamic.cp.route', 'cp'), config('statamic.routes.action', '!')];
-
-        if ($images) {
-            $prefixes[] = config('statamic.assets.image_manipulation.route', 'img');
-        }
 
         $path = '/'.ltrim($path, '/');
 

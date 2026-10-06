@@ -14,8 +14,7 @@ use Statamic\Contracts\Entries\Entry;
  *
  * What the card says, in order of precedence: the entry's SEO "Card title" /
  * "Card subtitle", else its title and the same description its meta tags
- * carry. Which template: the entry's SEO "Card template", else the
- * collection's `og_template`, else `default`.
+ * carry. Which template: the collection's `og_template`, else `default`.
  */
 class Generator
 {

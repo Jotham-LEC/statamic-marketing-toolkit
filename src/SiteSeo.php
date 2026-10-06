@@ -836,7 +836,7 @@ class SiteSeo
     }
 
     /**
-     * Project-specific nodes (Product, Offer, Event…). Empty by default.
+     * Project-specific nodes (Event, Course…). Empty by default.
      *
      * @return list<array<string, mixed>>
      */
