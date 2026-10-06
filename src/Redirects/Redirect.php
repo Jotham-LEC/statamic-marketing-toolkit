@@ -171,15 +171,15 @@ class Redirect extends Model
         $site = is_string($data['site'] ?? null) && $data['site'] !== '' ? $data['site'] : null;
 
         return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId), [
-            'source.required' => 'Which address should be redirected?',
-            'source.starts_with' => 'Start with / — the part of the address after the domain.',
-            'source.not_regex' => 'Leave out the query string (?…); addresses are matched without it.',
-            'source.regex' => 'An address can’t contain line breaks or other control characters.',
-            'target.required_unless' => 'Where should it go? Only “410 Gone” needs no target.',
-            'target.regex' => 'Start with / for a page on this site, or https:// for another site.',
-            'target.not_regex' => 'An address can’t contain line breaks or other control characters.',
-            'status.in' => 'Choose 301, 302 or 410.',
-            'site.in' => 'Choose one of the sites, or none for every site.',
+            'source.required' => __('seo::validation.redirect.source_required'),
+            'source.starts_with' => __('seo::validation.redirect.source_starts_with'),
+            'source.not_regex' => __('seo::validation.redirect.source_query'),
+            'source.regex' => __('seo::validation.redirect.control_characters'),
+            'target.required_unless' => __('seo::validation.redirect.target_required'),
+            'target.regex' => __('seo::validation.redirect.target_format'),
+            'target.not_regex' => __('seo::validation.redirect.control_characters'),
+            'status.in' => __('seo::validation.redirect.status'),
+            'site.in' => __('seo::validation.redirect.site'),
         ]);
     }
 
@@ -195,7 +195,7 @@ class Redirect extends Model
                 'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
                 function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId) {
                     if (self::forSource((string) $value, $ignoreId, $site)) {
-                        $fail('Another redirect already starts from this address.');
+                        $fail(__('seo::validation.redirect.source_taken'));
                     }
                 },
             ],
@@ -206,10 +206,10 @@ class Redirect extends Model
                     preg_match_all('/\$(\d+)/', (string) $value, $used);
 
                     if ($used[1] !== [] && max(array_map('intval', $used[1])) > $wildcards) {
-                        $fail('The target uses a $ number the source has no * for.');
+                        $fail(__('seo::validation.redirect.target_number'));
                     } elseif (preg_match('#^https?://[^/]*\$\d#i', (string) $value)) {
                         // What a visitor typed would choose the site they are sent to (`https://example.com$1` → example.com.evil.test).
-                        $fail('A $ number can only come after the domain and a /.');
+                        $fail(__('seo::validation.redirect.target_number_domain'));
                     } elseif ($loop = self::loop($source, (string) $value, $site, $ignoreId)) {
                         $fail($loop);
                     }
@@ -234,7 +234,7 @@ class Redirect extends Model
         }
 
         if (self::pointsBack($source, $target)) {
-            return 'This sends the address back to itself.';
+            return __('seo::validation.redirect.points_back');
         }
 
         $source = self::normalize($source);
@@ -284,8 +284,8 @@ class Redirect extends Model
 
             if (self::key($path) === self::key($source)) {
                 return $hops === 1
-                    ? 'The redirect from that address leads back here, so the two would loop.'
-                    : "The redirects from that address lead back here after {$hops} steps, so visitors would go round in a loop.";
+                    ? __('seo::validation.redirect.loop')
+                    : __('seo::validation.redirect.loop_steps', ['steps' => $hops]);
             }
         }
 

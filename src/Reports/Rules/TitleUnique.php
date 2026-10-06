@@ -15,7 +15,7 @@ class TitleUnique extends Rule
 
     public function label(): string
     {
-        return 'Unique title';
+        return 'seo::reports.rules.title_unique';
     }
 
     public function weight(): int
@@ -29,6 +29,6 @@ class TitleUnique extends Rule
 
         return $others === []
             ? Result::pass()
-            : Result::fail('Same title as '.$this->list($others).'.');
+            : Result::fail('seo::reports.messages.title_same', ['pages' => $this->listed($others)]);
     }
 }

@@ -9,8 +9,10 @@ use Inertia\Response;
 use JothamLec\Seo\Cp\Listing;
 use JothamLec\Seo\Reports\Report;
 use JothamLec\Seo\Reports\ReportPage;
+use JothamLec\Seo\Reports\Result;
 use JothamLec\Seo\Reports\Runner;
 use JothamLec\Seo\Reports\RunReportStep;
+use JothamLec\Seo\Support\Edition;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
@@ -23,6 +25,10 @@ use Statamic\Facades\User;
  * a queue worker that endpoint also does the work, one step per request, so
  * a report finishes on the sync queue without any request timing out. On a
  * multi-site install the list and "Run report" are of the selected site.
+ *
+ * Reports keep their checks' names and messages as translation keys (or
+ * plain text, from a site's own checks and older reports); they're
+ * translated here, on their way to the screen.
  */
 class ReportsController
 {
@@ -30,7 +36,7 @@ class ReportsController
     {
         $this->authorize('view seo');
 
-        $addon = Addon::get('jotham-lec/statamic-co-seo');
+        $addon = Addon::get(Edition::PACKAGE);
 
         return Inertia::render('seo::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
@@ -75,7 +81,7 @@ class ReportsController
         $this->authorize('view seo');
 
         $rules = collect($report->summary['rules'] ?? [])
-            ->map(fn (array $rule, string $handle) => [...$rule, 'handle' => $handle])
+            ->map(fn (array $rule, string $handle) => [...$rule, 'label' => __($rule['label']), 'handle' => $handle])
             ->sortByDesc(fn (array $rule) => [$rule['fail'] * $rule['weight'], $rule['warn']])
             ->values()
             ->all();
@@ -96,7 +102,7 @@ class ReportsController
     {
         $this->authorize('view seo');
 
-        $labels = collect($report->summary['rules'] ?? [])->map->label->put('render', 'Page renders')->all();
+        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('seo::reports.rules.render'))->all();
         /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
         $editUrls = [];
         $query = $report->pages()->getQuery();
@@ -110,7 +116,7 @@ class ReportsController
         return Listing::respond(
             $query,
             $request,
-            ['score' => 'Score', 'title' => 'Page', 'in_sitemap' => 'In sitemap'],
+            ['score' => __('seo::reports.cp.score'), 'title' => __('seo::reports.cp.page'), 'in_sitemap' => __('seo::reports.cp.in_sitemap')],
             ['title', 'url'],
             // Not an arrow function: it must see $editUrls once preload has filled it.
             function (ReportPage $page) use ($labels, &$editUrls) {
@@ -124,7 +130,11 @@ class ReportsController
                     'noindex' => $page->facts()->noindex(),
                     'issues' => collect($page->results ?? [])
                         ->reject(fn ($result) => $result['status'] === 'pass')
-                        ->map(fn ($result, $handle) => ['label' => $labels[$handle] ?? $handle, ...$result])
+                        ->map(fn ($result, $handle) => [
+                            'label' => $labels[$handle] ?? $handle,
+                            'status' => $result['status'],
+                            'message' => Result::translate($result['message'], $result['params'] ?? []),
+                        ])
                         ->sortBy(fn ($issue) => $issue['status'] === 'fail' ? 0 : 1)
                         ->values()
                         ->all(),
@@ -148,7 +158,7 @@ class ReportsController
             'score' => $report->score,
             'pages_total' => $report->pages_total,
             'pages_done' => $report->pages_done,
-            'error' => $report->error,
+            'error' => $report->error === null ? null : __($report->error),
             'created_at' => $report->created_at->toIso8601String(),
             'finished_at' => $report->finished_at?->toIso8601String(),
             'url' => cp_route('seo.reports.show', $report),

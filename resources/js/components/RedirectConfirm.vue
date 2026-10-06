@@ -22,16 +22,16 @@ function answer(choice) {
 <template>
     <ConfirmationModal
         :open="true"
-        title="This page’s address changes"
-        button-text="Add redirect"
-        cancel-text="Don’t add"
+        :title="__('seo::cp.confirm.title')"
+        :button-text="__('seo::cp.confirm.add')"
+        :cancel-text="__('seo::cp.confirm.dont_add')"
         @confirm="answer('add')"
         @cancel="answer('skip')"
     >
-        <p class="mb-3">Saving moves the page:</p>
+        <p class="mb-3">{{ __('seo::cp.confirm.moves') }}</p>
         <p class="mb-1 font-mono text-sm break-all">{{ from }}</p>
         <p class="mb-3 font-mono text-sm break-all">→ {{ to }}</p>
-        <p class="mb-4">Add a 301 redirect from the old address, so links to it keep working?</p>
-        <Button size="sm" variant="ghost" text="Don’t save yet" @click="answer('cancel')" />
+        <p class="mb-4">{{ __('seo::cp.confirm.question') }}</p>
+        <Button size="sm" variant="ghost" :text="__('seo::cp.confirm.not_yet')" @click="answer('cancel')" />
     </ConfirmationModal>
 </template>

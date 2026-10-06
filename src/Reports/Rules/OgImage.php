@@ -15,7 +15,7 @@ class OgImage extends Rule
 
     public function label(): string
     {
-        return 'Share image';
+        return 'seo::reports.rules.og_image';
     }
 
     public function weight(): int
@@ -26,7 +26,7 @@ class OgImage extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return $page->ogImage === null
-            ? Result::fail('No og:image: links shared on social media show no picture.')
+            ? Result::fail('seo::reports.messages.og_image_missing')
             : Result::pass();
     }
 }

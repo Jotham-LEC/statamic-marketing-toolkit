@@ -15,7 +15,7 @@ class DescriptionLength extends Rule
 
     public function label(): string
     {
-        return 'Description length';
+        return 'seo::reports.rules.description_length';
     }
 
     public function weight(): int
@@ -26,16 +26,16 @@ class DescriptionLength extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->description === null) {
-            return Result::fail('No meta description; search engines will pick text from the page.');
+            return Result::fail('seo::reports.messages.description_missing');
         }
 
         $length = mb_strlen($page->description);
         [$min, $max] = [$site->settings->int('description_min'), $site->settings->int('description_max')];
 
         return match (true) {
-            $length < $min => Result::warn("{$length} characters; aim for {$min}–{$max}."),
-            $length > $max => Result::warn("{$length} characters; aim for {$min}–{$max}. Longer ones are cut off."),
-            default => Result::pass("{$length} characters."),
+            $length < $min => Result::warn('seo::reports.messages.description_short', ['count' => $length, 'min' => $min, 'max' => $max]),
+            $length > $max => Result::warn('seo::reports.messages.description_long', ['count' => $length, 'min' => $min, 'max' => $max]),
+            default => Result::pass('seo::reports.messages.characters', ['count' => $length]),
         };
     }
 }

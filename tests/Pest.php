@@ -7,14 +7,18 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Http;
 use JothamLec\Seo\Commands\Install;
 use JothamLec\Seo\Context;
+use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\Meta;
 use JothamLec\Seo\Reports\ExternalLinkChecker;
 use JothamLec\Seo\SiteSeo;
 use JothamLec\Seo\Tests\TestCase;
 use Statamic\Contracts\Entries\Entry as EntryContract;
+use Statamic\Contracts\Taxonomies\Term;
+use Statamic\CP\Navigation\NavItem;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
+use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Role;
@@ -59,7 +63,7 @@ function entryIn(string $collection, string $slug, array $data = [], ?string $da
 /**
  * @param  array<string, mixed>  $overrides
  */
-function metaFor(?EntryContract $entry, string $uri = '/', array $overrides = [], int $status = 200): Meta
+function metaFor(EntryContract|Term|null $entry, string $uri = '/', array $overrides = [], int $status = 200): Meta
 {
     // Bound as the app's request too: Statamic works out the current site from it.
     app()->instance('request', $request = Request::create(absoluteTestUrl($uri)));
@@ -110,6 +114,40 @@ function multisite(): void
 
     Collection::findByHandle('home')->sites(['default', 'cothinking'])->save();
     Collection::findByHandle('pages')->sites(['default', 'cothinking'])->save();
+}
+
+/**
+ * One site in four languages: English (US) on example.test, French under
+ * /fr/, British English under /uk/, German on its own domain. Home and pages
+ * are on every site; a localization names its origin.
+ */
+function multilang(): void
+{
+    config(['statamic.editions.pro' => true, 'statamic.system.multisite' => true]);
+
+    Site::setSites([
+        'default' => ['name' => 'Acme', 'url' => 'https://example.test/', 'locale' => 'en_US'],
+        'fr' => ['name' => 'Acme', 'url' => 'https://example.test/fr/', 'locale' => 'fr_FR'],
+        'uk' => ['name' => 'Acme', 'url' => 'https://example.test/uk/', 'locale' => 'en_GB'],
+        'de' => ['name' => 'Acme', 'url' => 'https://de.example.test/', 'locale' => 'de_DE'],
+    ]);
+
+    Collection::findByHandle('home')->sites(['default', 'fr', 'uk', 'de'])->save();
+    Collection::findByHandle('pages')->sites(['default', 'fr', 'uk', 'de'])->save();
+}
+
+/**
+ * $origin in another language: an entry on $site that names it as its origin.
+ *
+ * @param  array<string, mixed>  $data
+ */
+function translationOf(EntryContract $origin, string $site, string $slug, array $data = []): EntryContract
+{
+    $entry = Entry::make()->collection($origin->collectionHandle())->locale($site)->origin($origin)->slug($slug)
+        ->data(['title' => ucfirst(str_replace('-', ' ', $slug)), ...$data]);
+    $entry->save();
+
+    return $entry;
 }
 
 /**
@@ -196,4 +234,20 @@ function fakeDns(array $hosts): void
             return array_values((array) ($this->hosts[$host] ?? []));
         }
     });
+}
+
+/**
+ * The CP navigation's items under Tools, keyed by name, as the user sees them.
+ *
+ * @return Illuminate\Support\Collection<string, NavItem>
+ */
+function toolsNav(): Illuminate\Support\Collection
+{
+    // AddonTestCase mocks the nav after the addon has extended the real one.
+    Nav::swap(new Statamic\CP\Navigation\Nav);
+    Navigation::register();
+
+    $tools = collect(Nav::build())->firstWhere('display', 'Tools');
+
+    return collect($tools['items'] ?? [])->keyBy(fn ($item) => $item->display());
 }

@@ -15,7 +15,7 @@ class Canonical extends Rule
 
     public function label(): string
     {
-        return 'Canonical address';
+        return 'seo::reports.rules.canonical';
     }
 
     public function weight(): int
@@ -26,15 +26,15 @@ class Canonical extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->canonical === null) {
-            return Result::fail('No canonical link: search engines may split this page’s ranking across its addresses.');
+            return Result::fail('seo::reports.messages.canonical_missing');
         }
 
         if (! preg_match('#^https?://#i', $page->canonical)) {
-            return Result::fail("The canonical link isn’t a full address: {$page->canonical}.");
+            return Result::fail('seo::reports.messages.canonical_relative', ['url' => $page->canonical]);
         }
 
         if (rtrim($page->canonical, '/') !== rtrim($url, '/')) {
-            return Result::pass("Points elsewhere: {$page->canonical}. Right for a piece first published there.");
+            return Result::pass('seo::reports.messages.canonical_elsewhere', ['url' => $page->canonical]);
         }
 
         return Result::pass();

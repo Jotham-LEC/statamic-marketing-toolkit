@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.17.0 – 2026-10-06
+
+Co-SEO comes in two editions, Free and Pro; pages link to their other languages (hreflang); and every word in the control panel can be translated. On the Statamic Marketplace from this version.
+
+### Upgrading
+- **Keep every feature: set Pro.** A site that updates without it runs as Free, which turns off Search Console, reports, generated share cards, automatic 301s, the 404 log, CSV import and export, and the dashboard widget. In `config/statamic/editions.php`:
+  ```php
+  'addons' => ['jotham-lec/statamic-co-seo' => 'pro'],
+  ```
+  A live site on Pro needs a licence from the [Marketplace](https://statamic.com/addons/jothamlec/co-seo). Nothing is deleted either way: reports, the 404 log and Search Console's numbers stay in their tables, and come back with Pro.
+- **Several languages on one domain**: a sitemap now lists every site on its domain, so `example.com/sitemap.xml` includes the pages under `/fr/`. Sites on their own domains are unchanged.
+- **SEO fields per language**: the `seo` fieldset's fields are now `localizable`. A localization keeps using its origin's values until someone edits its own.
+- No new migrations.
+
+### Added
+- **Editions.** `free` (the default) and `pro`, chosen in `config/statamic/editions.php`. Free: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with counters, redirects by hand (wildcards, 410), several sites, IndexNow and `SiteSeo` overrides. Pro adds Search Console, reports (scheduled, link checks, `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, and the dashboard widget. In Free, Tools → SEO shows a card for each Pro feature, linking to the Marketplace, and Pro's control panel addresses answer 404. `JothamLec\Seo\Support\Edition::pro()` tells code which it is.
+- **hreflang.** With several sites, a page gets a `<link rel="alternate" hreflang>` for each language it is published in (its entry's origin and localizations, or a term on each site of its taxonomy that has entries there), itself included, with `x-default`; the sitemap carries the same as `<xhtml:link>`. Drafts, noindexed and unlisted versions are left out, and a page that is noindexed or canonical elsewhere gets none. Codes are the site's language, or its full locale (`en-GB`) where two sites share one. Config `seo.hreflang.enabled` and `seo.hreflang.x_default` (a site handle, or `false`). New `SiteSeo` methods: `alternates()`, `contentAlternates()`, `localizations()`, `hreflangCodes()`, `xDefaultSite()`, `localeAlternates()`, `contentSite()`, `sitemapSites()`.
+- `og:locale:alternate` for each of a page's other languages.
+- **A control panel that can be translated.** Every string is in `lang/en` (`cp.php`, `fields.php`, `reports.php`, `validation.php`, `frontend.php`), under the `seo::` namespace; publish them with `--tag=seo-translations` and copy the folder to another language. Reports are stored as keys and shown in the reader's language; older reports show as they were written.
+- **Tools → SEO → Search Console** (Pro): its own screen, with the setup steps, then the connection: the key, each site's property, the last import, the pages imported, **Import now** and **Disconnect**. The overview shows the numbers once connected, otherwise a link to it.
+- Search Console's check explains a key or service account Google reports as disabled, with the guide to enabling it, and the setup's first step says what to do when an organization policy blocks new keys.
+
+### Changed
+- The addon is called **Co-SEO** in the control panel and on the Marketplace. The package name, the `seo::` namespace, config and routes are unchanged.
+- `og:locale`, the WebPage node's `inLanguage` and the "Page N" title suffix follow the content's own site (its language), not the site of the domain the request came in on, as the control panel preview does.
+- The Search Console tab is gone from Tools → Addons → SEO; the property is set on the Search Console screen and kept in the same settings.
+- "Imported 1 page." instead of "Imported 1 pages."
+
 ## 0.16.0 – 2026-10-06
 
 Fields in a page builder's sets.

@@ -62,7 +62,7 @@ class Report extends Command
         $this->newLine(2);
 
         if ($report->status !== SeoReport::DONE) {
-            $this->components->error("Report #{$report->id} failed: {$report->error}");
+            $this->components->error("Report #{$report->id} failed: ".__((string) $report->error));
 
             return self::FAILURE;
         }
@@ -71,7 +71,7 @@ class Report extends Command
         $this->components->info("Report #{$report->id}: score ".($report->score ?? '–')." / 100 over {$summary['scored']} pages ({$summary['noindex']} hidden from search engines, {$summary['errors']} that didn’t render).");
 
         $this->table(['Check', 'Failing', 'Warnings'], collect($summary['rules'] ?? [])
-            ->map(fn (array $rule) => [$rule['label'], $rule['fail'], $rule['warn']])
+            ->map(fn (array $rule) => [__($rule['label']), $rule['fail'], $rule['warn']])
             ->values()
             ->all());
 

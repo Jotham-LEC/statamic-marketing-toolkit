@@ -15,7 +15,7 @@ class BrokenLinks extends Rule
 
     public function label(): string
     {
-        return 'Links within the site';
+        return 'seo::reports.rules.broken_links';
     }
 
     public function weight(): int
@@ -26,11 +26,11 @@ class BrokenLinks extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->brokenLinks !== []) {
-            return Result::fail('Links to pages that don’t exist: '.implode(', ', array_slice($page->brokenLinks, 0, 5)).(count($page->brokenLinks) > 5 ? ' and more' : '').'.');
+            return Result::fail('seo::reports.messages.links_broken', ['links' => $this->listed($page->brokenLinks, 5, paths: false)]);
         }
 
         if ($page->redirectedLinks !== []) {
-            return Result::warn('Links that go through a redirect (link to the new address instead): '.implode(', ', array_slice($page->redirectedLinks, 0, 5)).'.');
+            return Result::warn('seo::reports.messages.links_redirected', ['links' => $this->listed($page->redirectedLinks, 5, paths: false)]);
         }
 
         return Result::pass();

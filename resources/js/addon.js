@@ -7,6 +7,7 @@ import Overview from './pages/Overview.vue';
 import RedirectForm from './pages/RedirectForm.vue';
 import Report from './pages/Report.vue';
 import Reports from './pages/Reports.vue';
+import SearchConsole from './pages/SearchConsole.vue';
 import Redirects from './pages/Redirects.vue';
 
 /**
@@ -49,7 +50,8 @@ function confirmRedirect(payload) {
     const axios = Statamic.$app.config.globalProperties.$axios;
     const reference = referenceFor(payload);
 
-    if (!reference) return Promise.resolve();
+    // Automatic redirects are Pro: the free edition has nothing to ask.
+    if (!reference || !Statamic.$config.get('seo')?.pro) return Promise.resolve();
 
     return axios
         .post(cp_url('seo/redirects/check'), { reference, values: payload.values })
@@ -68,7 +70,7 @@ function confirmRedirect(payload) {
                 modal.on('skip', () => answer(false));
                 modal.on('cancel', () => {
                     modal.destroy();
-                    reject('Not saved.');
+                    reject(__('seo::cp.confirm.not_saved'));
                 });
             });
         })
@@ -86,6 +88,7 @@ Statamic.booting(() => {
     Statamic.$inertia.register('seo::NotFound', NotFound);
     Statamic.$inertia.register('seo::Reports', Reports);
     Statamic.$inertia.register('seo::Report', Report);
+    Statamic.$inertia.register('seo::SearchConsole', SearchConsole);
 
     router.on('navigate', (event) => {
         page = event.detail.page;

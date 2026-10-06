@@ -4,60 +4,62 @@ fields:
     handle: seo_preview
     field:
       type: seo_preview
-      display: 'Search and share preview'
-      instructions: 'How this page shows in Google and when shared, with the defaults filled in. Updates as you type.'
+      localizable: true
+      display: 'seo::fields.seo.seo_preview.display'
+      instructions: 'seo::fields.seo.seo_preview.instructions'
       listable: false
   -
     handle: seo
     field:
       type: group
-      display: SEO
+      localizable: true
+      display: 'seo::fields.seo.seo.display'
       fullscreen: false
-      instructions: 'Leave any field empty to use the default.'
+      instructions: 'seo::fields.seo.seo.instructions'
       fields:
         -
           handle: title
           field:
             type: text
-            display: 'Title'
+            display: 'seo::fields.seo.title.display'
             character_limit: 70
-            instructions: 'Replaces the whole `<title>`. Empty: "{Title} · {Site}".'
+            instructions: 'seo::fields.seo.title.instructions'
         -
           handle: description
           field:
             type: textarea
-            display: 'Description'
+            display: 'seo::fields.seo.description.display'
             character_limit: 160
-            instructions: 'Empty: the entry''s description, else its first paragraph.'
+            instructions: 'seo::fields.seo.description.instructions'
         -
           handle: image
           field:
             type: assets
-            display: 'Share image'
+            display: 'seo::fields.seo.image.display'
             max_files: 1
             mode: list
-            instructions: 'Replaces the generated card. Cropped to 1200×630.'
+            instructions: 'seo::fields.seo.image.instructions'
         -
           handle: og_title
           field:
             type: text
-            display: 'Card title'
+            display: 'seo::fields.seo.og_title.display'
             width: 50
-            instructions: 'Text on the generated card. Empty: the title.'
+            instructions: 'seo::fields.seo.og_title.instructions'
         -
           handle: og_subtitle
           field:
             type: text
-            display: 'Card subtitle'
+            display: 'seo::fields.seo.og_subtitle.display'
             width: 50
-            instructions: 'Empty: the description.'
+            instructions: 'seo::fields.seo.og_subtitle.instructions'
         -
           handle: canonical
           field:
             type: text
             input_type: url
-            display: 'Canonical URL'
-            instructions: 'Only for a piece first published elsewhere: the original''s address.'
+            display: 'seo::fields.seo.canonical.display'
+            instructions: 'seo::fields.seo.canonical.instructions'
             validate:
               - nullable
               - 'url:http,https'
@@ -65,33 +67,33 @@ fields:
           handle: noindex
           field:
             type: toggle
-            display: 'Hide from search engines'
+            display: 'seo::fields.seo.noindex.display'
             width: 33
         -
           handle: nofollow
           field:
             type: toggle
-            display: 'Do not follow links'
+            display: 'seo::fields.seo.nofollow.display'
             width: 33
         -
           handle: nosnippet
           field:
             type: toggle
-            display: 'No snippet'
+            display: 'seo::fields.seo.nosnippet.display'
             width: 33
-            instructions: 'Show no text from this page in results, nor in AI Overviews and AI Mode.'
+            instructions: 'seo::fields.seo.nosnippet.instructions'
         -
           handle: max_snippet
           field:
             type: integer
-            display: 'Snippet length'
+            display: 'seo::fields.seo.max_snippet.display'
             width: 33
-            instructions: 'At most this many characters quoted. Empty: no limit.'
+            instructions: 'seo::fields.seo.max_snippet.instructions'
         -
           handle: sitemap
           field:
             type: toggle
-            display: 'In sitemap'
+            display: 'seo::fields.seo.sitemap.display'
             default: true
             width: 33
         -
@@ -99,5 +101,5 @@ fields:
           field:
             type: code
             mode: javascript
-            display: 'Extra JSON-LD'
-            instructions: 'A JSON object or array of objects, added to the page''s @graph.'
+            display: 'seo::fields.seo.json_ld.display'
+            instructions: 'seo::fields.seo.json_ld.instructions'

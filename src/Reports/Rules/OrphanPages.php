@@ -21,7 +21,7 @@ class OrphanPages extends Rule
 
     public function label(): string
     {
-        return 'Linked from another page';
+        return 'seo::reports.rules.orphan_pages';
     }
 
     public function weight(): int
@@ -35,6 +35,6 @@ class OrphanPages extends Rule
             return Result::pass();
         }
 
-        return Result::warn('No other page links here; link to it from a related page.');
+        return Result::warn('seo::reports.messages.orphan');
     }
 }

@@ -17,6 +17,9 @@ class OgImageController
 {
     public function __invoke(Generator $generator, ?string $path = null): Response
     {
+        // A cached route can outlive the setting (or the edition).
+        abort_unless(config('seo.og.enabled'), 404);
+
         $entry = Entry::findByUri('/'.trim((string) $path, '/'), Site::current()->handle());
         $entry = $entry instanceof Page ? $entry->entry() : $entry;
 

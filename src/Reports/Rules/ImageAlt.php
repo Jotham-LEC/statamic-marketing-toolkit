@@ -15,7 +15,7 @@ class ImageAlt extends Rule
 
     public function label(): string
     {
-        return 'Image descriptions';
+        return 'seo::reports.rules.image_alt';
     }
 
     public function weight(): int
@@ -29,8 +29,8 @@ class ImageAlt extends Rule
 
         return match (true) {
             $missing === 0 => Result::pass(),
-            $missing * 2 > $page->images => Result::fail("{$missing} of {$page->images} images have no alt text."),
-            default => Result::warn("{$missing} of {$page->images} images have no alt text."),
+            $missing * 2 > $page->images => Result::fail('seo::reports.messages.images_without_alt', ['count' => $missing, 'total' => $page->images]),
+            default => Result::warn('seo::reports.messages.images_without_alt', ['count' => $missing, 'total' => $page->images]),
         };
     }
 }

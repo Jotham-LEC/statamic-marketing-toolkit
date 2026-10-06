@@ -9,6 +9,7 @@ use JothamLec\Seo\SearchConsole\Client;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\ServiceProvider;
+use JothamLec\Seo\Support\Edition;
 use Statamic\Facades\Addon;
 
 beforeEach(function () {
@@ -39,19 +40,40 @@ function fakeGoogle(int $status = 200, array $body = ['siteUrl' => 'sc-domain:ex
     ]);
 }
 
-test('the overview offers the steps to whoever may change the addon\'s settings, with the site\'s domain suggested', function () {
+test('its own screen offers the steps to whoever may change the addon\'s settings, with the site\'s domain suggested', function () {
+    $this->actingAs(cpUser(super: true))->get(cp_route('seo.search-console.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('seo::SearchConsole')
+        ->where('setup.configured', false)
+        ->where('setup.can_set_up', true)
+        ->where('setup.suggested_property', 'sc-domain:example.test')
+        ->where('setup.urls.key', cp_route('seo.search-console.key'))
+        ->where('imported', ['fetched_at' => null, 'pages' => 0])
+        ->where('sites', []));
+});
+
+test('the overview links to that screen rather than holding the steps', function () {
     $this->actingAs(cpUser(super: true))->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('search', null)
-        ->where('searchSetup.configured', false)
-        ->where('searchSetup.can_set_up', true)
-        ->where('searchSetup.suggested_property', 'sc-domain:example.test')
-        ->where('searchSetup.urls.key', cp_route('seo.search-console.key')));
+        ->where('searchConsole', ['configured' => false, 'url' => cp_route('seo.search-console.index')])
+        ->missing('searchSetup'));
 });
 
 test('someone who may only view SEO is told it isn\'t connected, without the steps', function () {
-    $this->actingAs(cpUser(['view seo']))->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
-        ->where('searchSetup.can_set_up', false)
-        ->where('searchSetup.urls', null));
+    $this->actingAs(cpUser(['view seo']))->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('setup.can_set_up', false)
+        ->where('setup.urls', null));
+});
+
+test('saving the report settings keeps the properties set up on the Search Console screen', function () {
+    $this->actingAs(cpUser(super: true));
+    $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
+
+    $addon = Addon::get(Edition::PACKAGE);
+    $values = collect($addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess()->values())->all();
+
+    $this->patchJson(cp_route('addons.settings.update', $addon->slug()), $values)->assertOk();
+
+    expect((new Connection)->savedProperty('default'))->toBe('sc-domain:example.test');
 });
 
 test('an uploaded key is kept privately and connects with a saved property', function () {
@@ -64,7 +86,7 @@ test('an uploaded key is kept privately and connects with a saved property', fun
     $path = (new Connection)->keyPath();
 
     expect(substr(sprintf('%o', fileperms($path)), -4))->toBe('0600')
-        ->and(Addon::get('jotham-lec/statamic-co-seo')->settings()->get(Connection::SETTING))->toBe('sc-domain:example.test');
+        ->and(Addon::get(Edition::PACKAGE)->settings()->get(Connection::SETTING))->toBe('sc-domain:example.test');
 
     // A later request boots with what was saved.
     config(['seo.search_console.credentials' => null, 'seo.search_console.property' => null]);
@@ -96,10 +118,10 @@ test('values in .env win and can\'t be changed from the control panel', function
     $this->postJson(cp_route('seo.search-console.key'), ['key' => googleKey()])->assertStatus(409);
     $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:example.test'])->assertStatus(409);
 
-    $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
-        ->where('searchSetup.key_source', 'env')
-        ->where('searchSetup.property_source', 'env')
-        ->where('searchSetup.email', 'seo@project.iam.gserviceaccount.com'));
+    $this->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('setup.key_source', 'env')
+        ->where('setup.property_source', 'env')
+        ->where('setup.email', 'seo@project.iam.gserviceaccount.com'));
 });
 
 test('only whoever may change the addon\'s settings can set it up', function () {
@@ -123,12 +145,21 @@ test('checking the connection says what to fix in Google\'s words turned into st
     'no such property' => [404, ['error' => ['code' => 404, 'message' => 'Not found']], 'has no property sc-domain:example.test'],
 ]);
 
+test('a key Google has disabled gets its own explanation, with the guide', function () {
+    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    Http::fake(['oauth2.googleapis.com/token' => Http::response(['error' => 'invalid_grant', 'error_description' => 'Invalid grant: account disabled'], 400)]);
+
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.check'))
+        ->assertOk()->assertJson(['ok' => false])
+        ->assertJsonPath('message', fn (string $message) => str_contains($message, 'is disabled') && str_contains($message, 'https://docs.cloud.google.com/iam/docs/keys-disable-enable'));
+});
+
 test('importing from the control panel brings in the numbers', function () {
     config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
     fakeGoogle();
 
     $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.import'))
-        ->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 1 pages.']);
+        ->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 1 page.']);
 
     expect(SearchStat::query()->sum('clicks'))->toEqual(3);
 });

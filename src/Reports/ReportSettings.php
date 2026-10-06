@@ -2,6 +2,7 @@
 
 namespace JothamLec\Seo\Reports;
 
+use JothamLec\Seo\Support\Edition;
 use Statamic\Facades\Addon;
 
 /**
@@ -74,7 +75,7 @@ class ReportSettings
     private function saved(): array
     {
         try {
-            return Addon::get('jotham-lec/statamic-co-seo')?->settings()->all() ?? [];
+            return Addon::get(Edition::PACKAGE)?->settings()->all() ?? [];
         } catch (\Throwable) {
             // Before Statamic has booted the addon (an early config read).
             return [];

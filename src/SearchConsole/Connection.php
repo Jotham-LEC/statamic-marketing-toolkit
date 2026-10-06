@@ -5,6 +5,7 @@ namespace JothamLec\Seo\SearchConsole;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use JothamLec\Seo\Support\Edition;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
 use Throwable;
@@ -29,6 +30,12 @@ class Connection
 
     /** The properties of the sites other than the default: site handle => property. */
     public const string SITES_SETTING = 'search_console_properties';
+
+    /** Google's guide to enabling a disabled service account key. */
+    public const string KEYS_GUIDE = 'https://docs.cloud.google.com/iam/docs/keys-disable-enable';
+
+    /** Where an organization policy can stop new service account keys being created. */
+    public const string KEY_POLICY = 'https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation';
 
     /**
      * Fills the key `.env` left empty from what the control panel saved.
@@ -161,7 +168,7 @@ class Connection
         $site ??= Site::current()->handle();
 
         try {
-            $addon = Addon::get('jotham-lec/statamic-co-seo');
+            $addon = Addon::get(Edition::PACKAGE);
             $key = $site === Site::default()->handle() ? self::SETTING : self::SITES_SETTING;
             $value = $addon?->settings()->get($key);
             $value = $key === self::SITES_SETTING ? ((array) $value)[$site] ?? null : $value;
@@ -176,7 +183,7 @@ class Connection
     {
         $site ??= Site::current()->handle();
         $property = filled($property) ? trim((string) $property) : null;
-        $settings = Addon::get('jotham-lec/statamic-co-seo')->settings();
+        $settings = Addon::get(Edition::PACKAGE)->settings();
 
         if ($site === Site::default()->handle()) {
             $settings->set(self::SETTING, $property);
@@ -198,7 +205,7 @@ class Connection
     public function check(Client $client, ?string $site = null): array
     {
         if (! $client->configured($site)) {
-            return ['ok' => false, 'message' => 'Add the key and the property first.'];
+            return ['ok' => false, 'message' => __('seo::cp.search_console.messages.add_first')];
         }
 
         $property = (string) $this->property($site);
@@ -211,7 +218,7 @@ class Connection
             return ['ok' => false, 'message' => $exception->getMessage()];
         }
 
-        return ['ok' => true, 'message' => "Connected: the key can read {$property}."];
+        return ['ok' => true, 'message' => __('seo::cp.search_console.messages.connected', ['property' => $property])];
     }
 
     private function explain(RequestException $exception, string $property): string
@@ -219,14 +226,19 @@ class Connection
         $body = $exception->response->json() ?? [];
         $reason = (string) data_get($body, 'error.details.0.reason', data_get($body, 'error.status', ''));
         $message = (string) data_get($body, 'error.message', data_get($body, 'error_description', ''));
-        $email = $this->email() ?? 'the service account';
+        $email = $this->email() ?? __('seo::cp.search_console.messages.the_service_account');
+
+        $tokenError = in_array(data_get($body, 'error'), ['invalid_grant', 'unauthorized_client'], true);
 
         return match (true) {
-            $reason === 'SERVICE_DISABLED' || str_contains($message, 'has not been used') => 'The Google Search Console API is not enabled in the key\'s Google Cloud project. Enable it, wait a minute, and check again.',
-            in_array(data_get($body, 'error'), ['invalid_grant', 'unauthorized_client'], true) => 'Google refused the key: it may have been deleted in Google Cloud. Create a new key and upload it.',
-            $exception->response->status() === 403 => "{$email} is not a user of {$property}. Add it in Search Console → Settings → Users and permissions.",
-            $exception->response->status() === 404 => "Search Console has no property {$property}. Check how it is named there: sc-domain:example.com for a domain, https://example.com/ for an address prefix.",
-            default => 'Search Console said: '.($message ?: 'error '.$exception->response->status()),
+            $tokenError && str_contains(strtolower((string) data_get($body, 'error_description')), 'disabled') => __('seo::cp.search_console.messages.key_disabled', ['url' => self::KEYS_GUIDE]),
+            $reason === 'SERVICE_DISABLED' || str_contains($message, 'has not been used') => __('seo::cp.search_console.messages.api_disabled'),
+            $tokenError => __('seo::cp.search_console.messages.key_refused'),
+            $exception->response->status() === 403 => __('seo::cp.search_console.messages.not_a_user', ['email' => $email, 'property' => $property]),
+            $exception->response->status() === 404 => __('seo::cp.search_console.messages.no_property', ['property' => $property]),
+            default => __('seo::cp.search_console.messages.google_said', [
+                'message' => $message ?: __('seo::cp.search_console.messages.error', ['status' => $exception->response->status()]),
+            ]),
         };
     }
 }

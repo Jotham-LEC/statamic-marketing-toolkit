@@ -47,7 +47,7 @@ class SitemapController
     }
 
     /**
-     * @return Collection<int, array{loc: string, lastmod: ?string}>
+     * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */
     private function urls(): Collection
     {

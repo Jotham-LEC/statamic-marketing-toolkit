@@ -25,6 +25,20 @@ final readonly class Context
 
 `SiteSeo::meta($context)` collects everything into a readonly `Meta` object that `resources/views/meta.blade.php` prints. The same rules feed the sitemap, the share cards, the control panel preview and the reports, so a change in one place shows everywhere.
 
+## What each value falls back to
+
+| Value | Order |
+|---|---|
+| `<title>` | SEO title as typed → `{title}{separator}{site}` if it fits `seo.title.max`, else the title → site name on home. `· Page N` past page 1, in the page's language |
+| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 155 on a word |
+| share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** (Pro) → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
+| canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
+| robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
+| hreflang | the page's other languages that are published and listed, with `x-default`: `alternates()`, `localizations()`, `hreflangCodes()`, `xDefaultSite()` |
+| og:locale, `inLanguage` | the content's own site's locale and language, whichever domain the request came in on |
+
+Empty fields count as unset.
+
 ## Change a rule: SiteSeo
 
 Extend the class, override the methods you need, and point `seo.class` at it:
@@ -147,6 +161,30 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 - **Reports**: `app(JothamLec\Seo\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site.
 - **Another site as the current one**: `JothamLec\Seo\Support\Sites::as($handle, fn () => …)` runs code with that site current (the brand global, `absolute()`, the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
 
+## Several sites and languages
+
+With Statamic Pro and more than one site, whether separate brands on their own domains or languages under `/fr/` or on their own domains, each site gets its own:
+
+- **Brand values**: `seo:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
+- **Sitemap and robots.txt** per domain: a sitemap lists every site on its domain, each URL with its other languages. **Share cards** (Pro) and the **IndexNow key** on the site's own domain; IndexNow gets one request per domain.
+- **hreflang**: a page's localizations link to each other; see [configuration.md](configuration.md#languages-hreflang).
+- **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** (Pro) on the site of the content that moved.
+- **404 log** and **reports** (Pro), one report per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
+- **Search Console property** (Pro): one key, a property per site (set up from Tools → SEO → Search Console with the site selected, or a map in config).
+
+The SEO fields are `localizable`, so each language keeps its own values.
+
+## Translating the control panel
+
+Every word the addon shows in the control panel, and the "Page N" it adds to titles, is in `lang/en/*.php` under the `seo::` namespace (`cp.php`, `fields.php`, `reports.php`, `validation.php`, `frontend.php`). To translate, publish them and copy the folder:
+
+```bash
+php artisan vendor:publish --tag=seo-translations   # lang/vendor/seo/en
+cp -r lang/vendor/seo/en lang/vendor/seo/fr
+```
+
+The control panel uses the user's language preference; "Page N" uses each site's language. A report shows its checks in the reader's language: results are stored as keys and translated when shown.
+
 ## How the pieces fit
 
 | Piece | Where |
@@ -172,4 +210,10 @@ Tests run as production with an `array` cache that serializes, and render pages 
 
 The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
 
-Release: `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`; sites update with `composer update jotham-lec/statamic-co-seo`. Note the change in [CHANGELOG.md](../CHANGELOG.md).
+Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\Seo\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
+
+Release:
+
+1. Note the change in [CHANGELOG.md](../CHANGELOG.md).
+2. `npm run build` and commit `resources/dist`.
+3. `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`. Sites update with `composer update jotham-lec/statamic-co-seo`; the Marketplace picks the tag up from Packagist.

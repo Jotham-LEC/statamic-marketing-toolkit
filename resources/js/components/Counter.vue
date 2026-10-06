@@ -19,13 +19,14 @@ const state = computed(() => {
 const hint = computed(() => {
     const [min, max] = props.limits;
 
-    return { short: `under ${min}`, long: `over ${max}`, good: `${min}–${max}` }[state.value];
+    return { short: __('seo::cp.preview.under', { min }), long: __('seo::cp.preview.over', { max }), good: `${min}–${max}` }[state.value];
 });
+const tooltip = computed(() => __n('seo::cp.preview.count', length.value, { label: props.label, count: length.value, min: props.limits[0], max: props.limits[1] }));
 </script>
 
 <template>
     <span
-        :title="`${label}: ${length} characters, aim for ${limits[0]}–${limits[1]}`"
+        :title="tooltip"
         :class="{
             'text-amber-700 dark:text-amber-400': state === 'short',
             'text-(--theme-color-danger)': state === 'long',

@@ -4,11 +4,13 @@ This guide is for the people who write and look after the site's pages. It expla
 
 **SEO** (search engine optimisation) is about how your pages show up in Google and other search engines, and how they look when someone shares a link on Facebook, LinkedIn, WhatsApp or X. Most of it happens on its own: if you leave the SEO fields empty, the site fills in sensible values from your page's title, description and text.
 
+Some parts are in **Co-SEO Pro** only, marked *(Pro)* below. On the free edition, Tools → SEO shows a card for each of them instead.
+
 ## Tools → SEO
 
-The overview: the latest report's score, recent 404s, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
+The overview: the latest report's score *(Pro)*, recent 404s *(Pro)*, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most *(Pro)*, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
 
-**Connecting Google Search Console** is a one-time task for whoever looks after the site's settings: Tools → SEO lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
+**Connecting Google Search Console** *(Pro)* is a one-time task for whoever looks after the site's settings: **Tools → SEO → Search Console** lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
 
 ## SEO & brand
 
@@ -74,11 +76,15 @@ All optional. Empty means "use the default".
 | **In sitemap** | Lists the page in the sitemap search engines read. | On. |
 | **Extra JSON-LD** | Structured data for search engines. Leave it to your developer. | Nothing extra. |
 
-### Share cards
+### Several languages
+
+On a site in several languages, each translation of a page has its own SEO fields: give each language its own title and description. Search engines are told about the other languages by themselves (with "hreflang" links), so a French visitor is sent to the French page. A translation left as a draft, or hidden from search engines, is left out of those links.
+
+### Share cards *(Pro)*
 
 When a page has no share image, the site draws one: the page title and description on your brand colours. You see it in the preview. To change the words, fill in **Card title** and **Card subtitle**. To use a photo instead, upload a **Share image**.
 
-## When a page's address changes
+## When a page's address changes *(Pro)*
 
 A page's address (its URL) changes when you change its slug, when its date changes on a dated page such as a news article, or when you move it to another place in a page tree. Old links to it, from Google, other sites or your own emails, would then lead nowhere. So the site adds a **redirect**: anyone visiting the old address is sent to the new one.
 
@@ -103,11 +109,11 @@ If you can't manage redirects, the question isn't asked and the redirect is adde
   - **Active**: switch off to pause a redirect without deleting it.
   - **Site** (only with more than one site): the site whose address this is. Leave empty for every site. A site's own redirect wins over one for every site from the same address.
 - **Hits** and **Last used** show whether a redirect is still needed.
-- **Import CSV** and **Export CSV**: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
+- **Import CSV** and **Export CSV** *(Pro)*: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
 
 A redirect only applies when its address doesn't exist as a page. If you bring a page back at an old address, the page shows, not the redirect.
 
-## 404s
+## 404s *(Pro)*
 
 A **404** is what visitors get when they ask for an address that doesn't exist. **Tools → SEO → 404s** lists the ones real visitors hit, most recent first, with how often and the last page that linked there. Bots and hacking attempts are left out.
 
@@ -115,7 +121,7 @@ Use it to catch broken links. For a missing address that should lead somewhere, 
 
 With more than one site, the overview, the 404s, the reports and the dashboard card are of the site chosen in the control panel's site menu; redirects list every site's, with a Site column.
 
-## Reports
+## Reports *(Pro)*
 
 **Tools → SEO → Reports** checks every page of the site the way a search engine sees it, and gives each page a score out of 100. The site's score is the average.
 
@@ -147,6 +153,6 @@ A **warning** counts half. Pages set to hide from search engines are listed but 
 
 Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → Addons → SEO). Reports can also run on their own, daily or weekly.
 
-## The dashboard
+## The dashboard *(Pro)*
 
 The **SEO** box on the dashboard (if your administrator added it) shows the latest report's score and the most recent 404s. Click through for the details.

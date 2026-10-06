@@ -1,7 +1,14 @@
 <?php
 
+use Illuminate\Support\Facades\Lang;
+use JothamLec\Seo\Commands\Install;
+use JothamLec\Seo\Fieldtypes\SeoPreview;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\YAML;
+
+// Blueprints are written to disk and outlive a test: start each without one.
+beforeEach(fn () => Blueprint::find('globals.seo')?->delete());
 
 test('creates the SEO & brand global set and its blueprint, once', function () {
     $this->artisan('statamic:seo:install')->assertSuccessful();
@@ -68,4 +75,42 @@ test('--tab adds a whole tab a site asks for', function () {
 
     expect(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('currency', 'shipping_rates', 'return_category')
         ->not->toContain('publisher_type');
+});
+
+test('every label and help the blueprints name is in lang/en/fields.php', function () {
+    $blueprints = [
+        YAML::file(__DIR__.'/../../resources/fieldsets/seo.yaml')->parse(),
+        YAML::file(__DIR__.'/../../resources/blueprints/settings.yaml')->parse(),
+        Install::tabs('assets'),
+        [(new ReflectionProperty(SeoPreview::class, 'title'))->getValue()],
+    ];
+    $keys = [];
+
+    array_walk_recursive($blueprints, function ($value) use (&$keys) {
+        if (is_string($value) && str_starts_with($value, 'seo::')) {
+            $keys[] = $value;
+        }
+    });
+
+    expect(count($keys))->toBeGreaterThan(100)
+        ->and(array_values(array_filter($keys, fn (string $key) => ! Lang::has($key, 'en', false))))->toBe([]);
+});
+
+test('the brand blueprint shows in the control panel user\'s language', function () {
+    app('translator')->addLines([
+        'fields.brand.title_separator.display' => 'Séparateur de titre',
+        'fields.brand.tabs.brand' => 'Marque',
+    ], 'xx', 'seo');
+    app()->setLocale('xx');
+
+    $blueprint = Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => Install::tabs('assets')]);
+    $field = $blueprint->field('title_separator');
+
+    // Statamic passes the label through __() wherever it shows it: the publish
+    // form (in Vue), listing columns and validation messages.
+    expect($field->display())->toBe('seo::fields.brand.title_separator.display')
+        ->and(__($field->display()))->toBe('Séparateur de titre')
+        ->and($field->validationAttributes())->toBe(['title_separator' => 'Séparateur de titre'])
+        ->and(__($blueprint->tabs()->get('brand')->display()))->toBe('Marque')
+        ->and(__($blueprint->field('default_description')->display()))->toBe('Default description');
 });

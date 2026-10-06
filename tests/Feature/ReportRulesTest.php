@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Lang;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\ExternalLinkChecker;
 use JothamLec\Seo\Reports\HtmlInspector;
@@ -20,6 +21,7 @@ use JothamLec\Seo\Reports\Rules\OrphanPages;
 use JothamLec\Seo\Reports\Rules\SingleH1;
 use JothamLec\Seo\Reports\Rules\TitleLength;
 use JothamLec\Seo\Reports\Rules\TitleUnique;
+use JothamLec\Seo\Reports\Runner;
 use JothamLec\Seo\Reports\SiteFacts;
 
 /**
@@ -89,7 +91,7 @@ test('titles and descriptions must differ from every other page’s, ignoring ca
     $site->add('https://example.test/c', new PageFacts(title: 'Unique', description: 'same WORDS'));
 
     expect(verdict(TitleUnique::class, ['title' => 'Hello'], $site, 'https://example.test/a'))->toBe('fail')
-        ->and(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Hello'), $site)->message)->toBe('Same title as /b.')
+        ->and(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Hello'), $site)->text())->toBe('Same title as /b.')
         ->and(verdict(TitleUnique::class, ['title' => 'Unique'], $site, 'https://example.test/c'))->toBe('pass')
         ->and(verdict(DescriptionUnique::class, ['description' => 'Same words'], $site, 'https://example.test/a'))->toBe('fail')
         ->and(verdict(DescriptionUnique::class, ['description' => 'Other words'], $site, 'https://example.test/b'))->toBe('pass');
@@ -216,4 +218,43 @@ test('a link is checked against files in public/ and nowhere above it', function
     expect($links->check('/index.php'))->toBe('ok')
         ->and($links->check('/../composer.json'))->toBe('broken')
         ->and($links->check('/x/../../composer.json'))->toBe('broken');
+});
+
+test('a result keeps a translation key and its parameters, and reads as English', function () {
+    $site = new SiteFacts(new ReportSettings(['title_min' => 10, 'title_max' => 20]));
+    $result = app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'Short'), $site);
+
+    expect($result->toArray())->toBe(['status' => 'warn', 'message' => 'seo::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 10, 'max' => 20]])
+        ->and($result->text())->toBe('5 characters; aim for 10–20. Short titles waste the space search results give them.')
+        ->and(app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'A'), $site)->text())->toStartWith('1 character;')
+        ->and(app(OgImage::class)->check('https://example.test/page', new PageFacts, $site)->toArray())->toBe(['status' => 'fail', 'message' => 'seo::reports.messages.og_image_missing']);
+});
+
+test('a long list of pages ends with how many more there are', function () {
+    $site = new SiteFacts(new ReportSettings([]));
+    foreach (['a', 'b', 'c', 'd', 'e'] as $slug) {
+        $site->add("https://example.test/{$slug}", new PageFacts(title: 'Same'));
+    }
+    $links = ['/1', '/2', '/3', '/4', '/5', '/6'];
+
+    expect(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Same'), $site)->text())->toBe('Same title as /b, /c, /d and 1 more.')
+        ->and(app(BrokenLinks::class)->check('https://example.test/a', new PageFacts(brokenLinks: $links), $site)->text())
+        ->toBe('Links to pages that don’t exist: /1, /2, /3, /4, /5 and 1 more.')
+        ->and(app(BrokenLinks::class)->check('https://example.test/a', new PageFacts(redirectedLinks: ['/old']), $site)->text())
+        ->toBe('Links that go through a redirect (link to the new address instead): /old.');
+});
+
+test('every built-in check’s name and message has English words', function () {
+    $site = new SiteFacts(new ReportSettings([]));
+    $site->add('https://example.test/b', new PageFacts(title: 'T', description: 'D'));
+    $page = new PageFacts(title: 'T', description: 'D', h1s: ['A', 'B'], canonical: '/x', robots: 'noindex', inSitemap: true, images: 2, imagesWithoutAlt: 1,
+        brokenLinks: ['/gone'], jsonLdErrors: ['Syntax error'], brokenExternalLinks: ['https://gone.test/']);
+
+    foreach (Runner::RULES as $class) {
+        $rule = app($class);
+        $result = $rule->check('https://example.test/a', $page, $site);
+
+        expect(Lang::has($rule->label()))->toBeTrue($class)
+            ->and($result->message === '' || Lang::has($result->message))->toBeTrue($class.': '.$result->message);
+    }
 });

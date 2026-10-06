@@ -11,6 +11,8 @@ final readonly class Meta
      * @param  array{url: string, width: int, height: int, alt: ?string}|null  $image
      * @param  array<string, string>  $verification  meta name => content
      * @param  list<array<string, mixed>>  $graph  JSON-LD nodes
+     * @param  array<string, string>  $alternates  hreflang code => the page in that language
+     * @param  list<string>  $localeAlternates  og:locale:alternate
      */
     public function __construct(
         public string $title,
@@ -28,6 +30,8 @@ final readonly class Meta
         public ?string $twitterSite,
         public array $verification,
         public array $graph,
+        public array $alternates = [],
+        public array $localeAlternates = [],
     ) {}
 
     public function jsonLd(): ?string

@@ -24,7 +24,7 @@ async function run() {
     try {
         started.value = (await axios.post(props.runUrl)).data;
     } catch (error) {
-        toast.error(error.response?.data?.message ?? 'The report could not start.');
+        toast.error(error.response?.data?.message ?? __('seo::reports.cp.could_not_start'));
     } finally {
         starting.value = false;
     }
@@ -37,16 +37,15 @@ function finished(report) {
 </script>
 
 <template>
-    <Head title="SEO reports" />
+    <Head :title="__('seo::reports.cp.title')" />
 
-    <Header title="SEO reports" icon="charts-donut-graph">
-        <Button v-if="settingsUrl" text="Settings" :href="settingsUrl" />
-        <Button v-if="canRun" text="Run report" variant="primary" :loading="starting" :disabled="!!running" @click="run" />
+    <Header :title="__('seo::reports.cp.title')" icon="charts-donut-graph">
+        <Button v-if="settingsUrl" :text="__('seo::reports.cp.settings')" :href="settingsUrl" />
+        <Button v-if="canRun" :text="__('seo::reports.cp.run')" variant="primary" :loading="starting" :disabled="!!running" @click="run" />
     </Header>
 
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        A report renders every published page and checks it: titles, descriptions, headings, canonical links, the sitemap, image descriptions, links within the site,
-        share images and structured data. Each page gets a score out of 100; the site’s score is their average.
+        {{ __('seo::reports.cp.intro') }}
     </p>
 
     <Card v-if="running" class="mb-6 p-4">
@@ -57,22 +56,22 @@ function finished(report) {
         <table class="w-full text-sm">
             <thead class="text-left text-gray-600 dark:text-gray-400">
                 <tr>
-                    <th class="px-4 py-2 font-medium">Report</th>
-                    <th class="px-4 py-2 font-medium">Score</th>
-                    <th class="px-4 py-2 font-medium">Pages</th>
-                    <th class="px-4 py-2 font-medium">Finished</th>
+                    <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.column_report') }}</th>
+                    <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.score') }}</th>
+                    <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.pages') }}</th>
+                    <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.finished') }}</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="report in reports" :key="report.id" class="border-t border-gray-200 dark:border-gray-700">
                     <td class="px-4 py-2">
-                        <Link v-if="report.status === 'done'" :href="report.url" class="font-medium">SEO report #{{ report.id }}</Link>
-                        <span v-else>SEO report #{{ report.id }}</span>
+                        <Link v-if="report.status === 'done'" :href="report.url" class="font-medium">{{ __('seo::reports.cp.report', { id: report.id }) }}</Link>
+                        <span v-else>{{ __('seo::reports.cp.report', { id: report.id }) }}</span>
                     </td>
                     <td class="px-4 py-2">
                         <Score v-if="report.status === 'done'" :value="report.score" />
-                        <Badge v-else-if="report.status === 'running'" text="Running" />
-                        <Badge v-else color="red" text="Failed" :title="report.error" />
+                        <Badge v-else-if="report.status === 'running'" :text="__('seo::reports.cp.running')" />
+                        <Badge v-else color="red" :text="__('seo::reports.cp.failed')" :title="report.error" />
                     </td>
                     <td class="px-4 py-2 tabular-nums">{{ report.pages_total }}</td>
                     <td class="px-4 py-2"><When :value="report.finished_at" /></td>
@@ -80,5 +79,5 @@ function finished(report) {
             </tbody>
         </table>
     </Card>
-    <p v-else-if="!running" class="text-sm text-gray-600 dark:text-gray-400">No reports yet.{{ canRun ? ' Run the first one.' : '' }}</p>
+    <p v-else-if="!running" class="text-sm text-gray-600 dark:text-gray-400">{{ __('seo::reports.cp.none') }}<template v-if="canRun"> {{ __('seo::reports.cp.run_first') }}</template></p>
 </template>

@@ -62,8 +62,8 @@ test('a report renders every published page, runs the checks and scores the site
         ->and($report->pages()->pluck('url')->all())->not->toContain('https://example.test/draft');
 
     $team = reportPage($report, '/team');
-    expect($team->results['title_unique'])->toBe(['status' => 'fail', 'message' => 'Same title as /about.'])
-        ->and($team->results['broken_links']['message'])->toContain('/nowhere')
+    expect($team->results['title_unique'])->toBe(['status' => 'fail', 'message' => 'seo::reports.messages.title_same', 'params' => ['pages' => '/about']])
+        ->and($team->results['broken_links']['params']['links'])->toContain('/nowhere')
         ->and($team->results['image_alt']['status'])->toBe('fail')
         ->and($team->results['canonical']['status'])->toBe('pass')
         ->and($team->results['og_image']['status'])->toBe('pass')
@@ -127,6 +127,11 @@ test('a page that fails to render scores zero and says why', function () {
     expect($page->score)->toBe(0)
         ->and($page->results['render']['status'])->toBe('fail')
         ->and($report->summary['errors'])->toBe(1);
+
+    $this->actingAs(cpUser(super: true));
+    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues.0'))
+        ->toMatchArray(['label' => 'Page renders', 'status' => 'fail'])
+        ->and($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues.0.message'))->not->toStartWith('seo::');
 });
 
 test('only the newest reports are kept', function () {
@@ -210,11 +215,13 @@ test('the reports screens and a report’s pages, filtered by a check', function
     $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
         ->component('seo::Report', false)
         ->where('report.score', $report->score)
-        ->where('counts.scored', 3));
+        ->where('counts.scored', 3)
+        ->where('rules', fn ($rules) => collect($rules)->pluck('label')->contains('Unique title')));
 
     $flagged = $this->getJson(cp_route('seo.reports.pages', [$report, 'rule' => 'title_unique']))->assertOk();
     expect($flagged->json('data.*.path'))->toEqualCanonicalizing(['/about', '/team'])
         ->and($flagged->json('data.0.issues.0'))->toMatchArray(['label' => 'Unique title', 'status' => 'fail'])
+        ->and($flagged->json('data.0.issues.0.message'))->toBeIn(['Same title as /about.', 'Same title as /team.'])
         ->and($flagged->json('data.0.edit_url'))->toContain('/cp/collections/pages/entries/');
 
     $sorted = $this->getJson(cp_route('seo.reports.pages', [$report, 'sort' => 'score', 'order' => 'asc']))->json('data.*.score');
@@ -353,4 +360,72 @@ test('a title longer than its column is cut to fit, so the report still runs on 
 
     expect(mb_strlen($page->title))->toBe(255)
         ->and($page->facts['title'])->toStartWith('Long Long');
+});
+
+/**
+ * A finished report with one page, its results and checks stored as given.
+ *
+ * @param  array<string, array<string, mixed>>  $rules
+ * @param  array<string, array<string, mixed>>  $results
+ */
+function storedReport(array $rules, array $results): Report
+{
+    $report = Report::query()->create(['settings' => [], 'status' => Report::DONE, 'score' => 0, 'summary' => ['rules' => $rules, 'scored' => 1, 'noindex' => 0, 'errors' => 0]]);
+    $report->pages()->create(['url' => 'https://example.test/about', 'content_type' => 'entry', 'content_id' => 'x', 'score' => 0, 'checked' => true,
+        'results' => $results, 'failing' => ','.implode(',', array_map(fn ($handle) => $handle.':fail', array_keys($results))).',']);
+
+    return $report;
+}
+
+test('a report from before messages were translated, or from a site’s own check, shows its text as it is', function () {
+    $report = storedReport(
+        ['title_length' => ['label' => 'Title length', 'weight' => 2, 'fail' => 1, 'warn' => 0], 'house_style' => ['label' => 'House style', 'weight' => 1, 'fail' => 1, 'warn' => 0]],
+        ['title_length' => ['status' => 'fail', 'message' => 'Old English text.'], 'house_style' => ['status' => 'fail', 'message' => 'Says “colour”, not “color”: 50% of the time.']],
+    );
+    $this->actingAs(cpUser(super: true));
+
+    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('rules.0.label', 'Title length')
+        ->where('rules.1.label', 'House style'));
+
+    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues'))->toEqualCanonicalizing([
+        ['label' => 'Title length', 'status' => 'fail', 'message' => 'Old English text.'],
+        ['label' => 'House style', 'status' => 'fail', 'message' => 'Says “colour”, not “color”: 50% of the time.'],
+    ]);
+});
+
+test('a report reads in the language of whoever opens it', function () {
+    app('translator')->addLines([
+        'reports.rules.title_length' => 'Longueur du titre',
+        'reports.messages.title_short' => ':count caractère ; visez :min–:max.|:count caractères ; visez :min–:max.',
+        'reports.messages.title_same' => 'Même titre que :pages.',
+        'reports.messages.and_more' => ':list et :count autre|:list et :count autres',
+    ], 'fr', 'seo');
+    $report = storedReport(
+        ['title_length' => ['label' => 'seo::reports.rules.title_length', 'weight' => 2, 'fail' => 0, 'warn' => 1], 'title_unique' => ['label' => 'seo::reports.rules.title_unique', 'weight' => 2, 'fail' => 1, 'warn' => 0]],
+        [
+            'title_length' => ['status' => 'warn', 'message' => 'seo::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 30, 'max' => 60]],
+            'title_unique' => ['status' => 'fail', 'message' => 'seo::reports.messages.title_same', 'params' => ['pages' => ['message' => 'seo::reports.messages.and_more', 'params' => ['list' => '/a, /b, /c', 'count' => 2]]]],
+        ],
+    );
+    $this->actingAs(cpUser(super: true));
+    app()->setLocale('fr');
+
+    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('rules.0.label', 'Unique title')
+        ->where('rules.1.label', 'Longueur du titre'));
+
+    // An untranslated line falls back to English.
+    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues'))->toBe([
+        ['label' => 'Unique title', 'status' => 'fail', 'message' => 'Même titre que /a, /b, /c et 2 autres.'],
+        ['label' => 'Longueur du titre', 'status' => 'warn', 'message' => '5 caractères ; visez 30–60.'],
+    ]);
+});
+
+test('php please seo:report prints a check’s name, not its key', function () {
+    entryIn('pages', 'about');
+
+    $this->artisan('statamic:seo:report')
+        ->doesntExpectOutputToContain('seo::reports')
+        ->assertSuccessful();
 });

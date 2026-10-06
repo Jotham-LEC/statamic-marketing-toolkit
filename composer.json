@@ -1,6 +1,6 @@
 {
     "name": "jotham-lec/statamic-co-seo",
-    "description": "Meta tags, JSON-LD, sitemap, robots and generated Open Graph images for Statamic 6.",
+    "description": "SEO that tells you what to fix: meta tags, sitemaps, hreflang and redirects, plus Google Search Console numbers, site reports and share images on Pro.",
     "type": "statamic-addon",
     "license": "proprietary",
     "autoload": {
@@ -33,9 +33,13 @@
     },
     "extra": {
         "statamic": {
-            "name": "SEO",
-            "description": "Meta tags, JSON-LD, sitemap, robots and generated Open Graph images",
-            "slug": "seo"
+            "name": "Co-SEO",
+            "description": "SEO that tells you what to fix: Google's numbers beside a site audit, share cards, redirects and hreflang",
+            "slug": "seo",
+            "editions": [
+                "free",
+                "pro"
+            ]
         },
         "laravel": {
             "providers": [

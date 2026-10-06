@@ -4,6 +4,7 @@ namespace JothamLec\Seo\SearchConsole;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use JothamLec\Seo\Support\Edition;
 use RuntimeException;
 
 /**
@@ -24,7 +25,7 @@ class Client
 
     public function configured(?string $site = null): bool
     {
-        return filled(config('seo.search_console.credentials')) && (new Connection)->property($site) !== null;
+        return Edition::pro() && filled(config('seo.search_console.credentials')) && (new Connection)->property($site) !== null;
     }
 
     /**
@@ -32,7 +33,7 @@ class Client
      */
     public function configuredForAnySite(): bool
     {
-        return filled(config('seo.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
+        return Edition::pro() && filled(config('seo.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
     }
 
     /**

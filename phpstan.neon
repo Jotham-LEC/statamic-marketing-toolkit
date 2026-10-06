@@ -28,7 +28,7 @@ parameters:
             path: src/Reports/ReportSettings.php
         # Follow from the above: what an undeclared Statamic method returns is unknown.
         -
-            identifiers: [argument.unresolvableType, return.type]
+            identifier: argument.unresolvableType
             path: src/SiteSeo.php
         # Statamic's docblock: manipulate() returns a string only when given no item.
         -

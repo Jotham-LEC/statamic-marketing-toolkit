@@ -1,127 +1,123 @@
 tabs:
   checks:
-    display: Checks
+    display: 'seo::fields.settings.tabs.checks'
     sections:
       -
-        display: 'What a report checks'
-        instructions: 'Turn off a check to leave it out of the reports and the scores.'
+        display: 'seo::fields.settings.sections.checks.display'
+        instructions: 'seo::fields.settings.sections.checks.instructions'
         fields:
           -
             handle: rule_title_length
-            field: { type: toggle, display: 'Title length', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_title_length.display', default: true, width: 33 }
           -
             handle: rule_title_unique
-            field: { type: toggle, display: 'Unique titles', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_title_unique.display', default: true, width: 33 }
           -
             handle: rule_description_length
-            field: { type: toggle, display: 'Description length', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_description_length.display', default: true, width: 33 }
           -
             handle: rule_description_unique
-            field: { type: toggle, display: 'Unique descriptions', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_description_unique.display', default: true, width: 33 }
           -
             handle: rule_single_h1
-            field: { type: toggle, display: 'One main heading (h1)', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_single_h1.display', default: true, width: 33 }
           -
             handle: rule_canonical
-            field: { type: toggle, display: 'Canonical address', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_canonical.display', default: true, width: 33 }
           -
             handle: rule_noindex_in_sitemap
-            field: { type: toggle, display: 'Hidden pages left in the sitemap', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_noindex_in_sitemap.display', default: true, width: 33 }
           -
             handle: rule_image_alt
-            field: { type: toggle, display: 'Image descriptions (alt)', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_image_alt.display', default: true, width: 33 }
           -
             handle: rule_broken_links
-            field: { type: toggle, display: 'Broken links to this site', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_broken_links.display', default: true, width: 33 }
           -
             handle: rule_orphan_pages
-            field: { type: toggle, display: 'Pages no other page links to', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_orphan_pages.display', default: true, width: 33 }
           -
             handle: rule_external_links
-            field: { type: toggle, display: 'Broken links to other sites', instructions: 'Asks each linked site; off by default.', default: false, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_external_links.display', instructions: 'seo::fields.settings.rule_external_links.instructions', default: false, width: 33 }
           -
             handle: rule_og_image
-            field: { type: toggle, display: 'Share image', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_og_image.display', default: true, width: 33 }
           -
             handle: rule_json_ld
-            field: { type: toggle, display: 'Structured data (JSON-LD)', default: true, width: 33 }
+            field: { type: toggle, display: 'seo::fields.settings.rule_json_ld.display', default: true, width: 33 }
       -
-        display: 'Lengths'
-        instructions: 'Also used by the counters in the search and share preview.'
+        display: 'seo::fields.settings.sections.lengths.display'
+        instructions: 'seo::fields.settings.sections.lengths.instructions'
         fields:
           -
             handle: title_min
-            field: { type: integer, display: 'Title: at least', default: 30, width: 25, validate: ['required', 'integer', 'min:1'] }
+            field: { type: integer, display: 'seo::fields.settings.title_min.display', default: 30, width: 25, validate: ['required', 'integer', 'min:1'] }
           -
             handle: title_max
-            field: { type: integer, display: 'Title: at most', default: 60, width: 25, validate: ['required', 'integer', 'gt:title_min'] }
+            field: { type: integer, display: 'seo::fields.settings.title_max.display', default: 60, width: 25, validate: ['required', 'integer', 'gt:title_min'] }
           -
             handle: description_min
-            field: { type: integer, display: 'Description: at least', default: 50, width: 25, validate: ['required', 'integer', 'min:1'] }
+            field: { type: integer, display: 'seo::fields.settings.description_min.display', default: 50, width: 25, validate: ['required', 'integer', 'min:1'] }
           -
             handle: description_max
-            field: { type: integer, display: 'Description: at most', default: 160, width: 25, validate: ['required', 'integer', 'gt:description_min'] }
+            field: { type: integer, display: 'seo::fields.settings.description_max.display', default: 160, width: 25, validate: ['required', 'integer', 'gt:description_min'] }
   running:
-    display: Running
+    display: 'seo::fields.settings.tabs.running'
     sections:
       -
-        display: 'Which pages'
+        display: 'seo::fields.settings.sections.pages.display'
         fields:
           -
             handle: excluded_collections
             field:
               type: collections
-              display: 'Leave out these collections'
+              display: 'seo::fields.settings.excluded_collections.display'
               mode: select
           -
             handle: max_pages
-            field: { type: integer, display: 'Most pages per report', instructions: '0 checks every page.', default: 0, width: 50, validate: ['required', 'integer', 'min:0'] }
+            field: { type: integer, display: 'seo::fields.settings.max_pages.display', instructions: 'seo::fields.settings.max_pages.instructions', default: 0, width: 50, validate: ['required', 'integer', 'min:0'] }
       -
-        display: 'How'
+        display: 'seo::fields.settings.sections.how.display'
         fields:
           -
             handle: chunk_size
-            field: { type: integer, display: 'Pages per step', instructions: 'How many pages one step renders. Lower it if a step times out.', default: 25, width: 50, validate: ['required', 'integer', 'min:1', 'max:500'] }
+            field: { type: integer, display: 'seo::fields.settings.chunk_size.display', instructions: 'seo::fields.settings.chunk_size.instructions', default: 25, width: 50, validate: ['required', 'integer', 'min:1', 'max:500'] }
           -
             handle: keep_reports
-            field: { type: integer, display: 'Reports to keep', default: 10, width: 50, validate: ['required', 'integer', 'min:1'] }
+            field: { type: integer, display: 'seo::fields.settings.keep_reports.display', default: 10, width: 50, validate: ['required', 'integer', 'min:1'] }
+          # Set on Tools → SEO → Search Console. Hidden here, and still submitted,
+          # so saving these settings keeps them.
+          -
+            handle: search_console_property
+            field: { type: text, visibility: hidden }
+          -
+            handle: search_console_properties
+            field: { type: array, mode: dynamic, visibility: hidden }
       -
-        display: 'Schedule'
-        instructions: 'Needs the Laravel scheduler (`php artisan schedule:run` every minute).'
+        display: 'seo::fields.settings.sections.schedule.display'
+        instructions: 'seo::fields.settings.sections.schedule.instructions'
         fields:
           -
             handle: schedule
             field:
               type: button_group
-              display: 'Run a report'
+              display: 'seo::fields.settings.schedule.display'
               default: 'off'
-              options: { 'off': 'Only by hand', daily: 'Daily', weekly: 'Weekly' }
+              options: { 'off': 'seo::fields.settings.schedule.options.off', daily: 'seo::fields.settings.schedule.options.daily', weekly: 'seo::fields.settings.schedule.options.weekly' }
           -
             handle: schedule_day
             field:
               type: select
-              display: 'On'
+              display: 'seo::fields.settings.schedule_day.display'
               default: monday
               width: 50
-              options: { monday: Monday, tuesday: Tuesday, wednesday: Wednesday, thursday: Thursday, friday: Friday, saturday: Saturday, sunday: Sunday }
+              options: { monday: 'seo::fields.settings.schedule_day.options.monday', tuesday: 'seo::fields.settings.schedule_day.options.tuesday', wednesday: 'seo::fields.settings.schedule_day.options.wednesday', thursday: 'seo::fields.settings.schedule_day.options.thursday', friday: 'seo::fields.settings.schedule_day.options.friday', saturday: 'seo::fields.settings.schedule_day.options.saturday', sunday: 'seo::fields.settings.schedule_day.options.sunday' }
               if: { schedule: 'equals weekly' }
           -
             handle: schedule_time
             field:
               type: time
-              display: 'At'
+              display: 'seo::fields.settings.schedule_time.display'
               default: '03:00'
               width: 50
               unless: { schedule: 'equals off' }
-  search_console:
-    display: 'Search Console'
-    sections:
-      -
-        instructions: 'Tools → SEO walks you through connecting Google Search Console. A value in .env (SEO_SEARCH_CONSOLE_PROPERTY) wins over this one.'
-        fields:
-          -
-            handle: search_console_property
-            field: { type: text, display: 'Property', instructions: 'As Search Console names it: sc-domain:example.com for a domain, https://example.com/ for an address prefix.' }
-          -
-            handle: search_console_properties
-            field: { type: array, mode: dynamic, display: 'Properties of the other sites', key_header: 'Site handle', value_header: 'Property', instructions: 'Only with several sites: the property of each site but the default (whose is above). Tools → SEO fills it in for the site selected there.' }

@@ -20,6 +20,7 @@ use JothamLec\Seo\Reports\ReportSettings;
 use JothamLec\Seo\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\Support\Config;
+use JothamLec\Seo\Support\Edition;
 use JothamLec\Seo\Support\Sites;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
@@ -34,6 +35,7 @@ use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
 use Statamic\Providers\AddonServiceProvider;
+use Statamic\Statamic;
 
 class ServiceProvider extends AddonServiceProvider
 {
@@ -75,6 +77,9 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $subscribe = [RedirectChangedUris::class];
 
+    /** What the free edition leaves out of the lists above and of Statamic's autoloading. */
+    private const array PRO_ONLY = [Report::class, SearchConsole::class, SeoWidget::class, CreateRedirect::class];
+
     public function register(): void
     {
         parent::register();
@@ -105,10 +110,63 @@ class ServiceProvider extends AddonServiceProvider
         $config->set($key, Config::merge(require $path, (array) $config->get($key, [])));
     }
 
+    public function boot()
+    {
+        // Ahead of the parent's own callback, which registers the commands,
+        // widget, actions and routes this takes out of the free edition.
+        Statamic::booted(fn () => $this->bootEdition());
+
+        parent::boot();
+    }
+
+    /**
+     * The free edition: no generated share images, automatic 301s, 404 log,
+     * reports, Search Console or dashboard widget. Forced off at every boot
+     * rather than in the merged config, which isn't merged once it is cached.
+     * The data Pro saved stays in the database, ready for an upgrade.
+     */
+    protected function bootEdition(): void
+    {
+        if (Edition::pro()) {
+            return;
+        }
+
+        config([
+            'seo.og.enabled' => false,
+            'seo.redirects.automatic' => false,
+            'seo.not_found.enabled' => false,
+        ]);
+
+        $this->commands = array_values(array_diff($this->commands, self::PRO_ONLY));
+        $this->widgets = array_values(array_diff($this->widgets, self::PRO_ONLY));
+        $this->actions = array_values(array_diff($this->actions, self::PRO_ONLY));
+    }
+
+    /**
+     * Statamic also registers every command, widget and action in their
+     * folders: the free edition's leave Pro's out there too.
+     */
+    protected function autoloadFilesFromFolder($folder, $requiredClass = null)
+    {
+        $classes = parent::autoloadFilesFromFolder($folder, $requiredClass);
+
+        return Edition::pro() ? $classes : array_values(array_diff($classes, self::PRO_ONLY));
+    }
+
+    /**
+     * The settings are the reports': Pro only.
+     */
+    protected function bootSettingsBlueprint()
+    {
+        return Edition::pro() ? parent::bootSettingsBlueprint() : $this;
+    }
+
     public function bootAddon(): void
     {
         // A key and property set up in the control panel, where .env has none.
-        Connection::apply();
+        if (Edition::pro()) {
+            Connection::apply();
+        }
 
         $this->app->terminating(fn () => $this->app->make(IndexNow::class)->flush());
 
@@ -122,18 +180,20 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-        Permission::extend(fn () => Permission::group('seo', 'SEO', function () {
-            Permission::register('view seo')->label('View SEO overview, reports and 404s');
-            Permission::register('manage seo redirects')->label('Manage redirects');
-            Permission::register('run seo reports')->label('Run SEO reports');
+        Permission::extend(fn () => Permission::group('seo', __('seo::cp.seo'), function () {
+            Permission::register('view seo')->label(__(Edition::pro() ? 'seo::cp.permissions.view' : 'seo::cp.permissions.view_free'));
+            Permission::register('manage seo redirects')->label(__('seo::cp.permissions.redirects'));
+
+            if (Edition::pro()) {
+                Permission::register('run seo reports')->label(__('seo::cp.permissions.reports'));
+            }
         }));
 
         Navigation::register();
+
+        Statamic::provideToScript(['seo' => ['pro' => Edition::pro()]]);
     }
 
-    /**
-     * Reports on the schedule set under Tools → Addons → SEO.
-     */
     /**
      * Statamic builds an addon's schedule on every console boot: each artisan
      * command, queue job process and test. Reading the report settings costs
@@ -152,6 +212,11 @@ class ServiceProvider extends AddonServiceProvider
 
     protected function schedule($schedule)
     {
+        // Reports and Search Console are Pro.
+        if (! Edition::pro()) {
+            return;
+        }
+
         $settings = app(ReportSettings::class);
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);

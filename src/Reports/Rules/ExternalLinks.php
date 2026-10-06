@@ -19,7 +19,7 @@ class ExternalLinks extends Rule
 
     public function label(): string
     {
-        return 'Links to other sites';
+        return 'seo::reports.rules.external_links';
     }
 
     public function weight(): int
@@ -33,6 +33,6 @@ class ExternalLinks extends Rule
             return Result::pass();
         }
 
-        return Result::fail('Links to other sites that lead nowhere: '.implode(', ', array_slice($page->brokenExternalLinks, 0, 5)).(count($page->brokenExternalLinks) > 5 ? ' and more' : '').'.');
+        return Result::fail('seo::reports.messages.external_links_broken', ['links' => $this->listed($page->brokenExternalLinks, 5, paths: false)]);
     }
 }

@@ -11,6 +11,7 @@ use JothamLec\Seo\Preview\Draft;
 use JothamLec\Seo\Redirects\AutoRedirects;
 use JothamLec\Seo\Redirects\Csv;
 use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Support\Edition;
 use JothamLec\Seo\Support\Sites;
 use JothamLec\Seo\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
@@ -36,8 +37,10 @@ class RedirectsController
             'listingUrl' => cp_route('seo.redirects.listing'),
             'actionUrl' => cp_route('seo.actions.run'),
             'createUrl' => cp_route('seo.redirects.create'),
-            'exportUrl' => cp_route('seo.redirects.export'),
-            'importUrl' => cp_route('seo.redirects.import'),
+            // CSV in and out is Pro: the free edition shows what it would add.
+            'exportUrl' => Edition::pro() ? cp_route('seo.redirects.export') : null,
+            'importUrl' => Edition::pro() ? cp_route('seo.redirects.import') : null,
+            'upgradeUrl' => Edition::marketplaceUrl(),
         ]);
     }
 
@@ -54,15 +57,16 @@ class RedirectsController
             Redirect::query(),
             $request,
             [
-                'source' => 'From', 'target' => 'To',
+                'source' => __('seo::cp.listing.from'), 'target' => __('seo::cp.listing.to'),
                 // The site column only where there is more than one.
-                ...(Sites::multiple() ? ['site' => 'Site'] : []),
-                'status' => 'Status', 'active' => 'Active', 'hits' => 'Hits', 'last_hit_at' => 'Last used',
+                ...(Sites::multiple() ? ['site' => __('seo::cp.listing.site')] : []),
+                'status' => __('seo::cp.listing.status'), 'active' => __('seo::cp.listing.active'),
+                'hits' => __('seo::cp.listing.hits'), 'last_hit_at' => __('seo::cp.listing.last_used'),
             ],
             ['source', 'target'],
             fn (Redirect $redirect) => [
                 'id' => $redirect->id,
-                'site' => $redirect->site === null ? 'All sites' : ($sites[$redirect->site] ?? $redirect->site),
+                'site' => $redirect->site === null ? __('seo::cp.listing.all_sites') : ($sites[$redirect->site] ?? $redirect->site),
                 'source' => $redirect->source,
                 'target' => $redirect->target,
                 'status' => $redirect->status,
@@ -87,7 +91,7 @@ class RedirectsController
                 'status' => 301,
                 'active' => true,
             ]),
-            title: 'Create redirect',
+            title: __('seo::cp.redirects.create'),
             submitUrl: cp_route('seo.redirects.store'),
             method: 'post',
         );
@@ -256,22 +260,26 @@ class RedirectsController
     {
         return Blueprint::make('seo_redirect')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'source', 'field' => [
-                'type' => 'text', 'display' => 'From',
-                'instructions' => 'A path on this site, such as `/old-page`. A `*` matches anything, `/blog/*` for example.',
+                'type' => 'text', 'display' => __('seo::cp.redirect_form.source'),
+                'instructions' => __('seo::cp.redirect_form.source_instructions'),
             ]],
             ['handle' => 'target', 'field' => [
-                'type' => 'text', 'display' => 'To',
-                'instructions' => 'A path (`/new-page`) or a full address. `$1` is what the first `*` matched. Leave empty for 410.',
+                'type' => 'text', 'display' => __('seo::cp.redirect_form.target'),
+                'instructions' => __('seo::cp.redirect_form.target_instructions'),
             ]],
             ['handle' => 'status', 'field' => [
-                'type' => 'button_group', 'display' => 'Type', 'width' => 66, 'default' => '301',
-                'options' => ['301' => '301 Moved for good', '302' => '302 Moved for now', '410' => '410 Gone'],
+                'type' => 'button_group', 'display' => __('seo::cp.redirect_form.status'), 'width' => 66, 'default' => '301',
+                'options' => [
+                    '301' => __('seo::cp.redirect_form.status_301'),
+                    '302' => __('seo::cp.redirect_form.status_302'),
+                    '410' => __('seo::cp.redirect_form.status_410'),
+                ],
             ]],
-            ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => 'Active', 'width' => 33, 'default' => true]],
+            ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('seo::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
             // Only where there is more than one site to choose from.
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
-                'type' => 'select', 'display' => 'Site', 'options' => Sites::options(), 'clearable' => true, 'placeholder' => 'All sites',
-                'instructions' => 'The site whose address this is. Empty: every site. A site’s own redirect wins over one for every site.',
+                'type' => 'select', 'display' => __('seo::cp.redirect_form.site'), 'options' => Sites::options(), 'clearable' => true,
+                'placeholder' => __('seo::cp.redirect_form.all_sites'), 'instructions' => __('seo::cp.redirect_form.site_instructions'),
             ]]] : []),
         ]]]]]]);
     }

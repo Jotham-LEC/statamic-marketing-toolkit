@@ -131,6 +131,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Languages (hreflang)
+    |--------------------------------------------------------------------------
+    |
+    | With several sites, a page links to itself in each other language its
+    | entry (or term) is published in: <link rel="alternate" hreflang> tags
+    | and the same in the sitemap. The code is the site's language (`fr`),
+    | or its full locale (`en-GB`) where two sites share a language.
+    | `x_default` names the site whose version everyone else gets: null for
+    | the default site, a site handle, or false for none.
+    |
+    */
+
+    'hreflang' => [
+        'enabled' => true,
+        'x_default' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Redirects
     |--------------------------------------------------------------------------
     |

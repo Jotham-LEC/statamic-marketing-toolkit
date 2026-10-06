@@ -4,6 +4,8 @@ namespace JothamLec\Seo\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use JothamLec\Seo\ServiceProvider;
+use JothamLec\Seo\Support\Edition;
+use Statamic\Addons\Manifest;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
@@ -13,9 +15,23 @@ abstract class TestCase extends AddonTestCase
 
     protected string $addonServiceProvider = ServiceProvider::class;
 
+    /**
+     * The addon's edition the test runs in: Pro, unless the file uses the
+     * FreeEdition trait. Set before the addon boots, as a site's config is.
+     */
+    protected function edition(): string
+    {
+        return 'pro';
+    }
+
     protected function getEnvironmentSetUp($app)
     {
         parent::getEnvironmentSetUp($app);
+
+        // AddonTestCase's manifest leaves out the editions composer.json lists.
+        $manifest = $app->make(Manifest::class);
+        $manifest->manifest[Edition::PACKAGE]['editions'] = ['free', 'pro'];
+        $app['config']->set('statamic.editions.addons.'.Edition::PACKAGE, $this->edition());
 
         $app['config']->set('app.url', 'https://example.test');
         $app['config']->set('app.env', 'production');

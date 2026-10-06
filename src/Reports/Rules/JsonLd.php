@@ -15,7 +15,7 @@ class JsonLd extends Rule
 
     public function label(): string
     {
-        return 'Structured data';
+        return 'seo::reports.rules.json_ld';
     }
 
     public function weight(): int
@@ -26,8 +26,8 @@ class JsonLd extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return match (true) {
-            $page->jsonLdErrors !== [] => Result::fail('JSON-LD that doesn’t parse: '.implode('; ', $page->jsonLdErrors).'.'),
-            $page->jsonLd === 0 => Result::warn('No JSON-LD structured data.'),
+            $page->jsonLdErrors !== [] => Result::fail('seo::reports.messages.json_ld_invalid', ['errors' => implode('; ', $page->jsonLdErrors)]),
+            $page->jsonLd === 0 => Result::warn('seo::reports.messages.json_ld_missing'),
             default => Result::pass(),
         };
     }

@@ -2,6 +2,7 @@
 
 namespace JothamLec\Seo\Cp;
 
+use JothamLec\Seo\Support\Edition;
 use Statamic\CP\Navigation\Nav;
 use Statamic\CP\Navigation\NavItem;
 use Statamic\Facades\Addon;
@@ -16,7 +17,7 @@ class Navigation
 {
     public static function register(): void
     {
-        NavFacade::extend(fn (Nav $nav) => $nav->tools('SEO')
+        NavFacade::extend(fn (Nav $nav) => $nav->tools(__('seo::cp.seo'))
             ->route('seo.index')
             ->icon('search-magnifying-glass')
             ->can('view seo')
@@ -30,14 +31,16 @@ class Navigation
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
 
-        $addon = Addon::get('jotham-lec/statamic-co-seo');
+        $addon = Addon::get(Edition::PACKAGE);
+        $pro = Edition::pro();
 
         return array_values(array_filter([
-            $nav->item('Reports')->route('seo.reports.index')->can('view seo'),
-            $nav->item('Redirects')->route('seo.redirects.index')->can('manage seo redirects'),
-            $nav->item('404s')->route('seo.404s.index')->can('view seo'),
-            $variables ? $nav->item('Brand & defaults')->url($variables->editUrl())->can('edit', $variables) : null,
-            $addon?->hasSettingsBlueprint() ? $nav->item('Report settings')->url($addon->settingsUrl())->can('editSettings', $addon) : null,
+            $pro ? $nav->item(__('seo::cp.nav.reports'))->route('seo.reports.index')->can('view seo') : null,
+            $nav->item(__('seo::cp.nav.redirects'))->route('seo.redirects.index')->can('manage seo redirects'),
+            $pro ? $nav->item(__('seo::cp.nav.not_found'))->route('seo.404s.index')->can('view seo') : null,
+            $pro ? $nav->item(__('seo::cp.nav.search_console'))->route('seo.search-console.index')->can('view seo') : null,
+            $variables ? $nav->item(__('seo::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
+            $pro && $addon?->hasSettingsBlueprint() ? $nav->item(__('seo::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon) : null,
         ]));
     }
 }

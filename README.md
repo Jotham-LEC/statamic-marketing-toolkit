@@ -1,29 +1,84 @@
-# statamic-co-seo
+# Co-SEO: SEO that tells you what to fix
 
-SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro. With Pro, it works across several sites, each on its own domain: see [Several sites](#several-sites).
+Co-SEO puts Google's numbers next to a check of every page on your Statamic site, so your marketing team can see what to fix first, and why it matters, without leaving the control panel.
 
-Private package (`jotham-lec/statamic-co-seo`). Built for fresh Statamic sites: Statamic's own defaults first, and anything one site needs goes in that site's `SiteSeo` subclass.
+It is the only Statamic SEO addon that shows Google Search Console's clicks and positions beside a site audit. It also draws share cards for every page, on any host, with no headless browser to install.
 
-## Documentation
+## See what Google sees
 
-| | |
-|---|---|
-| [Getting started](docs/getting-started.md) | Requirements, install, blueprints, the tag, permissions, and a checklist that it works. |
-| [Configuration](docs/configuration.md) | Every key of `config/seo.php`, the report settings, permissions and commands. |
-| [A guide for editors](docs/editors.md) | For the people who write the pages: the SEO fields, the preview, redirects, 404s and reports. No code. |
-| [For developers](docs/developers.md) | How values are worked out, overriding rules in a `SiteSeo` subclass, the tag, share-card templates, working on the addon. |
-| [Troubleshooting](docs/troubleshooting.md) | Problems people have hit, and their fixes. |
-| [Changelog](CHANGELOG.md) | What changed in each version. |
+<!-- Screenshot: docs/images/search-console.png (Tools → SEO, Google Search panel) -->
 
-## Quick start
+Connect Google Search Console once, step by step, from the control panel. Every day Co-SEO brings in how often each page appeared in Google, how often it was clicked, and where it ranked. It sits next to your site's report, so a page that ranks but never gets clicked, or one that has dropped, stands out.
 
-```bash
-composer config --global github-oauth.github.com <token>   # read access to the private repo
-```
+## Fix what's broken
 
-```json
-"repositories": [{ "type": "vcs", "url": "https://github.com/Jotham-LEC/statamic-co-seo" }]
-```
+<!-- Screenshot: docs/images/report.png (a report with its score) -->
+
+A report reads every page the way a search engine does and gives the site a score out of 100. It lists what to fix, most important first:
+
+- missing or overlong titles and descriptions, and ones used on more than one page
+- broken links, inside the site and out
+- pages that no other page links to
+- images with no description, pages with no share image
+- pages hidden from Google that are still in the sitemap
+
+Reports run when you ask, or every day or week. Each issue links straight to the page's edit screen.
+
+## Share cards that look right everywhere
+
+<!-- Screenshot: docs/images/share-card.png (a generated card) -->
+
+When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Co-SEO draws one for every page that has none, in your brand's colours, with the page's title. Editors can change its wording, or upload their own image. It works on any host, including shared hosting, because it needs no headless browser.
+
+## For your team
+
+- **A live Google preview on every page.** Editors see the search result and the share card as they type, with counters that turn amber when a title or description is too short or too long.
+- **Nothing gets lost when a page moves.** Change a page's address and Co-SEO asks whether to send the old one to the new one, then does it.
+- **Redirects anyone can manage.** Add them one by one or import a spreadsheet; send a whole section with a wildcard, or tell Google a page is gone for good.
+- **A list of missing pages.** See the addresses visitors and search engines ask for that don't exist, and redirect them in a click.
+- **Sensible defaults.** Every page gets a title, a description, a canonical address, Open Graph and X tags, and structured data for Google, without anyone filling in a field. Editors change only what they want to.
+
+## Several languages
+
+- **hreflang, automatically.** Each page tells Google where it is in every other language, so French visitors get the French page. The sitemap carries the same links.
+- **A title per language.** Every SEO field can differ from one language to another.
+- **A sitemap per domain**, whether languages live under `/fr/` or on their own domains.
+- **A control panel in your language.** Every word in Co-SEO's screens can be translated.
+
+## Free and Pro
+
+| | Free | Pro |
+|---|:---:|:---:|
+| Titles, descriptions, Open Graph and X cards | ✓ | ✓ |
+| Structured data (JSON-LD) for Google | ✓ | ✓ |
+| Sitemap and robots.txt | ✓ | ✓ |
+| Live Google and share preview, with counters | ✓ | ✓ |
+| Redirects, with wildcards and "gone for good" | ✓ | ✓ |
+| Several sites and languages, with hreflang | ✓ | ✓ |
+| Instant indexing with Bing and others (IndexNow) | ✓ | ✓ |
+| Rules your developer can change in code | ✓ | ✓ |
+| Google Search Console numbers per page | | ✓ |
+| Site reports with a score, on a schedule | | ✓ |
+| Broken link checks, inside and out | | ✓ |
+| Share cards drawn for every page | | ✓ |
+| Redirects added automatically when a page moves | | ✓ |
+| The list of missing pages (404s) | | ✓ |
+| Import and export redirects as a spreadsheet | | ✓ |
+| Dashboard widget | | ✓ |
+
+The free edition shows Pro's features in the control panel as cards you can upgrade from. Nothing you set up is lost when you switch.
+
+## Why Co-SEO
+
+- **Sitemaps, several languages and redirects are free.** Not hidden behind an upgrade.
+- **Google's numbers inside your control panel**, next to what to fix.
+- **No headless browser needed** for share images, so they work on any host.
+- **Built for Statamic 6**, and works on Statamic Core: you don't need Statamic Pro unless you run several sites.
+- **One price, no renewals** while Co-SEO is below version 1.0.
+
+## Installing
+
+Ask your developer to run:
 
 ```bash
 composer require jotham-lec/statamic-co-seo
@@ -31,63 +86,23 @@ php artisan migrate
 php please seo:install
 ```
 
-1. Import the fieldset into each blueprint that should have SEO fields: `- import: seo::seo`.
-2. Put the tag in the layout's `<head>`: `<s:seo:meta />` (Antlers: `{{ seo:meta }}`).
-3. Fill in **Globals → SEO & brand**.
+then fill in **Globals → SEO & brand**. For Pro, they buy it on the Marketplace and set the edition in `config/statamic/editions.php`.
 
-[Getting started](docs/getting-started.md) covers the rest: the dashboard widget, permissions, the schedule.
+Developers: start with [Getting started](docs/getting-started.md), then [For developers](docs/developers.md).
 
-## What it does
-
-- **On every page**: the `<title>`, description, robots, canonical, Open Graph, X and verification tags, and one JSON-LD graph (website, publisher, page, breadcrumbs, article, FAQ and your own nodes). Escaped for HTML and JSON.
-- **Files**: `/sitemap.xml` (split above 1,000 URLs, cached, rebuilt on save) and `/robots.txt` from the global set.
-- **Share cards**: a picture drawn for each page that has none, at `/og/{uri}.png`, in the brand's colours; editors change its text or replace it with an upload.
-- **In the control panel**:
-  - a live **Google and share preview** with length counters on every page
-  - **Redirects** (wildcards, 301/302/410, CSV), added automatically when a page's address changes, with a question first
-  - a **404 log** with one-click redirects
-  - **reports** that render every page, check it against thirteen rules and score the site
-  - **Google Search Console** numbers per page (clicks, appearances, position), imported daily, set up step by step from Tools → SEO
-  - a **dashboard widget**
-- **Rules in code**: one class, `SiteSeo`, works out every value; extend it to change one rule for one site.
-
-## What each value falls back to
-
-| Value | Order |
+| Documentation | |
 |---|---|
-| `<title>` | SEO title as typed → `{title}{separator}{site}` if it fits `seo.title.max`, else the title → site name on home. `· Page N` past page 1 |
-| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 155 on a word |
-| share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
-| canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
-| robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
+| [Getting started](docs/getting-started.md) | Requirements, installing, the editions, the tag, permissions, and a checklist that it works. |
+| [A guide for editors](docs/editors.md) | For the people who write the pages: the fields, the preview, redirects, 404s and reports. |
+| [Configuration](docs/configuration.md) | Every setting, permission and command. |
+| [For developers](docs/developers.md) | How values are worked out, changing a rule in code, share-card templates, several sites. |
+| [Troubleshooting](docs/troubleshooting.md) | Problems people have hit, and their fixes. |
+| [Changelog](CHANGELOG.md) | What changed in each version. |
 
-Empty fields count as unset.
+## Licence and support
 
-## Several sites
+Co-SEO is a commercial addon, sold on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/co-seo). The free edition is free on any site. Pro is $59, once, with updates included and no renewal while Co-SEO is below 1.0. A live site on Pro needs a licence: buy it on the Marketplace, then add it to the site on statamic.com. Local and staging sites don't need one.
 
-With Statamic Pro and more than one site, each on its own domain, each site gets its own:
+Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-co-seo/issues).
 
-- **Brand values**: `seo:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
-- **Sitemap, robots.txt, share cards and IndexNow key** on its own domain; IndexNow gets one request per domain.
-- **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** on the site of the content that moved.
-- **404 log** and **reports**, one report per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
-- **Search Console property**: one key, a property per site (set up from Tools → SEO with the site selected, or a map in config).
-
-## Not built yet
-
-- `/sitemap.xsl` (a readable sitemap in the browser).
-- GraphQL fields: they need Statamic Pro.
-
-## Develop
-
-```bash
-composer install && npm install
-npm run build      # commit resources/dist: sites don't run npm
-vendor/bin/pest    # needs PHP's imagick extension
-vendor/bin/pint
-vendor/bin/phpstan # Larastan, level 5
-```
-
-Release: `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`; sites update with `composer update jotham-lec/statamic-co-seo`.
-
-Licence: proprietary, all rights reserved.
+Made by CoThinking. All rights reserved.

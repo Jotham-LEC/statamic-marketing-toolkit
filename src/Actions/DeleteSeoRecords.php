@@ -36,8 +36,8 @@ class DeleteSeoRecords extends Action
 
     public function confirmationText()
     {
-        /** @translation */
-        return 'Delete this?|Delete these :count items?';
+        // The CP picks the singular or plural part.
+        return __('seo::cp.actions.delete_confirm');
     }
 
     public function run($items, $values)

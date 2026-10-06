@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JothamLec\Seo\Support\SchemaTypes;
+use JothamLec\Seo\Support\Sites;
 use JothamLec\Seo\Support\Text;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Auth\User;
@@ -19,6 +20,7 @@ use Statamic\Facades\Image;
 use Statamic\Facades\Markdown;
 use Statamic\Facades\Site;
 use Statamic\Fields\Value;
+use Statamic\Sites\Site as SiteObject;
 use Statamic\Structures\Page;
 use WeakMap;
 
@@ -54,6 +56,7 @@ class SiteSeo
     {
         $canonical = $this->canonical($context);
         $title = $this->title($context);
+        $alternates = $context->status >= 400 ? [] : $this->alternates($context);
 
         return new Meta(
             title: $title,
@@ -64,13 +67,15 @@ class SiteSeo
             ogType: $this->ogType($context),
             url: $this->url($context),
             siteName: $this->settings->siteName(),
-            locale: str_replace('-', '_', Site::current()->locale()),
+            locale: $this->ogLocale($this->contentSite($context)),
             image: $this->image($context),
             published: $this->published($context),
             modified: $this->modified($context),
             twitterSite: $this->twitterSite(),
             verification: $this->verification(),
             graph: $context->status >= 400 ? [] : $this->graph($context),
+            alternates: $alternates,
+            localeAlternates: $alternates === [] ? [] : $this->localeAlternates($context),
         );
     }
 
@@ -83,7 +88,9 @@ class SiteSeo
     public function title(Context $context): string
     {
         $site = $this->settings->siteName();
-        $suffix = $context->page() > 1 ? "{$this->settings->separator()}Page {$context->page()}" : '';
+        $suffix = $context->page() > 1
+            ? $this->settings->separator().__('seo::frontend.page', ['n' => $context->page()], $this->contentSite($context)->lang())
+            : '';
 
         // The editor's SEO title is the whole <title>, as typed.
         if ($title = $context->seo()['title'] ?? null) {
@@ -575,7 +582,7 @@ class SiteSeo
             'name' => $this->ogTitle($context),
             'description' => $this->description($context),
             'isPartOf' => ['@id' => $this->home().'#website'],
-            'inLanguage' => Site::current()->lang(),
+            'inLanguage' => $this->contentSite($context)->lang(),
             // Where Google takes a page's thumbnail for Search and Discover from.
             'primaryImageOfPage' => $image ? ['@type' => 'ImageObject', 'url' => $image['url'], 'width' => $image['width'], 'height' => $image['height']] : null,
             // A profile page is about someone (Google requires it): the entry, as a Person.
@@ -852,14 +859,178 @@ class SiteSeo
 
     /*
     |--------------------------------------------------------------------------
+    | Languages
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The same page in each language, for hreflang: code => address, with
+     * `x-default` for the version shown to everyone else (config
+     * `seo.hreflang.x_default`). Empty when there is no other language to
+     * point to, or when this isn't an address to index: noindexed, canonical
+     * elsewhere, a listing past its first page.
+     *
+     * @return array<string, string>
+     */
+    public function alternates(Context $context): array
+    {
+        return $this->once($context, 'alternates', function () use ($context) {
+            $content = $context->content();
+
+            if (! $content || $context->page() > 1 || str_contains($this->robots($context), 'noindex')) {
+                return [];
+            }
+
+            if (rtrim((string) $this->canonical($context), '/') !== rtrim($this->url($context), '/')) {
+                return [];
+            }
+
+            return $this->contentAlternates($content);
+        });
+    }
+
+    /**
+     * hreflang code => address of $content in each language it is published
+     * and listed in, itself included, plus `x-default`. Empty under two.
+     *
+     * @return array<string, string>
+     */
+    public function contentAlternates(Entry|Term $content): array
+    {
+        if (! config('seo.hreflang.enabled', true) || ! Sites::multiple()) {
+            return [];
+        }
+
+        $versions = $this->localizations($content);
+
+        if (! isset($versions[$content->locale()])) {
+            return [];
+        }
+
+        $codes = $this->hreflangCodes();
+        $alternates = [];
+
+        foreach ($versions as $site => $version) {
+            $alternates[$codes[$site]] ??= (string) $version->absoluteUrl();
+        }
+
+        if (count($alternates) < 2) {
+            return [];
+        }
+
+        $default = $this->xDefaultSite();
+
+        if ($default !== null && isset($versions[$default])) {
+            $alternates['x-default'] = (string) $versions[$default]->absoluteUrl();
+        }
+
+        return $alternates;
+    }
+
+    /**
+     * $content on each site it can be listed on, in the sites' order: an
+     * entry's origin and its localizations, a term on each of its
+     * taxonomy's sites (where it has entries). Drafts, noindexed versions
+     * and those canonical elsewhere are left out, as from the sitemap.
+     *
+     * @return array<string, Entry|Term> site handle => content
+     */
+    public function localizations(Entry|Term $content): array
+    {
+        if ($content instanceof Entry) {
+            $root = $content->root();
+            $versions = collect([$root, ...$root->descendants()->values()->all()])
+                ->filter(fn (Entry $entry) => $entry->status() === 'published');
+        } else {
+            $versions = collect($content->taxonomy()?->sites() ?? [])
+                ->map(fn (string $site) => $content->in($site))
+                ->filter(fn (Term $term) => Sites::as($term->locale(), fn () => $this->termHasEntries($term)));
+        }
+
+        $versions = $versions->filter(fn (Entry|Term $version) => $this->inSitemap($version))
+            ->keyBy(fn (Entry|Term $version) => $version->locale());
+
+        return collect(Sites::handles())
+            ->filter(fn (string $site) => $versions->has($site))
+            ->mapWithKeys(fn (string $site) => [$site => $versions->get($site)])
+            ->all();
+    }
+
+    /**
+     * Each site's hreflang code: its language (`en`, `fr`), or its full
+     * locale (`en-GB`, `en-US`) where two sites share a language.
+     *
+     * @return array<string, string> site handle => code
+     */
+    public function hreflangCodes(): array
+    {
+        $languages = Site::all()->map(fn ($site) => strtolower((string) $site->lang()))->countBy();
+
+        return Site::all()->mapWithKeys(fn ($site) => [$site->handle() => $languages[strtolower((string) $site->lang())] > 1
+            ? str_replace('_', '-', Str::before((string) $site->locale(), '.'))
+            : (string) $site->lang(),
+        ])->all();
+    }
+
+    /**
+     * The site whose version is `x-default`: the default site, another named
+     * in `seo.hreflang.x_default`, or none (false).
+     */
+    public function xDefaultSite(): ?string
+    {
+        $site = config('seo.hreflang.x_default');
+
+        if ($site === false) {
+            return null;
+        }
+
+        return is_string($site) && Site::get($site) ? $site : Site::default()->handle();
+    }
+
+    /**
+     * og:locale:alternate: the locales of the page's other languages.
+     *
+     * @return list<string>
+     */
+    public function localeAlternates(Context $context): array
+    {
+        $alternates = $this->alternates($context);
+        $own = $this->ogLocale($this->contentSite($context));
+
+        return collect($this->hreflangCodes())
+            ->filter(fn (string $code) => isset($alternates[$code]))
+            ->keys()
+            ->map(fn (string $site) => $this->ogLocale(Site::get($site)))
+            ->reject(fn (string $locale) => $locale === $own)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The site of the page's content (its language), else the current one.
+     */
+    public function contentSite(Context $context): SiteObject
+    {
+        return $context->content()?->site() ?? Site::current();
+    }
+
+    protected function ogLocale(SiteObject $site): string
+    {
+        return str_replace('-', '_', Str::before((string) $site->locale(), '.'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Sitemap
     |--------------------------------------------------------------------------
     */
 
     /**
-     * Every URL the sitemap lists, sorted by address.
+     * Every URL the sitemap lists, sorted by address, each with its other
+     * languages (hreflang code => address) when it has any.
      *
-     * @return Collection<int, array{loc: string, lastmod: ?string}>
+     * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */
     public function sitemapUrls(): Collection
     {
@@ -896,12 +1067,30 @@ class SiteSeo
     }
 
     /**
-     * @return Collection<int, array{loc: string, lastmod: ?string}>
+     * The sites one sitemap lists: the current one, and the others on its
+     * domain (languages under /fr/, /de/). A domain serves one sitemap.
+     *
+     * @return list<string>
+     */
+    public function sitemapSites(): array
+    {
+        $host = fn ($site) => strtolower((string) parse_url((string) $site->absoluteUrl(), PHP_URL_HOST));
+        $current = $host(Site::current());
+
+        return Site::all()->filter(fn ($site) => $host($site) === $current)->map->handle()->values()->all();
+    }
+
+    /**
+     * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */
     protected function sitemapEntries(): Collection
     {
+        $sites = $this->sitemapSites();
+
         $collections = config('seo.sitemap.collections')
-            ?? \Statamic\Facades\Collection::all()->filter(fn ($collection) => $collection->route(Site::current()->handle()))->map->handle()->all();
+            ?? \Statamic\Facades\Collection::all()
+                ->filter(fn ($collection) => collect($sites)->contains(fn (string $site) => $collection->route($site)))
+                ->map->handle()->all();
 
         $collections = array_values(array_diff($collections, (array) config('seo.sitemap.exclude_collections')));
 
@@ -911,13 +1100,13 @@ class SiteSeo
 
         return Entries::query()
             ->whereIn('collection', $collections)
-            ->where('site', Site::current()->handle())
+            ->whereIn('site', $sites)
             ->whereStatus('published')
             // In chunks, keeping only the address and date: a big site's entries needn't all be in memory.
             ->orderBy('id')
             ->lazy(500)
             ->filter(fn (Entry $entry) => $this->inSitemap($entry))
-            ->map(fn (Entry $entry) => ['loc' => $entry->absoluteUrl(), 'lastmod' => $entry->lastModified()?->toAtomString()])
+            ->map(fn (Entry $entry) => $this->sitemapRow($entry))
             ->values()
             ->collect();
     }
@@ -936,15 +1125,29 @@ class SiteSeo
     }
 
     /**
-     * @return Collection<int, array{loc: string, lastmod: ?string}>
+     * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */
     protected function sitemapTerms(): Collection
     {
-        return collect((array) config('seo.sitemap.taxonomies'))
-            ->flatMap(fn (string $taxonomy) => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->where('site', Site::current()->handle())->get())
+        // Each site's terms counted on that site: termHasEntries() asks of the current one.
+        return collect($this->sitemapSites())->flatMap(fn (string $site) => Sites::as($site, fn () => collect((array) config('seo.sitemap.taxonomies'))
+            ->flatMap(fn (string $taxonomy) => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
+            ->map(fn (Term $term) => $term->in($site))
             ->filter(fn (Term $term) => $this->inSitemap($term) && $this->termHasEntries($term))
-            ->map(fn (Term $term) => ['loc' => $term->absoluteUrl(), 'lastmod' => $term->lastModified()?->toAtomString()])
-            ->values();
+            ->map(fn (Term $term) => $this->sitemapRow($term))
+            ->values()
+            ->all()));
+    }
+
+    /**
+     * @return array{loc: string, lastmod: ?string, alternates?: array<string, string>}
+     */
+    protected function sitemapRow(Entry|Term $content): array
+    {
+        $row = ['loc' => (string) $content->absoluteUrl(), 'lastmod' => $content->lastModified()?->toAtomString()];
+        $alternates = $this->contentAlternates($content);
+
+        return $alternates === [] ? $row : [...$row, 'alternates' => $alternates];
     }
 
     /*

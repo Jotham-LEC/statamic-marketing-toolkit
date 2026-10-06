@@ -1,32 +1,11 @@
 <?php
 
-use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Widgets\SeoWidget;
-use Statamic\CP\Navigation\NavItem;
 use Statamic\Facades\Addon;
-use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
-use Statamic\Facades\User;
 use Statamic\Widgets\VueComponent;
-
-/**
- * The CP navigation's items under Tools, keyed by name, as the user sees them.
- *
- * @return Collection<string, NavItem>
- */
-function toolsNav(): Collection
-{
-    // AddonTestCase mocks the nav after the addon has extended the real one.
-    Nav::swap(new Statamic\CP\Navigation\Nav);
-    Navigation::register();
-
-    $tools = collect(Nav::build())->firstWhere('display', 'Tools');
-
-    return collect($tools['items'] ?? [])->keyBy(fn ($item) => $item->display());
-}
 
 test('the addon registers its permissions in an SEO group', function () {
     $permissions = Permission::boot()->all()->filter(fn ($permission) => $permission->group() === 'seo')->map->value()->values()->all();
@@ -42,7 +21,7 @@ test('Tools → SEO opens the overview and links to the brand global', function 
 
     expect($seo)->not->toBeNull()
         ->and($seo->url())->toBe(cp_route('seo.index'))
-        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Reports', 'Redirects', '404s', 'Brand & defaults', 'Report settings']);
+        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Reports', 'Redirects', '404s', 'Search Console', 'Brand & defaults', 'Report settings']);
 
     $this->get(cp_route('seo.index'))
         ->assertOk()

@@ -60,7 +60,7 @@ class Csv
                 $validator = Redirect::validator($row, $existing?->id);
 
                 if ($validator->fails()) {
-                    $result['errors'][] = 'Line '.($index + 1).': '.$validator->errors()->first();
+                    $result['errors'][] = __('seo::validation.csv_line', ['line' => $index + 1, 'message' => $validator->errors()->first()]);
 
                     continue;
                 }

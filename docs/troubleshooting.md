@@ -1,5 +1,20 @@
 # Troubleshooting
 
+### I see "Pro" cards instead of reports, 404s or Search Console
+
+The addon is running as Free. If you bought Pro, set it in `config/statamic/editions.php`: `'addons' => ['jotham-lec/statamic-co-seo' => 'pro']`, then clear the config cache (`php artisan config:clear`) if the site caches it. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, not this addon's edition.
+
+### No hreflang tags, or a language is missing from them
+
+- hreflang needs several sites (Statamic Pro, `multisite` on) and `seo.hreflang.enabled`.
+- The pages must be linked: a translation is an entry **localized** from another (it has an `origin`), not a separate entry with the same title.
+- A version that is a draft, noindexed, left out of the sitemap or canonical elsewhere is left out. If the page you're looking at is one of those, it gets no tags at all.
+- Page 2 and later of a listing, and error pages, get none.
+
+### Search Console: I can't create a key, or Google says the key is disabled
+
+New Google Cloud projects often block service account keys with the organization policy `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation), then you create the key as usual. A key (or service account) that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable). **Check the connection** on Tools → SEO → Search Console says which of these Google reports.
+
 ### Share cards: "Imagick PHP extension must be installed"
 
 the-og draws cards with Imagick. Install PHP's `imagick` extension (on NixOS, add `all.imagick` to the PHP `buildEnv` extensions). Uploaded share images don't need it; only generated cards do.
@@ -12,7 +27,7 @@ The built assets weren't published. Run `php artisan vendor:publish --tag=seo --
 
 - Is the cache store `array`? Automatic redirects compare the entry with the copy loaded before it was edited, and the `array` store returns the same object, so nothing looks changed. Use `file`, `redis` or `database`.
 - Only **published** entries get one: a draft has no public address to protect.
-- `seo.redirects.automatic` and `seo.redirects.enabled` must be `true`.
+- `seo.redirects.automatic` and `seo.redirects.enabled` must be `true`, and the addon must be Pro: Free adds no automatic redirects.
 - Did someone answer "Don't add" in the save dialog? That skips it for that save.
 
 ### A redirect doesn't apply

@@ -73,7 +73,7 @@ class Runner
             return $running;
         }
 
-        $running?->update(['status' => Report::FAILED, 'error' => 'Stopped making progress.', 'finished_at' => now()]);
+        $running?->update(['status' => Report::FAILED, 'error' => 'seo::reports.messages.stopped', 'finished_at' => now()]);
 
         $settings ??= app(ReportSettings::class);
         $sitemap = $this->seo->sitemapUrls()->pluck('loc')->flip();
@@ -114,7 +114,7 @@ class Runner
             $content = $this->content($page);
 
             if ($content === null) {
-                $facts = new PageFacts(status: 404, error: 'The page was deleted while the report ran.');
+                $facts = new PageFacts(status: 404, error: 'seo::reports.messages.page_deleted');
             } else {
                 $rendered = $this->renderer->render($content);
                 $facts = $rendered['status'] === 200 && $rendered['error'] === null
@@ -201,8 +201,8 @@ class Runner
 
             if (! $facts->rendered()) {
                 $counts['errors']++;
-                $message = $facts->error ?? "The page answered with status {$facts->status}.";
-                $page->update(['results' => ['render' => Result::fail($message)->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
+                $result = $facts->error !== null ? Result::fail($facts->error) : Result::fail('seo::reports.messages.status', ['status' => $facts->status]);
+                $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
                 $scores[] = 0;
 
                 return;

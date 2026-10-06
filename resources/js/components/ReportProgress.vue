@@ -30,7 +30,7 @@ onBeforeUnmount(() => (stopped = true));
 <template>
     <div>
         <div class="mb-1 flex justify-between text-sm">
-            <span>Checking pages…</span>
+            <span>{{ __('seo::reports.cp.checking') }}</span>
             <span>{{ current.pages_done }} / {{ current.pages_total }}</span>
         </div>
         <div class="h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">

@@ -8,10 +8,11 @@ use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\Report;
 use JothamLec\Seo\SearchConsole\Client;
-use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\SiteSeo;
+use JothamLec\Seo\Support\Edition;
 use JothamLec\Seo\Support\Sites;
+use Statamic\Addons\Addon as AddonPackage;
 use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\Addon;
 use Statamic\Facades\GlobalSet;
@@ -40,75 +41,63 @@ class OverviewController
     private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in($site);
-        $addon = Addon::get('jotham-lec/statamic-co-seo');
-        $latest = Report::query()->shownOn($site)->where('status', Report::DONE)->latest('id')->first();
+        $addon = Addon::get(Edition::PACKAGE);
+        $pro = Edition::pro();
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
         return Inertia::render('seo::Overview', [
             'siteName' => $seo->settings()->siteName(),
+            'edition' => Edition::name(),
+            'upgradeUrl' => Edition::marketplaceUrl(),
             'global' => [
                 'exists' => $variables !== null,
                 'url' => $variables && $user->can('edit', $variables) ? $variables->editUrl() : null,
                 'separator' => $seo->settings()->separator(),
                 'description' => $seo->settings()->string('default_description'),
             ],
-            'report' => [
-                'latest' => $latest === null ? null : [
-                    'score' => (int) $latest->score,
-                    'pages' => (int) ($latest->summary['scored'] ?? $latest->pages_total),
-                    'finished_at' => $latest->finished_at?->toIso8601String(),
-                    'url' => cp_route('seo.reports.show', $latest),
-                ],
-                'url' => cp_route('seo.reports.index'),
-                'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? $addon->settingsUrl() : null,
-            ],
+            // Pro's panels are null in the free edition, which shows what they would add instead.
+            'report' => $pro ? $this->report($user, $addon, $site) : null,
             'redirects' => $user->can('manage seo redirects') ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
                 'url' => cp_route('seo.redirects.index'),
             ] : null,
-            'notFound' => [
+            'notFound' => $pro ? [
                 'paths' => MissingPath::query()->shownOn($site)->count(),
                 'recent' => MissingPath::query()->shownOn($site)->latest('last_seen_at')->limit(5)->get()
                     ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])->all(),
                 'url' => cp_route('seo.404s.index'),
-            ],
-            'search' => $this->search($searchConsole, $site),
-            'searchSetup' => $this->searchSetup($searchConsole, $user->can('editSettings', $addon), $site),
+            ] : null,
+            'search' => $pro ? $this->search($searchConsole, $site) : null,
+            'searchConsole' => $pro ? [
+                'configured' => $searchConsole->configured($site),
+                'url' => cp_route('seo.search-console.index'),
+            ] : null,
             // On the site's own address, which can differ from the control panel's.
             'files' => collect([
-                'Sitemap' => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
-                'robots.txt' => config('seo.robots_txt') ? 'robots.txt' : null,
-                'Home share card' => config('seo.og.enabled') ? 'og.png' : null,
+                __('seo::cp.overview.files.sitemap') => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
+                __('seo::cp.overview.files.robots') => config('seo.robots_txt') ? 'robots.txt' : null,
+                __('seo::cp.overview.files.card') => config('seo.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
         ]);
     }
 
     /**
-     * Where Search Console's setup stands, for the steps on Tools → SEO.
-     * Without permission to change it, only whether it is connected.
-     *
      * @return array<string, mixed>
      */
-    private function searchSetup(Client $client, bool $canSetUp, string $site): array
+    private function report(UserContract $user, ?AddonPackage $addon, string $site): array
     {
-        $connection = new Connection;
+        $latest = Report::query()->shownOn($site)->where('status', Report::DONE)->latest('id')->first();
 
         return [
-            'configured' => $client->configured($site),
-            'can_set_up' => $canSetUp,
-            'email' => $canSetUp ? $connection->email() : null,
-            'key_source' => $connection->keySource(),
-            'property' => $canSetUp ? $connection->property($site) : null,
-            'property_source' => $connection->propertySource($site),
-            'suggested_property' => $connection->suggestedProperty($site),
-            'urls' => $canSetUp ? [
-                'key' => cp_route('seo.search-console.key'),
-                'forget_key' => cp_route('seo.search-console.key.forget'),
-                'property' => cp_route('seo.search-console.property'),
-                'check' => cp_route('seo.search-console.check'),
-                'import' => cp_route('seo.search-console.import'),
-            ] : null,
+            'latest' => $latest === null ? null : [
+                'score' => (int) $latest->score,
+                'pages' => (int) ($latest->summary['scored'] ?? $latest->pages_total),
+                'finished_at' => $latest->finished_at?->toIso8601String(),
+                'url' => cp_route('seo.reports.show', $latest),
+            ],
+            'url' => cp_route('seo.reports.index'),
+            'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? $addon->settingsUrl() : null,
         ];
     }
 

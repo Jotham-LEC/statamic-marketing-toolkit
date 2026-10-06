@@ -106,6 +106,27 @@ test('an import refuses a row that loops back through an earlier row of the same
         ]);
 });
 
+test('the checks, the import report and the listing speak the editor\'s language', function () {
+    $this->actingAs(cpUser(['manage seo redirects']));
+    Redirect::query()->create(['source' => '/a', 'target' => '/b']);
+    app('translator')->addLines([
+        'cp.redirects.title' => 'XX Redirects',
+        'cp.listing.from' => 'XX From',
+        'validation.redirect.source_required' => 'XX Which address?',
+        'validation.redirect.loop' => 'XX Loop.',
+        'validation.csv_line' => 'XX line :line: :message',
+    ], 'xx', 'seo');
+    app()->setLocale('xx');
+
+    $this->postJson(cp_route('seo.redirects.store'), ['source' => '', 'target' => '/x', 'status' => '301'])
+        ->assertJsonValidationErrors(['source' => 'XX Which address?']);
+
+    $csv = "/b,/a\n";
+    expect($this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->json('errors'))
+        ->toBe(['XX line 1: XX Loop.'])
+        ->and($this->getJson(cp_route('seo.redirects.listing'))->json('meta.columns.0.label'))->toBe('XX From');
+});
+
 test('the 404 log listing, newest first, with a "Create redirect" action per row', function () {
     $this->actingAs(cpUser(['view seo', 'manage seo redirects']));
     $old = MissingPath::query()->create(['path' => '/old-miss', 'hits' => 9, 'first_seen_at' => now()->subDay(), 'last_seen_at' => now()->subDay()]);

@@ -45,10 +45,11 @@ class NotFoundController
             MissingPath::query()->shownOn(Site::selected()->handle()),
             $request,
             [
-                'last_seen_at' => 'Last seen', 'path' => 'Path',
+                'last_seen_at' => __('seo::cp.listing.last_seen'), 'path' => __('seo::cp.listing.path'),
                 // The site column only where there is more than one.
-                ...(Sites::multiple() ? ['site' => 'Site'] : []),
-                'hits' => 'Hits', 'first_seen_at' => 'First seen', 'referrer' => 'Last linked from',
+                ...(Sites::multiple() ? ['site' => __('seo::cp.listing.site')] : []),
+                'hits' => __('seo::cp.listing.hits'), 'first_seen_at' => __('seo::cp.listing.first_seen'),
+                'referrer' => __('seo::cp.listing.last_linked_from'),
             ],
             ['path', 'referrer'],
             fn (MissingPath $row) => [

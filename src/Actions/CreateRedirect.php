@@ -14,7 +14,7 @@ class CreateRedirect extends Action
 
     public static function title()
     {
-        return __('Create redirect');
+        return __('seo::cp.redirects.create');
     }
 
     public function visibleTo($item)

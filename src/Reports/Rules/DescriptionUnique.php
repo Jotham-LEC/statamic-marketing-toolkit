@@ -15,7 +15,7 @@ class DescriptionUnique extends Rule
 
     public function label(): string
     {
-        return 'Unique description';
+        return 'seo::reports.rules.description_unique';
     }
 
     public function weight(): int
@@ -29,6 +29,6 @@ class DescriptionUnique extends Rule
 
         return $others === []
             ? Result::pass()
-            : Result::fail('Same description as '.$this->list($others).'.');
+            : Result::fail('seo::reports.messages.description_same', ['pages' => $this->listed($others)]);
     }
 }

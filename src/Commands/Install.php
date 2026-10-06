@@ -24,18 +24,26 @@ class Install extends Command
 {
     /** Common choices; any other schema.org type can be typed in. */
     private const array PUBLISHER_TYPES = [
-        'Organization' => 'Organization',
-        'Corporation' => 'Corporation',
-        'EducationalOrganization' => 'Educational organization',
-        'NGO' => 'Non-profit',
-        'LocalBusiness' => 'Local business',
-        'Store' => 'Store',
-        'ProfessionalService' => 'Professional service',
-        'Restaurant' => 'Restaurant',
-        'Person' => 'Person',
+        'Organization' => 'seo::fields.brand.publisher_type.options.organization',
+        'Corporation' => 'seo::fields.brand.publisher_type.options.corporation',
+        'EducationalOrganization' => 'seo::fields.brand.publisher_type.options.educational_organization',
+        'NGO' => 'seo::fields.brand.publisher_type.options.ngo',
+        'LocalBusiness' => 'seo::fields.brand.publisher_type.options.local_business',
+        'Store' => 'seo::fields.brand.publisher_type.options.store',
+        'ProfessionalService' => 'seo::fields.brand.publisher_type.options.professional_service',
+        'Restaurant' => 'seo::fields.brand.publisher_type.options.restaurant',
+        'Person' => 'seo::fields.brand.publisher_type.options.person',
     ];
 
-    private const array DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    private const array DAYS = [
+        'Monday' => 'seo::fields.brand.days.options.monday',
+        'Tuesday' => 'seo::fields.brand.days.options.tuesday',
+        'Wednesday' => 'seo::fields.brand.days.options.wednesday',
+        'Thursday' => 'seo::fields.brand.days.options.thursday',
+        'Friday' => 'seo::fields.brand.days.options.friday',
+        'Saturday' => 'seo::fields.brand.days.options.saturday',
+        'Sunday' => 'seo::fields.brand.days.options.sunday',
+    ];
 
     use RunsInPlease;
 
@@ -209,6 +217,9 @@ class Install extends Command
     }
 
     /**
+     * The blueprint keeps translation keys (lang/en/fields.php), not English,
+     * so the control panel shows it in each user's language.
+     *
      * @return array<string, mixed>
      */
     public static function tabs(string $container): array
@@ -217,91 +228,91 @@ class Install extends Command
         $asset = fn (string $display, string $instructions = '') => ['type' => 'assets', 'display' => $display, 'container' => $container, 'max_files' => 1, 'instructions' => $instructions];
 
         return [
-            'brand' => ['display' => 'Brand', 'sections' => [['fields' => [
-                $field('title_separator', ['type' => 'text', 'display' => 'Title separator', 'width' => 50, 'placeholder' => '·', 'instructions' => 'Between the page title and the site name, with a space on each side.']),
-                $field('default_description', ['type' => 'textarea', 'display' => 'Default description', 'character_limit' => 160, 'instructions' => 'For pages with no description and no first paragraph.']),
-                $field('default_image', $asset('Default share image', 'For pages without an image or a generated card. 1200×630.')),
-                $field('site_alternate_name', ['type' => 'text', 'display' => 'Other site name', 'width' => 50, 'instructions' => 'A shorter name or acronym search engines may show instead.']),
-                $field('twitter_handle', ['type' => 'text', 'display' => 'X handle', 'width' => 50, 'prepend' => '@']),
+            'brand' => ['display' => 'seo::fields.brand.tabs.brand', 'sections' => [['fields' => [
+                $field('title_separator', ['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display', 'width' => 50, 'placeholder' => '·', 'instructions' => 'seo::fields.brand.title_separator.instructions']),
+                $field('default_description', ['type' => 'textarea', 'display' => 'seo::fields.brand.default_description.display', 'character_limit' => 160, 'instructions' => 'seo::fields.brand.default_description.instructions']),
+                $field('default_image', $asset('seo::fields.brand.default_image.display', 'seo::fields.brand.default_image.instructions')),
+                $field('site_alternate_name', ['type' => 'text', 'display' => 'seo::fields.brand.site_alternate_name.display', 'width' => 50, 'instructions' => 'seo::fields.brand.site_alternate_name.instructions']),
+                $field('twitter_handle', ['type' => 'text', 'display' => 'seo::fields.brand.twitter_handle.display', 'width' => 50, 'prepend' => '@']),
             ]]]],
-            'publisher' => ['display' => 'Publisher', 'sections' => [
-                ['instructions' => 'Who is behind the site, for search engines (JSON-LD). Each value is printed only where its type accepts it.', 'fields' => [
-                    $field('publisher_type', ['type' => 'select', 'display' => 'Type', 'width' => 50, 'multiple' => true, 'taggable' => true, 'default' => ['Organization'], 'options' => self::PUBLISHER_TYPES, 'instructions' => 'The most specific schema.org type, or two (EducationalOrganization and LocalBusiness). Type any other schema.org type.']),
-                    $field('publisher_name', ['type' => 'text', 'display' => 'Name', 'width' => 50]),
-                    $field('publisher_alternate_name', ['type' => 'text', 'display' => 'Other name', 'width' => 50, 'instructions' => 'An abbreviation or former name.']),
-                    $field('founding_date', ['type' => 'date', 'display' => 'Founded', 'width' => 50]),
-                    $field('publisher_description', ['type' => 'textarea', 'display' => 'Description']),
-                    $field('publisher_logo', $asset('Logo or portrait')),
-                    $field('job_title', ['type' => 'text', 'display' => 'Job title', 'width' => 50, 'if' => ['publisher_type' => 'contains Person']]),
-                    $field('telephone', ['type' => 'text', 'display' => 'Telephone', 'width' => 50]),
-                    $field('email', ['type' => 'text', 'input_type' => 'email', 'display' => 'Email', 'width' => 50]),
-                    $field('area_served', ['type' => 'text', 'display' => 'Area served', 'width' => 50]),
-                    $field('same_as', ['type' => 'list', 'display' => 'Profiles elsewhere', 'instructions' => 'Full URLs: LinkedIn, Instagram, Google Business Profile…']),
-                    $field('contact_points', ['type' => 'grid', 'display' => 'Contact points', 'mode' => 'table', 'add_row' => 'Add a contact point', 'fields' => [
-                        $field('contact_type', ['type' => 'text', 'display' => 'For', 'placeholder' => 'customer service']),
-                        $field('telephone', ['type' => 'text', 'display' => 'Telephone']),
-                        $field('email', ['type' => 'text', 'display' => 'Email']),
+            'publisher' => ['display' => 'seo::fields.brand.tabs.publisher', 'sections' => [
+                ['instructions' => 'seo::fields.brand.sections.publisher.instructions', 'fields' => [
+                    $field('publisher_type', ['type' => 'select', 'display' => 'seo::fields.brand.publisher_type.display', 'width' => 50, 'multiple' => true, 'taggable' => true, 'default' => ['Organization'], 'options' => self::PUBLISHER_TYPES, 'instructions' => 'seo::fields.brand.publisher_type.instructions']),
+                    $field('publisher_name', ['type' => 'text', 'display' => 'seo::fields.brand.publisher_name.display', 'width' => 50]),
+                    $field('publisher_alternate_name', ['type' => 'text', 'display' => 'seo::fields.brand.publisher_alternate_name.display', 'width' => 50, 'instructions' => 'seo::fields.brand.publisher_alternate_name.instructions']),
+                    $field('founding_date', ['type' => 'date', 'display' => 'seo::fields.brand.founding_date.display', 'width' => 50]),
+                    $field('publisher_description', ['type' => 'textarea', 'display' => 'seo::fields.brand.publisher_description.display']),
+                    $field('publisher_logo', $asset('seo::fields.brand.publisher_logo.display')),
+                    $field('job_title', ['type' => 'text', 'display' => 'seo::fields.brand.job_title.display', 'width' => 50, 'if' => ['publisher_type' => 'contains Person']]),
+                    $field('telephone', ['type' => 'text', 'display' => 'seo::fields.brand.telephone.display', 'width' => 50]),
+                    $field('email', ['type' => 'text', 'input_type' => 'email', 'display' => 'seo::fields.brand.email.display', 'width' => 50]),
+                    $field('area_served', ['type' => 'text', 'display' => 'seo::fields.brand.area_served.display', 'width' => 50]),
+                    $field('same_as', ['type' => 'list', 'display' => 'seo::fields.brand.same_as.display', 'instructions' => 'seo::fields.brand.same_as.instructions']),
+                    $field('contact_points', ['type' => 'grid', 'display' => 'seo::fields.brand.contact_points.display', 'mode' => 'table', 'add_row' => 'seo::fields.brand.contact_points.add_row', 'fields' => [
+                        $field('contact_type', ['type' => 'text', 'display' => 'seo::fields.brand.contact_type.display', 'placeholder' => 'seo::fields.brand.contact_type.placeholder']),
+                        $field('telephone', ['type' => 'text', 'display' => 'seo::fields.brand.telephone.display']),
+                        $field('email', ['type' => 'text', 'display' => 'seo::fields.brand.email.display']),
                     ]]),
                 ]],
-                ['display' => 'Address', 'instructions' => 'Required for a local business with premises; leave empty for one that only serves an area.', 'fields' => [
-                    $field('street_address', ['type' => 'text', 'display' => 'Street address']),
-                    $field('address_locality', ['type' => 'text', 'display' => 'City', 'width' => 50]),
-                    $field('address_region', ['type' => 'text', 'display' => 'State or region', 'width' => 50]),
-                    $field('postal_code', ['type' => 'text', 'display' => 'Postcode', 'width' => 50]),
-                    $field('address_country', ['type' => 'text', 'display' => 'Country code', 'width' => 50, 'placeholder' => 'MY, AU, US…']),
+                ['display' => 'seo::fields.brand.sections.address.display', 'instructions' => 'seo::fields.brand.sections.address.instructions', 'fields' => [
+                    $field('street_address', ['type' => 'text', 'display' => 'seo::fields.brand.street_address.display']),
+                    $field('address_locality', ['type' => 'text', 'display' => 'seo::fields.brand.address_locality.display', 'width' => 50]),
+                    $field('address_region', ['type' => 'text', 'display' => 'seo::fields.brand.address_region.display', 'width' => 50]),
+                    $field('postal_code', ['type' => 'text', 'display' => 'seo::fields.brand.postal_code.display', 'width' => 50]),
+                    $field('address_country', ['type' => 'text', 'display' => 'seo::fields.brand.address_country.display', 'width' => 50, 'placeholder' => 'MY, AU, US…']),
                 ]],
-                ['display' => 'Local business', 'instructions' => 'For a Store, a Restaurant or another LocalBusiness type.', 'fields' => [
-                    $field('price_range', ['type' => 'text', 'display' => 'Price range', 'width' => 33, 'placeholder' => '$$']),
-                    $field('latitude', ['type' => 'text', 'display' => 'Latitude', 'width' => 33]),
-                    $field('longitude', ['type' => 'text', 'display' => 'Longitude', 'width' => 33]),
-                    $field('opening_hours', ['type' => 'grid', 'display' => 'Opening hours', 'mode' => 'table', 'add_row' => 'Add hours', 'fields' => [
-                        $field('days', ['type' => 'checkboxes', 'display' => 'Days', 'inline' => true, 'options' => array_combine(self::DAYS, array_map(fn (string $day) => substr($day, 0, 3), self::DAYS))]),
-                        $field('opens', ['type' => 'time', 'display' => 'Opens']),
-                        $field('closes', ['type' => 'time', 'display' => 'Closes']),
+                ['display' => 'seo::fields.brand.sections.local_business.display', 'instructions' => 'seo::fields.brand.sections.local_business.instructions', 'fields' => [
+                    $field('price_range', ['type' => 'text', 'display' => 'seo::fields.brand.price_range.display', 'width' => 33, 'placeholder' => '$$']),
+                    $field('latitude', ['type' => 'text', 'display' => 'seo::fields.brand.latitude.display', 'width' => 33]),
+                    $field('longitude', ['type' => 'text', 'display' => 'seo::fields.brand.longitude.display', 'width' => 33]),
+                    $field('opening_hours', ['type' => 'grid', 'display' => 'seo::fields.brand.opening_hours.display', 'mode' => 'table', 'add_row' => 'seo::fields.brand.opening_hours.add_row', 'fields' => [
+                        $field('days', ['type' => 'checkboxes', 'display' => 'seo::fields.brand.days.display', 'inline' => true, 'options' => self::DAYS]),
+                        $field('opens', ['type' => 'time', 'display' => 'seo::fields.brand.opens.display']),
+                        $field('closes', ['type' => 'time', 'display' => 'seo::fields.brand.closes.display']),
                     ]]),
                 ]],
             ]],
-            'shop' => ['display' => 'Shop', 'sections' => [
-                ['instructions' => 'For a site that sells: the currency of its prices, and the return and shipping policies for all its products.', 'fields' => [
-                    $field('currency', ['type' => 'text', 'display' => 'Currency', 'width' => 33, 'placeholder' => 'MYR, AUD, USD…', 'instructions' => 'Three-letter code.']),
+            'shop' => ['display' => 'seo::fields.brand.tabs.shop', 'sections' => [
+                ['instructions' => 'seo::fields.brand.sections.shop.instructions', 'fields' => [
+                    $field('currency', ['type' => 'text', 'display' => 'seo::fields.brand.currency.display', 'width' => 33, 'placeholder' => 'MYR, AUD, USD…', 'instructions' => 'seo::fields.brand.currency.instructions']),
                 ]],
-                ['display' => 'Returns', 'fields' => [
-                    $field('return_category', ['type' => 'select', 'display' => 'Returns', 'width' => 33, 'options' => [
-                        'MerchantReturnFiniteReturnWindow' => 'Within a number of days',
-                        'MerchantReturnUnlimitedWindow' => 'Any time',
-                        'MerchantReturnNotPermitted' => 'Not accepted',
+                ['display' => 'seo::fields.brand.sections.returns.display', 'fields' => [
+                    $field('return_category', ['type' => 'select', 'display' => 'seo::fields.brand.return_category.display', 'width' => 33, 'options' => [
+                        'MerchantReturnFiniteReturnWindow' => 'seo::fields.brand.return_category.options.finite_window',
+                        'MerchantReturnUnlimitedWindow' => 'seo::fields.brand.return_category.options.unlimited_window',
+                        'MerchantReturnNotPermitted' => 'seo::fields.brand.return_category.options.not_permitted',
                     ]]),
-                    $field('return_days', ['type' => 'integer', 'display' => 'Days to return', 'width' => 33, 'if' => ['return_category' => 'equals MerchantReturnFiniteReturnWindow']]),
-                    $field('return_country', ['type' => 'text', 'display' => 'Country code', 'width' => 33, 'placeholder' => 'MY']),
-                    $field('return_policy_link', ['type' => 'text', 'input_type' => 'url', 'display' => 'Return policy page', 'instructions' => 'Enough on its own, or alongside the details above.']),
+                    $field('return_days', ['type' => 'integer', 'display' => 'seo::fields.brand.return_days.display', 'width' => 33, 'if' => ['return_category' => 'equals MerchantReturnFiniteReturnWindow']]),
+                    $field('return_country', ['type' => 'text', 'display' => 'seo::fields.brand.return_country.display', 'width' => 33, 'placeholder' => 'MY']),
+                    $field('return_policy_link', ['type' => 'text', 'input_type' => 'url', 'display' => 'seo::fields.brand.return_policy_link.display', 'instructions' => 'seo::fields.brand.return_policy_link.instructions']),
                 ]],
-                ['display' => 'Shipping', 'fields' => [
-                    $field('shipping_rates', ['type' => 'grid', 'display' => 'Shipping rates', 'mode' => 'table', 'add_row' => 'Add a rate', 'instructions' => 'One row per destination and order value. Leave the order values empty for a flat rate.', 'fields' => [
-                        $field('country', ['type' => 'text', 'display' => 'Country']),
-                        $field('region', ['type' => 'text', 'display' => 'Region']),
-                        $field('min_order', ['type' => 'float', 'display' => 'Orders from']),
-                        $field('max_order', ['type' => 'float', 'display' => 'Orders up to']),
-                        $field('rate', ['type' => 'float', 'display' => 'Rate']),
-                        $field('min_days', ['type' => 'integer', 'display' => 'Days, from']),
-                        $field('max_days', ['type' => 'integer', 'display' => 'Days, to']),
+                ['display' => 'seo::fields.brand.sections.shipping.display', 'fields' => [
+                    $field('shipping_rates', ['type' => 'grid', 'display' => 'seo::fields.brand.shipping_rates.display', 'mode' => 'table', 'add_row' => 'seo::fields.brand.shipping_rates.add_row', 'instructions' => 'seo::fields.brand.shipping_rates.instructions', 'fields' => [
+                        $field('country', ['type' => 'text', 'display' => 'seo::fields.brand.country.display']),
+                        $field('region', ['type' => 'text', 'display' => 'seo::fields.brand.region.display']),
+                        $field('min_order', ['type' => 'float', 'display' => 'seo::fields.brand.min_order.display']),
+                        $field('max_order', ['type' => 'float', 'display' => 'seo::fields.brand.max_order.display']),
+                        $field('rate', ['type' => 'float', 'display' => 'seo::fields.brand.rate.display']),
+                        $field('min_days', ['type' => 'integer', 'display' => 'seo::fields.brand.min_days.display']),
+                        $field('max_days', ['type' => 'integer', 'display' => 'seo::fields.brand.max_days.display']),
                     ]]),
                 ]],
             ]],
-            'share_cards' => ['display' => 'Share cards', 'sections' => [['instructions' => 'Colours and picture for generated share images.', 'fields' => [
-                $field('og_background', ['type' => 'color', 'display' => 'Background', 'width' => 33]),
-                $field('og_text', ['type' => 'color', 'display' => 'Text', 'width' => 33]),
-                $field('og_accent', ['type' => 'color', 'display' => 'Accent', 'width' => 33]),
-                $field('og_picture', $asset('Picture', 'A logo or portrait on every card.')),
+            'share_cards' => ['display' => 'seo::fields.brand.tabs.share_cards', 'sections' => [['instructions' => 'seo::fields.brand.sections.share_cards.instructions', 'fields' => [
+                $field('og_background', ['type' => 'color', 'display' => 'seo::fields.brand.og_background.display', 'width' => 33]),
+                $field('og_text', ['type' => 'color', 'display' => 'seo::fields.brand.og_text.display', 'width' => 33]),
+                $field('og_accent', ['type' => 'color', 'display' => 'seo::fields.brand.og_accent.display', 'width' => 33]),
+                $field('og_picture', $asset('seo::fields.brand.og_picture.display', 'seo::fields.brand.og_picture.instructions')),
             ]]]],
-            'crawlers' => ['display' => 'Crawlers', 'sections' => [['fields' => [
-                $field('google_verification', ['type' => 'text', 'display' => 'Google verification', 'width' => 50]),
-                $field('bing_verification', ['type' => 'text', 'display' => 'Bing verification', 'width' => 50]),
-                $field('yandex_verification', ['type' => 'text', 'display' => 'Yandex verification', 'width' => 50]),
-                $field('pinterest_verification', ['type' => 'text', 'display' => 'Pinterest verification', 'width' => 50]),
-                $field('robots_disallow', ['type' => 'list', 'display' => 'robots.txt Disallow', 'instructions' => 'Paths to keep crawlers out of. Empty: the control panel.']),
-                $field('allow_ai_training', ['type' => 'toggle', 'display' => 'Allow AI training', 'default' => true, 'width' => 50, 'instructions' => 'Off: GPTBot, ClaudeBot, Google-Extended, Applebot-Extended and CCBot are turned away in robots.txt. Google Search is unaffected.']),
-                $field('allow_ai_search', ['type' => 'toggle', 'display' => 'Allow AI search', 'default' => true, 'width' => 50, 'instructions' => 'Off: the crawlers behind ChatGPT search, Claude and Perplexity answers are turned away.']),
-                $field('robots_extra', ['type' => 'textarea', 'display' => 'robots.txt extra lines', 'instructions' => 'Added as typed, e.g. rules for AI crawlers.']),
+            'crawlers' => ['display' => 'seo::fields.brand.tabs.crawlers', 'sections' => [['fields' => [
+                $field('google_verification', ['type' => 'text', 'display' => 'seo::fields.brand.google_verification.display', 'width' => 50]),
+                $field('bing_verification', ['type' => 'text', 'display' => 'seo::fields.brand.bing_verification.display', 'width' => 50]),
+                $field('yandex_verification', ['type' => 'text', 'display' => 'seo::fields.brand.yandex_verification.display', 'width' => 50]),
+                $field('pinterest_verification', ['type' => 'text', 'display' => 'seo::fields.brand.pinterest_verification.display', 'width' => 50]),
+                $field('robots_disallow', ['type' => 'list', 'display' => 'seo::fields.brand.robots_disallow.display', 'instructions' => 'seo::fields.brand.robots_disallow.instructions']),
+                $field('allow_ai_training', ['type' => 'toggle', 'display' => 'seo::fields.brand.allow_ai_training.display', 'default' => true, 'width' => 50, 'instructions' => 'seo::fields.brand.allow_ai_training.instructions']),
+                $field('allow_ai_search', ['type' => 'toggle', 'display' => 'seo::fields.brand.allow_ai_search.display', 'default' => true, 'width' => 50, 'instructions' => 'seo::fields.brand.allow_ai_search.instructions']),
+                $field('robots_extra', ['type' => 'textarea', 'display' => 'seo::fields.brand.robots_extra.display', 'instructions' => 'seo::fields.brand.robots_extra.instructions']),
             ]]]],
         ];
     }

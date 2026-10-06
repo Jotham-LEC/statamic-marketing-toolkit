@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $in_sitemap
  * @property bool $checked
  * @property ?array<string, mixed> $facts
- * @property ?array<string, array{status: string, message: string}> $results
+ * @property ?array<string, array{status: string, message: string, params?: array<string, mixed>}> $results message: a translation key or plain text
  * @property ?int $score
  */
 class ReportPage extends Model

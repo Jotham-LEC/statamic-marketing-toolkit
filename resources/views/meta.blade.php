@@ -7,6 +7,9 @@
 @if ($meta->canonical)
 <link rel="canonical" href="{{ $meta->canonical }}">
 @endif
+@foreach ($meta->alternates as $hreflang => $href)
+<link rel="alternate" hreflang="{{ $hreflang }}" href="{{ $href }}">
+@endforeach
 @foreach ($meta->verification as $name => $content)
 <meta name="{{ $name }}" content="{{ $content }}">
 @endforeach
@@ -18,6 +21,9 @@
 <meta property="og:url" content="{{ $meta->url }}">
 <meta property="og:site_name" content="{{ $meta->siteName }}">
 <meta property="og:locale" content="{{ $meta->locale }}">
+@foreach ($meta->localeAlternates as $locale)
+<meta property="og:locale:alternate" content="{{ $locale }}">
+@endforeach
 @if ($meta->image)
 <meta property="og:image" content="{{ $meta->image['url'] }}">
 <meta property="og:image:width" content="{{ $meta->image['width'] }}">

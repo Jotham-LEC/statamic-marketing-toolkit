@@ -12,16 +12,16 @@ defineProps({
 </script>
 
 <template>
-    <Head title="404s" />
+    <Head :title="__('seo::cp.not_found.title')" />
 
-    <Header title="404s" icon="alert-warning-exclamation-mark" />
+    <Header :title="__('seo::cp.not_found.title')" icon="alert-warning-exclamation-mark" />
 
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
         <template v-if="enabled">
-            Addresses visitors asked for that don’t exist, one row per address; the {{ maxRows }} most recent are kept. Bots and scanner probes are left out.
-            Use a row’s menu to create a redirect for it.
+            {{ __('seo::cp.not_found.intro', { max: maxRows }) }}
+            {{ __('seo::cp.not_found.create') }}
         </template>
-        <template v-else>The 404 log is turned off (<code>seo.not_found.enabled</code>).</template>
+        <span v-else v-html="__('seo::cp.not_found.off', { setting: '<code>seo.not_found.enabled</code>' })" />
     </p>
 
     <Listing

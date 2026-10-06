@@ -15,7 +15,7 @@ class NoindexInSitemap extends Rule
 
     public function label(): string
     {
-        return 'Hidden page in the sitemap';
+        return 'seo::reports.rules.noindex_in_sitemap';
     }
 
     public function weight(): int
@@ -31,7 +31,7 @@ class NoindexInSitemap extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return $page->noindex() && $page->inSitemap
-            ? Result::fail('The sitemap lists this page, but it tells search engines not to index it.')
+            ? Result::fail('seo::reports.messages.noindex_in_sitemap')
             : Result::pass();
     }
 }

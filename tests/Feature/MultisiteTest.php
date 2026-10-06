@@ -16,6 +16,7 @@ use JothamLec\Seo\SearchConsole\Client;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\SiteSeo;
+use JothamLec\Seo\Support\Edition;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Blueprint;
@@ -450,10 +451,12 @@ describe('Search Console', function () {
         $this->actingAs(cpUser(super: true));
         session(['statamic.cp.selected-site' => 'cothinking']);
 
-        $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('search.clicks', 9)
-            ->where('searchSetup.property', 'sc-domain:cothink.test')
-            ->where('searchSetup.property_source', 'env'));
+        $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('search.clicks', 9));
+        $this->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('setup.property', 'sc-domain:cothink.test')
+            ->where('setup.property_source', 'env')
+            ->where('imported.pages', 2)
+            ->where('sites.1', ['name' => 'CoThinking', 'property' => 'sc-domain:cothink.test', 'selected' => true]));
 
         $this->artisan('statamic:seo:search-console', ['--site' => 'default'])->assertSuccessful();
         expect(SearchStat::query()->count())->toBe(3);
@@ -463,14 +466,14 @@ describe('Search Console', function () {
         $this->actingAs(cpUser(super: true));
         session(['statamic.cp.selected-site' => 'cothinking']);
 
-        $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('searchSetup.configured', false)
-            ->where('searchSetup.suggested_property', 'sc-domain:cothink.test'));
+        $this->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('setup.configured', false)
+            ->where('setup.suggested_property', 'sc-domain:cothink.test'));
 
         $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:cothink.test'])->assertOk();
         $this->postJson(cp_route('seo.search-console.import'))->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 2 pages.']);
 
-        $settings = Addon::get('jotham-lec/statamic-co-seo')->settings();
+        $settings = Addon::get(Edition::PACKAGE)->settings();
 
         expect($settings->get(Connection::SITES_SETTING))->toBe(['cothinking' => 'sc-domain:cothink.test'])
             ->and($settings->get(Connection::SETTING))->toBeNull()

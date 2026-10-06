@@ -24,7 +24,7 @@ class SeoWidget extends Widget
         }
 
         return VueComponent::render('seo-widget', [
-            'title' => $this->config('title', 'SEO'),
+            'title' => $this->config('title', __('seo::cp.seo')),
             'report' => $this->latestReport(),
             'notFound' => $this->recentNotFound(),
             'url' => cp_route('seo.index'),
