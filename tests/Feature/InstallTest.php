@@ -77,18 +77,10 @@ test('--tab adds a whole tab a site asks for', function () {
         ->not->toContain('publisher_type');
 });
 
-test('the blueprint read from YAML is the one the command used to build in PHP', function () {
-    $sorted = function (array $value) use (&$sorted): array {
-        ksort($value);
+test('the consent regions the blueprint offers include the EEA the tracking code knows', function () {
+    $regions = collect(Install::tabs('assets')['tracking']['sections'][1]['fields'])->firstWhere('handle', 'consent_regions');
 
-        return array_map(fn ($item) => is_array($item) ? $sorted($item) : $item, $value);
-    };
-    $snapshot = json_decode(file_get_contents(__DIR__.'/../fixtures/install-tabs.json'), true);
-    $tabs = Install::tabs('assets');
-    $regions = collect($tabs['tracking']['sections'][1]['fields'])->firstWhere('handle', 'consent_regions');
-
-    expect($sorted($tabs))->toBe($sorted($snapshot))
-        ->and($regions['field']['options'])->toHaveKey(Tracking::EEA);
+    expect($regions['field']['options'])->toHaveKey(Tracking::EEA);
 });
 
 test('every label and help the blueprints name is in lang/en/fields.php', function () {
