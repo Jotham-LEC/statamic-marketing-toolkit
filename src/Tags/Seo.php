@@ -36,7 +36,7 @@ class Seo extends Tags
     public function favicons(): string
     {
         // Free serves the icons on the default site's domain alone: no links to a 404 elsewhere.
-        if (! config('seo.favicons.enabled', true) || ! Sites::served()) {
+        if (! config('seo.favicons.enabled') || ! Sites::served()) {
             return '';
         }
 

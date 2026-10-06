@@ -44,15 +44,15 @@ Route::withoutMiddleware([
             Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
         }
 
-        if (config('seo.llms_txt', true) && ! file_exists(public_path('llms.txt'))) {
+        if (config('seo.llms_txt') && ! file_exists(public_path('llms.txt'))) {
             Route::get('llms.txt', [TextFileController::class, 'llms'])->name('llms');
         }
 
-        if (config('seo.ads_txt', true) && ! file_exists(public_path('ads.txt'))) {
+        if (config('seo.ads_txt') && ! file_exists(public_path('ads.txt'))) {
             Route::get('ads.txt', [TextFileController::class, 'ads'])->name('ads');
         }
 
-        if (config('seo.favicons.enabled', true)) {
+        if (config('seo.favicons.enabled')) {
             foreach (array_keys(Favicons::FILES) as $file) {
                 if (! file_exists(public_path($file))) {
                     Route::get($file, FaviconController::class)->name('favicons.'.$file);
