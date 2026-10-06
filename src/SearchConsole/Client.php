@@ -18,6 +18,9 @@ class Client
 
     private const string TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
+    /** The most rows the Search Analytics API returns at once. */
+    private const int ROW_LIMIT = 25000;
+
     public function configured(): bool
     {
         return filled(config('seo.search_console.credentials')) && filled(config('seo.search_console.property'));
@@ -31,18 +34,27 @@ class Client
     public function pages(string $from, string $to): array
     {
         $property = rawurlencode((string) config('seo.search_console.property'));
+        $rows = [];
 
-        return Http::withToken($this->token())
-            ->timeout(30)
-            ->post("https://www.googleapis.com/webmasters/v3/sites/{$property}/searchAnalytics/query", [
-                'startDate' => $from,
-                'endDate' => $to,
-                'dimensions' => ['page'],
-                'rowLimit' => 25000,
-                'dataState' => 'all',
-            ])
-            ->throw()
-            ->json('rows', []);
+        // At most ROW_LIMIT rows an answer: a site with more pages is read in turns.
+        do {
+            $batch = Http::withToken($this->token())
+                ->timeout(30)
+                ->post("https://www.googleapis.com/webmasters/v3/sites/{$property}/searchAnalytics/query", [
+                    'startDate' => $from,
+                    'endDate' => $to,
+                    'dimensions' => ['page'],
+                    'rowLimit' => self::ROW_LIMIT,
+                    'startRow' => count($rows),
+                    'dataState' => 'all',
+                ])
+                ->throw()
+                ->json('rows', []);
+
+            $rows = [...$rows, ...$batch];
+        } while (count($batch) === self::ROW_LIMIT);
+
+        return $rows;
     }
 
     private function token(): string

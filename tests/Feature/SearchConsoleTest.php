@@ -75,3 +75,20 @@ test('the overview shows the totals and the pages with the most clicks', functio
         ->where('search.top.0', ['path' => '/', 'clicks' => 30, 'impressions' => 500, 'position' => 3.1])
         ->where('search.top.1.position', 7.4));
 });
+
+test('a site with more pages than one answer holds is read in turns', function () {
+    [$credentials] = serviceAccountKey();
+    config(['seo.search_console' => ['credentials' => $credentials, 'property' => 'https://example.test/', 'days' => 28]]);
+    $row = fn (int $i) => ['keys' => ["https://example.test/p{$i}"], 'clicks' => 1, 'impressions' => 2, 'ctr' => 0.5, 'position' => 3.0];
+    Http::fake([
+        'oauth2.googleapis.com/token' => Http::response(['access_token' => 'token-1', 'expires_in' => 3599]),
+        'www.googleapis.com/webmasters/*' => Http::sequence()
+            ->push(['rows' => array_map($row, range(1, 25000))])
+            ->push(['rows' => array_map($row, range(25001, 25003))]),
+    ]);
+
+    $this->artisan('statamic:seo:search-console')->assertSuccessful();
+
+    expect(SearchStat::query()->count())->toBe(25003);
+    Http::assertSent(fn (HttpRequest $request) => str_contains($request->url(), 'searchAnalytics') && $request['startRow'] === 25000);
+});
