@@ -1,14 +1,14 @@
 <?php
 
-namespace JothamLec\Seo;
+namespace JothamLec\MarketingToolkit;
 
 use ArrayAccess;
 use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use JothamLec\Seo\Support\SchemaTypes;
-use JothamLec\Seo\Support\Sites;
-use JothamLec\Seo\Support\Text;
+use JothamLec\MarketingToolkit\Support\SchemaTypes;
+use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Auth\User;
 use Statamic\Contracts\Entries\Entry;

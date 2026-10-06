@@ -1,8 +1,8 @@
 <?php
 
-namespace JothamLec\Seo\Fieldtypes;
+namespace JothamLec\MarketingToolkit\Fieldtypes;
 
-use JothamLec\Seo\Reports\ReportSettings;
+use JothamLec\MarketingToolkit\Reports\ReportSettings;
 use Statamic\Fields\Fieldtype;
 
 /**

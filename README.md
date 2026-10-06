@@ -1,6 +1,6 @@
-# Co-SEO: SEO that tells you what to fix
+# Marketing Toolkit: SEO that tells you what to fix
 
-Co-SEO puts Google's numbers next to a check of every page on your Statamic site, so your marketing team can see what to fix first, and why it matters, without leaving the control panel.
+Marketing Toolkit puts Google's numbers next to a check of every page on your Statamic site, so your marketing team can see what to fix first, and why it matters, without leaving the control panel.
 
 It is the only Statamic SEO addon that shows Google Search Console's clicks and positions beside a site audit. It also draws share cards for every page, on any host, with no headless browser to install.
 
@@ -8,7 +8,7 @@ It is the only Statamic SEO addon that shows Google Search Console's clicks and 
 
 <!-- Screenshot: docs/images/search-console.png (Tools → SEO, Google Search panel) -->
 
-Connect Google Search Console once, step by step, from the control panel. Every day Co-SEO brings in how often each page appeared in Google, how often it was clicked, and where it ranked. It sits next to your site's report, so a page that ranks but never gets clicked, or one that has dropped, stands out.
+Connect Google Search Console once, step by step, from the control panel. Every day Marketing Toolkit brings in how often each page appeared in Google, how often it was clicked, and where it ranked. It sits next to your site's report, so a page that ranks but never gets clicked, or one that has dropped, stands out.
 
 ## Fix what's broken
 
@@ -28,12 +28,12 @@ Reports run when you ask, or every day or week. Each issue links straight to the
 
 <!-- Screenshot: docs/images/share-card.png (a generated card) -->
 
-When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Co-SEO draws one for every page that has none, in your brand's colours, with the page's title. Editors can change its wording, or upload their own image. It works on any host, including shared hosting, because it needs no headless browser.
+When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Marketing Toolkit draws one for every page that has none, in your brand's colours, with the page's title. Editors can change its wording, or upload their own image. It works on any host, including shared hosting, because it needs no headless browser.
 
 ## For your team
 
 - **A live Google preview on every page.** Editors see the search result and the share card as they type, with counters that turn amber when a title or description is too short or too long.
-- **Nothing gets lost when a page moves.** Change a page's address and Co-SEO asks whether to send the old one to the new one, then does it.
+- **Nothing gets lost when a page moves.** Change a page's address and Marketing Toolkit asks whether to send the old one to the new one, then does it.
 - **Redirects anyone can manage.** Add them one by one or import a spreadsheet; send a whole section with a wildcard, or tell Google a page is gone for good.
 - **A list of missing pages.** See the addresses visitors and search engines ask for that don't exist, and redirect them in a click.
 - **Sensible defaults.** Every page gets a title, a description, a canonical address, Open Graph and X tags, and structured data for Google, without anyone filling in a field. Editors change only what they want to.
@@ -43,7 +43,7 @@ When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Co-
 - **hreflang, automatically.** Each page tells Google where it is in every other language, so French visitors get the French page. The sitemap carries the same links.
 - **A title per language.** Every SEO field can differ from one language to another.
 - **A sitemap per domain**, whether languages live under `/fr/` or on their own domains.
-- **A control panel in your language.** Every word in Co-SEO's screens can be translated.
+- **A control panel in your language.** Every word in Marketing Toolkit's screens can be translated.
 
 ## Free and Pro
 
@@ -68,20 +68,20 @@ When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Co-
 
 The free edition shows Pro's features in the control panel as cards you can upgrade from. Nothing you set up is lost when you switch.
 
-## Why Co-SEO
+## Why Marketing Toolkit
 
 - **Sitemaps, several languages and redirects are free.** Not hidden behind an upgrade.
 - **Google's numbers inside your control panel**, next to what to fix.
 - **No headless browser needed** for share images, so they work on any host.
 - **Built for Statamic 6**, and works on Statamic Core: you don't need Statamic Pro unless you run several sites.
-- **One price, no renewals** while Co-SEO is below version 1.0.
+- **One price, no renewals** while Marketing Toolkit is below version 1.0.
 
 ## Installing
 
 Ask your developer to run:
 
 ```bash
-composer require jotham-lec/statamic-co-seo
+composer require jotham-lec/statamic-marketing-toolkit
 php artisan migrate
 php please seo:install
 ```
@@ -101,7 +101,7 @@ Developers: start with [Getting started](docs/getting-started.md), then [For dev
 
 ## Licence and support
 
-Co-SEO is a commercial addon, sold on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/co-seo). The free edition is free on any site. Pro is $59, once, with updates included and no renewal while Co-SEO is below 1.0. A live site on Pro needs a licence: buy it on the Marketplace, then add it to the site on statamic.com. Local and staging sites don't need one.
+Marketing Toolkit is a commercial addon, sold on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit). The free edition is free on any site. Pro is $59, once, with updates included and no renewal while Marketing Toolkit is below 1.0. A live site on Pro needs a licence: buy it on the Marketplace, then add it to the site on statamic.com. Local and staging sites don't need one.
 
 Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-co-seo/issues).
 

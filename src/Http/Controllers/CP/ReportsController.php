@@ -1,18 +1,18 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
-use JothamLec\Seo\Cp\Listing;
-use JothamLec\Seo\Reports\Report;
-use JothamLec\Seo\Reports\ReportPage;
-use JothamLec\Seo\Reports\Result;
-use JothamLec\Seo\Reports\Runner;
-use JothamLec\Seo\Reports\RunReportStep;
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\Cp\Listing;
+use JothamLec\MarketingToolkit\Reports\Report;
+use JothamLec\MarketingToolkit\Reports\ReportPage;
+use JothamLec\MarketingToolkit\Reports\Result;
+use JothamLec\MarketingToolkit\Reports\Runner;
+use JothamLec\MarketingToolkit\Reports\RunReportStep;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;

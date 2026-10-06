@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers;
+namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
-use JothamLec\Seo\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 
 /**
  * /{key}.txt: the file that proves to IndexNow the site owns its key.

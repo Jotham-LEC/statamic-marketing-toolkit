@@ -5,11 +5,11 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\Seo\SearchConsole\Client;
-use JothamLec\Seo\SearchConsole\Connection;
-use JothamLec\Seo\SearchConsole\SearchStat;
-use JothamLec\Seo\ServiceProvider;
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\SearchConsole\Client;
+use JothamLec\MarketingToolkit\SearchConsole\Connection;
+use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
+use JothamLec\MarketingToolkit\ServiceProvider;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Facades\Addon;
 
 beforeEach(function () {
@@ -19,7 +19,7 @@ beforeEach(function () {
 
 afterEach(function () {
     File::delete((new Connection)->keyPath());
-    File::delete(resource_path('addons/seo.yaml'));
+    File::delete(resource_path('addons/marketing-toolkit.yaml'));
 });
 
 function googleKey(): string

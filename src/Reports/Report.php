@@ -1,12 +1,12 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
  * One run over the site: its settings when it started, how far it has got,

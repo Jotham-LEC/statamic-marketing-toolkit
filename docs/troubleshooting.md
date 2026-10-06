@@ -2,7 +2,7 @@
 
 ### I see "Pro" cards instead of reports, 404s or Search Console
 
-The addon is running as Free. If you bought Pro, set it in `config/statamic/editions.php`: `'addons' => ['jotham-lec/statamic-co-seo' => 'pro']`, then clear the config cache (`php artisan config:clear`) if the site caches it. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, not this addon's edition.
+The addon is running as Free. If you bought Pro, set it in `config/statamic/editions.php`: `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, then clear the config cache (`php artisan config:clear`) if the site caches it. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, not this addon's edition.
 
 ### No hreflang tags, or a language is missing from them
 
@@ -21,7 +21,7 @@ the-og draws cards with Imagick. Install PHP's `imagick` extension (on NixOS, ad
 
 ### The SEO screens are unstyled or blank
 
-The built assets weren't published. Run `php artisan vendor:publish --tag=seo --force`, then reload without cache. Statamic republishes them on `composer update`.
+The built assets weren't published. Run `php artisan vendor:publish --tag=marketing-toolkit --force`, then reload without cache. Statamic republishes them on `composer update`.
 
 ### No automatic redirect when a slug changes
 

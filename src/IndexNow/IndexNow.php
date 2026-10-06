@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\IndexNow;
+namespace JothamLec\MarketingToolkit\IndexNow;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

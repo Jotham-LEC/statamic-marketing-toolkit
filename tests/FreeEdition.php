@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Tests;
+namespace JothamLec\MarketingToolkit\Tests;
 
 /**
  * Runs a test file in the free edition: `uses(FreeEdition::class)`.

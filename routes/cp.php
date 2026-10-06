@@ -1,14 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use JothamLec\Seo\Http\Controllers\CP\ActionController;
-use JothamLec\Seo\Http\Controllers\CP\NotFoundController;
-use JothamLec\Seo\Http\Controllers\CP\OverviewController;
-use JothamLec\Seo\Http\Controllers\CP\PreviewController;
-use JothamLec\Seo\Http\Controllers\CP\RedirectsController;
-use JothamLec\Seo\Http\Controllers\CP\ReportsController;
-use JothamLec\Seo\Http\Controllers\CP\SearchConsoleController;
-use JothamLec\Seo\Http\Middleware\RequirePro;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\ActionController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\NotFoundController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\OverviewController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\PreviewController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\RedirectsController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\ReportsController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\SearchConsoleController;
+use JothamLec\MarketingToolkit\Http\Middleware\RequirePro;
 
 Route::name('seo.')->prefix('seo')->group(function () {
     Route::get('/', OverviewController::class)->name('index');

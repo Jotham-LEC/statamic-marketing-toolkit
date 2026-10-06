@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriResolver;
@@ -33,7 +33,7 @@ class ExternalLinkChecker
 
     private const int MAX_REDIRECTS = 5;
 
-    private const string USER_AGENT = 'Mozilla/5.0 (compatible; statamic-co-seo link check)';
+    private const string USER_AGENT = 'Mozilla/5.0 (compatible; statamic-marketing-toolkit link check)';
 
     /**
      * @param  list<string>  $urls

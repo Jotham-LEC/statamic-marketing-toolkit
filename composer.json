@@ -1,22 +1,25 @@
 {
-    "name": "jotham-lec/statamic-co-seo",
-    "description": "SEO that tells you what to fix: meta tags, sitemaps, hreflang and redirects, plus Google Search Console numbers, site reports and share images on Pro.",
+    "name": "jotham-lec/statamic-marketing-toolkit",
+    "description": "The marketing fundamentals for a Statamic website: SEO, tracking tags, Consent Mode, favicons and redirects, plus Search Console numbers, broken link checks and conversion events on Pro.",
     "type": "statamic-addon",
     "license": "proprietary",
     "autoload": {
         "psr-4": {
-            "JothamLec\\Seo\\": "src"
+            "JothamLec\\MarketingToolkit\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "JothamLec\\Seo\\Tests\\": "tests"
+            "JothamLec\\MarketingToolkit\\Tests\\": "tests"
         }
     },
     "require": {
         "php": "^8.3",
         "statamic/cms": "^6.30",
         "simonhamp/the-og": "^0.8"
+    },
+    "replace": {
+        "jotham-lec/statamic-co-seo": "self.version"
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
@@ -33,9 +36,9 @@
     },
     "extra": {
         "statamic": {
-            "name": "Co-SEO",
-            "description": "SEO that tells you what to fix: Google's numbers beside a site audit, share cards, redirects and hreflang",
-            "slug": "seo",
+            "name": "Marketing Toolkit",
+            "description": "The marketing fundamentals for your Statamic site: SEO, tracking, consent, favicons and redirects",
+            "slug": "marketing-toolkit",
             "editions": [
                 "free",
                 "pro"
@@ -43,7 +46,7 @@
         },
         "laravel": {
             "providers": [
-                "JothamLec\\Seo\\ServiceProvider"
+                "JothamLec\\MarketingToolkit\\ServiceProvider"
             ]
         }
     },

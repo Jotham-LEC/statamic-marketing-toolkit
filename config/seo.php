@@ -1,7 +1,7 @@
 <?php
 
-use JothamLec\Seo\Og\DefaultTemplate;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\Og\DefaultTemplate;
+use JothamLec\MarketingToolkit\SiteSeo;
 
 return [
 
@@ -11,7 +11,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Every value the addon prints is worked out by one method on this class.
-    | Extend JothamLec\Seo\SiteSeo in the project and override a method to
+    | Extend JothamLec\MarketingToolkit\SiteSeo in the project and override a method to
     | change one rule (an extra JSON-LD node, a noindex condition, more
     | sitemap URLs) without touching the rest.
     |

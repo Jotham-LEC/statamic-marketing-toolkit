@@ -1,11 +1,11 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
-use JothamLec\Seo\Support\Uris;
+use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Facades\Site;
 
 /**

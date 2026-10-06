@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Http\Controllers\CP\ActionController as StatamicActionController;
 
 /**

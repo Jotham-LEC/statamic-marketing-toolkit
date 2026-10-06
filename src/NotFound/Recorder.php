@@ -1,13 +1,13 @@
 <?php
 
-namespace JothamLec\Seo\NotFound;
+namespace JothamLec\MarketingToolkit\NotFound;
 
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
 /**

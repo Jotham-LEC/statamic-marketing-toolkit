@@ -1,18 +1,18 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers;
+namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Facades\Site;
 
 /**
  * /sitemap.xml: every published page search engines should index. Up to
  * `seo.sitemap.per_page` URLs it is one <urlset>; past that it becomes an
  * index of /sitemap_{n}.xml. Cached until an entry, term, tree, collection
- * or taxonomy is saved (JothamLec\Seo\Listeners\FlushSitemap).
+ * or taxonomy is saved (JothamLec\MarketingToolkit\Listeners\FlushSitemap).
  */
 class SitemapController
 {

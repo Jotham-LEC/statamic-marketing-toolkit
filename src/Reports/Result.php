@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Support\Facades\Lang;
 

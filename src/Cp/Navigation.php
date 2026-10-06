@@ -1,8 +1,8 @@
 <?php
 
-namespace JothamLec\Seo\Cp;
+namespace JothamLec\MarketingToolkit\Cp;
 
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\CP\Navigation\Nav;
 use Statamic\CP\Navigation\NavItem;
 use Statamic\Facades\Addon;

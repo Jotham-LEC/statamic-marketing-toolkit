@@ -1,14 +1,14 @@
 <?php
 
-namespace JothamLec\Seo\Http\Middleware;
+namespace JothamLec\MarketingToolkit\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use JothamLec\Seo\NotFound\Recorder;
-use JothamLec\Seo\Redirects\Matcher;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Support\StatamicRoutes;
+use JothamLec\MarketingToolkit\NotFound\Recorder;
+use JothamLec\MarketingToolkit\Redirects\Matcher;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Support\StatamicRoutes;
 use Statamic\Facades\Site;
 use Symfony\Component\HttpFoundation\Response;
 

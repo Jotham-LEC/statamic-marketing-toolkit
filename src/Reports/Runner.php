@@ -1,25 +1,25 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use JothamLec\Seo\Reports\Rules\BrokenLinks;
-use JothamLec\Seo\Reports\Rules\Canonical;
-use JothamLec\Seo\Reports\Rules\DescriptionLength;
-use JothamLec\Seo\Reports\Rules\DescriptionUnique;
-use JothamLec\Seo\Reports\Rules\ExternalLinks;
-use JothamLec\Seo\Reports\Rules\ImageAlt;
-use JothamLec\Seo\Reports\Rules\JsonLd;
-use JothamLec\Seo\Reports\Rules\NoindexInSitemap;
-use JothamLec\Seo\Reports\Rules\OgImage;
-use JothamLec\Seo\Reports\Rules\OrphanPages;
-use JothamLec\Seo\Reports\Rules\Rule;
-use JothamLec\Seo\Reports\Rules\SingleH1;
-use JothamLec\Seo\Reports\Rules\TitleLength;
-use JothamLec\Seo\Reports\Rules\TitleUnique;
-use JothamLec\Seo\SiteSeo;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Reports\Rules\BrokenLinks;
+use JothamLec\MarketingToolkit\Reports\Rules\Canonical;
+use JothamLec\MarketingToolkit\Reports\Rules\DescriptionLength;
+use JothamLec\MarketingToolkit\Reports\Rules\DescriptionUnique;
+use JothamLec\MarketingToolkit\Reports\Rules\ExternalLinks;
+use JothamLec\MarketingToolkit\Reports\Rules\ImageAlt;
+use JothamLec\MarketingToolkit\Reports\Rules\JsonLd;
+use JothamLec\MarketingToolkit\Reports\Rules\NoindexInSitemap;
+use JothamLec\MarketingToolkit\Reports\Rules\OgImage;
+use JothamLec\MarketingToolkit\Reports\Rules\OrphanPages;
+use JothamLec\MarketingToolkit\Reports\Rules\Rule;
+use JothamLec\MarketingToolkit\Reports\Rules\SingleH1;
+use JothamLec\MarketingToolkit\Reports\Rules\TitleLength;
+use JothamLec\MarketingToolkit\Reports\Rules\TitleUnique;
+use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Facades\Entry;

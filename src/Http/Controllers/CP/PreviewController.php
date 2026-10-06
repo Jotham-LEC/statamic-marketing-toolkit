@@ -1,15 +1,15 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use JothamLec\Seo\Context;
-use JothamLec\Seo\Og\Generator;
-use JothamLec\Seo\Preview\Draft;
-use JothamLec\Seo\SiteSeo;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Preview\Draft;
+use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Site;

@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
@@ -26,7 +26,7 @@ class Renderer
      */
     public function render(Entry|Term $content): array
     {
-        $request = Request::create((string) $content->absoluteUrl(), 'GET', server: ['HTTP_USER_AGENT' => 'jotham-lec/statamic-co-seo report']);
+        $request = Request::create((string) $content->absoluteUrl(), 'GET', server: ['HTTP_USER_AGENT' => 'jotham-lec/statamic-marketing-toolkit report']);
         $previous = app('request');
         $cascade = app(Cascade::class);
         $noindex = config('seo.robots.noindex_outside_production');

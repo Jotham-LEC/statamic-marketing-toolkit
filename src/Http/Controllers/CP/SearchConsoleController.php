@@ -1,18 +1,18 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use JothamLec\Seo\SearchConsole\Client;
-use JothamLec\Seo\SearchConsole\Connection;
-use JothamLec\Seo\SearchConsole\Importer;
-use JothamLec\Seo\SearchConsole\SearchStat;
-use JothamLec\Seo\Support\Edition;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\SearchConsole\Client;
+use JothamLec\MarketingToolkit\SearchConsole\Connection;
+use JothamLec\MarketingToolkit\SearchConsole\Importer;
+use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
+use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;

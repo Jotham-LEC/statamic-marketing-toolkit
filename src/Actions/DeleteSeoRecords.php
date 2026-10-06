@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Actions;
+namespace JothamLec\MarketingToolkit\Actions;
 
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Actions\Action;
 
 /**

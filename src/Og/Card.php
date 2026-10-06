@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Og;
+namespace JothamLec\MarketingToolkit\Og;
 
 /**
  * What goes on a generated share card. A Template decides where each part

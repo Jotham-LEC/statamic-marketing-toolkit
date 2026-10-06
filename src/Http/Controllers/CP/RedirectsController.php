@@ -1,19 +1,19 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use JothamLec\Seo\Cp\Listing;
-use JothamLec\Seo\Preview\Draft;
-use JothamLec\Seo\Redirects\AutoRedirects;
-use JothamLec\Seo\Redirects\Csv;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Support\Edition;
-use JothamLec\Seo\Support\Sites;
-use JothamLec\Seo\Support\Uris;
+use JothamLec\MarketingToolkit\Cp\Listing;
+use JothamLec\MarketingToolkit\Preview\Draft;
+use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
+use JothamLec\MarketingToolkit\Redirects\Csv;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Facades\Action;

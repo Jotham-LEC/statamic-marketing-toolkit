@@ -1,8 +1,8 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Facades\Addon;
 
 /**

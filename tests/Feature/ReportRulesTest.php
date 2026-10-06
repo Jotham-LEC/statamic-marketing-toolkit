@@ -2,27 +2,27 @@
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Lang;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Reports\ExternalLinkChecker;
-use JothamLec\Seo\Reports\HtmlInspector;
-use JothamLec\Seo\Reports\LinkChecker;
-use JothamLec\Seo\Reports\PageFacts;
-use JothamLec\Seo\Reports\ReportSettings;
-use JothamLec\Seo\Reports\Rules\BrokenLinks;
-use JothamLec\Seo\Reports\Rules\Canonical;
-use JothamLec\Seo\Reports\Rules\DescriptionLength;
-use JothamLec\Seo\Reports\Rules\DescriptionUnique;
-use JothamLec\Seo\Reports\Rules\ExternalLinks;
-use JothamLec\Seo\Reports\Rules\ImageAlt;
-use JothamLec\Seo\Reports\Rules\JsonLd;
-use JothamLec\Seo\Reports\Rules\NoindexInSitemap;
-use JothamLec\Seo\Reports\Rules\OgImage;
-use JothamLec\Seo\Reports\Rules\OrphanPages;
-use JothamLec\Seo\Reports\Rules\SingleH1;
-use JothamLec\Seo\Reports\Rules\TitleLength;
-use JothamLec\Seo\Reports\Rules\TitleUnique;
-use JothamLec\Seo\Reports\Runner;
-use JothamLec\Seo\Reports\SiteFacts;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Reports\ExternalLinkChecker;
+use JothamLec\MarketingToolkit\Reports\HtmlInspector;
+use JothamLec\MarketingToolkit\Reports\LinkChecker;
+use JothamLec\MarketingToolkit\Reports\PageFacts;
+use JothamLec\MarketingToolkit\Reports\ReportSettings;
+use JothamLec\MarketingToolkit\Reports\Rules\BrokenLinks;
+use JothamLec\MarketingToolkit\Reports\Rules\Canonical;
+use JothamLec\MarketingToolkit\Reports\Rules\DescriptionLength;
+use JothamLec\MarketingToolkit\Reports\Rules\DescriptionUnique;
+use JothamLec\MarketingToolkit\Reports\Rules\ExternalLinks;
+use JothamLec\MarketingToolkit\Reports\Rules\ImageAlt;
+use JothamLec\MarketingToolkit\Reports\Rules\JsonLd;
+use JothamLec\MarketingToolkit\Reports\Rules\NoindexInSitemap;
+use JothamLec\MarketingToolkit\Reports\Rules\OgImage;
+use JothamLec\MarketingToolkit\Reports\Rules\OrphanPages;
+use JothamLec\MarketingToolkit\Reports\Rules\SingleH1;
+use JothamLec\MarketingToolkit\Reports\Rules\TitleLength;
+use JothamLec\MarketingToolkit\Reports\Rules\TitleUnique;
+use JothamLec\MarketingToolkit\Reports\Runner;
+use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 /**
  * @param  array<string, mixed>  $facts

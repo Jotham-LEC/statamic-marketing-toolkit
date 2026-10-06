@@ -1,12 +1,12 @@
 <?php
 
-namespace JothamLec\Seo\Commands;
+namespace JothamLec\MarketingToolkit\Commands;
 
 use Illuminate\Console\Command;
-use JothamLec\Seo\SearchConsole\Client;
-use JothamLec\Seo\SearchConsole\Connection;
-use JothamLec\Seo\SearchConsole\Importer;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\SearchConsole\Client;
+use JothamLec\MarketingToolkit\SearchConsole\Connection;
+use JothamLec\MarketingToolkit\SearchConsole\Importer;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Site;
 use Throwable;

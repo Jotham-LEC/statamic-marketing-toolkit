@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Redirects;
+namespace JothamLec\MarketingToolkit\Redirects;
 
 use Illuminate\Support\Facades\DB;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
  * Redirects as CSV: `source,target,status,active`, one rule per row, with that

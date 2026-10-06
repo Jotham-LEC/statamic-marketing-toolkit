@@ -1,11 +1,11 @@
 <?php
 
-namespace JothamLec\Seo\SearchConsole;
+namespace JothamLec\MarketingToolkit\SearchConsole;
 
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
 use Throwable;

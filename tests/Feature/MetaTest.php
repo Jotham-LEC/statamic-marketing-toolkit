@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
-use JothamLec\Seo\Context;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;

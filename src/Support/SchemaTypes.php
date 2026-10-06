@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Support;
+namespace JothamLec\MarketingToolkit\Support;
 
 /**
  * What kind of thing a schema.org type is, so the publisher node only prints

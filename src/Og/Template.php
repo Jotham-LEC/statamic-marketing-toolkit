@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Og;
+namespace JothamLec\MarketingToolkit\Og;
 
 use SimonHamp\TheOg\Image;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo;
+namespace JothamLec\MarketingToolkit;
 
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Globals\Variables;

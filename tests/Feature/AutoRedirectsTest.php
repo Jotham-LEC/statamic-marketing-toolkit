@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Event;
-use JothamLec\Seo\Redirects\AutoRedirects;
-use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Events\EntrySaving;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;

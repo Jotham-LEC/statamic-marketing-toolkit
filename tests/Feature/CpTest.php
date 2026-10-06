@@ -1,9 +1,12 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Widgets\SeoWidget;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Support\LegacySettings;
+use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
+use Statamic\Facades\Fieldset;
 use Statamic\Facades\Permission;
 use Statamic\Widgets\VueComponent;
 
@@ -89,6 +92,32 @@ test('the addon finds itself under the package name in composer.json', function 
     $name = json_decode((string) file_get_contents(__DIR__.'/../../composer.json'), true)['name'];
 
     // Navigation, ReportsController and ReportSettings look the addon up by this name.
-    expect($name)->toBe('jotham-lec/statamic-co-seo')
+    expect($name)->toBe('jotham-lec/statamic-marketing-toolkit')
         ->and(Addon::get($name)?->hasSettingsBlueprint())->toBeTrue();
+});
+
+test('the SEO names stay as they were under Co-SEO', function () {
+    expect(config('seo.global'))->toBe('seo')
+        ->and(__('seo::cp.seo'))->toBe('SEO')
+        ->and(Fieldset::find('seo::seo'))->not->toBeNull()
+        ->and(view()->exists('seo::meta'))->toBeTrue();
+});
+
+test('Co-SEO\'s addon settings are carried over once, under the new slug', function () {
+    $old = resource_path('addons/seo.yaml');
+    $new = resource_path('addons/marketing-toolkit.yaml');
+    File::ensureDirectoryExists(dirname($old));
+    file_put_contents($old, "search_console_property: 'sc-domain:example.test'\n");
+
+    try {
+        LegacySettings::carryOver();
+        expect(file_get_contents($new))->toContain('sc-domain:example.test');
+
+        file_put_contents($old, "search_console_property: 'sc-domain:old.test'\n");
+        LegacySettings::carryOver();
+        expect(file_get_contents($new))->toContain('sc-domain:example.test');
+    } finally {
+        @unlink($old);
+        @unlink($new);
+    }
 });

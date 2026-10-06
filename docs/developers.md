@@ -4,7 +4,7 @@ How the addon works out each value, and where to change it for one site.
 
 ## How a value is worked out
 
-Every value the `<head>` prints comes from one public method of `JothamLec\Seo\SiteSeo`, called with a `Context`:
+Every value the `<head>` prints comes from one public method of `JothamLec\MarketingToolkit\SiteSeo`, called with a `Context`:
 
 ```php
 final readonly class Context
@@ -47,8 +47,8 @@ Extend the class, override the methods you need, and point `seo.class` at it:
 // app/Seo.php
 namespace App;
 
-use JothamLec\Seo\Context;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\SiteSeo;
 
 class Seo extends SiteSeo
 {
@@ -119,8 +119,8 @@ A template turns a `Card` (title, description, label, site name, picture, colour
 ```php
 namespace App\Og;
 
-use JothamLec\Seo\Og\Card;
-use JothamLec\Seo\Og\Template;
+use JothamLec\MarketingToolkit\Og\Card;
+use JothamLec\MarketingToolkit\Og\Template;
 use SimonHamp\TheOg\Image;
 use SimonHamp\TheOg\Layout\Layouts\Standard;
 use SimonHamp\TheOg\Theme;
@@ -155,11 +155,11 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 
 ## Redirects, 404s and reports from code
 
-- **Redirects** are the Eloquent model `JothamLec\Seo\Redirects\Redirect` (`site`, `source`, `target`, `status`, `active`, `automatic`, `hits`, `last_hit_at`). `site` is a site handle, or null for every site (always null on a single site). Saving or deleting one through the model clears the cached rules; after bulk queries, call `JothamLec\Seo\Redirects\Matcher::flush()`.
-- **Automatic redirects** go through `JothamLec\Seo\Redirects\AutoRedirects::create($from, $to, $site)`, which also collapses chains among that site's rules. Use it when you move content in code.
-- **The 404 log** is `JothamLec\Seo\NotFound\MissingPath` (with `site`, as redirects).
-- **Reports**: `app(JothamLec\Seo\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site.
-- **Another site as the current one**: `JothamLec\Seo\Support\Sites::as($handle, fn () => …)` runs code with that site current (the brand global, `absolute()`, the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
+- **Redirects** are the Eloquent model `JothamLec\MarketingToolkit\Redirects\Redirect` (`site`, `source`, `target`, `status`, `active`, `automatic`, `hits`, `last_hit_at`). `site` is a site handle, or null for every site (always null on a single site). Saving or deleting one through the model clears the cached rules; after bulk queries, call `JothamLec\MarketingToolkit\Redirects\Matcher::flush()`.
+- **Automatic redirects** go through `JothamLec\MarketingToolkit\Redirects\AutoRedirects::create($from, $to, $site)`, which also collapses chains among that site's rules. Use it when you move content in code.
+- **The 404 log** is `JothamLec\MarketingToolkit\NotFound\MissingPath` (with `site`, as redirects).
+- **Reports**: `app(JothamLec\MarketingToolkit\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site.
+- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the brand global, `absolute()`, the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
 
 ## Several sites and languages
 
@@ -210,10 +210,10 @@ Tests run as production with an `array` cache that serializes, and render pages 
 
 The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
 
-Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\Seo\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
+Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\MarketingToolkit\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
 
 Release:
 
 1. Note the change in [CHANGELOG.md](../CHANGELOG.md).
 2. `npm run build` and commit `resources/dist`.
-3. `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`. Sites update with `composer update jotham-lec/statamic-co-seo`; the Marketplace picks the tag up from Packagist.
+3. `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`. Sites update with `composer update jotham-lec/statamic-marketing-toolkit`; the Marketplace picks the tag up from Packagist.

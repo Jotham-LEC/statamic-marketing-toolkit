@@ -5,19 +5,19 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\Seo\Actions\CreateRedirect;
-use JothamLec\Seo\IndexNow\IndexNow;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Og\Generator;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Reports\Report;
-use JothamLec\Seo\Reports\Runner;
-use JothamLec\Seo\SearchConsole\Client;
-use JothamLec\Seo\SearchConsole\Connection;
-use JothamLec\Seo\SearchConsole\SearchStat;
-use JothamLec\Seo\SiteSeo;
-use JothamLec\Seo\Support\Edition;
-use JothamLec\Seo\Widgets\SeoWidget;
+use JothamLec\MarketingToolkit\Actions\CreateRedirect;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Reports\Report;
+use JothamLec\MarketingToolkit\Reports\Runner;
+use JothamLec\MarketingToolkit\SearchConsole\Client;
+use JothamLec\MarketingToolkit\SearchConsole\Connection;
+use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
+use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
@@ -434,7 +434,7 @@ describe('Search Console', function () {
         ]);
     });
 
-    afterEach(fn () => File::delete(resource_path('addons/seo.yaml')));
+    afterEach(fn () => File::delete(resource_path('addons/marketing-toolkit.yaml')));
 
     test('each site imports its own property, and the overview shows the selected site\'s numbers', function () {
         config(['seo.search_console.property' => ['default' => 'sc-domain:example.test', 'cothinking' => 'sc-domain:cothink.test']]);

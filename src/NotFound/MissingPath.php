@@ -1,11 +1,11 @@
 <?php
 
-namespace JothamLec\Seo\NotFound;
+namespace JothamLec\MarketingToolkit\NotFound;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
  * A path visitors asked for and got a 404: one row per path, with how often

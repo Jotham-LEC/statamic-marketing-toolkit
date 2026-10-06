@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Redirects;
+namespace JothamLec\MarketingToolkit\Redirects;
 
 use Closure;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
  * One rule: requests for `source` go to `target` with `status` (301, 302),

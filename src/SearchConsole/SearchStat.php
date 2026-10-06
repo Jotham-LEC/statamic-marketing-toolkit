@@ -1,11 +1,11 @@
 <?php
 
-namespace JothamLec\Seo\SearchConsole;
+namespace JothamLec\MarketingToolkit\SearchConsole;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
  * One page's numbers from Google Search Console over the last import's

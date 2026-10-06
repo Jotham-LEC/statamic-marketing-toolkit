@@ -5,20 +5,20 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 ## What you need
 
 - **Statamic 6** (Core is enough) on **PHP 8.3+**. Several sites and languages need Statamic Pro, as Statamic itself does; see [Several sites and languages](developers.md#several-sites-and-languages).
-- **PHP's `imagick` extension** for the generated share cards (Co-SEO Pro). Without it the cards (and their tests) fail; everything else works.
+- **PHP's `imagick` extension** for the generated share cards (Marketing Toolkit Pro). Without it the cards (and their tests) fail; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
-- **For Pro, a licence** for the live site, from the [Statamic Marketplace](https://statamic.com/addons/jothamlec/co-seo). Local and staging sites don't need one.
+- **For Pro, a licence** for the live site, from the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit). Local and staging sites don't need one.
 
 ## The editions
 
-Co-SEO comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), several sites and languages with hreflang, IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, reports (on a schedule, with link checks and `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, and the dashboard widget.
+Marketing Toolkit comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), several sites and languages with hreflang, IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, reports (on a schedule, with link checks and `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, and the dashboard widget.
 
 To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
 
 ```php
 'addons' => [
-    'jotham-lec/statamic-co-seo' => 'pro',
+    'jotham-lec/statamic-marketing-toolkit' => 'pro',
 ],
 ```
 
@@ -27,7 +27,7 @@ In Free, Pro's screens aren't there and Tools → SEO shows a card for each of t
 ## 1. Install the package
 
 ```bash
-composer require jotham-lec/statamic-co-seo
+composer require jotham-lec/statamic-marketing-toolkit
 php artisan migrate                          # seo_redirects, seo_404s, seo_reports, seo_report_pages, seo_search_stats
 php please seo:install                       # the "SEO & brand" global set
 php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to change the defaults
@@ -35,7 +35,7 @@ php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to chan
 
 `seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (`·` as the separator, the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing. With several sites it creates the set on each, the others taking what they leave empty from the default site; a set that already exists must be enabled on each site by hand (the command names the sites it is missing).
 
-The control panel's scripts and styles are published to `public/vendor/statamic-co-seo` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=seo --force`.
+The control panel's scripts and styles are published to `public/vendor/statamic-marketing-toolkit` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 
 ## 2. Add the SEO fields to your blueprints
 

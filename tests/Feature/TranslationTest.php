@@ -3,9 +3,9 @@
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Reports\Runner;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Reports\Runner;
 use Statamic\Facades\YAML;
 
 /**

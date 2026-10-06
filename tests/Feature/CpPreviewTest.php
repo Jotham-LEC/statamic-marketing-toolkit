@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Testing\TestResponse;
-use JothamLec\Seo\Fieldtypes\SeoPreview;
+use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Taxonomy;

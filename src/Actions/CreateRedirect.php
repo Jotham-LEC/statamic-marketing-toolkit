@@ -1,8 +1,8 @@
 <?php
 
-namespace JothamLec\Seo\Actions;
+namespace JothamLec\MarketingToolkit\Actions;
 
-use JothamLec\Seo\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use Statamic\Actions\Action;
 
 /**

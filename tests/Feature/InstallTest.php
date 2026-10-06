@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Lang;
-use JothamLec\Seo\Commands\Install;
-use JothamLec\Seo\Fieldtypes\SeoPreview;
+use JothamLec\MarketingToolkit\Commands\Install;
+use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\YAML;

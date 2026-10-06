@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Redirects;
+namespace JothamLec\MarketingToolkit\Redirects;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\User;
 
 /**

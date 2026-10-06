@@ -1,29 +1,30 @@
 <?php
 
-namespace JothamLec\Seo;
+namespace JothamLec\MarketingToolkit;
 
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
-use JothamLec\Seo\Actions\CreateRedirect;
-use JothamLec\Seo\Actions\DeleteSeoRecords;
-use JothamLec\Seo\Commands\Install;
-use JothamLec\Seo\Commands\Report;
-use JothamLec\Seo\Commands\SearchConsole;
-use JothamLec\Seo\Cp\Navigation;
-use JothamLec\Seo\Fieldtypes\SeoPreview;
-use JothamLec\Seo\Http\Middleware\HandleMissing;
-use JothamLec\Seo\IndexNow\IndexNow;
-use JothamLec\Seo\Listeners\FlushSitemap;
-use JothamLec\Seo\Listeners\RedirectChangedUris;
-use JothamLec\Seo\Listeners\SubmitToIndexNow;
-use JothamLec\Seo\Reports\ReportSettings;
-use JothamLec\Seo\SearchConsole\Client as SearchConsoleClient;
-use JothamLec\Seo\SearchConsole\Connection;
-use JothamLec\Seo\Support\Config;
-use JothamLec\Seo\Support\Edition;
-use JothamLec\Seo\Support\Sites;
-use JothamLec\Seo\Tags\Seo;
-use JothamLec\Seo\Widgets\SeoWidget;
+use JothamLec\MarketingToolkit\Actions\CreateRedirect;
+use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\Commands\Install;
+use JothamLec\MarketingToolkit\Commands\Report;
+use JothamLec\MarketingToolkit\Commands\SearchConsole;
+use JothamLec\MarketingToolkit\Cp\Navigation;
+use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
+use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
+use JothamLec\MarketingToolkit\Listeners\RedirectChangedUris;
+use JothamLec\MarketingToolkit\Listeners\SubmitToIndexNow;
+use JothamLec\MarketingToolkit\Reports\ReportSettings;
+use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
+use JothamLec\MarketingToolkit\SearchConsole\Connection;
+use JothamLec\MarketingToolkit\Support\Config;
+use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\LegacySettings;
+use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Tags\Seo;
+use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Events\CollectionSaved;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
@@ -39,7 +40,21 @@ use Statamic\Statamic;
 
 class ServiceProvider extends AddonServiceProvider
 {
+    /*
+     * The SEO module keeps the names it had as Co-SEO (addon slug `seo`):
+     * `seo::` views, translations, fieldsets and blueprints, and
+     * config/seo.php, so sites that import `seo::seo` or call `__('seo::…')`
+     * don't change. Statamic would name them after the slug.
+     */
     protected $viewNamespace = 'seo';
+
+    protected $fieldsetNamespace = 'seo';
+
+    protected $blueprintNamespace = 'seo';
+
+    protected $config = false;
+
+    protected $translations = false;
 
     protected $tags = [Seo::class];
 
@@ -83,6 +98,9 @@ class ServiceProvider extends AddonServiceProvider
     public function register(): void
     {
         parent::register();
+
+        // Merged here rather than in Statamic's bootConfig(), which would name the file after the slug.
+        $this->mergeConfigFrom(__DIR__.'/../config/seo.php', 'seo');
 
         $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class') ?: SiteSeo::class));
 
@@ -163,6 +181,8 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon(): void
     {
+        $this->bootSeoNames();
+
         // A key and property set up in the control panel, where .env has none.
         if (Edition::pro()) {
             Connection::apply();
@@ -192,6 +212,21 @@ class ServiceProvider extends AddonServiceProvider
         Navigation::register();
 
         Statamic::provideToScript(['seo' => ['pro' => Edition::pro()]]);
+    }
+
+    /**
+     * config/seo.php and the `seo::` translations, under the names the SEO
+     * module has always had (see the namespaces above); and the addon
+     * settings Co-SEO saved under its old slug, carried over once.
+     */
+    protected function bootSeoNames(): void
+    {
+        $this->publishes([__DIR__.'/../config/seo.php' => config_path('seo.php')], 'seo-config');
+
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'seo');
+        $this->publishes([__DIR__.'/../lang' => $this->app->langPath('vendor/seo')], 'seo-translations');
+
+        LegacySettings::carryOver();
     }
 
     /**

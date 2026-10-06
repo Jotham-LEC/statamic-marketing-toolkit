@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Support;
+namespace JothamLec\MarketingToolkit\Support;
 
 /**
  * Paths Statamic answers itself, outside the front end: the control panel,

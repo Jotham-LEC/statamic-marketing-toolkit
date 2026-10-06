@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Support;
+namespace JothamLec\MarketingToolkit\Support;
 
 use Statamic\Facades\Addon;
 use Throwable;
@@ -13,7 +13,7 @@ use Throwable;
  */
 final class Edition
 {
-    public const string PACKAGE = 'jotham-lec/statamic-co-seo';
+    public const string PACKAGE = 'jotham-lec/statamic-marketing-toolkit';
 
     public static function pro(): bool
     {
@@ -34,6 +34,6 @@ final class Edition
      */
     public static function marketplaceUrl(): string
     {
-        return 'https://statamic.com/addons/jothamlec/co-seo';
+        return 'https://statamic.com/addons/jothamlec/marketing-toolkit';
     }
 }

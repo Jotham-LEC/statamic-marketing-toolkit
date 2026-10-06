@@ -1,9 +1,9 @@
 <?php
 
-use JothamLec\Seo\Og\Card;
-use JothamLec\Seo\Og\DefaultTemplate;
-use JothamLec\Seo\Og\Generator;
-use JothamLec\Seo\Og\Template;
+use JothamLec\MarketingToolkit\Og\Card;
+use JothamLec\MarketingToolkit\Og\DefaultTemplate;
+use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Og\Template;
 use SimonHamp\TheOg\Image;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;

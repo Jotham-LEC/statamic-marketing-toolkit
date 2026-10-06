@@ -1,7 +1,7 @@
 <?php
 
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 
 test('a 404 is logged once per path, with hits, dates and the last referrer', function () {
     $this->get('/missing', ['Referer' => 'https://elsewhere.test/a', 'User-Agent' => 'Mozilla/5.0']);

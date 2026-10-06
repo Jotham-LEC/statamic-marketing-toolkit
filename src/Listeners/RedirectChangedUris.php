@@ -1,11 +1,11 @@
 <?php
 
-namespace JothamLec\Seo\Listeners;
+namespace JothamLec\MarketingToolkit\Listeners;
 
 use Carbon\Carbon;
 use Illuminate\Events\Dispatcher;
-use JothamLec\Seo\Redirects\AutoRedirects;
-use JothamLec\Seo\Support\Uris;
+use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
+use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Events\CollectionTreeSaved;

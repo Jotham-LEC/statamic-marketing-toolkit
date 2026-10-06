@@ -1,17 +1,17 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Inertia\Inertia;
 use Inertia\Response;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Redirects\Redirect;
-use JothamLec\Seo\Reports\Report;
-use JothamLec\Seo\SearchConsole\Client;
-use JothamLec\Seo\SearchConsole\SearchStat;
-use JothamLec\Seo\SiteSeo;
-use JothamLec\Seo\Support\Edition;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Reports\Report;
+use JothamLec\MarketingToolkit\SearchConsole\Client;
+use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
+use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Addons\Addon as AddonPackage;
 use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\Addon;

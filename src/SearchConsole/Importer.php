@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\SearchConsole;
+namespace JothamLec\MarketingToolkit\SearchConsole;
 
 use Illuminate\Support\Facades\DB;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
 /**

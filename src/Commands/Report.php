@@ -1,11 +1,11 @@
 <?php
 
-namespace JothamLec\Seo\Commands;
+namespace JothamLec\MarketingToolkit\Commands;
 
 use Illuminate\Console\Command;
-use JothamLec\Seo\Reports\Report as SeoReport;
-use JothamLec\Seo\Reports\Runner;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Reports\Report as SeoReport;
+use JothamLec\MarketingToolkit\Reports\Runner;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Site;
 

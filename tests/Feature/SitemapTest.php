@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
-use JothamLec\Seo\Reports\Runner;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\Reports\Runner;
+use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Events\EntryScheduleReached;
 use Statamic\Events\StacheCleared;

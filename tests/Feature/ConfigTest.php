@@ -1,7 +1,7 @@
 <?php
 
-use JothamLec\Seo\ServiceProvider;
-use JothamLec\Seo\Support\Config;
+use JothamLec\MarketingToolkit\ServiceProvider;
+use JothamLec\MarketingToolkit\Support\Config;
 
 test('a site\'s keyed arrays merge into the defaults at every depth', function () {
     $merged = Config::merge(

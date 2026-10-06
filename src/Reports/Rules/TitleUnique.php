@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Reports\Rules;
+namespace JothamLec\MarketingToolkit\Reports\Rules;
 
-use JothamLec\Seo\Reports\PageFacts;
-use JothamLec\Seo\Reports\Result;
-use JothamLec\Seo\Reports\SiteFacts;
+use JothamLec\MarketingToolkit\Reports\PageFacts;
+use JothamLec\MarketingToolkit\Reports\Result;
+use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 class TitleUnique extends Rule
 {

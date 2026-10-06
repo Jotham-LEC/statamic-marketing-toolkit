@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Cp;
+namespace JothamLec\MarketingToolkit\Cp;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;

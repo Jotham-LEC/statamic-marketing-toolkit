@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Support;
+namespace JothamLec\MarketingToolkit\Support;
 
 /**
  * Merges a site's config/seo.php into the addon's defaults. Laravel's own

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased (0.18.0)
+
+Co-SEO is now **Marketing Toolkit**: the marketing fundamentals of a website, not only its SEO.
+
+### Upgrading
+- **New package name.** `composer remove jotham-lec/statamic-co-seo --no-update && composer require jotham-lec/statamic-marketing-toolkit`, then rename the key in `config/statamic/editions.php` to `jotham-lec/statamic-marketing-toolkit`. Everything else stays: see [Upgrading from Co-SEO](docs/upgrading.md).
+- PHP classes moved from `JothamLec\Seo` to `JothamLec\MarketingToolkit`.
+
+### Changed
+- The addon's slug is `marketing-toolkit`: its scripts are published to `public/vendor/statamic-marketing-toolkit` (tag `marketing-toolkit`), and its settings file is `resources/addons/marketing-toolkit.yaml`, copied once from `seo.yaml`. `config/seo.php`, the `seo::` views, translations and fieldsets, routes, permissions and tags keep their names.
+
 ## 0.17.0 – 2026-10-06
 
 Co-SEO comes in two editions, Free and Pro; pages link to their other languages (hreflang); and every word in the control panel can be translated. On the Statamic Marketplace from this version.

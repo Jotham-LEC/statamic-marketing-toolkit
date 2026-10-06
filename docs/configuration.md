@@ -13,7 +13,7 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
 
 | Key | Default | |
 |---|---|---|
-| `class` | `JothamLec\Seo\SiteSeo` | The class that works out every value. Extend it to change one rule; see [developers.md](developers.md#change-a-rule-siteseo). |
+| `class` | `JothamLec\MarketingToolkit\SiteSeo` | The class that works out every value. Extend it to change one rule; see [developers.md](developers.md#change-a-rule-siteseo). |
 | `global` | `'seo'` | Handle of the brand global set. |
 
 ### Titles and descriptions
@@ -164,7 +164,7 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 ## Editions
 
-`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-co-seo' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, leaves out Search Console, the reports and their settings, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
+`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, leaves out Search Console, the reports and their settings, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
 
 ## Addon settings: Tools → Addons → SEO (Pro)
 

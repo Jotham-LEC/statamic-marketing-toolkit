@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Support;
+namespace JothamLec\MarketingToolkit\Support;
 
 use Closure;
 use ReflectionProperty;

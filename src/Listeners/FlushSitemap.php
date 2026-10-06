@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Listeners;
+namespace JothamLec\MarketingToolkit\Listeners;
 
 use Illuminate\Support\Facades\Cache;
-use JothamLec\Seo\Http\Controllers\SitemapController;
+use JothamLec\MarketingToolkit\Http\Controllers\SitemapController;
 use Statamic\Facades\Site;
 
 /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo;
+namespace JothamLec\MarketingToolkit;
 
 /**
  * Everything the <head> prints for one page, resolved. The view only formats it.

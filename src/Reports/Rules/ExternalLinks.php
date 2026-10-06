@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Reports\Rules;
+namespace JothamLec\MarketingToolkit\Reports\Rules;
 
-use JothamLec\Seo\Reports\PageFacts;
-use JothamLec\Seo\Reports\Result;
-use JothamLec\Seo\Reports\SiteFacts;
+use JothamLec\MarketingToolkit\Reports\PageFacts;
+use JothamLec\MarketingToolkit\Reports\Result;
+use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 /**
  * Links to other sites that lead nowhere (a 404, a 410, a domain that no

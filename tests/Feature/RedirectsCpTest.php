@@ -2,10 +2,10 @@
 
 use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\Seo\Actions\CreateRedirect;
-use JothamLec\Seo\Actions\DeleteSeoRecords;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Actions\CreateRedirect;
+use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Taxonomy;

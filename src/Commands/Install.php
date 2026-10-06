@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Commands;
+namespace JothamLec\MarketingToolkit\Commands;
 
 use Illuminate\Console\Command;
 use Statamic\Console\RunsInPlease;

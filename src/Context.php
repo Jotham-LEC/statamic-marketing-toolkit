@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo;
+namespace JothamLec\MarketingToolkit;
 
 use Illuminate\Http\Request;
 use Statamic\Contracts\Entries\Entry;

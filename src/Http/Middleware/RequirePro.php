@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Http\Middleware;
+namespace JothamLec\MarketingToolkit\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

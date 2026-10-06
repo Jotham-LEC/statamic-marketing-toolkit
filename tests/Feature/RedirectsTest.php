@@ -2,8 +2,8 @@
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
-use JothamLec\Seo\Redirects\Csv;
-use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Redirects\Csv;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Facades\URL;
 
 function rule(string $source, ?string $target, int $status = 301, bool $active = true): Redirect

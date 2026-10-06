@@ -26,7 +26,7 @@ return [
 
     'pro' => [
         'badge' => 'Pro',
-        'get' => 'Get Co-SEO Pro',
+        'get' => 'Get Marketing Toolkit Pro',
         'reports' => [
             'title' => 'Reports',
             'body' => 'Every page checked and scored out of 100: missing titles and descriptions, broken links, pages nothing links to, share images. On a schedule, or when you ask.',
@@ -39,7 +39,7 @@ return [
             'title' => 'Google Search',
             'body' => 'Clicks, appearances and position for each page, from Google Search Console, next to what the reports find.',
         ],
-        'csv' => 'Import and export redirects as CSV with Co-SEO Pro.',
+        'csv' => 'Import and export redirects as CSV with Marketing Toolkit Pro.',
     ],
 
     'overview' => [

@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\SearchConsole;
+namespace JothamLec\MarketingToolkit\SearchConsole;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Edition;
 use RuntimeException;
 
 /**

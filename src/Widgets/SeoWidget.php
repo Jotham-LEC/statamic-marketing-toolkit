@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Widgets;
+namespace JothamLec\MarketingToolkit\Widgets;
 
 use Illuminate\Support\Facades\Schema;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\Reports\Report;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Reports\Report;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
 use Statamic\Widgets\VueComponent;

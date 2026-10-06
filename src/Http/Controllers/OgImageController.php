@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers;
+namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
-use JothamLec\Seo\Og\Generator;
+use JothamLec\MarketingToolkit\Og\Generator;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Structures\Page;

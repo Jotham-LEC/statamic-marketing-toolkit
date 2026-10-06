@@ -1,14 +1,14 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers\CP;
+namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use JothamLec\Seo\Cp\Listing;
-use JothamLec\Seo\NotFound\MissingPath;
-use JothamLec\Seo\NotFound\Recorder;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Cp\Listing;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\NotFound\Recorder;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Action;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;

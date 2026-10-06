@@ -1,8 +1,8 @@
 <?php
 
-namespace JothamLec\Seo\Listeners;
+namespace JothamLec\MarketingToolkit\Listeners;
 
-use JothamLec\Seo\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;

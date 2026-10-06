@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
-use JothamLec\Seo\Redirects\Matcher;
+use JothamLec\MarketingToolkit\Redirects\Matcher;
 use Statamic\Facades\Asset;
 use Statamic\Facades\Data;
 use Statamic\Facades\Site;

@@ -4,7 +4,7 @@ use Illuminate\Contracts\Queue\Job;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Http;
-use JothamLec\Seo\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use Statamic\Facades\Entry;
 
 describe('snippets', function () {

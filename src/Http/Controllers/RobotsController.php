@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Http\Controllers;
+namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\SiteSeo;
 
 /**
  * /robots.txt from the SEO global set. Outside production it shuts every

@@ -1,9 +1,9 @@
 <?php
 
-namespace JothamLec\Seo\Tags;
+namespace JothamLec\MarketingToolkit\Tags;
 
-use JothamLec\Seo\Context;
-use JothamLec\Seo\SiteSeo;
+use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Tags\Tags;
 
 /**

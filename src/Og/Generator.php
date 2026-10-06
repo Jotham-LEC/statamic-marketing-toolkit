@@ -1,12 +1,12 @@
 <?php
 
-namespace JothamLec\Seo\Og;
+namespace JothamLec\MarketingToolkit\Og;
 
 use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
-use JothamLec\Seo\Context;
-use JothamLec\Seo\SiteSeo;
-use JothamLec\Seo\Support\Sites;
+use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Contracts\Entries\Entry;
 
 /**

@@ -3,7 +3,7 @@
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\Seo\SearchConsole\SearchStat;
+use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 
 /**
  * A service account key made up for the test, and its public half.

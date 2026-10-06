@@ -4,11 +4,11 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use JothamLec\Seo\Http\Controllers\IndexNowKeyController;
-use JothamLec\Seo\Http\Controllers\OgImageController;
-use JothamLec\Seo\Http\Controllers\RobotsController;
-use JothamLec\Seo\Http\Controllers\SitemapController;
-use JothamLec\Seo\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Http\Controllers\IndexNowKeyController;
+use JothamLec\MarketingToolkit\Http\Controllers\OgImageController;
+use JothamLec\MarketingToolkit\Http\Controllers\RobotsController;
+use JothamLec\MarketingToolkit\Http\Controllers\SitemapController;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 
 /*
  * Statamic registers these with its front-end routes (the `web` group), ahead

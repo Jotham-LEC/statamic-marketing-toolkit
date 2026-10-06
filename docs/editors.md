@@ -4,7 +4,7 @@ This guide is for the people who write and look after the site's pages. It expla
 
 **SEO** (search engine optimisation) is about how your pages show up in Google and other search engines, and how they look when someone shares a link on Facebook, LinkedIn, WhatsApp or X. Most of it happens on its own: if you leave the SEO fields empty, the site fills in sensible values from your page's title, description and text.
 
-Some parts are in **Co-SEO Pro** only, marked *(Pro)* below. On the free edition, Tools → SEO shows a card for each of them instead.
+Some parts are in **Marketing Toolkit Pro** only, marked *(Pro)* below. On the free edition, Tools → SEO shows a card for each of them instead.
 
 ## Tools → SEO
 

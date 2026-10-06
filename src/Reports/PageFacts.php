@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
 /**
  * What one rendered page says about itself, as the checks need it.

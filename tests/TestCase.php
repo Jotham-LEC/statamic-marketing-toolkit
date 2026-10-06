@@ -1,10 +1,10 @@
 <?php
 
-namespace JothamLec\Seo\Tests;
+namespace JothamLec\MarketingToolkit\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use JothamLec\Seo\ServiceProvider;
-use JothamLec\Seo\Support\Edition;
+use JothamLec\MarketingToolkit\ServiceProvider;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Addons\Manifest;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;

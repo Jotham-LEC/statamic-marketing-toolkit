@@ -1,6 +1,6 @@
 <?php
 
-namespace JothamLec\Seo\Support;
+namespace JothamLec\MarketingToolkit\Support;
 
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Blink;

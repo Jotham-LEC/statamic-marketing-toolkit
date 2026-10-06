@@ -1,8 +1,8 @@
 <?php
 
-namespace JothamLec\Seo\Reports;
+namespace JothamLec\MarketingToolkit\Reports;
 
-use JothamLec\Seo\Support\Uris;
+use JothamLec\MarketingToolkit\Support\Uris;
 
 /**
  * What the checks know about the whole run: its settings, and which titles
