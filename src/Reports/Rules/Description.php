@@ -6,22 +6,22 @@ use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
 
 /**
- * A page with no share image: a bare link on LinkedIn, WhatsApp or Slack.
+ * A page with no description: Google writes its own snippet from the page.
  */
-class OgImage extends Rule
+class Description extends Rule
 {
     public static function handle(): string
     {
-        return 'og_image';
+        return 'description';
     }
 
     public function label(): string
     {
-        return 'seo::reports.rules.og_image';
+        return 'seo::reports.rules.description';
     }
 
     public function check(string $url, PageFacts $page): Result
     {
-        return $page->ogImage === null ? Result::fail('seo::reports.messages.og_image_missing') : Result::pass();
+        return $page->description === null ? Result::fail('seo::reports.messages.description_missing') : Result::pass();
     }
 }

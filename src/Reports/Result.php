@@ -51,18 +51,6 @@ final readonly class Result
     }
 
     /**
-     * Its share of the check's weight: all, half, or none.
-     */
-    public function value(): float
-    {
-        return match ($this->status) {
-            self::PASS => 1.0,
-            self::WARN => 0.5,
-            default => 0.0,
-        };
-    }
-
-    /**
      * The message in the current language.
      */
     public function text(): string

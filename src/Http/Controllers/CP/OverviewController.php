@@ -12,9 +12,7 @@ use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Sites;
-use Statamic\Addons\Addon as AddonPackage;
 use Statamic\Contracts\Auth\User as UserContract;
-use Statamic\Facades\Addon;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
@@ -42,7 +40,6 @@ class OverviewController
     private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in($site);
-        $addon = Addon::get(Edition::PACKAGE);
         $pro = Edition::pro();
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
@@ -57,7 +54,7 @@ class OverviewController
                 'description' => $seo->settings()->string('default_description'),
             ],
             // Pro's panels are null in the free edition, which shows what they would add instead.
-            'report' => $pro ? $this->report($user, $addon, $site) : null,
+            'report' => $pro ? $this->report($site) : null,
             'redirects' => $user->can('manage seo redirects') ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
@@ -88,19 +85,18 @@ class OverviewController
     /**
      * @return array<string, mixed>
      */
-    private function report(UserContract $user, ?AddonPackage $addon, string $site): array
+    private function report(string $site): array
     {
         $latest = Report::query()->shownOn($site)->where('status', Report::DONE)->latest('id')->first();
 
         return [
             'latest' => $latest === null ? null : [
-                'score' => (int) $latest->score,
-                'pages' => (int) ($latest->summary['scored'] ?? $latest->pages_total),
+                'issues' => (int) ($latest->summary['with_issues'] ?? 0),
+                'pages' => (int) $latest->pages_total,
                 'finished_at' => $latest->finished_at?->toIso8601String(),
                 'url' => cp_route('seo.reports.show', $latest),
             ],
             'url' => cp_route('seo.reports.index'),
-            'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? $addon->settingsUrl() : null,
         ];
     }
 

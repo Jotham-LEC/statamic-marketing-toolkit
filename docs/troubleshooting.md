@@ -40,16 +40,15 @@ Requests from bots and tools are left out on purpose, including `curl` and `wget
 
 ### Every page says noindex
 
-That's `seo.robots.noindex_outside_production`: unless `APP_ENV=production`, every page is noindexed so test copies stay out of search results. Reports ignore it while they run, so a report on a local copy still means something.
+That's `seo.robots.noindex_outside_production`: unless `APP_ENV=production`, every page is noindexed so test copies stay out of search results. The link check ignores it while it runs, so a check on a local copy still means something.
 
-### A report stays at 0 pages, or a step times out
+### A link check stays at 0 pages, or a step times out
 
 - **With a queue worker** (`QUEUE_CONNECTION` other than `sync`), is the worker running? The CP queues one job per step.
-- **Without one**, the report advances while its screen is open, one step per progress request. Keep the tab open, or run `php please seo:report` in a terminal.
-- If a step times out, lower **Pages per step** (Tools → Addons → SEO → Running).
-- A report that stops moving for 30 minutes is marked failed when the next one starts.
+- **Without one**, the check advances while its screen is open, one step per progress request. Keep the tab open, or run `php please seo:report` in a terminal.
+- A check that stops moving for 30 minutes is marked failed when the next one starts.
 
-### A report flags links that work
+### The link check flags links that work
 
 The link check looks the address up without fetching it: content Statamic knows, a file in `public/`, an asset, a route the app registers, or a redirect. A link handled some other way (a web-server rewrite, another app on the same domain) shows as broken. Links to files under a shared folder that isn't on your local copy (uploads kept on the server only) also show as broken locally but not in production.
 

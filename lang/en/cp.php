@@ -9,27 +9,26 @@ return [
     'seo' => 'SEO',
 
     'nav' => [
-        'reports' => 'Reports',
+        'reports' => 'Link check',
         'redirects' => 'Redirects',
         'not_found' => '404s',
         'search_console' => 'Search Console',
         'brand' => 'Brand & defaults',
-        'report_settings' => 'Report settings',
     ],
 
     'permissions' => [
-        'view' => 'View SEO overview, reports and 404s',
+        'view' => 'View SEO overview, link checks and 404s',
         'view_free' => 'View SEO overview',
         'redirects' => 'Manage redirects',
-        'reports' => 'Run SEO reports',
+        'reports' => 'Run link checks',
     ],
 
     'pro' => [
         'badge' => 'Pro',
         'get' => 'Get Marketing Toolkit Pro',
         'reports' => [
-            'title' => 'Reports',
-            'body' => 'Every page checked and scored out of 100: missing titles and descriptions, broken links, pages nothing links to, share images. On a schedule, or when you ask.',
+            'title' => 'Link check',
+            'body' => 'Every week, every page opened and checked: links that lead nowhere, here or on other sites, and pages with no description or share image. Each one a click away from its edit screen.',
         ],
         'not_found' => [
             'title' => '404s',
@@ -37,7 +36,7 @@ return [
         ],
         'search_console' => [
             'title' => 'Google Search',
-            'body' => 'Clicks, appearances and position for each page, from Google Search Console, next to what the reports find.',
+            'body' => 'Clicks, appearances and position for each page, from Google Search Console, inside the control panel.',
         ],
         'sites' => [
             'title' => 'Several sites and languages',
@@ -48,12 +47,12 @@ return [
 
     'overview' => [
         'report' => [
-            'title' => 'Report',
-            'pages' => ':count page,|:count pages,',
-            'none' => 'No report yet. A report renders every page and scores it out of 100.',
-            'open_latest' => 'Open the latest report',
-            'all' => 'All reports',
-            'settings' => 'Report settings',
+            'title' => 'Link check',
+            'pages' => ':count page to fix,|:count pages to fix,',
+            'all_good' => 'Nothing to fix,',
+            'none' => 'Not checked yet. The link check opens every page and lists broken links and missing descriptions or share images.',
+            'open_latest' => 'Open the latest check',
+            'all' => 'All checks',
         ],
         'not_found' => [
             'title' => '404s',
@@ -224,9 +223,9 @@ return [
 
     // The dashboard widget.
     'widget' => [
-        'latest_report' => 'Latest report',
-        'pages' => ':count page|:count pages',
-        'no_report' => 'No report yet.',
+        'latest_report' => 'Link check',
+        'pages' => ':count page to fix|:count pages to fix',
+        'no_report' => 'Not checked yet.',
         'recent_404s' => 'Recent 404s',
         'none' => 'No missing pages recorded.',
     ],

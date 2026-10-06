@@ -4,8 +4,10 @@ namespace JothamLec\MarketingToolkit\Reports\Rules;
 
 use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
-use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
+/**
+ * Links to pages of this site that don't exist, or that a redirect answers.
+ */
 class BrokenLinks extends Rule
 {
     public static function handle(): string
@@ -18,21 +20,21 @@ class BrokenLinks extends Rule
         return 'seo::reports.rules.broken_links';
     }
 
-    public function weight(): int
-    {
-        return 3;
-    }
-
-    public function check(string $url, PageFacts $page, SiteFacts $site): Result
+    public function check(string $url, PageFacts $page): Result
     {
         if ($page->brokenLinks !== []) {
-            return Result::fail('seo::reports.messages.links_broken', ['links' => $this->listed($page->brokenLinks, 5, paths: false)]);
+            return Result::fail('seo::reports.messages.links_broken', ['links' => $this->listed($page->brokenLinks)]);
         }
 
         if ($page->redirectedLinks !== []) {
-            return Result::warn('seo::reports.messages.links_redirected', ['links' => $this->listed($page->redirectedLinks, 5, paths: false)]);
+            return Result::warn('seo::reports.messages.links_redirected', ['links' => $this->listed($page->redirectedLinks)]);
         }
 
         return Result::pass();
+    }
+
+    public function appliesToNoindex(): bool
+    {
+        return true;
     }
 }

@@ -2,7 +2,6 @@
 
 namespace JothamLec\MarketingToolkit\Fieldtypes;
 
-use JothamLec\MarketingToolkit\Reports\ReportSettings;
 use Statamic\Fields\Fieldtype;
 
 /**
@@ -17,19 +16,23 @@ class SeoPreview extends Fieldtype
 
     protected $categories = ['special'];
 
+    private const int TITLE_MIN = 30;
+
+    private const int DESCRIPTION_MIN = 50;
+
+    private const int DESCRIPTION_MAX = 160;
+
     public function preload(): array
     {
-        $settings = app(ReportSettings::class);
-
         return [
             'urls' => [
                 'meta' => cp_route('seo.preview.meta'),
                 'card' => cp_route('seo.preview.card'),
             ],
-            // The report's thresholds (Tools → Addons → SEO), so the counters and the reports agree.
+            // Where the counters turn amber: what Google shows without cutting it short.
             'limits' => [
-                'title' => [$settings->int('title_min'), $settings->int('title_max')],
-                'description' => [$settings->int('description_min'), $settings->int('description_max')],
+                'title' => [self::TITLE_MIN, (int) config('seo.title.max', 60)],
+                'description' => [self::DESCRIPTION_MIN, self::DESCRIPTION_MAX],
             ],
             'og' => (bool) config('seo.og.enabled'),
         ];

@@ -21,7 +21,6 @@ function translationKeysUsed(): array
         ...File::allFiles($root.'/resources/js'),
         ...File::allFiles($root.'/resources/views'),
         ...File::allFiles($root.'/resources/fieldsets'),
-        ...File::allFiles($root.'/resources/blueprints'),
     ]);
 
     return $files->flatMap(function ($file) {
@@ -110,7 +109,6 @@ test('"Page N" is in the page\'s own language', function () {
 test('the fieldset and settings blueprint name keys, not English', function () {
     $displays = collect([
         YAML::file(__DIR__.'/../../resources/fieldsets/seo.yaml')->parse(),
-        YAML::file(__DIR__.'/../../resources/blueprints/settings.yaml')->parse(),
     ])->flatMap(fn (array $yaml) => collect(Arr::dot($yaml))
         ->filter(fn ($value, string $key) => preg_match('/\.(display|instructions)$/', $key) === 1)
         ->values());

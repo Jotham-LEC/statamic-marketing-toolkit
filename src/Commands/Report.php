@@ -11,7 +11,7 @@ use Statamic\Facades\Site;
 
 /**
  * `php please seo:report`: check every published page now, in this process,
- * and print the scores. The scheduler runs it when reports are scheduled. On
+ * and print what needs fixing. The scheduler runs it when reports are scheduled. On
  * a multi-site install it reports on each site in turn, or on `--site`.
  */
 class Report extends Command
@@ -20,7 +20,7 @@ class Report extends Command
 
     protected $signature = 'statamic:seo:report {--site= : The handle of one site to report on (default: every site)}';
 
-    protected $description = 'Check every published page against the SEO rules and score the site';
+    protected $description = 'Check every published page for broken links, and for a missing description or share image';
 
     public function handle(Runner $runner): int
     {
@@ -68,7 +68,7 @@ class Report extends Command
         }
 
         $summary = $report->summary ?? [];
-        $this->components->info("Report #{$report->id}: score ".($report->score ?? '–')." / 100 over {$summary['scored']} pages ({$summary['noindex']} hidden from search engines, {$summary['errors']} that didn’t render).");
+        $this->components->info("Report #{$report->id}: {$summary['with_issues']} of {$report->pages_total} pages have something to fix ({$summary['noindex']} hidden from search engines, {$summary['errors']} that didn’t render).");
 
         $this->table(['Check', 'Failing', 'Warnings'], collect($summary['rules'] ?? [])
             ->map(fn (array $rule) => [__($rule['label']), $rule['fail'], $rule['warn']])

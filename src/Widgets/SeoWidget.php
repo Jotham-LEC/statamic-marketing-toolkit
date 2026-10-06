@@ -33,7 +33,7 @@ class SeoWidget extends Widget
     }
 
     /**
-     * @return array{score: int, pages: int, created_at: string, url: string}|null
+     * @return array{issues: int, pages: int, created_at: string, url: string}|null
      */
     protected function latestReport(): ?array
     {
@@ -44,8 +44,8 @@ class SeoWidget extends Widget
         $report = Report::query()->shownOn(Site::selected()->handle())->where('status', Report::DONE)->latest('id')->first();
 
         return $report === null ? null : [
-            'score' => (int) $report->score,
-            'pages' => (int) ($report->summary['scored'] ?? $report->pages_total),
+            'issues' => (int) ($report->summary['with_issues'] ?? 0),
+            'pages' => (int) $report->pages_total,
             'created_at' => $report->finished_at?->toIso8601String() ?? $report->created_at->toIso8601String(),
             'url' => cp_route('seo.reports.show', $report),
         ];

@@ -240,6 +240,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Link check (Pro)
+    |--------------------------------------------------------------------------
+    |
+    | Opens every published page and lists broken links (on the site and to
+    | other sites) and pages with no description or share image. Runs on
+    | the Laravel scheduler: 'weekly' (Monday, 03:00), 'daily' or false.
+    |
+    */
+
+    'reports' => [
+        'schedule' => 'weekly',
+        'external_links' => true,
+        'exclude_collections' => [],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Generated Open Graph images
     |--------------------------------------------------------------------------
     |

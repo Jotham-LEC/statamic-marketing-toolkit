@@ -5,19 +5,10 @@ namespace JothamLec\MarketingToolkit\Reports;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\Reports\Rules\BrokenLinks;
-use JothamLec\MarketingToolkit\Reports\Rules\Canonical;
-use JothamLec\MarketingToolkit\Reports\Rules\DescriptionLength;
-use JothamLec\MarketingToolkit\Reports\Rules\DescriptionUnique;
+use JothamLec\MarketingToolkit\Reports\Rules\Description;
 use JothamLec\MarketingToolkit\Reports\Rules\ExternalLinks;
-use JothamLec\MarketingToolkit\Reports\Rules\ImageAlt;
-use JothamLec\MarketingToolkit\Reports\Rules\JsonLd;
-use JothamLec\MarketingToolkit\Reports\Rules\NoindexInSitemap;
 use JothamLec\MarketingToolkit\Reports\Rules\OgImage;
-use JothamLec\MarketingToolkit\Reports\Rules\OrphanPages;
 use JothamLec\MarketingToolkit\Reports\Rules\Rule;
-use JothamLec\MarketingToolkit\Reports\Rules\SingleH1;
-use JothamLec\MarketingToolkit\Reports\Rules\TitleLength;
-use JothamLec\MarketingToolkit\Reports\Rules\TitleUnique;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Contracts\Entries\Entry as EntryContract;
@@ -27,10 +18,10 @@ use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 
 /**
- * Runs reports. start() lists the pages; step() renders the next chunk of
- * them and reads what each says; the last step runs the checks, which need
- * every page (to find repeated titles), scores the pages and the site, and
- * drops reports beyond the number to keep.
+ * Runs the link check. start() lists the pages; step() renders the next
+ * chunk of them and reads what each says (checking its links to other sites
+ * as it goes); the last step runs the checks, counts the pages with issues,
+ * and drops reports beyond the number to keep.
  *
  * A report is of one site: on a multi-site install each runs with its site
  * as Statamic's current one, so the pages, the sitemap, the brand global and
@@ -39,11 +30,7 @@ use Statamic\Facades\Term;
 class Runner
 {
     /** @var list<class-string<Rule>> */
-    public const array RULES = [
-        TitleLength::class, TitleUnique::class, DescriptionLength::class, DescriptionUnique::class,
-        SingleH1::class, Canonical::class, NoindexInSitemap::class, ImageAlt::class,
-        BrokenLinks::class, OgImage::class, JsonLd::class, OrphanPages::class, ExternalLinks::class,
-    ];
+    public const array RULES = [BrokenLinks::class, ExternalLinks::class, Description::class, OgImage::class];
 
     /** A running report that hasn't moved for this long is taken to have died. */
     private const int STALE_MINUTES = 30;
@@ -180,66 +167,48 @@ class Runner
     {
         $settings = $report->settings();
         $rules = $this->rules($settings);
-        $site = new SiteFacts($settings);
-
-        $report->pages()->select(['id', 'url', 'facts'])->lazyById(200)->each(function (ReportPage $page) use ($site) {
-            $facts = $page->facts();
-
-            if ($facts->rendered() && ! $facts->noindex()) {
-                $site->add($page->url, $facts);
-            }
-        });
 
         $summary = collect($rules)->mapWithKeys(fn (Rule $rule) => [$rule::handle() => [
-            'label' => $rule->label(), 'weight' => $rule->weight(), 'fail' => 0, 'warn' => 0,
+            'label' => $rule->label(), 'fail' => 0, 'warn' => 0,
         ]])->all();
-        $scores = [];
-        $counts = ['scored' => 0, 'noindex' => 0, 'errors' => 0];
+        $counts = ['checked' => 0, 'noindex' => 0, 'errors' => 0, 'with_issues' => 0];
 
-        $report->pages()->lazyById(200)->each(function (ReportPage $page) use ($rules, $site, &$summary, &$scores, &$counts) {
+        $report->pages()->lazyById(200)->each(function (ReportPage $page) use ($rules, &$summary, &$counts) {
             $facts = $page->facts();
 
             if (! $facts->rendered()) {
                 $counts['errors']++;
+                $counts['with_issues']++;
                 $result = $facts->error !== null ? Result::fail($facts->error) : Result::fail('seo::reports.messages.status', ['status' => $facts->status]);
-                $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
-                $scores[] = 0;
+                $page->update(['results' => ['render' => $result->toArray()], 'failing' => ',render:fail,']);
 
                 return;
             }
 
-            $applicable = array_filter($rules, fn (Rule $rule) => ! $facts->noindex() || $rule->appliesToNoindex());
+            $facts->noindex() ? $counts['noindex']++ : $counts['checked']++;
             $results = [];
-            $earned = $possible = 0;
 
-            foreach ($applicable as $rule) {
-                $result = $rule->check($page->url, $facts, $site);
+            foreach (array_filter($rules, fn (Rule $rule) => ! $facts->noindex() || $rule->appliesToNoindex()) as $rule) {
+                $result = $rule->check($page->url, $facts);
                 $results[$rule::handle()] = $result->toArray();
-                $earned += $rule->weight() * $result->value();
-                $possible += $rule->weight();
 
                 if ($result->status !== Result::PASS) {
                     $summary[$rule::handle()][$result->status]++;
                 }
             }
 
-            // A page search engines are told to skip is listed, not scored.
-            $score = $facts->noindex() || $possible === 0 ? null : (int) round(100 * $earned / $possible);
-            $facts->noindex() ? $counts['noindex']++ : $counts['scored']++;
-
-            if ($score !== null) {
-                $scores[] = $score;
-            }
-
             $flagged = collect($results)->reject(fn ($result) => $result['status'] === Result::PASS)
                 ->map(fn ($result, $handle) => $handle.':'.$result['status'])->implode(',');
 
-            $page->update(['results' => $results, 'score' => $score, 'failing' => $flagged === '' ? null : ','.$flagged.',']);
+            if ($flagged !== '') {
+                $counts['with_issues']++;
+            }
+
+            $page->update(['results' => $results, 'failing' => $flagged === '' ? null : ','.$flagged.',']);
         });
 
         $report->update([
             'status' => Report::DONE,
-            'score' => $scores === [] ? null : (int) round(array_sum($scores) / count($scores)),
             'summary' => ['rules' => $summary, ...$counts],
             'finished_at' => now(),
         ]);

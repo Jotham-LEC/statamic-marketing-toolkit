@@ -5,7 +5,6 @@ namespace JothamLec\MarketingToolkit\Cp;
 use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\CP\Navigation\Nav;
 use Statamic\CP\Navigation\NavItem;
-use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav as NavFacade;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -31,7 +30,6 @@ class Navigation
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
 
-        $addon = Addon::get(Edition::PACKAGE);
         $pro = Edition::pro();
 
         return array_values(array_filter([
@@ -40,7 +38,6 @@ class Navigation
             $pro ? $nav->item(__('seo::cp.nav.not_found'))->route('seo.404s.index')->can('view seo') : null,
             $pro ? $nav->item(__('seo::cp.nav.search_console'))->route('seo.search-console.index')->can('view seo') : null,
             $variables ? $nav->item(__('seo::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
-            $pro && $addon?->hasSettingsBlueprint() ? $nav->item(__('seo::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon) : null,
         ]));
     }
 }

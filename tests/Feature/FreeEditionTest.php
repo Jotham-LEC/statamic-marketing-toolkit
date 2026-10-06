@@ -98,8 +98,7 @@ test('no schedule, report or Search Console commands, widget, or redirect-from-4
         ->and(app('statamic.extensions')[Action::class]->keys()->all())->toContain(DeleteSeoRecords::handle())
         ->not->toContain(CreateRedirect::handle())
         ->and(app(Client::class)->configured())->toBeFalse()
-        ->and(app(Client::class)->configuredForAnySite())->toBeFalse()
-        ->and(Addon::get(Edition::PACKAGE)->hasSettingsBlueprint())->toBeFalse();
+        ->and(app(Client::class)->configuredForAnySite())->toBeFalse();
 });
 
 test('manual redirects and 410s work; a 404 isn\'t logged', function () {

@@ -2,7 +2,7 @@
 
 /*
  * The labels and help of the addon's fields: the SEO fieldset on entries and
- * terms, the report settings (Tools → Addons → SEO) and the "SEO & brand"
+ * terms and the "SEO & brand"
  * global set that `php please seo:install` creates. Those blueprints store
  * these keys, so each user sees them in their control panel language.
  */
@@ -64,85 +64,6 @@ return [
             'display' => 'Extra JSON-LD',
             'instructions' => 'A JSON object or array of objects, added to the page\'s @graph.',
         ],
-    ],
-
-    // resources/blueprints/settings.yaml
-    'settings' => [
-        'tabs' => [
-            'checks' => 'Checks',
-            'running' => 'Running',
-        ],
-        'sections' => [
-            'checks' => [
-                'display' => 'What a report checks',
-                'instructions' => 'Turn off a check to leave it out of the reports and the scores.',
-            ],
-            'lengths' => [
-                'display' => 'Lengths',
-                'instructions' => 'Also used by the counters in the search and share preview.',
-            ],
-            'pages' => [
-                'display' => 'Which pages',
-            ],
-            'how' => [
-                'display' => 'How',
-            ],
-            'schedule' => [
-                'display' => 'Schedule',
-                'instructions' => 'Needs the Laravel scheduler (`php artisan schedule:run` every minute).',
-            ],
-        ],
-        'rule_title_length' => ['display' => 'Title length'],
-        'rule_title_unique' => ['display' => 'Unique titles'],
-        'rule_description_length' => ['display' => 'Description length'],
-        'rule_description_unique' => ['display' => 'Unique descriptions'],
-        'rule_single_h1' => ['display' => 'One main heading (h1)'],
-        'rule_canonical' => ['display' => 'Canonical address'],
-        'rule_noindex_in_sitemap' => ['display' => 'Hidden pages left in the sitemap'],
-        'rule_image_alt' => ['display' => 'Image descriptions (alt)'],
-        'rule_broken_links' => ['display' => 'Broken links to this site'],
-        'rule_orphan_pages' => ['display' => 'Pages no other page links to'],
-        'rule_external_links' => [
-            'display' => 'Broken links to other sites',
-            'instructions' => 'Asks each linked site; off by default.',
-        ],
-        'rule_og_image' => ['display' => 'Share image'],
-        'rule_json_ld' => ['display' => 'Structured data (JSON-LD)'],
-        'title_min' => ['display' => 'Title: at least'],
-        'title_max' => ['display' => 'Title: at most'],
-        'description_min' => ['display' => 'Description: at least'],
-        'description_max' => ['display' => 'Description: at most'],
-        'excluded_collections' => ['display' => 'Leave out these collections'],
-        'max_pages' => [
-            'display' => 'Most pages per report',
-            'instructions' => '0 checks every page.',
-        ],
-        'chunk_size' => [
-            'display' => 'Pages per step',
-            'instructions' => 'How many pages one step renders. Lower it if a step times out.',
-        ],
-        'keep_reports' => ['display' => 'Reports to keep'],
-        'schedule' => [
-            'display' => 'Run a report',
-            'options' => [
-                'off' => 'Only by hand',
-                'daily' => 'Daily',
-                'weekly' => 'Weekly',
-            ],
-        ],
-        'schedule_day' => [
-            'display' => 'On',
-            'options' => [
-                'monday' => 'Monday',
-                'tuesday' => 'Tuesday',
-                'wednesday' => 'Wednesday',
-                'thursday' => 'Thursday',
-                'friday' => 'Friday',
-                'saturday' => 'Saturday',
-                'sunday' => 'Sunday',
-            ],
-        ],
-        'schedule_time' => ['display' => 'At'],
     ],
 
     // The "SEO & brand" global set (src/Commands/Install.php)

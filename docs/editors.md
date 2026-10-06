@@ -8,7 +8,7 @@ Some parts are in **Marketing Toolkit Pro** only, marked *(Pro)* below. On the f
 
 ## Tools → SEO
 
-The overview: the latest report's score *(Pro)*, recent 404s *(Pro)*, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most *(Pro)*, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
+The overview: the latest link check *(Pro)*, recent 404s *(Pro)*, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most *(Pro)*, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
 
 **Connecting Google Search Console** *(Pro)* is a one-time task for whoever looks after the site's settings: **Tools → SEO → Search Console** lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
 
@@ -119,40 +119,21 @@ A **404** is what visitors get when they ask for an address that doesn't exist. 
 
 Use it to catch broken links. For a missing address that should lead somewhere, open the row's **⋯** menu and choose **Create redirect**: the form opens with the address (and, with more than one site, its site) filled in, and you only add where it should go.
 
-With more than one site, the overview, the 404s, the reports and the dashboard card are of the site chosen in the control panel's site menu; redirects list every site's, with a Site column.
+With more than one site, the overview, the 404s, the link checks and the dashboard card are of the site chosen in the control panel's site menu; redirects list every site's, with a Site column.
 
-## Reports *(Pro)*
+## Link check *(Pro)*
 
-**Tools → SEO → Reports** checks every page of the site the way a search engine sees it, and gives each page a score out of 100. The site's score is the average.
+**Tools → SEO → Link check** opens every published page, as a visitor would, and lists the pages with something to fix:
 
-Click **Run report**. A bar shows the progress; a few hundred pages take under a minute. When it's done you see:
+| Check | What to do |
+|---|---|
+| Broken links | A link to a page of this site that doesn't exist: fix the link, or add a redirect. A link that goes through a redirect (a warning): link straight to the new address. |
+| Broken links to other sites | A link to a page that no longer exists (404, 410), even after a redirect, or to a site that's gone. Links to `localhost` or a private network aren't checked. |
+| Description | The page has no description, so Google picks text from the page for its search result. Write one on the page's SEO tab. |
+| Share image | Links to the page on LinkedIn, WhatsApp or Slack show no picture. Upload one on the page's SEO tab, or set a default in **SEO & brand**. |
 
-- **The site's score**.
-- **The checks**, with how many pages fail each one or get a warning. Click a check to see only the pages it flagged.
-- **The pages**, lowest score first. Each one lists its problems and has a **Fix** link to its edit screen.
-
-What the checks look for:
-
-| Check | Counts | What to do |
-|---|---|---|
-| Links within the site | 3 | A link to a page that doesn't exist: fix the link, or add a redirect. A link that goes through a redirect: link straight to the new address. |
-| Canonical address | 3 | Usually fine on its own; tell your developer if it fails. |
-| Hidden page in the sitemap | 3 | A page set to hide from search engines but still in the sitemap: tell your developer. |
-| Title length | 2 | Write an SEO title that fits. |
-| Unique title | 2 | Two pages with the same title: make each one say what that page is about. |
-| Description length | 2 | Write a description of the right length. |
-| Unique description | 2 | The same, for descriptions. |
-| One main heading | 2 | Each page should have one main heading. Usually the page template's job. |
-| Structured data | 2 | Usually the developer's job. |
-| Image descriptions | 1 | Describe each image in its "alt text" (in the asset's settings), for people who can't see it and for search engines. |
-| Share image | 1 | Pages without a picture when shared. |
-| Linked from another page | 2 | A page in the sitemap that no other page links to (a warning): link to it from a related page, so search engines and readers find it. The home page is exempt. |
-| Links to other sites | 1 | Off unless your administrator turns it on, since it asks each linked site: links to pages that no longer exist (404, 410), even after a redirect, or to sites that are gone. Links to `localhost` or a private network aren't checked. |
-
-A **warning** counts half. Pages set to hide from search engines are listed but not scored.
-
-Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → Addons → SEO). Reports can also run on their own, daily or weekly.
+It runs every week on its own (Monday, 03:00). Click **Check now** to run it straight away; a few hundred pages take under a minute. Click a check to see only the pages it flagged; each page has a **Fix** link to its edit screen. Pages hidden from search engines are checked for broken links only.
 
 ## The dashboard *(Pro)*
 
-The **SEO** box on the dashboard (if your administrator added it) shows the latest report's score and the most recent 404s. Click through for the details.
+The **SEO** box on the dashboard (if your administrator added it) shows how many pages the latest link check found to fix, and the most recent 404s. Click through for the details.

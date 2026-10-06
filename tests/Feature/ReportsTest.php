@@ -44,11 +44,11 @@ function reportPage(Report $report, string $path): ReportPage
     return $report->pages()->where('url', 'https://example.test'.$path)->sole();
 }
 
-test('a report renders every published page, runs the checks and scores the site', function () {
-    entryIn('home', 'home', ['title' => 'Home', 'description' => 'The home page of the Acme site, where it all starts.']);
-    entryIn('pages', 'about', ['title' => 'About the Acme company', 'description' => 'Who we are, what we make and why we make it, in brief.']);
-    entryIn('pages', 'team', ['title' => 'About the Acme company', 'description' => 'The people behind Acme and what each of them does here.', 'body' => '<a href="/nowhere">x</a><img src="/a.jpg">']);
-    entryIn('pages', 'hidden', ['seo' => ['noindex' => true]]);
+test('a link check opens every published page and lists what to fix', function () {
+    entryIn('home', 'home', ['title' => 'Home', 'description' => 'The home page.']);
+    entryIn('pages', 'about', ['title' => 'About', 'description' => 'Who we are.']);
+    entryIn('pages', 'team', ['title' => 'Team', 'body' => '<a href="/nowhere">x</a>']);
+    entryIn('pages', 'hidden', ['seo' => ['noindex' => true], 'body' => '<a href="/gone">x</a>']);
     entryIn('pages', 'draft')->published(false)->save();
 
     $report = fullReport();
@@ -56,27 +56,22 @@ test('a report renders every published page, runs the checks and scores the site
     expect($report->status)->toBe(Report::DONE)
         ->and($report->pages_total)->toBe(4)
         ->and($report->pages_done)->toBe(4)
-        ->and($report->summary)->toMatchArray(['scored' => 3, 'noindex' => 1, 'errors' => 0])
-        ->and($report->summary['rules']['title_unique'])->toMatchArray(['fail' => 2, 'warn' => 0])
-        ->and($report->summary['rules']['broken_links']['fail'])->toBe(1)
+        ->and($report->score)->toBeNull()
+        ->and($report->summary)->toMatchArray(['checked' => 3, 'noindex' => 1, 'errors' => 0, 'with_issues' => 2])
+        ->and($report->summary['rules']['broken_links']['fail'])->toBe(2)
+        ->and($report->summary['rules']['description']['fail'])->toBe(1)
         ->and($report->pages()->pluck('url')->all())->not->toContain('https://example.test/draft');
 
     $team = reportPage($report, '/team');
-    expect($team->results['title_unique'])->toBe(['status' => 'fail', 'message' => 'seo::reports.messages.title_same', 'params' => ['pages' => '/about']])
-        ->and($team->results['broken_links']['params']['links'])->toContain('/nowhere')
-        ->and($team->results['image_alt']['status'])->toBe('fail')
-        ->and($team->results['canonical']['status'])->toBe('pass')
+    expect($team->results['broken_links'])->toBe(['status' => 'fail', 'message' => 'seo::reports.messages.links_broken', 'params' => ['links' => '/nowhere']])
+        ->and($team->results['description']['status'])->toBe('fail')
         ->and($team->results['og_image']['status'])->toBe('pass')
-        ->and($team->results['json_ld']['status'])->toBe('pass')
-        ->and($team->failing)->toContain(',title_unique:fail,')
-        ->and($team->score)->toBeLessThan(reportPage($report, '/about')->score);
+        ->and($team->failing)->toBe(',broken_links:fail,description:fail,');
 
-    // Hidden from search engines: listed and checked against the sitemap, not scored.
+    // Hidden from search engines: its links are checked, not its description or image.
     $hidden = reportPage($report, '/hidden');
-    expect($hidden->score)->toBeNull()->and(array_keys($hidden->results))->toBe(['noindex_in_sitemap']);
-
-    $scores = $report->pages()->whereNotNull('score')->pluck('score');
-    expect($report->score)->toBe((int) round($scores->avg()));
+    expect(array_keys($hidden->results))->toBe(['broken_links', 'external_links'])
+        ->and(reportPage($report, '/about')->failing)->toBeNull();
 });
 
 test('outside production the environment’s noindex is ignored, so a local report means something', function () {
@@ -102,8 +97,8 @@ test('a report runs in steps of the chunk size', function () {
         ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
 });
 
-test('turned-off checks, left-out collections and the page limit', function () {
-    reportSettings(['rule_og_image' => false, 'excluded_collections' => ['essays'], 'max_pages' => 2]);
+test('the external link check turned off, left-out collections and the page limit', function () {
+    reportSettings(['external_links' => false, 'exclude_collections' => ['essays'], 'max_pages' => 2]);
     entryIn('essays', 'left-out', date: '2026-01-01');
     foreach (['a', 'b', 'c'] as $slug) {
         entryIn('pages', $slug);
@@ -112,25 +107,25 @@ test('turned-off checks, left-out collections and the page limit', function () {
     $report = fullReport();
 
     expect($report->pages_total)->toBe(2)
-        ->and($report->summary['rules'])->not->toHaveKey('og_image')
-        ->and($report->pages()->first()->results)->not->toHaveKey('og_image')
+        ->and($report->summary['rules'])->not->toHaveKey('external_links')
+        ->and($report->pages()->first()->results)->not->toHaveKey('external_links')
         ->and($report->pages()->pluck('url')->all())->not->toContain('https://example.test/essays/left-out');
 });
 
-test('a page that fails to render scores zero and says why', function () {
+test('a page that fails to render is listed, and says why', function () {
     Collection::make('broken')->routes('broken/{slug}')->template('missing-template')->save();
     entryIn('broken', 'page');
 
     $report = fullReport();
     $page = reportPage($report, '/broken/page');
 
-    expect($page->score)->toBe(0)
-        ->and($page->results['render']['status'])->toBe('fail')
-        ->and($report->summary['errors'])->toBe(1);
+    expect($page->results['render']['status'])->toBe('fail')
+        ->and($report->summary['errors'])->toBe(1)
+        ->and($report->summary['with_issues'])->toBe(1);
 
     $this->actingAs(cpUser(super: true));
     expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues.0'))
-        ->toMatchArray(['label' => 'Page renders', 'status' => 'fail'])
+        ->toMatchArray(['label' => 'Page loads', 'status' => 'fail'])
         ->and($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues.0.message'))->not->toStartWith('seo::');
 });
 
@@ -158,12 +153,12 @@ test('starting while a report runs returns that report; one that stopped moving 
         ->and($running->fresh()->status)->toBe(Report::FAILED);
 });
 
-test('php please seo:report runs a whole report and prints the scores', function () {
+test('php please seo:report runs a whole check and prints what to fix', function () {
     entryIn('pages', 'about');
 
     $this->artisan('statamic:seo:report')
-        ->expectsOutputToContain('score')
-        ->expectsOutputToContain('Unique title')
+        ->expectsOutputToContain('1 of 1 pages have something to fix')
+        ->expectsOutputToContain('Description')
         ->assertSuccessful();
 
     expect(Report::query()->sole()->status)->toBe(Report::DONE);
@@ -200,32 +195,31 @@ test('with a queue worker the run is queued, and each step queues the next', fun
     Queue::assertPushed(RunReportStep::class, 2);
 });
 
-test('the reports screens and a report’s pages, filtered by a check', function () {
-    entryIn('pages', 'about', ['title' => 'Same']);
-    entryIn('pages', 'team', ['title' => 'Same']);
-    entryIn('pages', 'unique-page', ['title' => 'A title of its very own here']);
+test('the link check screens list only the pages to fix, filtered by a check', function () {
+    entryIn('pages', 'about', ['description' => 'Fine.', 'body' => '<a href="/nowhere">x</a>']);
+    entryIn('pages', 'team');
+    entryIn('pages', 'fine', ['description' => 'Fine.']);
     $report = fullReport();
     $this->actingAs(cpUser(super: true));
 
     $this->get(cp_route('seo.reports.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->component('seo::Reports', false)
         ->where('reports.0.id', $report->id)
+        ->where('reports.0.with_issues', 2)
         ->where('canRun', true));
 
     $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
         ->component('seo::Report', false)
-        ->where('report.score', $report->score)
-        ->where('counts.scored', 3)
-        ->where('rules', fn ($rules) => collect($rules)->pluck('label')->contains('Unique title')));
+        ->where('counts.checked', 3)
+        ->where('counts.with_issues', 2)
+        ->where('rules', fn ($rules) => collect($rules)->pluck('label')->contains('Broken links')));
 
-    $flagged = $this->getJson(cp_route('seo.reports.pages', [$report, 'rule' => 'title_unique']))->assertOk();
-    expect($flagged->json('data.*.path'))->toEqualCanonicalizing(['/about', '/team'])
-        ->and($flagged->json('data.0.issues.0'))->toMatchArray(['label' => 'Unique title', 'status' => 'fail'])
-        ->and($flagged->json('data.0.issues.0.message'))->toBeIn(['Same title as /about.', 'Same title as /team.'])
+    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.path'))->toEqualCanonicalizing(['/about', '/team']);
+
+    $flagged = $this->getJson(cp_route('seo.reports.pages', [$report, 'rule' => 'broken_links']))->assertOk();
+    expect($flagged->json('data.*.path'))->toBe(['/about'])
+        ->and($flagged->json('data.0.issues.0'))->toMatchArray(['label' => 'Broken links', 'status' => 'fail', 'message' => 'Links to pages that don’t exist: /nowhere.'])
         ->and($flagged->json('data.0.edit_url'))->toContain('/cp/collections/pages/entries/');
-
-    $sorted = $this->getJson(cp_route('seo.reports.pages', [$report, 'sort' => 'score', 'order' => 'asc']))->json('data.*.score');
-    expect($sorted)->toBe(collect($sorted)->sort()->values()->all());
 });
 
 test('viewing reports needs "view seo"; running one needs "run seo reports"', function () {
@@ -238,19 +232,19 @@ test('viewing reports needs "view seo"; running one needs "run seo reports"', fu
     $this->postJson(cp_route('seo.reports.run'))->assertForbidden();
 });
 
-test('the dashboard widget shows the latest finished report', function () {
+test('the dashboard widget shows the latest finished check', function () {
     entryIn('pages', 'about');
     $report = fullReport();
     $this->actingAs(cpUser(['view seo']));
 
     expect((new SeoWidget)->component()->toArray()['props']['report'])->toMatchArray([
-        'score' => $report->score,
+        'issues' => 1,
         'pages' => 1,
         'url' => cp_route('seo.reports.show', $report),
     ]);
 });
 
-test('reports run on the schedule set in the addon settings', function () {
+test('the check runs weekly unless config/seo.php says otherwise', function () {
     $events = function (array $settings) {
         reportSettings($settings);
         $schedule = new Schedule;
@@ -259,7 +253,8 @@ test('reports run on the schedule set in the addon settings', function () {
         return collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'seo:report'))->map(fn ($event) => $event->expression)->values()->all();
     };
 
-    expect($events(['schedule' => 'off']))->toBe([])
+    expect($events([]))->toBe(['0 3 * * 1'])
+        ->and($events(['schedule' => false]))->toBe([])
         ->and($events(['schedule' => 'daily', 'schedule_time' => '04:30']))->toBe(['30 4 * * *'])
         ->and($events(['schedule' => 'weekly', 'schedule_day' => 'wednesday', 'schedule_time' => '03:00']))->toBe(['0 3 * * 3']);
 });
@@ -285,10 +280,21 @@ test('the schedule is built only for the commands that need it', function (strin
     'any other command' => ['migrate', false],
 ]);
 
-test('the preview counters use the report thresholds', function () {
-    reportSettings(['title_min' => 20, 'title_max' => 70, 'description_min' => 80, 'description_max' => 150]);
+test('the preview counters turn amber where Google cuts a title or description short', function () {
+    config(['seo.title.max' => 70]);
 
-    expect((new SeoPreview)->preload()['limits'])->toBe(['title' => [20, 70], 'description' => [80, 150]]);
+    expect((new SeoPreview)->preload()['limits'])->toBe(['title' => [30, 70], 'description' => [50, 160]]);
+});
+
+test('config/seo.php sets the link check', function () {
+    config(['seo.reports' => ['schedule' => 'daily', 'external_links' => false, 'exclude_collections' => ['essays']]]);
+    $settings = new ReportSettings;
+
+    expect($settings->get('schedule'))->toBe('daily')
+        ->and($settings->ruleEnabled('external_links'))->toBeFalse()
+        ->and($settings->ruleEnabled('broken_links'))->toBeTrue()
+        ->and($settings->excludedCollections())->toBe(['essays'])
+        ->and($settings->int('keep_reports'))->toBe(10);
 });
 
 test('a Blade page that shows validation errors renders in a report run from the console or a queue', function () {
@@ -296,7 +302,7 @@ test('a Blade page that shows validation errors renders in a report run from the
 
     $facts = reportPage(fullReport(), '/contact')->facts();
 
-    expect($facts->error)->toBeNull()->and($facts->status)->toBe(200)->and($facts->h1s)->toBe(['Contact']);
+    expect($facts->error)->toBeNull()->and($facts->status)->toBe(200)->and($facts->title)->not->toBeNull();
 });
 
 test('only one report starts at a time', function () {
@@ -319,8 +325,8 @@ function reportOnAboutAndATerm(): array
     $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
     $entry = entryIn('pages', 'about');
     $report = Report::query()->create(['settings' => [], 'status' => Report::DONE, 'summary' => ['rules' => []]]);
-    $report->pages()->create(['url' => 'https://example.test/about', 'content_type' => 'entry', 'content_id' => $entry->id(), 'score' => 50, 'checked' => true]);
-    $report->pages()->create(['url' => 'https://example.test/topics/gardens', 'content_type' => 'term', 'content_id' => $term->id(), 'score' => 60, 'checked' => true]);
+    $report->pages()->create(['url' => 'https://example.test/about', 'content_type' => 'entry', 'content_id' => $entry->id(), 'checked' => true, 'failing' => ',og_image:fail,']);
+    $report->pages()->create(['url' => 'https://example.test/topics/gardens', 'content_type' => 'term', 'content_id' => $term->id(), 'checked' => true, 'failing' => ',og_image:fail,']);
 
     return [$report, $entry, $term];
 }
@@ -340,17 +346,18 @@ test('a report page has no edit link for someone who may not edit it', function 
     expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.edit_url'))->toBe([null, null]);
 });
 
-test('a report checks links to other sites only when its settings ask', function () {
+test('a check asks other sites about links to them unless config turns it off', function () {
     Http::fake(['gone.test/*' => Http::response('', 404)]);
     fakeDns(['gone.test' => '93.184.215.14']);
     entryIn('pages', 'about', ['body' => '<a href="https://gone.test/a">Gone</a>']);
 
+    expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe(['https://gone.test/a']);
+
+    Http::fake();
+    reportSettings(['external_links' => false]);
+
     expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe([]);
     Http::assertNothingSent();
-
-    reportSettings(['rule_external_links' => true]);
-
-    expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe(['https://gone.test/a']);
 });
 
 test('a title longer than its column is cut to fit, so the report still runs on MySQL and Postgres', function () {
@@ -362,63 +369,24 @@ test('a title longer than its column is cut to fit, so the report still runs on 
         ->and($page->facts['title'])->toStartWith('Long Long');
 });
 
-/**
- * A finished report with one page, its results and checks stored as given.
- *
- * @param  array<string, array<string, mixed>>  $rules
- * @param  array<string, array<string, mixed>>  $results
- */
-function storedReport(array $rules, array $results): Report
-{
-    $report = Report::query()->create(['settings' => [], 'status' => Report::DONE, 'score' => 0, 'summary' => ['rules' => $rules, 'scored' => 1, 'noindex' => 0, 'errors' => 0]]);
-    $report->pages()->create(['url' => 'https://example.test/about', 'content_type' => 'entry', 'content_id' => 'x', 'score' => 0, 'checked' => true,
-        'results' => $results, 'failing' => ','.implode(',', array_map(fn ($handle) => $handle.':fail', array_keys($results))).',']);
-
-    return $report;
-}
-
-test('a report from before messages were translated, or from a site’s own check, shows its text as it is', function () {
-    $report = storedReport(
-        ['title_length' => ['label' => 'Title length', 'weight' => 2, 'fail' => 1, 'warn' => 0], 'house_style' => ['label' => 'House style', 'weight' => 1, 'fail' => 1, 'warn' => 0]],
-        ['title_length' => ['status' => 'fail', 'message' => 'Old English text.'], 'house_style' => ['status' => 'fail', 'message' => 'Says “colour”, not “color”: 50% of the time.']],
-    );
-    $this->actingAs(cpUser(super: true));
-
-    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
-        ->where('rules.0.label', 'Title length')
-        ->where('rules.1.label', 'House style'));
-
-    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues'))->toEqualCanonicalizing([
-        ['label' => 'Title length', 'status' => 'fail', 'message' => 'Old English text.'],
-        ['label' => 'House style', 'status' => 'fail', 'message' => 'Says “colour”, not “color”: 50% of the time.'],
-    ]);
-});
-
-test('a report reads in the language of whoever opens it', function () {
+test('a check reads in the language of whoever opens it', function () {
     app('translator')->addLines([
-        'reports.rules.title_length' => 'Longueur du titre',
-        'reports.messages.title_short' => ':count caractère ; visez :min–:max.|:count caractères ; visez :min–:max.',
-        'reports.messages.title_same' => 'Même titre que :pages.',
+        'reports.rules.broken_links' => 'Liens cassés',
+        'reports.messages.links_broken' => 'Liens vers des pages qui n’existent pas : :links.',
         'reports.messages.and_more' => ':list et :count autre|:list et :count autres',
     ], 'fr', 'seo');
-    $report = storedReport(
-        ['title_length' => ['label' => 'seo::reports.rules.title_length', 'weight' => 2, 'fail' => 0, 'warn' => 1], 'title_unique' => ['label' => 'seo::reports.rules.title_unique', 'weight' => 2, 'fail' => 1, 'warn' => 0]],
-        [
-            'title_length' => ['status' => 'warn', 'message' => 'seo::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 30, 'max' => 60]],
-            'title_unique' => ['status' => 'fail', 'message' => 'seo::reports.messages.title_same', 'params' => ['pages' => ['message' => 'seo::reports.messages.and_more', 'params' => ['list' => '/a, /b, /c', 'count' => 2]]]],
-        ],
-    );
+    entryIn('pages', 'about', ['body' => '<a href="/1">1</a><a href="/2">2</a><a href="/3">3</a><a href="/4">4</a><a href="/5">5</a><a href="/6">6</a><a href="/7">7</a>']);
+    $report = fullReport();
     $this->actingAs(cpUser(super: true));
     app()->setLocale('fr');
 
     $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
-        ->where('rules.0.label', 'Unique title')
-        ->where('rules.1.label', 'Longueur du titre'));
+        ->where('rules.0.label', 'Liens cassés'));
 
     // An untranslated line falls back to English.
     expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues'))->toBe([
-        ['label' => 'Unique title', 'status' => 'fail', 'message' => 'Même titre que /a, /b, /c et 2 autres.'],
-        ['label' => 'Longueur du titre', 'status' => 'warn', 'message' => '5 caractères ; visez 30–60.'],
+        ['label' => 'Liens cassés', 'status' => 'fail', 'message' => 'Liens vers des pages qui n’existent pas : /1, /2, /3, /4, /5 et 2 autres.'],
+        ['label' => 'Description', 'status' => 'fail', 'message' => 'No description: Google will pick text from the page for its search result.'],
     ]);
 });
 

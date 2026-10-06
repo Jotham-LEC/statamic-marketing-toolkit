@@ -171,14 +171,6 @@ class ServiceProvider extends AddonServiceProvider
         return Edition::pro() ? $classes : array_values(array_diff($classes, self::PRO_ONLY));
     }
 
-    /**
-     * The settings are the reports': Pro only.
-     */
-    protected function bootSettingsBlueprint()
-    {
-        return Edition::pro() ? parent::bootSettingsBlueprint() : $this;
-    }
-
     public function bootAddon(): void
     {
         $this->bootSeoNames();

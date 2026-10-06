@@ -64,18 +64,6 @@ test('someone who may only view SEO is told it isn\'t connected, without the ste
         ->where('setup.urls', null));
 });
 
-test('saving the report settings keeps the properties set up on the Search Console screen', function () {
-    $this->actingAs(cpUser(super: true));
-    $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
-
-    $addon = Addon::get(Edition::PACKAGE);
-    $values = collect($addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess()->values())->all();
-
-    $this->patchJson(cp_route('addons.settings.update', $addon->slug()), $values)->assertOk();
-
-    expect((new Connection)->savedProperty('default'))->toBe('sc-domain:example.test');
-});
-
 test('an uploaded key is kept privately and connects with a saved property', function () {
     $this->actingAs(cpUser(super: true));
 

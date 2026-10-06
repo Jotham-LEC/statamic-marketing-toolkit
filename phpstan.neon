@@ -19,13 +19,6 @@ parameters:
         -
             identifier: nullsafe.neverNull
             message: '#Statamic\\Addons\\Addon#'
-        # The same, where the null check is part of a condition.
-        -
-            identifier: booleanAnd.leftAlwaysTrue
-            path: src/Http/Controllers/CP/ReportsController.php
-        -
-            identifier: nullCoalesce.expr
-            path: src/Reports/ReportSettings.php
         # Follow from the above: what an undeclared Statamic method returns is unknown.
         -
             identifier: argument.unresolvableType

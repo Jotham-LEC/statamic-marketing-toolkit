@@ -17,8 +17,8 @@ defineProps({
             <section>
                 <h3 class="mb-1 text-xs font-medium uppercase text-gray-500">{{ __('seo::cp.widget.latest_report') }}</h3>
                 <a v-if="report" :href="report.url" class="block">
-                    <span class="text-3xl font-semibold">{{ report.score }}</span><span class="text-gray-500">/100</span>
-                    <span class="block text-xs text-gray-500">{{ __n('seo::cp.widget.pages', report.pages, { count: report.pages }) }} · <When :value="report.created_at" /></span>
+                    <span class="text-3xl font-semibold" :class="{ 'text-(--theme-color-danger)': report.issues }">{{ report.issues }}</span>
+                    <span class="block text-xs text-gray-500">{{ __n('seo::cp.widget.pages', report.issues, { count: report.issues }) }} · <When :value="report.created_at" /></span>
                 </a>
                 <p v-else class="text-sm text-gray-500">{{ __('seo::cp.widget.no_report') }}</p>
             </section>

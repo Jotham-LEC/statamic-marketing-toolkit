@@ -2,40 +2,35 @@
 
 namespace JothamLec\MarketingToolkit\Reports;
 
-use JothamLec\MarketingToolkit\Support\Edition;
-use Statamic\Facades\Addon;
-
 /**
- * The report settings editors set under Tools → Addons → SEO, with the
- * blueprint's defaults for anything not saved yet.
+ * How the link check runs: `seo.reports` in config/seo.php, over these
+ * defaults. A report keeps a copy of them from when it started.
  */
 class ReportSettings
 {
     public const array DEFAULTS = [
-        // Off until asked for: it sends requests to the sites a page links to.
-        'rule_external_links' => false,
-        'title_min' => 30,
-        'title_max' => 60,
-        'description_min' => 50,
-        'description_max' => 160,
-        'excluded_collections' => [],
+        // Off, daily or weekly; weekly runs on Monday.
+        'schedule' => 'weekly',
+        'schedule_day' => 'monday',
+        'schedule_time' => '03:00',
+        // Sends a request to each site the pages link to (cached for a day).
+        'external_links' => true,
+        'exclude_collections' => [],
         'max_pages' => 0,
         'chunk_size' => 25,
         'keep_reports' => 10,
-        'schedule' => 'off',
-        'schedule_day' => 'monday',
-        'schedule_time' => '03:00',
     ];
 
     /** @var array<string, mixed> */
     private array $values;
 
     /**
-     * @param  array<string, mixed>|null  $values  null: read the saved addon settings
+     * @param  array<string, mixed>|null  $values  null: read config/seo.php
      */
     public function __construct(?array $values = null)
     {
-        $this->values = [...self::DEFAULTS, ...array_filter($values ?? $this->saved(), fn ($value) => $value !== null)];
+        $values ??= (array) config('seo.reports', []);
+        $this->values = [...self::DEFAULTS, ...array_filter($values, fn ($value) => $value !== null)];
     }
 
     public function get(string $key): mixed
@@ -48,9 +43,12 @@ class ReportSettings
         return (int) $this->get($key);
     }
 
+    /**
+     * Every check runs, but the external link check can be turned off.
+     */
     public function ruleEnabled(string $handle): bool
     {
-        return (bool) ($this->values['rule_'.$handle] ?? true);
+        return $handle !== 'external_links' || (bool) $this->get('external_links');
     }
 
     /**
@@ -58,7 +56,7 @@ class ReportSettings
      */
     public function excludedCollections(): array
     {
-        return array_values(array_filter((array) $this->get('excluded_collections'), 'is_string'));
+        return array_values(array_filter((array) $this->get('exclude_collections'), 'is_string'));
     }
 
     /**
@@ -67,18 +65,5 @@ class ReportSettings
     public function all(): array
     {
         return $this->values;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function saved(): array
-    {
-        try {
-            return Addon::get(Edition::PACKAGE)?->settings()->all() ?? [];
-        } catch (\Throwable) {
-            // Before Statamic has booted the addon (an early config read).
-            return [];
-        }
     }
 }
