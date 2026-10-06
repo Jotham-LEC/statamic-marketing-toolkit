@@ -75,6 +75,7 @@ composer install && npm install
 npm run build      # commit resources/dist: sites don't run npm
 vendor/bin/pest    # needs PHP's imagick extension
 vendor/bin/pint
+vendor/bin/phpstan # Larastan, level 5
 ```
 
 Release: `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`; sites update with `composer update jotham-lec/statamic-co-seo`.

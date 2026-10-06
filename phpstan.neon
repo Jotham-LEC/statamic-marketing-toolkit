@@ -1,0 +1,36 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - src
+        - routes
+    ignoreErrors:
+        # Statamic's contracts don't declare most methods its classes implement (Entry::absoluteUrl, Term::in, User::can…).
+        -
+            identifier: method.notFound
+            message: '#Statamic\\(Contracts|CP)\\#'
+        # Larastan doesn't know views in an addon's namespace (seo::meta).
+        -
+            identifier: argument.type
+            message: '#expects view-string\|null#'
+        # Statamic's docblock says Addon::get() always returns an Addon; it returns null for one not installed.
+        -
+            identifier: nullsafe.neverNull
+            message: '#Statamic\\Addons\\Addon#'
+        # The same, where the null check is part of a condition.
+        -
+            identifier: booleanAnd.leftAlwaysTrue
+            path: src/Http/Controllers/CP/ReportsController.php
+        -
+            identifier: nullCoalesce.expr
+            path: src/Reports/ReportSettings.php
+        # Follow from the above: what an undeclared Statamic method returns is unknown.
+        -
+            identifiers: [argument.unresolvableType, return.type]
+            path: src/SiteSeo.php
+        # Statamic's docblock: manipulate() returns a string only when given no item.
+        -
+            identifier: method.nonObject
+            message: '#ImageManipulator\|string#'

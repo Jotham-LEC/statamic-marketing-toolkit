@@ -163,6 +163,7 @@ composer install && npm install
 npm run build      # Vue → resources/dist/build; commit the build, sites don't run npm
 vendor/bin/pest    # needs PHP's imagick extension for the share-card tests
 vendor/bin/pint
+vendor/bin/phpstan # Larastan, level 5; phpstan.neon says why each ignored error is ignored
 ```
 
 Tests run as production with an `array` cache that serializes, and render pages through `tests/fixtures/views`. Statamic matches the site by its absolute URL, so request front-end pages as `https://example.test/…`.

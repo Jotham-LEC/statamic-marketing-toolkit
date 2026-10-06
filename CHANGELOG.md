@@ -23,6 +23,7 @@ Remove `og.cache_store`, `image` and `indexnow.endpoint` from a published `confi
 
 ### Changed
 - Faster CSV import of redirects: each row's loop check read every rule again, rebuilt after the row before it. It now reads only the rules that could match (300 rows: 11.6 s → 0.6 s).
+- Development: Larastan (level 5) checks `src` and `routes`: `vendor/bin/phpstan`.
 
 ### Fixed
 - Automatic redirects on a site whose timezone isn't UTC: an entry's saved date was read in the site's timezone, so in a collection whose route has the day (`{year}/{month}/{day}`) any save could add a redirect from a day that never existed, and a real move started from the wrong address.

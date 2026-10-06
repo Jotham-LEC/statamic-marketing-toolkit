@@ -19,9 +19,10 @@
         "simonhamp/the-og": "^0.8"
     },
     "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.20",
         "orchestra/testbench": "^10.8|^11.0",
-        "pestphp/pest": "^4.0",
-        "laravel/pint": "^1.20"
+        "pestphp/pest": "^4.0"
     },
     "config": {
         "allow-plugins": {
