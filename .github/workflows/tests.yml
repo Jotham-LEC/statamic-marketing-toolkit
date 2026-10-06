@@ -8,18 +8,20 @@ concurrency:
 
 jobs:
   tests:
-    name: PHP ${{ matrix.php }} · ${{ matrix.dependencies }} · ${{ matrix.db }}${{ matrix.imagick && '' || ' · no imagick' }}
+    name: PHP ${{ matrix.php }} · ${{ matrix.statamic }} · ${{ matrix.db }}${{ !matrix.imagick && ' · no imagick' || '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          # The oldest versions composer.json allows (Statamic 6.30, Laravel 12).
-          - { php: '8.3', dependencies: lowest, db: sqlite, imagick: true }
-          - { php: '8.4', dependencies: highest, db: sqlite, imagick: true }
-          - { php: '8.4', dependencies: highest, db: pgsql, imagick: true }
+          # The oldest PHP, Statamic and Laravel composer.json allows. (Not
+          # --prefer-lowest across the board: Laravel 12.40's lowest Guzzle
+          # doesn't load on its own.)
+          - { php: '8.3', statamic: '6.30.*', laravel: '^12.40', db: sqlite, imagick: true }
+          - { php: '8.4', statamic: latest, db: sqlite, imagick: true }
+          - { php: '8.4', statamic: latest, db: pgsql, imagick: true }
           # Favicons drawn with GD; the share-card tests skip.
-          - { php: '8.4', dependencies: highest, db: sqlite, imagick: false }
+          - { php: '8.4', statamic: latest, db: sqlite, imagick: false }
 
     services:
       postgres:
@@ -39,9 +41,11 @@ jobs:
           extensions: curl, dom, gd, mbstring, openssl, pdo_sqlite, pdo_pgsql, ${{ matrix.imagick && 'imagick' || ':imagick' }}
           coverage: none
 
+      - name: Pin Statamic ${{ matrix.statamic }} and Laravel ${{ matrix.laravel }}
+        if: matrix.statamic != 'latest'
+        run: composer require --no-update --no-interaction "statamic/cms:${{ matrix.statamic }}" "laravel/framework:${{ matrix.laravel }}"
+
       - uses: ramsey/composer-install@v3
-        with:
-          dependency-versions: ${{ matrix.dependencies }}
 
       # One Postgres database, so that run is serial.
       - name: Tests

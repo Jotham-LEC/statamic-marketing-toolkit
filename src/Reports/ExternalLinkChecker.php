@@ -102,7 +102,8 @@ class ExternalLinkChecker
         }
 
         foreach ($ips as $ip) {
-            if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)) {
+            // PHPStan 2.3 types this filter_var() as always a string; a private or reserved address returns false.
+            if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)) { // @phpstan-ignore booleanNot.alwaysFalse
                 return false;
             }
         }
