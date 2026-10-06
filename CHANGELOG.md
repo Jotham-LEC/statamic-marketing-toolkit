@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0 – 2026-10-06
+
+Run `php artisan migrate` after updating: there is a new table.
+
+### Added
+- **Google Search Console**: each page's clicks, impressions, click-through rate and average position, imported daily (`php please seo:search-console`, on the schedule) and shown on Tools → SEO with the totals and the most-clicked pages. Signed in as a service account, with no client library; off until `seo.search_console.credentials` and `.property` are set. Setup in docs/configuration.md.
+
 ## 0.9.0 – 2026-10-06
 
 ### Added

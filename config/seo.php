@@ -181,6 +181,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Google Search Console
+    |--------------------------------------------------------------------------
+    |
+    | Clicks, impressions, CTR and position per page on Tools → SEO, imported
+    | daily (`php please seo:search-console`). `credentials` is a service
+    | account's JSON key, or the path to it; `property` is the property as
+    | Search Console names it: `sc-domain:example.com` or `https://example.com/`.
+    |
+    */
+
+    'search_console' => [
+        'credentials' => env('SEO_SEARCH_CONSOLE_CREDENTIALS'),
+        'property' => env('SEO_SEARCH_CONSOLE_PROPERTY'),
+        'days' => 28,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Generated Open Graph images
     |--------------------------------------------------------------------------
     |

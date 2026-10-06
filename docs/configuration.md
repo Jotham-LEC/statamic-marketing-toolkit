@@ -90,6 +90,23 @@ The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose ca
 | `indexnow.key` | `null` (`SEO_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
 | `indexnow.endpoint` | `https://api.indexnow.org/indexnow` | Shares the addresses with every participating engine. |
 
+### Google Search Console
+
+Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until both keys are set.
+
+| Key | Default | |
+|---|---|---|
+| `search_console.credentials` | `SEO_SEARCH_CONSOLE_CREDENTIALS` | A service account's JSON key, or the path to the file. |
+| `search_console.property` | `SEO_SEARCH_CONSOLE_PROPERTY` | The property as Search Console names it: `sc-domain:example.com` for a domain property, `https://example.com/` for a URL prefix. |
+| `search_console.days` | `28` | The period imported, ending today (Pacific time, as Search Console counts). |
+
+Setting it up:
+
+1. In [Google Cloud](https://console.cloud.google.com/), create a project (or use one), enable the **Google Search Console API**, and create a **service account** with a **JSON key**.
+2. In [Search Console](https://search.google.com/search-console), open the property → Settings → Users and permissions, and add the service account's email (`…@….iam.gserviceaccount.com`) as a **Restricted** user.
+3. Put the key on the server (outside the web root) and set `SEO_SEARCH_CONSOLE_CREDENTIALS=/path/to/key.json` and `SEO_SEARCH_CONSOLE_PROPERTY` in `.env`.
+4. Run `php please seo:search-console` once; the schedule then runs it daily at 04:30 (Laravel's scheduler must be running).
+
 ### Share cards and images
 
 | Key | Default | |
@@ -136,4 +153,5 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 |---|---|
 | `php please seo:install [--container=] [--fields] [--tab=shop]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has; `--tab` adds a whole tab it doesn't have (`shop`, `publisher`…). |
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
+| `php please seo:search-console` | Imports the last period's numbers from Google Search Console. |
 | `php please seo:report` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. |

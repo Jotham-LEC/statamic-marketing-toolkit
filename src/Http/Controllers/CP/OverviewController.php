@@ -7,6 +7,8 @@ use Inertia\Response;
 use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\Report;
+use JothamLec\Seo\SearchConsole\Client;
+use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\SiteSeo;
 use Statamic\Facades\Addon;
 use Statamic\Facades\GlobalSet;
@@ -20,7 +22,7 @@ use Statamic\Facades\User;
  */
 class OverviewController
 {
-    public function __invoke(SiteSeo $seo): Response
+    public function __invoke(SiteSeo $seo, Client $searchConsole): Response
     {
         $user = User::current();
         abort_unless($user?->can('view seo'), 403);
@@ -58,6 +60,7 @@ class OverviewController
                     ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])->all(),
                 'url' => cp_route('seo.404s.index'),
             ],
+            'search' => $this->search($searchConsole),
             // On the site's own address, which can differ from the control panel's.
             'files' => collect([
                 'Sitemap' => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
@@ -65,5 +68,35 @@ class OverviewController
                 'Home share card' => config('seo.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
         ]);
+    }
+
+    /**
+     * Search Console's numbers, once it is set up: the totals for the
+     * period and the pages with the most clicks.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function search(Client $client): ?array
+    {
+        if (! $client->configured()) {
+            return null;
+        }
+
+        $first = SearchStat::query()->first();
+
+        return [
+            'fetched_at' => $first?->fetched_at?->toIso8601String(),
+            'from' => $first?->from?->toDateString(),
+            'to' => $first?->to?->toDateString(),
+            'clicks' => (int) SearchStat::query()->sum('clicks'),
+            'impressions' => (int) SearchStat::query()->sum('impressions'),
+            'top' => SearchStat::query()->orderByDesc('clicks')->orderByDesc('impressions')->limit(5)->get()
+                ->map(fn (SearchStat $row) => [
+                    'path' => parse_url($row->url, PHP_URL_PATH) ?: '/',
+                    'clicks' => $row->clicks,
+                    'impressions' => $row->impressions,
+                    'position' => round($row->position, 1),
+                ])->all(),
+        ];
     }
 }

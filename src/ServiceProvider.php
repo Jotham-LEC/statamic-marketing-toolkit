@@ -6,6 +6,7 @@ use JothamLec\Seo\Actions\CreateRedirect;
 use JothamLec\Seo\Actions\DeleteSeoRecords;
 use JothamLec\Seo\Commands\Install;
 use JothamLec\Seo\Commands\Report;
+use JothamLec\Seo\Commands\SearchConsole;
 use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\Fieldtypes\SeoPreview;
 use JothamLec\Seo\Http\Middleware\HandleMissing;
@@ -14,6 +15,7 @@ use JothamLec\Seo\Listeners\FlushSitemap;
 use JothamLec\Seo\Listeners\RedirectChangedUris;
 use JothamLec\Seo\Listeners\SubmitToIndexNow;
 use JothamLec\Seo\Reports\ReportSettings;
+use JothamLec\Seo\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\Seo\Support\Config;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
@@ -32,7 +34,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $tags = [Seo::class];
 
-    protected $commands = [Install::class, Report::class];
+    protected $commands = [Install::class, Report::class, SearchConsole::class];
 
     protected $fieldtypes = [SeoPreview::class];
 
@@ -122,5 +124,10 @@ class ServiceProvider extends AddonServiceProvider
         };
 
         $event?->withoutOverlapping()->runInBackground();
+
+        // Search Console's numbers, daily, once it is set up.
+        if (app(SearchConsoleClient::class)->configured()) {
+            $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping();
+        }
     }
 }

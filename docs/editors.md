@@ -6,7 +6,7 @@ This guide is for the people who write and look after the site's pages. It expla
 
 ## Tools → SEO
 
-The overview: the latest report's score, recent 404s, redirects, and the brand defaults, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
+The overview: the latest report's score, recent 404s, redirects, the brand defaults, and, once your developer connects it, Google Search's clicks and appearances with the pages people click most, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
 
 ## SEO & brand
 

@@ -10,6 +10,7 @@ defineProps({
     report: { type: Object, required: true },
     redirects: { type: Object, default: null },
     notFound: { type: Object, required: true },
+    search: { type: Object, default: null },
     files: { type: Array, required: true },
 });
 </script>
@@ -77,6 +78,30 @@ defineProps({
                 </template>
             </Card>
         </div>
+
+        <Card v-if="search" class="space-y-3 p-4">
+            <Heading size="lg">Google Search</Heading>
+            <Description v-if="!search.fetched_at">Not imported yet. It runs daily, or now with <code>php please seo:search-console</code>.</Description>
+            <template v-else>
+                <Description>
+                    {{ search.clicks.toLocaleString() }} clicks from {{ search.impressions.toLocaleString() }} appearances, {{ search.from }} to {{ search.to }}.
+                    Updated <When :value="search.fetched_at" />.
+                </Description>
+                <table v-if="search.top.length" class="w-full text-sm">
+                    <thead class="text-left text-gray-500">
+                        <tr><th class="py-1 font-medium">Page</th><th class="py-1 text-right font-medium">Clicks</th><th class="py-1 text-right font-medium">Appearances</th><th class="py-1 text-right font-medium">Position</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="row in search.top" :key="row.path" class="border-t border-gray-200 dark:border-gray-700">
+                            <td class="truncate py-1 font-mono text-xs">{{ row.path }}</td>
+                            <td class="py-1 text-right tabular-nums">{{ row.clicks }}</td>
+                            <td class="py-1 text-right tabular-nums">{{ row.impressions }}</td>
+                            <td class="py-1 text-right tabular-nums">{{ row.position }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </template>
+        </Card>
 
         <Card class="space-y-2 p-4">
             <Heading size="lg">What the site serves</Heading>
