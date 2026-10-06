@@ -6,6 +6,7 @@ use JothamLec\MarketingToolkit\Actions\CreateRedirect;
 use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use Statamic\Actions\Action;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Taxonomy;
@@ -125,6 +126,38 @@ test('the checks, the import report and the listing speak the editor\'s language
     expect($this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->json('errors'))
         ->toBe(['XX line 1: XX Loop.'])
         ->and($this->getJson(cp_route('seo.redirects.listing'))->json('meta.columns.0.label'))->toBe('XX From');
+});
+
+/**
+ * Runway's Publish and Unpublish call `runwayResource()` on any Eloquent model
+ * they are asked about, and Statamic's `Action::for()` asks every registered
+ * action. With Runway installed, both listings answered 500.
+ */
+test('another addon\'s action that cannot handle our rows does not break the listings', function () {
+    $throwsOnForeignModels = new class extends Action
+    {
+        public static function handle()
+        {
+            return 'throws_on_foreign_models';
+        }
+
+        public function visibleTo($item)
+        {
+            throw new BadMethodCallException('Call to undefined method runwayResource()');
+        }
+    };
+    app()->instance($throwsOnForeignModels::class, $throwsOnForeignModels);
+    app('statamic.actions')->put($throwsOnForeignModels::handle(), $throwsOnForeignModels::class);
+
+    $this->actingAs(cpUser(['view seo', 'manage seo redirects']));
+    $redirect = Redirect::query()->create(['source' => '/old', 'target' => '/new']);
+    $row = MissingPath::query()->create(['path' => '/miss', 'hits' => 1, 'first_seen_at' => now(), 'last_seen_at' => now()]);
+
+    expect($this->getJson(cp_route('seo.redirects.listing'))->assertOk()->json('data.0.actions.*.handle'))->toBe([DeleteSeoRecords::handle()])
+        ->and($this->getJson(cp_route('seo.404s.listing'))->assertOk()->json('data.0.actions.*.handle'))->toBe([DeleteSeoRecords::handle(), CreateRedirect::handle()]);
+
+    $this->postJson(cp_route('seo.actions.bulk'), ['selections' => [$redirect->id], 'context' => ['type' => 'redirects']])->assertOk();
+    $this->postJson(cp_route('seo.actions.bulk'), ['selections' => [$row->id], 'context' => ['type' => '404s']])->assertOk();
 });
 
 test('the 404 log listing, newest first, with a "Create redirect" action per row', function () {

@@ -6,12 +6,12 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
-use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Commands\Report;
 use JothamLec\MarketingToolkit\Commands\SearchConsole;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Cp\Navigation;
+use JothamLec\MarketingToolkit\Cp\RecordActions;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
@@ -73,7 +73,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $widgets = [SeoWidget::class];
 
-    protected $actions = [DeleteSeoRecords::class, CreateRedirect::class];
+    protected $actions = RecordActions::ACTIONS;
 
     protected $vite = [
         'input' => ['resources/js/addon.js', 'resources/css/addon.css'],

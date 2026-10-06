@@ -6,10 +6,10 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Cp\Listing;
+use JothamLec\MarketingToolkit\Cp\RecordActions;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\NotFound\Recorder;
 use JothamLec\MarketingToolkit\Support\Sites;
-use Statamic\Facades\Action;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
 
@@ -61,7 +61,7 @@ class NotFoundController
                 'referrer' => Recorder::webAddress($row->referrer),
                 'first_seen_at' => $row->first_seen_at->toIso8601String(),
                 'last_seen_at' => $row->last_seen_at->toIso8601String(),
-                'actions' => Action::for($row, ['type' => '404s']),
+                'actions' => RecordActions::for(collect([$row]), ['type' => '404s']),
             ],
             defaultOrder: 'desc',
         );

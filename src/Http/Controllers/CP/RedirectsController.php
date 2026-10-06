@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Cp\Listing;
+use JothamLec\MarketingToolkit\Cp\RecordActions;
 use JothamLec\MarketingToolkit\Preview\Draft;
 use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
 use JothamLec\MarketingToolkit\Redirects\Campaign;
@@ -17,7 +18,6 @@ use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
-use Statamic\Facades\Action;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\User;
 use Statamic\Fields\Blueprint as BlueprintObject;
@@ -76,7 +76,7 @@ class RedirectsController
                 'hits' => $redirect->hits,
                 'last_hit_at' => $redirect->last_hit_at?->toIso8601String(),
                 'edit_url' => cp_route('seo.redirects.edit', $redirect),
-                'actions' => Action::for($redirect, ['type' => 'redirects']),
+                'actions' => RecordActions::for(collect([$redirect]), ['type' => 'redirects']),
             ],
         );
     }
