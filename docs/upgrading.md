@@ -36,6 +36,8 @@ A site without this line runs as Free. Since Co-SEO 0.17 that leaves out the rep
 
 ## 4. What changes
 
+- **`php artisan migrate` clears the old SEO reports.** 0.18 replaces the scored reports with the weekly link check, which checks different things, so a migration deletes the rows of `seo_reports` and `seo_report_pages` (the tables stay, and the link check fills them). Export anything you want to keep from Tools → SEO → Reports before updating. Its `down()` can't bring them back.
+
 - The control panel's scripts are published to `public/vendor/statamic-marketing-toolkit`. Their publish tag is now `marketing-toolkit`: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 - PHP classes moved from `JothamLec\Seo\…` to `JothamLec\MarketingToolkit\…`. Only a site that overrides `SiteSeo` (`'class'` in `config/seo.php`) or extends a share-card template needs to change its `use` lines.
 
