@@ -322,3 +322,23 @@ test('a campaign link: UTM tags join the target\'s own query, show again when ed
     $this->get('https://example.test/go/linkedin')->assertStatus(302)->assertRedirect('https://example.test/offer?ref=1&utm_source=linkedin&utm_campaign=autumn#form');
     expect($redirect->fresh()->hits)->toBe(1);
 });
+
+test('saving a redirect keeps the rest of the target\'s query as typed, and only swaps its UTM tags', function () {
+    $this->actingAs(cpUser(['manage seo redirects']));
+    $target = '/search/$1?q=$1&a.b=1&x=1&x=2&flag&c=d+e#top';
+
+    $this->postJson(cp_route('seo.redirects.store'), ['source' => '/find/*', 'target' => $target, 'status' => '301', 'active' => true])->assertOk();
+    $redirect = Redirect::query()->sole();
+    expect($redirect->target)->toBe($target);
+
+    $this->get('https://example.test/find/shoes')->assertRedirect('https://example.test/search/shoes?q=shoes&a.b=1&x=1&x=2&flag&c=d+e#top');
+
+    // A tag the target already has, sent back unchanged with the form: nothing moves.
+    $tagged = '/offer?q=$1&utm_campaign=autumn&a.b=1&x=1&x=2&flag&c=d+e#top';
+    $this->patchJson(cp_route('seo.redirects.update', $redirect), ['source' => '/find/*', 'target' => $tagged, 'status' => '301', 'active' => true, 'utm_campaign' => 'autumn'])->assertOk();
+    expect($redirect->fresh()->target)->toBe($tagged);
+
+    // A changed one is replaced; everything else stays byte for byte.
+    $this->patchJson(cp_route('seo.redirects.update', $redirect), ['source' => '/find/*', 'target' => $tagged, 'status' => '301', 'active' => true, 'utm_campaign' => 'winter sale'])->assertOk();
+    expect($redirect->fresh()->target)->toBe('/offer?q=$1&a.b=1&x=1&x=2&flag&c=d+e&utm_campaign=winter%20sale#top');
+});
