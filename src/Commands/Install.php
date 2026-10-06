@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Commands;
 
 use Illuminate\Console\Command;
+use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
@@ -48,7 +49,7 @@ class Install extends Command
 
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image} {--fields : Add fields a newer version brings to an existing blueprint} {--tab=* : Add these tabs (e.g. shop) to an existing blueprint}';
+    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image} {--fields : Add fields a newer version brings to an existing blueprint} {--tab=* : Add these tabs (e.g. shop) to an existing blueprint} {--forms : Add the lead source fields (Pro) to every form}';
 
     protected $description = 'Create the SEO & brand global set';
 
@@ -80,6 +81,11 @@ class Install extends Command
             if ($added !== []) {
                 $this->components->info('Added: '.implode(', ', $added).'.');
             }
+        }
+
+        if ($this->option('forms')) {
+            $forms = Attribution::addToForms();
+            $this->components->info($forms === [] ? 'Every form has the lead source fields.' : 'Lead source fields added to: '.implode(', ', $forms).'.');
         }
 
         if (! GlobalSet::findByHandle($handle)) {
@@ -299,6 +305,11 @@ class Install extends Command
                     $field('consent_ad_personalization', $consent('seo::fields.brand.consent_ad_personalization.display')),
                     $field('consent_wait_for_update', ['type' => 'integer', 'display' => 'seo::fields.brand.consent_wait_for_update.display', 'width' => 50, 'default' => 500, 'append' => 'ms', 'if' => ['consent_mode' => 'true'], 'instructions' => 'seo::fields.brand.consent_wait_for_update.instructions']),
                     $field('consent_regions', ['type' => 'select', 'display' => 'seo::fields.brand.consent_regions.display', 'width' => 50, 'multiple' => true, 'taggable' => true, 'options' => [Tracking::EEA => 'seo::fields.brand.consent_regions.options.eea'], 'if' => ['consent_mode' => 'true'], 'instructions' => 'seo::fields.brand.consent_regions.instructions']),
+                ]],
+                ['display' => 'seo::fields.brand.sections.conversions.display', 'instructions' => 'seo::fields.brand.sections.conversions.instructions', 'fields' => [
+                    $field('conversions', ['type' => 'toggle', 'display' => 'seo::fields.brand.conversions.display', 'default' => true, 'width' => 50, 'instructions' => 'seo::fields.brand.conversions.instructions']),
+                    $field('linkedin_conversion_id', ['type' => 'text', 'display' => 'seo::fields.brand.linkedin_conversion_id.display', 'width' => 50, 'if' => ['conversions' => 'true'], 'validate' => ['nullable', 'regex:/^\d{3,12}$/']]),
+                    $field('attribution', ['type' => 'toggle', 'display' => 'seo::fields.brand.attribution.display', 'width' => 50, 'instructions' => 'seo::fields.brand.attribution.instructions']),
                 ]],
             ]],
             'shop' => ['display' => 'seo::fields.brand.tabs.shop', 'sections' => [

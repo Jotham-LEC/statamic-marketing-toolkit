@@ -160,7 +160,10 @@ test('a CSP nonce is added to every script', function () {
     seoGlobal(['gtm_id' => 'GTM-ABC1234', 'consent_mode' => true]);
     Vite::useCspNonce('abc123');
 
-    expect(substr_count(trackingHead(), '<script nonce="abc123">'))->toBe(2);
+    $head = app(Tracking::class)->head();
+
+    expect(substr_count($head, '<script'))->toBeGreaterThan(1)
+        ->toBe(substr_count($head, '<script nonce="abc123">'));
 });
 
 test('install adds the Tracking tab to an existing blueprint on request', function () {

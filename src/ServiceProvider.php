@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit;
 
+use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
@@ -9,10 +10,13 @@ use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Commands\Report;
 use JothamLec\MarketingToolkit\Commands\SearchConsole;
+use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Cp\Navigation;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Listeners\AttributeSubmission;
+use JothamLec\MarketingToolkit\Listeners\CountConversion;
 use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
 use JothamLec\MarketingToolkit\Listeners\RedirectChangedUris;
 use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
@@ -32,8 +36,10 @@ use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
+use Statamic\Events\FormSubmitted;
 use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Events\StacheCleared;
+use Statamic\Events\SubmissionCreated;
 use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
@@ -92,6 +98,9 @@ class ServiceProvider extends AddonServiceProvider
         // A deploy clears the Stache; the rules may have changed with the code.
         StacheCleared::class => [FlushSitemap::class],
         GlobalVariablesSaved::class => [RemakeFavicons::class],
+        // Pro: where each lead came from, and the lead sent to the tracking tools.
+        FormSubmitted::class => [AttributeSubmission::class],
+        SubmissionCreated::class => [CountConversion::class],
     ];
 
     protected $subscribe = [RedirectChangedUris::class];
@@ -180,6 +189,9 @@ class ServiceProvider extends AddonServiceProvider
     public function bootAddon(): void
     {
         $this->bootSeoNames();
+
+        // Written and read by the page's own script: left as plain text.
+        EncryptCookies::except([Attribution::COOKIE, CountConversion::COOKIE]);
 
         // A key and property set up in the control panel, where .env has none.
         if (Edition::pro()) {

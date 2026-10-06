@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
 use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
@@ -18,7 +19,9 @@ use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Actions\Action;
 use Statamic\Facades\Addon;
 use Statamic\Facades\AssetContainer;
+use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Form;
 use Statamic\Facades\Permission;
 use Statamic\Widgets\Widget;
 
@@ -193,4 +196,19 @@ test('favicons are made from the brand\'s icon', function () {
 
     $this->get('https://example.test/favicon.ico')->assertOk();
     expect(renderAt('/', '<s:seo:head />'))->toContain('rel="apple-touch-icon"');
+});
+
+test('no lead source and no conversions: they are Pro', function () {
+    seoGlobal(['gtm_id' => 'GTM-ABC1234']);
+    $form = Form::make('contact')->title('Contact');
+    $form->save();
+    Blueprint::make('contact')->setNamespace('forms')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [['handle' => 'email', 'field' => ['type' => 'text']]]]]]]])->save();
+    Attribution::addToForms();
+
+    $this->withUnencryptedCookie('mt_source', json_encode(['source' => 'linkedin']))
+        ->post('https://example.test/!/forms/contact', ['email' => 'a@example.test'])
+        ->assertCookieMissing('mt_conversion');
+
+    expect(renderAt('/', '<s:seo:head />'))->not->toContain('mtConversion')->not->toContain('mt_source=')
+        ->and(Form::find('contact')->submissions()->first()?->get('utm_source'))->toBeNull();
 });

@@ -66,6 +66,18 @@ return [
         ],
     ],
 
+    // The lead source fields `seo:install --forms` adds to each form (Pro).
+    'attribution' => [
+        'tab' => 'Lead source',
+        'utm_source' => 'Source (utm_source)',
+        'utm_medium' => 'Medium (utm_medium)',
+        'utm_campaign' => 'Campaign (utm_campaign)',
+        'utm_term' => 'Term (utm_term)',
+        'utm_content' => 'Content (utm_content)',
+        'referrer' => 'Came from',
+        'landing_page' => 'First page',
+    ],
+
     // The "SEO & brand" global set (src/Commands/Install.php)
     'brand' => [
         'tabs' => [
@@ -83,6 +95,10 @@ return [
             ],
             'tracking' => [
                 'instructions' => 'Paste each tool’s ID; leave the others empty. They load on the live site only, never while editing. An ID your developer set in .env wins over the one here.',
+            ],
+            'conversions' => [
+                'display' => 'Leads (Pro)',
+                'instructions' => 'A form sent on the site counts as a lead in your tools: generate_lead in Google Tag Manager and Analytics, Lead for Meta, “form submitted” in PostHog, and your LinkedIn conversion.',
             ],
             'consent' => [
                 'display' => 'Consent Mode',
@@ -125,6 +141,15 @@ return [
         'background_color' => [
             'display' => 'Icon background',
             'instructions' => 'Behind the icon on an iPhone home screen. White unless set.',
+        ],
+        'conversions' => [
+            'display' => 'Send form submissions as leads',
+            'instructions' => 'For every form on the site.',
+        ],
+        'linkedin_conversion_id' => ['display' => 'LinkedIn conversion ID'],
+        'attribution' => [
+            'display' => 'Save where each lead came from',
+            'instructions' => 'The campaign (UTM tags), the site that sent them and the page they landed on, with each form submission. It keeps them in a cookie: in the EU and UK, use Consent Mode too. Your developer adds the fields to the forms once.',
         ],
         'tracking_overlap' => [
             'display' => 'Move these tags into Google Tag Manager',

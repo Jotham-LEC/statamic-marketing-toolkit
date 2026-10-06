@@ -43,3 +43,36 @@ load();
 @endif
 })(window.lintrk);</script>
 @endif
+@if ($attribution)
+<script{!! $n !!}>(function(w,d){if(/(?:^|; )mt_source=/.test(d.cookie))return;
+function save(){if(/(?:^|; )mt_source=/.test(d.cookie))return;var q=new URLSearchParams(w.location.search),r=d.referrer&&d.referrer.indexOf(w.location.origin)!==0?d.referrer:'',v={source:q.get('utm_source')||'',medium:q.get('utm_medium')||'',campaign:q.get('utm_campaign')||'',term:q.get('utm_term')||'',content:q.get('utm_content')||'',referrer:r.slice(0,255),landing:(w.location.pathname+w.location.search).slice(0,255)};
+d.cookie='mt_source='+encodeURIComponent(JSON.stringify(v))+'; Max-Age=7776000; Path=/; SameSite=Lax'+(w.location.protocol==='https:'?'; Secure':'');}
+@if ($bridge)
+mtConsent(function(s){if(s.analytics_storage==='granted')save();});
+@else
+save();
+@endif
+})(window,document);</script>
+@endif
+@if ($conversions)
+<script{!! $n !!}>(function(w,d){w.mtConversion=function(form){
+@if ($ids['gtm'])
+w.dataLayer.push({event:'generate_lead',form_name:form});
+@endif
+@if ($ids['ga4'])
+gtag('event','generate_lead',{form_name:form});
+@endif
+@if ($ids['posthog'])
+posthog.capture('form submitted',{form:form});
+@endif
+@if ($ids['meta'])
+fbq('track','Lead',{content_name:form});
+@endif
+@if ($ids['linkedin'] && $linkedinConversion)
+w.lintrk('track',{conversion_id:{{ $linkedinConversion }}});
+@endif
+};
+function check(){var m=d.cookie.match(/(?:^|; )mt_conversion=([^;]*)/);if(!m)return;d.cookie='mt_conversion=; Max-Age=0; Path=/; SameSite=Lax';w.mtConversion(decodeURIComponent(m[1]));}
+check();d.addEventListener('submit',function(){var n=0,t=setInterval(function(){check();if(++n>=20)clearInterval(t);},500);},true);
+})(window,document);</script>
+@endif

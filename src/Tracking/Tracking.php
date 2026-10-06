@@ -182,8 +182,9 @@ class Tracking
         $ids = $this->ids();
         $consent = $this->consent();
 
-        // Trackers that don't read Google's Consent Mode wait for the banner's answer.
-        $bridge = $consent !== null && ($ids['posthog'] || $ids['meta'] || $ids['linkedin']);
+        $attribution = $this->attribution();
+        // Trackers that don't read Google's Consent Mode, and the attribution cookie, wait for the banner's answer.
+        $bridge = $consent !== null && ($ids['posthog'] || $ids['meta'] || $ids['linkedin'] || $attribution);
         $host = $this->posthogHost();
 
         return [
@@ -199,8 +200,37 @@ class Tracking
                 'opt_out_capturing_by_default' => $bridge ?: null,
                 'persistence' => $bridge ? 'memory' : null,
             ]),
+            'conversions' => $this->conversions() && array_filter($ids) !== [],
+            'linkedinConversion' => $this->linkedinConversion(),
+            'attribution' => $attribution,
             'nonce' => Vite::cspNonce(),
         ];
+    }
+
+    /**
+     * Pro: whether a form submission is sent to the tools as a lead.
+     */
+    public function conversions(): bool
+    {
+        return Edition::pro() && $this->settings->bool('conversions', true);
+    }
+
+    /**
+     * Pro: the LinkedIn conversion a form submission counts as, if any.
+     */
+    public function linkedinConversion(): ?string
+    {
+        $id = trim((string) $this->settings->string('linkedin_conversion_id'));
+
+        return $this->conversions() && preg_match('/^\d{3,12}$/', $id) ? $id : null;
+    }
+
+    /**
+     * Pro: whether to remember where each visitor first came from, for their submissions.
+     */
+    public function attribution(): bool
+    {
+        return Edition::pro() && $this->settings->bool('attribution');
     }
 
     /**

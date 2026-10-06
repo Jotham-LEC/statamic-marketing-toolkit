@@ -85,6 +85,38 @@ These three don't read Google's Consent Mode. When they load directly (not throu
 
 With regions *(Pro)*, the page can't know where the visitor is, so the bridge waits for the banner's update everywhere. Most banners send one on every page, also where they don't show (they grant everything there). If yours doesn't, these three tools stay off outside the regions. GTM's consent checks don't have this problem: one more reason to load them through GTM.
 
+## Leads *(Pro)*
+
+With **Send form submissions as leads** on (the Tracking tab; on by default), every Statamic form submission that goes through is sent to each tool set, on the page the visitor sees next (or the same page, for a form sent with JavaScript):
+
+| Tool | Event |
+|---|---|
+| Google Tag Manager | `dataLayer.push({event: 'generate_lead', form_name: 'contact'})`: add a Custom Event trigger for `generate_lead` |
+| Google Analytics 4 | `gtag('event', 'generate_lead', {form_name: 'contact'})`; mark `generate_lead` as a key event in GA4 |
+| PostHog | `posthog.capture('form submitted', {form: 'contact'})` |
+| Meta Pixel | `fbq('track', 'Lead', {content_name: 'contact'})` |
+| LinkedIn | `lintrk('track', {conversion_id: …})`, with the **LinkedIn conversion ID** from Campaign Manager |
+
+The submission leaves a short-lived `mt_conversion` cookie naming its form; the page's script reads it, sends the lead and deletes it. A cookie rather than the session, so it works on pages served from the static cache. Each tool still follows Consent Mode: a lead sent before consent waits, or is dropped, as that tool does.
+
+A form that isn't a Statamic form (Livewire, a newsletter widget) can send the same lead itself once it succeeds:
+
+```js
+window.mtConversion?.('newsletter');
+```
+
+## Where each lead came from *(Pro)*
+
+With **Save where each lead came from** on (off by default: it sets a cookie), the first time a visitor reaches the site, a script keeps in the `mt_source` cookie (90 days) the UTM tags of the address they landed on (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`), the site that sent them, and that first page. When they send a form, the submission gets them in its own fields, shown in **Forms** and in the exports.
+
+Add the fields to every form once (it adds a **Lead source** tab of hidden fields; run it again after creating a form):
+
+```bash
+php please seo:install --forms
+```
+
+With Consent Mode on, the cookie is written only once `analytics_storage` is granted. In the EU and the UK, that cookie needs consent: turn on Consent Mode with it. Only the first visit counts (first touch): later visits through other campaigns don't overwrite it.
+
 ## Checking it works
 
 On the live site, open the browser's developer tools:
