@@ -194,7 +194,7 @@ test('the dialog\'s answer is kept for the next save of that entry', function ()
 });
 
 test('the dialog works for a term too: the check, and the answer read by the term\'s save', function () {
-    Taxonomy::make('topics')->save();
+    Taxonomy::make('topics')->termTemplate('default')->save();
     Blueprint::make('topic')->setNamespace('taxonomies.topics')->setContents(['fields' => [['handle' => 'title', 'field' => ['type' => 'text']]]])->save();
     $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
     $reference = $term->in('default')->reference();
@@ -207,4 +207,14 @@ test('the dialog works for a term too: the check, and the answer read by the ter
     Term::find('topics::gardens')->term()->syncOriginal()->slug('gardening')->save();
 
     expect(Redirect::query()->count())->toBe(0);
+});
+
+test('the dialog does not ask about a term without a page of its own', function () {
+    Taxonomy::make('topics')->save();
+    Blueprint::make('topic')->setNamespace('taxonomies.topics')->setContents(['fields' => [['handle' => 'title', 'field' => ['type' => 'text']]]])->save();
+    $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
+    $this->actingAs(cpUser(super: true));
+
+    $this->postJson(cp_route('seo.redirects.check'), ['reference' => $term->in('default')->reference(), 'values' => ['title' => 'Gardens', 'slug' => 'gardening']])
+        ->assertExactJson(['changes' => false]);
 });

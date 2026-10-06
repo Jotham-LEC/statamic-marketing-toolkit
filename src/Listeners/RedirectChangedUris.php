@@ -110,7 +110,7 @@ class RedirectChangedUris
         $slug = $term->getOriginal('slug');
         $this->forget('term', (string) $term->id());
 
-        if (! $this->enabled() || $slug === null || $slug === $term->slug()) {
+        if (! $this->enabled() || $slug === null || $slug === $term->slug() || ! Uris::termHasPage($term)) {
             return;
         }
 

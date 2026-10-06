@@ -146,6 +146,11 @@ class RedirectsController
             return ['changes' => false];
         }
 
+        // A term without a page (no template) gets no redirect either (RedirectChangedUris).
+        if ($stored instanceof TermContract && ! Uris::termHasPage($stored)) {
+            return ['changes' => false];
+        }
+
         Uris::forget();
         $from = $stored->uri();
 

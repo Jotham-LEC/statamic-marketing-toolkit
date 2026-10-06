@@ -179,13 +179,27 @@ test('moving a collection\'s mount page redirects its entries with one wildcard 
 });
 
 test('a renamed term leaves a 301 behind', function () {
-    Taxonomy::make('topics')->save();
+    Taxonomy::make('topics')->termTemplate('default')->save();
     tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
 
     $term = Term::find('topics::gardens')->term()->syncOriginal();
     $term->slug('gardening')->save();
 
     expect(redirectMap())->toBe(['/topics/gardens' => '/topics/gardening']);
+});
+
+/**
+ * Statamic answers a term's address only when its template exists. A
+ * taxonomy used only to tag content (no `topics.show` view) has addresses
+ * that 404 before and after the rename; a rule between them is noise.
+ */
+test('a renamed term without a page of its own leaves no redirect', function () {
+    Taxonomy::make('topics')->save();
+    tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
+
+    Term::find('topics::gardens')->term()->syncOriginal()->slug('gardening')->save();
+
+    expect(redirectMap())->toBe([]);
 });
 
 test('automatic redirects can be turned off', function () {
