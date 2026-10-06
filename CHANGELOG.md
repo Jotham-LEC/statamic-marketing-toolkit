@@ -138,6 +138,20 @@ Statamic Pro with several sites, each on its own domain. Single sites work as be
 
 The same code as 0.13.1, tagged by mistake before the several-sites work was merged; that work is 0.15.0.
 
+## 0.13.3 – 2026-10-06
+
+The redirects and 404 listings work beside Runway. Released from a branch off 0.13.2 for sites on 0.13; the fix reached the main line in 0.18.1.
+
+### Fixed
+- With Runway installed, the Redirects and 404s listings answered 500: Statamic asks every registered action whether it applies to a row, and Runway's Publish and Unpublish assume any database row is one of theirs. The listings now offer only the addon's own actions (Delete, Create redirect).
+
+## 0.13.2 – 2026-10-06
+
+A missing page answers 404 even before `migrate`. Released from a branch off 0.13.1 for sites on 0.13; the fix reached the main line in 0.18.1.
+
+### Fixed
+- Between installing or upgrading the addon and running `migrate`, a missing page answered 500: the redirect lookup read a table that wasn't there yet. The lookup, the hit count and the 404 log are now reported when they fail, and the page answers its 404 as it would without them.
+
 ## 0.13.1 – 2026-10-06
 
 No redirects for renamed terms that have no page.
