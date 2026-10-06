@@ -1,4 +1,5 @@
 <script setup>
+import { numberFormatter } from '@statamic/cms/api';
 import { Head } from '@statamic/cms/inertia';
 import { Alert, Button, Card, Description, Header, Heading, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
 import ProCard from '../components/ProCard.vue';
@@ -106,7 +107,7 @@ defineProps({
             <Description v-if="!search.fetched_at">{{ __('seo::cp.overview.search.not_imported') }}</Description>
             <template v-else>
                 <Description>
-                    {{ __('seo::cp.overview.search.summary', { clicks: search.clicks.toLocaleString(), impressions: search.impressions.toLocaleString(), from: search.from, to: search.to }) }}
+                    {{ __('seo::cp.overview.search.summary', { clicks: numberFormatter.format(search.clicks), impressions: numberFormatter.format(search.impressions), from: search.from, to: search.to }) }}
                     {{ __('seo::cp.overview.search.updated') }} <When :value="search.fetched_at" />.
                 </Description>
                 <Table v-if="search.top.length" class="overflow-x-auto">
@@ -119,8 +120,8 @@ defineProps({
                     <TableRows>
                         <TableRow v-for="row in search.top" :key="row.path">
                             <TableCell><div class="max-w-48 truncate font-mono text-xs sm:max-w-md" :title="row.path">{{ row.path }}</div></TableCell>
-                            <TableCell class="tabular-nums">{{ row.clicks.toLocaleString() }}</TableCell>
-                            <TableCell class="tabular-nums">{{ row.impressions.toLocaleString() }}</TableCell>
+                            <TableCell class="tabular-nums">{{ numberFormatter.format(row.clicks) }}</TableCell>
+                            <TableCell class="tabular-nums">{{ numberFormatter.format(row.impressions) }}</TableCell>
                             <TableCell class="tabular-nums">{{ row.position }}</TableCell>
                         </TableRow>
                     </TableRows>
