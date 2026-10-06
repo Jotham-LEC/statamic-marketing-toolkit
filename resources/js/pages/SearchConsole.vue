@@ -82,12 +82,13 @@ async function disconnect() {
                 <dd class="tabular-nums">{{ imported.pages }}</dd>
             </dl>
 
-            <template v-if="sites.length && setup.can_set_up">
+            <template v-if="sites.length">
                 <Heading size="sm">{{ __('seo::cp.search_console.properties') }}</Heading>
                 <ul class="space-y-1 text-sm">
                     <li v-for="site in sites" :key="site.name" class="flex gap-3" :class="{ 'font-semibold': site.selected }">
                         <span class="min-w-32">{{ site.name }}</span>
-                        <span class="font-mono text-xs">{{ site.property ?? __('seo::cp.search_console.no_property') }}</span>
+                        <span v-if="site.property" class="font-mono text-xs">{{ site.property }}</span>
+                        <span v-else>{{ site.connected ? __('seo::cp.search_console.connected') : __('seo::cp.search_console.no_property') }}</span>
                     </li>
                 </ul>
             </template>

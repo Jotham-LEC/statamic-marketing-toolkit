@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
@@ -47,6 +50,7 @@ test('its own screen offers the steps to whoever may change the addon\'s setting
         ->where('setup.can_set_up', true)
         ->where('setup.suggested_property', 'sc-domain:example.test')
         ->where('setup.urls.key', cp_route('seo.search-console.key'))
+        ->where('setup.guides', ['key_policy' => Connection::KEY_POLICY, 'keys' => Connection::KEYS_GUIDE])
         ->where('imported', ['fetched_at' => null, 'pages' => 0])
         ->where('sites', []));
 });
@@ -167,6 +171,32 @@ test('importing from the control panel brings in the numbers', function () {
         ->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 1 page.']);
 
     expect(SearchStat::query()->sum('clicks'))->toEqual(3);
+});
+
+test('a failed import from the control panel is reported, and the editor told what the check makes of it', function () {
+    $logged = [];
+    Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logged) {
+        $logged[] = $event->context['exception'] ?? null;
+    });
+    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    fakeGoogle(404, ['error' => ['code' => 404, 'message' => 'Not found']]);
+
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.import'))
+        ->assertOk()->assertJson(['ok' => false])->assertJsonPath('message', fn (string $message) => str_contains($message, 'has no property'));
+
+    // Reported through Statamic's control panel handler, which logs it.
+    expect($logged)->toHaveCount(1)->and($logged[0])->toBeInstanceOf(RequestException::class);
+});
+
+test('on several sites, someone who may only view SEO sees whether the sites they work on are connected, not their properties', function () {
+    multisite();
+    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => ['cothinking' => 'sc-domain:cothink.test']]);
+    session(['statamic.cp.selected-site' => 'cothinking']);
+
+    $this->actingAs(cpUser(['view seo', 'access cothinking site']))->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('setup.configured', true)
+        ->where('setup.property', null)
+        ->where('sites', [['name' => 'CoThinking', 'property' => null, 'connected' => true, 'selected' => true]]));
 });
 
 test('the daily import runs once it is set up, however that was done', function () {

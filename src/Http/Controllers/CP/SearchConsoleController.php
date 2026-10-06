@@ -32,8 +32,9 @@ class SearchConsoleController
     /**
      * Tools → SEO → Search Console: the steps to connect it, then where the
      * connection stands: the key, each site's property, the last import.
-     * Anyone who may view SEO sees it; only whoever may change the addon's
-     * settings gets the steps and the buttons.
+     * Anyone who may view SEO sees it, for the sites they may work on; only
+     * whoever may change the addon's settings gets the steps, the buttons and
+     * the properties (the others, whether each site is connected).
      */
     public function index(Client $client): Response
     {
@@ -42,9 +43,10 @@ class SearchConsoleController
 
         return Inertia::render('seo::SearchConsole', [
             'setup' => $this->setup($client, $site),
-            'sites' => Sites::multiple() ? Site::all()->map(fn ($each) => [
+            'sites' => Sites::multiple() ? Site::authorized()->map(fn ($each) => [
                 'name' => (string) $each->name(),
-                'property' => $this->connection->property($each->handle()),
+                'property' => $this->canSetUp() ? $this->connection->property($each->handle()) : null,
+                'connected' => $client->configured($each->handle()),
                 'selected' => $each->handle() === $site,
             ])->values()->all() : [],
             'imported' => [
@@ -80,6 +82,7 @@ class SearchConsoleController
                 'check' => cp_route('seo.search-console.check'),
                 'import' => cp_route('seo.search-console.import'),
             ] : null,
+            'guides' => ['key_policy' => Connection::KEY_POLICY, 'keys' => Connection::KEYS_GUIDE],
         ];
     }
 
@@ -152,7 +155,10 @@ class SearchConsoleController
 
         try {
             $count = $importer->import($site);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            // The editor sees what the check makes of it; the error itself goes to the log.
+            report($e);
+
             return response()->json($this->connection->check($client, $site));
         }
 

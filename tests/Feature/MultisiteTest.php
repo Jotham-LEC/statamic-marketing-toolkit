@@ -500,7 +500,7 @@ describe('Search Console', function () {
             ->where('setup.property', 'sc-domain:cothink.test')
             ->where('setup.property_source', 'env')
             ->where('imported.pages', 2)
-            ->where('sites.1', ['name' => 'CoThinking', 'property' => 'sc-domain:cothink.test', 'selected' => true]));
+            ->where('sites.1', ['name' => 'CoThinking', 'property' => 'sc-domain:cothink.test', 'connected' => true, 'selected' => true]));
 
         $this->artisan('statamic:seo:search-console', ['--site' => 'default'])->assertSuccessful();
         expect(SearchStat::query()->count())->toBe(3);

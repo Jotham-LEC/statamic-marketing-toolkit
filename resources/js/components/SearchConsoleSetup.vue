@@ -91,8 +91,8 @@ function copyEmail() {
                     class="text-gray-600 dark:text-gray-400"
                     v-html="
                         __('seo::cp.search_console.setup.key_blocked', {
-                            policy: link('https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation', __('seo::cp.search_console.setup.key_policy')),
-                            enable: link('https://docs.cloud.google.com/iam/docs/keys-disable-enable', __('seo::cp.search_console.setup.key_enable')),
+                            policy: link(setup.guides.key_policy, __('seo::cp.search_console.setup.key_policy')),
+                            enable: link(setup.guides.keys, __('seo::cp.search_console.setup.key_enable')),
                         })
                     "
                 />
