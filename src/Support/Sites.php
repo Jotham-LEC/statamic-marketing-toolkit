@@ -39,10 +39,6 @@ final class Sites
      */
     public static function served(): bool
     {
-        if (self::multiple() || ! self::installed()) {
-            return true;
-        }
-
         return self::servesUrl((string) Site::current()->absoluteUrl());
     }
 
@@ -76,6 +72,18 @@ final class Sites
     public static function handles(): array
     {
         return Site::all()->map->handle()->values()->all();
+    }
+
+    /**
+     * The handles of the sites the signed-in user may work on (Statamic's
+     * `access {site} site` permission; a super user, every one), or every
+     * site's while the addon works as on a single site.
+     *
+     * @return list<string>
+     */
+    public static function accessible(): array
+    {
+        return self::multiple() ? Site::authorized()->map->handle()->values()->all() : self::handles();
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
+use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Og\Generator;
@@ -155,7 +156,7 @@ describe('redirects', function () {
 
     test('ignoring letter case, an address is still one per site, matched on its own site', function () {
         config(['seo.redirects.case_sensitive' => false]);
-        $this->actingAs(cpUser(['manage seo redirects']));
+        $this->actingAs(cpUser(['manage seo redirects', 'access default site', 'access cothinking site']));
         Redirect::query()->create(['site' => 'cothinking', 'source' => '/About', 'target' => '/here']);
         Redirect::query()->create(['source' => '/about', 'target' => '/everywhere']);
 
@@ -179,7 +180,7 @@ describe('redirects', function () {
     });
 
     test('the form offers the sites, and a redirect made from a site\'s 404 starts on that site', function () {
-        $this->actingAs(cpUser(['manage seo redirects']));
+        $this->actingAs(cpUser(['manage seo redirects', 'access default site', 'access cothinking site']));
 
         $this->get(cp_route('seo.redirects.create', ['source' => '/missing', 'site' => 'cothinking']))
             ->assertInertia(fn (AssertableInertia $page) => $page
@@ -194,7 +195,7 @@ describe('redirects', function () {
     });
 
     test('CSV carries each rule\'s site', function () {
-        $this->actingAs(cpUser(['manage seo redirects']));
+        $this->actingAs(cpUser(['manage seo redirects', 'access default site', 'access cothinking site']));
         Redirect::query()->create(['source' => '/one', 'target' => '/1']);
         Redirect::query()->create(['site' => 'cothinking', 'source' => '/one', 'target' => '/uno']);
 
@@ -210,6 +211,34 @@ describe('redirects', function () {
                 ['site' => 'cothinking', 'source' => '/one', 'target' => '/eins'],
                 ['site' => 'cothinking', 'source' => '/two', 'target' => '/2'],
             ]);
+    });
+
+    test('a user who may work on one site manages only its rules and those for every site', function () {
+        $this->actingAs(cpUser(['manage seo redirects', 'access cothinking site']));
+        $theirs = Redirect::query()->create(['site' => 'cothinking', 'source' => '/theirs', 'target' => '/a']);
+        $everywhere = Redirect::query()->create(['source' => '/everywhere', 'target' => '/b']);
+        $other = Redirect::query()->create(['site' => 'default', 'source' => '/other', 'target' => '/c']);
+        $form = fn (array $values = []) => ['source' => '/x', 'target' => '/y', 'status' => '301', 'active' => true, ...$values];
+
+        expect($this->getJson(cp_route('seo.redirects.listing', ['sort' => 'id']))->json('data.*.source'))->toEqualCanonicalizing(['/theirs', '/everywhere'])
+            ->and($this->get(cp_route('seo.redirects.export'))->streamedContent())->not->toContain('/other');
+
+        $this->get(cp_route('seo.redirects.edit', $other))->assertNotFound();
+        $this->patchJson(cp_route('seo.redirects.update', $other), $form(['source' => '/other']))->assertNotFound();
+        $this->postJson(cp_route('seo.redirects.store'), $form(['site' => 'default']))->assertJsonValidationErrors('site');
+        $this->patchJson(cp_route('seo.redirects.update', $everywhere), $form(['source' => '/everywhere', 'site' => 'default']))->assertJsonValidationErrors('site');
+        $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$other->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
+
+        $this->get(cp_route('seo.redirects.edit', $theirs))->assertOk();
+        $this->patchJson(cp_route('seo.redirects.update', $everywhere), $form(['source' => '/everywhere', 'target' => '/b2']))->assertOk();
+        $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$theirs->id, $everywhere->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
+
+        $csv = "source,target,status,active,site\n/mine,/1,301,1,cothinking\n/not-mine,/2,301,1,default\n";
+        $result = $this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
+
+        expect($result)->toMatchArray(['created' => 1, 'updated' => 0])
+            ->and($result['errors'])->toHaveCount(1)
+            ->and(Redirect::query()->orderBy('id')->pluck('source')->all())->toBe(['/other', '/mine']);
     });
 });
 

@@ -80,6 +80,27 @@ class Redirect extends Model
     }
 
     /**
+     * Rules the signed-in user may manage: those on the sites they may work
+     * on, and those for every site.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeAccessible(Builder $query): void
+    {
+        if (Sites::multiple()) {
+            $query->where(fn (Builder $query) => $query->whereIn('site', Sites::accessible())->orWhereNull('site'));
+        }
+    }
+
+    /**
+     * Whether the signed-in user may manage this rule (see scopeAccessible()).
+     */
+    public function isAccessible(): bool
+    {
+        return $this->site === null || in_array($this->site, Sites::accessible(), true);
+    }
+
+    /**
      * Rules that apply on this site: its own and those for every site.
      *
      * @param  Builder<self>  $query
@@ -166,16 +187,19 @@ class Redirect extends Model
      * Checks a redirect's fields, from the form or a CSV row. $taken: whether
      * another rule already starts from the source, and $active: the active
      * rules, when the caller has them at hand (an import, which reads them
-     * once rather than for every row); else they are looked up.
+     * once rather than for every row); else they are looked up. $sites: the
+     * handles a rule may name (the CP passes the user's own); every site's
+     * when not given.
      *
      * @param  array<string, mixed>  $data
      * @param  ?Collection<int, self>  $active
+     * @param  ?list<string>  $sites
      */
-    public static function validator(array $data, ?int $ignoreId = null, ?bool $taken = null, ?Collection $active = null): ValidatorContract
+    public static function validator(array $data, ?int $ignoreId = null, ?bool $taken = null, ?Collection $active = null, ?array $sites = null): ValidatorContract
     {
         $site = is_string($data['site'] ?? null) && $data['site'] !== '' ? $data['site'] : null;
 
-        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId, $taken, $active), [
+        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId, $taken, $active, $sites ?? Sites::handles()), [
             'source.required' => __('seo::validation.redirect.source_required'),
             'source.starts_with' => __('seo::validation.redirect.source_starts_with'),
             'source.not_regex' => __('seo::validation.redirect.source_query'),
@@ -190,12 +214,13 @@ class Redirect extends Model
 
     /**
      * @param  ?Collection<int, self>  $active
+     * @param  list<string>  $sites
      * @return array<string, mixed>
      */
-    private static function rules(string $source, ?string $site, ?int $ignoreId, ?bool $taken, ?Collection $active): array
+    private static function rules(string $source, ?string $site, ?int $ignoreId, ?bool $taken, ?Collection $active, array $sites): array
     {
         return [
-            'site' => ['nullable', 'string', Rule::in(Sites::handles())],
+            'site' => ['nullable', 'string', Rule::in($sites)],
             'source' => [
                 // Control characters would go into the Location header (a line break starts a new header).
                 'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',

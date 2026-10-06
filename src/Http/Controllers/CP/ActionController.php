@@ -8,6 +8,7 @@ use JothamLec\MarketingToolkit\Cp\RecordActions;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Actions\Action;
+use Statamic\Facades\Site;
 use Statamic\Http\Controllers\CP\ActionController as StatamicActionController;
 
 /**
@@ -46,10 +47,20 @@ class ActionController extends StatamicActionController
         return RecordActions::for($this->getSelectedItems(collect($data['selections']), $context), $context);
     }
 
+    /**
+     * The selected rows, from those the listing shows this user: a 404 row on
+     * the selected site, a redirect on a site they may work on. Any other is
+     * as if it didn't exist.
+     */
     protected function getSelectedItems($items, $context)
     {
-        $model = ($context['type'] ?? null) === '404s' ? MissingPath::class : Redirect::class;
+        $query = ($context['type'] ?? null) === '404s'
+            ? MissingPath::query()->shownOn(Site::selected()->handle())
+            : Redirect::query()->accessible();
+        $selected = $query->whereIn('id', $items->all())->get();
 
-        return $model::query()->whereIn('id', $items->all())->get();
+        abort_if($selected->count() < $items->unique()->count(), 404);
+
+        return $selected;
     }
 }

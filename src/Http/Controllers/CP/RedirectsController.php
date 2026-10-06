@@ -53,7 +53,7 @@ class RedirectsController
         $actions = RecordActions::for(collect([new Redirect]), ['type' => 'redirects']);
 
         return Listing::respond(
-            Redirect::query(),
+            Redirect::query()->accessible(),
             $request,
             [
                 'source' => __('seo::cp.listing.from'), 'target' => __('seo::cp.listing.to'),
@@ -85,8 +85,6 @@ class RedirectsController
             new Redirect([
                 'source' => (string) $request->query('source', ''),
                 'site' => Sites::scope($request->query('site') === null ? null : (string) $request->query('site')),
-                'status' => 301,
-                'active' => true,
             ]),
             title: __('seo::cp.redirects.create'),
             submitUrl: cp_route('seo.redirects.store'),
@@ -103,11 +101,15 @@ class RedirectsController
 
     public function edit(Redirect $redirect): Response
     {
+        abort_unless($redirect->isAccessible(), 404);
+
         return $this->form($redirect, title: $redirect->source, submitUrl: cp_route('seo.redirects.update', $redirect), method: 'patch');
     }
 
     public function update(Request $request, Redirect $redirect): JsonResponse
     {
+        abort_unless($redirect->isAccessible(), 404);
+
         // Edited by hand, it is no longer one the content made.
         $redirect->update([...$this->validated($request, $redirect->id), 'automatic' => false]);
 
@@ -217,7 +219,7 @@ class RedirectsController
         // Without a choice (or on a single site): every site.
         $values['site'] = is_string($values['site'] ?? null) && $values['site'] !== '' && Sites::multiple() ? $values['site'] : null;
 
-        return Redirect::validator($values, $ignoreId)->validate();
+        return Redirect::validator($values, $ignoreId, sites: Sites::accessible())->validate();
     }
 
     private function form(Redirect $redirect, string $title, string $submitUrl, string $method): Response
@@ -276,7 +278,7 @@ class RedirectsController
             ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('seo::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
             // Only where there is more than one site to choose from.
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
-                'type' => 'select', 'display' => __('seo::cp.redirect_form.site'), 'options' => Sites::options(), 'clearable' => true,
+                'type' => 'select', 'display' => __('seo::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => true,
                 'placeholder' => __('seo::cp.redirect_form.all_sites'), 'instructions' => __('seo::cp.redirect_form.site_instructions'),
             ]]] : []),
         ]], ...$campaign]]]]);

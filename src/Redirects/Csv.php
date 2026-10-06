@@ -13,6 +13,8 @@ use SplTempFileObject;
  * or empty for every site). Import adds new sources and updates existing ones
  * on the row's site (in any letter case, when matching ignores it); a row
  * that fails the form's checks is skipped and reported by its row number.
+ * Both keep to the sites the signed-in user may work on, and to the rules
+ * for every site.
  */
 class Csv
 {
@@ -28,7 +30,7 @@ class Csv
         fputcsv($out, $sites ? [...self::HEADER, 'site'] : self::HEADER, escape: '');
 
         // Each address's rule for every site (no site) first: databases sort a null differently.
-        Redirect::query()->orderBy('source')->orderByRaw('site is not null')->orderBy('site')->each(function (Redirect $redirect) use ($out, $sites) {
+        Redirect::query()->accessible()->orderBy('source')->orderByRaw('site is not null')->orderBy('site')->each(function (Redirect $redirect) use ($out, $sites) {
             $row = [$redirect->source, $redirect->target, $redirect->status, $redirect->active ? 1 : 0];
 
             fputcsv($out, $sites ? [...$row, $redirect->site] : $row, escape: '');
@@ -49,6 +51,7 @@ class Csv
 
         return Matcher::flushAfter(fn () => DB::transaction(function () use ($file) {
             $result = ['created' => 0, 'updated' => 0, 'errors' => []];
+            $sites = Sites::accessible();
             // Every rule read once, not for each row and again in its checks: by
             // site ('' for every site) and source as rules compare it (case-folded
             // when matching ignores case), oldest first; and the active ones, which
@@ -83,7 +86,7 @@ class Csv
                 $key = Redirect::key(Redirect::normalize($row['source']));
                 $matches = $bySource[$row['site'] ?? ''][$key] ?? [];
                 $existing = $matches[0] ?? null;
-                $validator = Redirect::validator($row, $existing?->id, count($matches) > 1, $active);
+                $validator = Redirect::validator($row, $existing?->id, count($matches) > 1, $active, $sites);
 
                 if ($validator->fails()) {
                     $result['errors'][] = __('seo::validation.csv_row', ['row' => $number, 'message' => $validator->errors()->first()]);
