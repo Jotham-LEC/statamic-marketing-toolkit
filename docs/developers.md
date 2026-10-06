@@ -213,14 +213,14 @@ The control panel uses the user's language preference; "Page N" uses each site's
 ```bash
 composer install && npm install
 npm run build      # Vue → resources/dist/build; commit the build, sites don't run npm
-vendor/bin/pest    # needs PHP's imagick extension for the share-card tests
-vendor/bin/pint
+composer test      # Pest, in parallel (about a minute); the share-card tests skip without PHP's imagick extension
+composer lint      # Pint; `vendor/bin/pint` fixes what it finds
 composer analyse   # Larastan, level 5, with the 1 GB it needs; phpstan.neon says why each ignored error is ignored
 ```
 
 Tests run as production with an `array` cache that serializes, and render pages through `tests/fixtures/views`. Statamic matches the site by its absolute URL, so request front-end pages as `https://example.test/…`.
 
-The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
+The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`; not in parallel, as the processes would share the database). GitHub Actions runs all of this on every push: PHP 8.3 on the oldest versions composer.json allows, PHP 8.4 on the newest, Postgres, and without Imagick.
 
 Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\MarketingToolkit\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
 

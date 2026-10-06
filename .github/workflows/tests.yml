@@ -1,0 +1,78 @@
+name: Tests
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }} · ${{ matrix.dependencies }} · ${{ matrix.db }}${{ matrix.imagick && '' || ' · no imagick' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The oldest versions composer.json allows (Statamic 6.30, Laravel 12).
+          - { php: '8.3', dependencies: lowest, db: sqlite, imagick: true }
+          - { php: '8.4', dependencies: highest, db: sqlite, imagick: true }
+          - { php: '8.4', dependencies: highest, db: pgsql, imagick: true }
+          # Favicons drawn with GD; the share-card tests skip.
+          - { php: '8.4', dependencies: highest, db: sqlite, imagick: false }
+
+    services:
+      postgres:
+        image: ${{ matrix.db == 'pgsql' && 'postgres:16' || '' }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: seo_test
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, dom, gd, mbstring, openssl, pdo_sqlite, pdo_pgsql, ${{ matrix.imagick && 'imagick' || ':imagick' }}
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      # One Postgres database, so that run is serial.
+      - name: Tests
+        run: vendor/bin/pest ${{ matrix.db == 'sqlite' && '--parallel' || '' }}
+        env:
+          SEO_TEST_DB: ${{ matrix.db == 'pgsql' && 'pgsql' || '' }}
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+
+  quality:
+    name: Pint, PHPStan, built assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, dom, gd, imagick, mbstring, openssl
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - run: composer lint
+      - run: composer analyse
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The committed build must be what the source builds to.
+      - run: npm ci && npm run build
+      - run: git diff --exit-code resources/dist && test -z "$(git status --porcelain resources/dist)"

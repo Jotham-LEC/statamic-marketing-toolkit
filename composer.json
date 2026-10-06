@@ -28,6 +28,8 @@
         "pestphp/pest": "^4.0"
     },
     "scripts": {
+        "test": "pest --parallel",
+        "lint": "pint --test",
         "analyse": "phpstan analyse --memory-limit=1G"
     },
     "config": {

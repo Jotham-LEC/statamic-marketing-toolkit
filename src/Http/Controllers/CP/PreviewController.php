@@ -48,8 +48,9 @@ class PreviewController
                 'url' => $meta->image['url'],
                 'alt' => $meta->image['alt'],
                 // A generated card is drawn from the form by card(); its public URL
-                // would show the saved entry's card instead.
-                'generated' => $generated !== null && $meta->image['url'] === $generated,
+                // would show the saved entry's card instead. Compared without the
+                // ?v= stamp: an unsaved entry's is "now", read twice.
+                'generated' => $generated !== null && strtok($meta->image['url'], '?') === strtok($generated, '?'),
             ],
         ]);
     }

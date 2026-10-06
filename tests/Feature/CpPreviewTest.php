@@ -123,7 +123,7 @@ test('the card is drawn from the form as a PNG and never cached', function () {
     expect($response->headers->get('Cache-Control'))->toContain('no-store')
         ->and(getimagesizefromstring($response->getContent())[0])->toBe(1200)
         ->and(collect($cached)->keys()->filter(fn ($key) => str_contains($key, 'seo:og')))->toBeEmpty();
-});
+})->skip(! extension_loaded('imagick'), 'Share cards need PHP\'s imagick extension.');
 
 test('the card route has nothing to draw for a term or with cards off', function () {
     $this->actingAs(cpUser(super: true));

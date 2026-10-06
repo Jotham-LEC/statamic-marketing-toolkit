@@ -22,7 +22,7 @@ test('a published page has a card, served as a cacheable PNG without a cookie', 
     expect(substr($response->getContent(), 0, 8))->toBe("\x89PNG\r\n\x1a\n")
         ->and(getimagesizefromstring($response->getContent())[0])->toBe(1200)
         ->and($response->headers->get('Set-Cookie'))->toBeNull();
-});
+})->skip(! extension_loaded('imagick'), 'Share cards need PHP\'s imagick extension.');
 
 test('home has its card at /og.png; drafts and unknown pages have none', function () {
     entryIn('home', 'home');
@@ -31,7 +31,7 @@ test('home has its card at /og.png; drafts and unknown pages have none', functio
     $this->get('/og.png')->assertOk();
     $this->get('/og/draft.png')->assertNotFound();
     $this->get('/og/nothing.png')->assertNotFound();
-});
+})->skip(! extension_loaded('imagick'), 'Share cards need PHP\'s imagick extension.');
 
 test('the card says the title and description, or the editor\'s card text instead', function () {
     $generator = app(Generator::class);

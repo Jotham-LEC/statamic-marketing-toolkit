@@ -2,10 +2,12 @@
 
 namespace JothamLec\MarketingToolkit\Tests;
 
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use JothamLec\MarketingToolkit\ServiceProvider;
 use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Addons\Manifest;
+use Statamic\Facades\Stache;
 use Statamic\Testing\AddonTestCase;
 use Statamic\Testing\Concerns\PreventsSavingStacheItemsToDisk;
 
@@ -14,6 +16,55 @@ abstract class TestCase extends AddonTestCase
     use PreventsSavingStacheItemsToDisk, RefreshDatabase;
 
     protected string $addonServiceProvider = ServiceProvider::class;
+
+    /**
+     * Under `pest --parallel` each process gets its own copy of Testbench's
+     * skeleton (storage, resources/addons) and its own Stache and assets
+     * folder, so processes never read or delete each other's files.
+     */
+    public static function applicationBasePath()
+    {
+        $skeleton = parent::applicationBasePath();
+
+        if (! $token = self::token()) {
+            return $skeleton;
+        }
+
+        // A fresh copy after each composer install or update.
+        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.filemtime($skeleton.'/vendor/composer/installed.json').'-'.$token;
+
+        if (! is_dir($copy)) {
+            $files = new Filesystem;
+            $files->ensureDirectoryExists($copy);
+            foreach (array_diff(scandir($skeleton), ['.', '..', 'storage', 'vendor']) as $item) {
+                is_dir($skeleton.'/'.$item)
+                    ? $files->copyDirectory($skeleton.'/'.$item, $copy.'/'.$item)
+                    : $files->copy($skeleton.'/'.$item, $copy.'/'.$item);
+            }
+            foreach (['app/public', 'app/private', 'framework/cache', 'framework/sessions', 'framework/views', 'logs'] as $folder) {
+                $files->ensureDirectoryExists($copy.'/storage/'.$folder);
+            }
+            $files->link(realpath($skeleton.'/vendor'), $copy.'/vendor');
+        }
+
+        return $copy;
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if ($token = self::token()) {
+            $shared = $this->fakeStacheDirectory;
+            $this->fakeStacheDirectory = $shared.'-'.$token;
+            Stache::stores()->each(fn ($store) => $store->directory(str_replace($shared, $this->fakeStacheDirectory, $store->directory())));
+        }
+    }
+
+    private static function token(): ?string
+    {
+        return ($_SERVER['TEST_TOKEN'] ?? getenv('TEST_TOKEN')) ?: null;
+    }
 
     /**
      * The addon's edition the test runs in: Pro, unless the file uses the
@@ -62,7 +113,7 @@ abstract class TestCase extends AddonTestCase
         $app['config']->set('statamic.editions.pro', false);
         $app['config']->set('filesystems.disks.assets', [
             'driver' => 'local',
-            'root' => __DIR__.'/__fixtures__/dev-null/assets',
+            'root' => __DIR__.'/__fixtures__/dev-null'.(self::token() ? '-'.self::token() : '').'/assets',
             'url' => '/assets',
             'visibility' => 'public',
         ]);
