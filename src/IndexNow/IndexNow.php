@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\IndexNow;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Throwable;
 
 /**
@@ -40,7 +41,8 @@ class IndexNow
 
     public function queue(?string $url): void
     {
-        if ($url !== null && $url !== '' && $this->enabled()) {
+        // Free: the default site's domain only (several sites are Pro).
+        if ($url !== null && $url !== '' && $this->enabled() && Sites::servesUrl($url)) {
             $this->urls[$url] = true;
         }
     }

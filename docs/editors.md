@@ -76,7 +76,7 @@ All optional. Empty means "use the default".
 | **In sitemap** | Lists the page in the sitemap search engines read. | On. |
 | **Extra JSON-LD** | Structured data for search engines. Leave it to your developer. | Nothing extra. |
 
-### Several languages
+### Several languages *(Pro)*
 
 On a site in several languages, each translation of a page has its own SEO fields: give each language its own title and description. Search engines are told about the other languages by themselves (with "hreflang" links), so a French visitor is sent to the French page. A translation left as a draft, or hidden from search engines, is left out of those links.
 

@@ -16,6 +16,7 @@ use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Actions\Action;
 use Statamic\Facades\Addon;
 use Statamic\Facades\AssetContainer;
+use Statamic\Facades\Entry;
 use Statamic\Facades\Permission;
 use Statamic\Widgets\Widget;
 
@@ -129,4 +130,47 @@ test('the sitemap, robots.txt and IndexNow work as in Pro', function () {
     $this->get('https://example.test/robots.txt')->assertOk()->assertSee('Sitemap: https://example.test/sitemap.xml', false);
 
     Http::assertSent(fn ($request) => $request->url() === 'https://api.indexnow.org/indexnow');
+});
+
+test('several languages: no hreflang, and the sitemap lists the default site alone', function () {
+    multilang();
+    $about = entryIn('pages', 'about');
+    translationOf($about, 'fr', 'a-propos');
+    translationOf($about, 'de', 'uber-uns');
+
+    expect(metaFor($about, '/about')->alternates)->toBe([])
+        ->and(metaFor($about, '/about')->localeAlternates)->toBe([])
+        ->and(renderAt('/about', '<s:seo:meta :entry="$entry" />', ['entry' => $about]))->not->toContain('hreflang');
+
+    $this->get('https://example.test/sitemap.xml')->assertOk()
+        ->assertSee('https://example.test/about', false)
+        ->assertDontSee('https://example.test/fr/a-propos', false)
+        ->assertDontSee('xhtml:link', false);
+});
+
+test('several sites: another site\'s domain has no sitemap or robots.txt, and IndexNow leaves it out', function () {
+    multisite();
+    Http::fake(['api.indexnow.org/*' => Http::response('', 200)]);
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    Entry::make()->collection('pages')->locale('cothinking')->slug('team')->data(['title' => 'Team'])->save();
+    app()->terminate();
+
+    $this->get('https://example.test/sitemap.xml')->assertOk()->assertSee('https://example.test/about', false);
+    $this->get('https://cothink.test/sitemap.xml')->assertNotFound();
+    $this->get('https://cothink.test/robots.txt')->assertNotFound();
+
+    Http::assertSent(fn ($request) => $request['host'] === 'example.test');
+    Http::assertNotSent(fn ($request) => $request['host'] === 'cothink.test');
+});
+
+test('several sites: the overview is the default site\'s, with a Pro card for the others', function () {
+    multisite();
+    seoGlobal([]);
+    $this->actingAs(cpUser(super: true));
+    session(['statamic.cp.selected-site' => 'cothinking']);
+
+    $this->get(cp_route('seo.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('severalSites', true)
+        ->where('siteName', 'Acme'));
 });

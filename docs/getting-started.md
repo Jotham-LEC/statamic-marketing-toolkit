@@ -4,7 +4,7 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## What you need
 
-- **Statamic 6** (Core is enough) on **PHP 8.3+**. Several sites and languages need Statamic Pro, as Statamic itself does; see [Several sites and languages](developers.md#several-sites-and-languages).
+- **Statamic 6** (Core is enough) on **PHP 8.3+**. Several sites and languages need Statamic Pro, as Statamic itself does, and Marketing Toolkit Pro; see [Several sites and languages](developers.md#several-sites-and-languages).
 - **PHP's `imagick` extension** for the generated share cards (Marketing Toolkit Pro). Without it the cards (and their tests) fail; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
@@ -12,7 +12,7 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## The editions
 
-Marketing Toolkit comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), several sites and languages with hreflang, IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, reports (on a schedule, with link checks and `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, and the dashboard widget.
+Marketing Toolkit comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, reports (on a schedule, with link checks and `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, several sites and languages with hreflang, and the dashboard widget.
 
 To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
 

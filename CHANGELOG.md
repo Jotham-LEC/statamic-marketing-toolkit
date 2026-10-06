@@ -9,6 +9,7 @@ Co-SEO is now **Marketing Toolkit**: the marketing fundamentals of a website, no
 - PHP classes moved from `JothamLec\Seo` to `JothamLec\MarketingToolkit`.
 
 ### Changed
+- **Several sites and hreflang are Pro.** On a multi-site install, Free looks after the default site: pages on every site keep their meta tags, but there is no hreflang or `og:locale:alternate`, the sitemap lists the default site alone, other domains answer 404 for `sitemap.xml` and `robots.txt`, IndexNow sends the default domain's pages only, and Tools → SEO shows the default site with a card for Pro. Multi-site needs Statamic Pro anyway; set the addon to Pro to keep everything.
 - The addon's slug is `marketing-toolkit`: its scripts are published to `public/vendor/statamic-marketing-toolkit` (tag `marketing-toolkit`), and its settings file is `resources/addons/marketing-toolkit.yaml`, copied once from `seo.yaml`. `config/seo.php`, the `seo::` views, translations and fieldsets, routes, permissions and tags keep their names.
 
 ## 0.17.0 – 2026-10-06

@@ -17,6 +17,7 @@ defineProps({
     search: { type: Object, default: null },
     searchConsole: { type: Object, default: null },
     files: { type: Array, required: true },
+    severalSites: { type: Boolean, default: false },
 });
 </script>
 
@@ -25,6 +26,8 @@ defineProps({
 
     <div class="max-w-page mx-auto space-y-6">
         <Header :title="__('seo::cp.seo')" icon="search-magnifying-glass" />
+
+        <ProCard v-if="severalSites" :title="__('seo::cp.pro.sites.title')" :body="__('seo::cp.pro.sites.body')" :url="upgradeUrl" />
 
         <div class="grid gap-6 md:grid-cols-2">
             <Card v-if="report" class="flex flex-col gap-3 p-4">

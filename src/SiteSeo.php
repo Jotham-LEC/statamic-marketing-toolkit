@@ -1068,7 +1068,8 @@ class SiteSeo
 
     /**
      * The sites one sitemap lists: the current one, and the others on its
-     * domain (languages under /fr/, /de/). A domain serves one sitemap.
+     * domain (languages under /fr/, /de/). A domain serves one sitemap. In
+     * Free, the default site only.
      *
      * @return list<string>
      */
@@ -1077,7 +1078,10 @@ class SiteSeo
         $host = fn ($site) => strtolower((string) parse_url((string) $site->absoluteUrl(), PHP_URL_HOST));
         $current = $host(Site::current());
 
-        return Site::all()->filter(fn ($site) => $host($site) === $current)->map->handle()->values()->all();
+        // Free lists the default site alone (several sites are Pro).
+        $sites = Sites::multiple() ? Site::all() : collect([Site::default()]);
+
+        return $sites->filter(fn ($site) => $host($site) === $current)->map->handle()->values()->all();
     }
 
     /**

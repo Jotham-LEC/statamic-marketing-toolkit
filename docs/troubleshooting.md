@@ -6,7 +6,7 @@ The addon is running as Free. If you bought Pro, set it in `config/statamic/edit
 
 ### No hreflang tags, or a language is missing from them
 
-- hreflang needs several sites (Statamic Pro, `multisite` on) and `seo.hreflang.enabled`.
+- hreflang needs several sites (Statamic Pro, `multisite` on), Marketing Toolkit Pro and `seo.hreflang.enabled`.
 - The pages must be linked: a translation is an entry **localized** from another (it has an `origin`), not a separate entry with the same title.
 - A version that is a draft, noindexed, left out of the sitemap or canonical elsewhere is left out. If the page you're looking at is one of those, it gets no tags at all.
 - Page 2 and later of a listing, and error pages, get none.

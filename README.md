@@ -38,7 +38,7 @@ When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Mar
 - **A list of missing pages.** See the addresses visitors and search engines ask for that don't exist, and redirect them in a click.
 - **Sensible defaults.** Every page gets a title, a description, a canonical address, Open Graph and X tags, and structured data for Google, without anyone filling in a field. Editors change only what they want to.
 
-## Several languages
+## Several languages (Pro)
 
 - **hreflang, automatically.** Each page tells Google where it is in every other language, so French visitors get the French page. The sitemap carries the same links.
 - **A title per language.** Every SEO field can differ from one language to another.
@@ -54,7 +54,6 @@ When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Mar
 | Sitemap and robots.txt | ✓ | ✓ |
 | Live Google and share preview, with counters | ✓ | ✓ |
 | Redirects, with wildcards and "gone for good" | ✓ | ✓ |
-| Several sites and languages, with hreflang | ✓ | ✓ |
 | Instant indexing with Bing and others (IndexNow) | ✓ | ✓ |
 | Rules your developer can change in code | ✓ | ✓ |
 | Google Search Console numbers per page | | ✓ |
@@ -64,16 +63,17 @@ When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Mar
 | Redirects added automatically when a page moves | | ✓ |
 | The list of missing pages (404s) | | ✓ |
 | Import and export redirects as a spreadsheet | | ✓ |
+| Several sites and languages, with hreflang | | ✓ |
 | Dashboard widget | | ✓ |
 
 The free edition shows Pro's features in the control panel as cards you can upgrade from. Nothing you set up is lost when you switch.
 
 ## Why Marketing Toolkit
 
-- **Sitemaps, several languages and redirects are free.** Not hidden behind an upgrade.
+- **Sitemaps and redirects are free.** Not hidden behind an upgrade.
 - **Google's numbers inside your control panel**, next to what to fix.
 - **No headless browser needed** for share images, so they work on any host.
-- **Built for Statamic 6**, and works on Statamic Core: you don't need Statamic Pro unless you run several sites.
+- **Built for Statamic 6**, and works on Statamic Core: you need Statamic Pro, and Marketing Toolkit Pro, only for several sites.
 - **One price, no renewals** while Marketing Toolkit is below version 1.0.
 
 ## Installing

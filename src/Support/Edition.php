@@ -8,7 +8,7 @@ use Throwable;
 /**
  * The addon's edition: `free` (the default) or `pro`, as Statamic reads it
  * from `config/statamic/editions.php` (`'addons' => [PACKAGE => 'pro']`).
- * Pro adds Search Console, reports, generated share images, automatic 301s,
+ * Pro adds several sites with hreflang, Search Console, reports, generated share images, automatic 301s,
  * the 404 log, CSV import and export of redirects and the dashboard widget.
  */
 final class Edition

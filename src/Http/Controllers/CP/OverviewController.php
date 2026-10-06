@@ -32,7 +32,8 @@ class OverviewController
         $user = User::current();
         abort_unless($user?->can('view seo'), 403);
 
-        $site = Site::selected()->handle();
+        // Free works with the default site alone (several sites are Pro).
+        $site = Sites::multiple() ? Site::selected()->handle() : Site::default()->handle();
 
         // The selected site's brand values and addresses, not the control panel's domain's.
         return Sites::as($site, fn () => $this->render($seo, $searchConsole, $user, $site));
@@ -74,6 +75,8 @@ class OverviewController
                 'url' => cp_route('seo.search-console.index'),
             ] : null,
             // On the site's own address, which can differ from the control panel's.
+            // Free on a multi-site install: what Pro adds there.
+            'severalSites' => Sites::installed() && ! $pro,
             'files' => collect([
                 __('seo::cp.overview.files.sitemap') => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
                 __('seo::cp.overview.files.robots') => config('seo.robots_txt') ? 'robots.txt' : null,

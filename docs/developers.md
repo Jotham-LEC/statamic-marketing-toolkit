@@ -163,6 +163,8 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 
 ## Several sites and languages
 
+Several sites are Pro. On a multi-site install, Free looks after the default site only: pages on every site keep their meta tags, but there is no hreflang, the sitemap, robots.txt and IndexNow cover the default site's domain, and Tools → SEO shows the default site.
+
 With Statamic Pro and more than one site, whether separate brands on their own domains or languages under `/fr/` or on their own domains, each site gets its own:
 
 - **Brand values**: `seo:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.

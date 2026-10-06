@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
 /**
@@ -51,6 +52,8 @@ class SitemapController
      */
     private function urls(): Collection
     {
+        abort_unless(Sites::served(), 404); // Free: the default site's domain only.
+
         return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
     }
 

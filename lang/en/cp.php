@@ -39,6 +39,10 @@ return [
             'title' => 'Google Search',
             'body' => 'Clicks, appearances and position for each page, from Google Search Console, next to what the reports find.',
         ],
+        'sites' => [
+            'title' => 'Several sites and languages',
+            'body' => 'This install has several sites. The free edition looks after the default site: its sitemap, robots.txt and settings. Pro adds every other site, and hreflang links between languages so each visitor gets the page in their language.',
+        ],
         'csv' => 'Import and export redirects as CSV with Marketing Toolkit Pro.',
     ],
 
