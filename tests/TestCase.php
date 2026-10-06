@@ -30,8 +30,8 @@ abstract class TestCase extends AddonTestCase
             return $skeleton;
         }
 
-        // A fresh copy after each composer install or update.
-        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.filemtime($skeleton.'/vendor/composer/installed.json').'-'.$token;
+        // One per checkout, fresh after each composer install or update.
+        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.md5(realpath($skeleton).filemtime($skeleton.'/vendor/composer/installed.json')).'-'.$token;
 
         if (! is_dir($copy)) {
             $files = new Filesystem;
