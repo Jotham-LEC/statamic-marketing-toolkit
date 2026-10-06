@@ -85,6 +85,7 @@ The methods you're most likely to override:
 | `image(Context)` | `['url', 'width', 'height', 'alt']` or `null`: override, uploaded image, `image_fields`, generated card, default image. |
 | `canonical(Context)` | The canonical URL, or `null` for none. |
 | `robots(Context)` | The robots meta content. |
+| `snippetRules(Context)` | The robots content after any `nofollow`: `seo.robots.default` with the page's **No snippet** or **Snippet length** applied. |
 | `shouldNoindex(Context)` | Extra reasons to noindex (an empty listing, a thank-you page). Return `parent::shouldNoindex($context) || …`. |
 | `hiddenOutsideProduction()` | Whether this copy of the site is kept out of search engines (every page noindexed, robots.txt disallowing all): `seo.robots.noindex_outside_production` unless `APP_ENV=production`. |
 | `ogType(Context)` | og:type. |
@@ -96,6 +97,7 @@ The methods you're most likely to override:
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
 | `termHasEntries(Term)` | Whether a term has published entries, for the sitemap and the reports. Override for a taxonomy that isn't attached to the collection whose entries use it. |
 | `robotsTxt()` | robots.txt. |
+| `llmsPerCollection()` | How many pages llms.txt lists per collection, the most recently changed first. 100 by default. |
 
 Helpers available in a subclass: `settings()` (the brand global, with `string()`, `list()`, `asset()`, `siteName()`), `contentConfig($context, $key, $default)` (the page's collection rules, or a term's taxonomy rules), `collectionConfig($context, $key, $default)` (an entry's collection only), and `absolute($url)`.
 
