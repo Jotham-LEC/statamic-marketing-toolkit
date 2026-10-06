@@ -13,11 +13,6 @@ class DescriptionUnique extends Rule
         return 'description_unique';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.description_unique';
-    }
-
     public function weight(): int
     {
         return 2;

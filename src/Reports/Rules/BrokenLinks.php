@@ -13,11 +13,6 @@ class BrokenLinks extends Rule
         return 'broken_links';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.broken_links';
-    }
-
     public function weight(): int
     {
         return 3;

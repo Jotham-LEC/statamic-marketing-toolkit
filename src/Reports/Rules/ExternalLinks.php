@@ -17,11 +17,6 @@ class ExternalLinks extends Rule
         return 'external_links';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.external_links';
-    }
-
     public function weight(): int
     {
         return 1;

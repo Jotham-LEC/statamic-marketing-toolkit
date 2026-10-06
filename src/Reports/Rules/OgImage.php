@@ -13,11 +13,6 @@ class OgImage extends Rule
         return 'og_image';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.og_image';
-    }
-
     public function weight(): int
     {
         return 1;

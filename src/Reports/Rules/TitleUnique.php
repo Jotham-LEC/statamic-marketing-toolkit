@@ -13,11 +13,6 @@ class TitleUnique extends Rule
         return 'title_unique';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.title_unique';
-    }
-
     public function weight(): int
     {
         return 2;

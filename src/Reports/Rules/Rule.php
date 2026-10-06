@@ -22,7 +22,10 @@ abstract class Rule
      * The check's name: a translation key, or plain text. Reports keep it as
      * it is and translate it when shown.
      */
-    abstract public function label(): string;
+    public function label(): string
+    {
+        return 'seo::reports.rules.'.static::handle();
+    }
 
     abstract public function weight(): int;
 
@@ -37,20 +40,9 @@ abstract class Rule
     }
 
     /**
-     * The paths of some pages, for a message: the first few, then "and N more".
-     *
-     * @param  list<string>  $urls
-     */
-    protected function list(array $urls, int $show = 3): string
-    {
-        $list = $this->listed($urls, $show);
-
-        return is_array($list) ? Result::translate($list['message'], $list['params']) : $list;
-    }
-
-    /**
-     * As list(), as a message parameter, translated when the message is shown.
-     * Full addresses are shortened to their paths unless $paths is false.
+     * Some items for a message, as a message parameter: the first few, then
+     * "and N more", translated when the message is shown. Full addresses are
+     * shortened to their paths unless $paths is false.
      *
      * @param  list<string>  $items
      * @return string|array{message: string, params: array{list: string, count: int}}

@@ -13,11 +13,6 @@ class DescriptionLength extends Rule
         return 'description_length';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.description_length';
-    }
-
     public function weight(): int
     {
         return 2;

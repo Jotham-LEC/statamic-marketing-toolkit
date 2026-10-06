@@ -19,11 +19,6 @@ class OrphanPages extends Rule
         return 'orphan_pages';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.orphan_pages';
-    }
-
     public function weight(): int
     {
         return 2;

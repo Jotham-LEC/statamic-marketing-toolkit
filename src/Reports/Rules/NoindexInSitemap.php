@@ -13,11 +13,6 @@ class NoindexInSitemap extends Rule
         return 'noindex_in_sitemap';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.noindex_in_sitemap';
-    }
-
     public function weight(): int
     {
         return 3;
