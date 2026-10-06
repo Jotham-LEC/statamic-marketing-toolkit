@@ -8,7 +8,7 @@ use SimonHamp\TheOg\Image;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 
-beforeEach(fn () => seoGlobal(['site_name' => 'Acme', 'og_background' => '#282828', 'og_text' => '#fbf1c7', 'og_accent' => '#fad03a']));
+beforeEach(fn () => seoGlobal(['og_background' => '#282828', 'og_text' => '#fbf1c7', 'og_accent' => '#fad03a']));
 
 test('a published page has a card, served as a cacheable PNG without a cookie', function () {
     entryIn('pages', 'about', ['description' => 'Who we are.']);
@@ -42,17 +42,18 @@ test('the card says the title and description, or the editor\'s card text instea
         ->and([$custom->title, $custom->description])->toBe(['Meet us', 'Five people.']);
 });
 
-test('the template comes from the entry, else its collection, else the default', function () {
+test('the template comes from the collection, else the default', function () {
     config(['seo.og.templates.quiet' => QuietTemplate::class, 'seo.collections.essays.og_template' => 'quiet']);
     $generator = app(Generator::class);
 
     expect($generator->template(entryIn('pages', 'about')))->toBeInstanceOf(DefaultTemplate::class)
-        ->and($generator->template(entryIn('essays', 'first', [], '2026-01-02')))->toBeInstanceOf(QuietTemplate::class)
-        ->and($generator->template(entryIn('pages', 'special', ['seo' => ['og_template' => 'quiet']])))->toBeInstanceOf(QuietTemplate::class);
+        ->and($generator->template(entryIn('essays', 'first', [], '2026-01-02')))->toBeInstanceOf(QuietTemplate::class);
 });
 
 test('a template key that names nothing falls back to the default; a missing default is a setup error', function () {
-    expect(app(Generator::class)->template(entryIn('pages', 'odd', ['seo' => ['og_template' => 'nope']])))->toBeInstanceOf(DefaultTemplate::class);
+    config(['seo.collections.pages.og_template' => 'nope']);
+
+    expect(app(Generator::class)->template(entryIn('pages', 'odd')))->toBeInstanceOf(DefaultTemplate::class);
 
     config(['seo.og.templates' => []]);
 

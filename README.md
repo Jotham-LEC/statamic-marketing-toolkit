@@ -1,8 +1,8 @@
 # statamic-co-seo
 
-SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt and humans.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro.
+SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro.
 
-Private package (`jotham-lec/statamic-co-seo`), built alongside SEO Pro to compare the two and shared between Jotham's sites.
+Private package (`jotham-lec/statamic-co-seo`). Built for fresh Statamic sites: Statamic's own defaults first, and anything one site needs goes in that site's `SiteSeo` subclass.
 
 ## Documentation
 
@@ -40,7 +40,7 @@ php please seo:install
 ## What it does
 
 - **On every page**: the `<title>`, description, robots, canonical, Open Graph, X and verification tags, and one JSON-LD graph (website, publisher, page, breadcrumbs, article, FAQ and your own nodes). Escaped for HTML and JSON.
-- **Files**: `/sitemap.xml` (split above 1,000 URLs, cached, rebuilt on save), `/robots.txt` and `/humans.txt` from the global set.
+- **Files**: `/sitemap.xml` (split above 1,000 URLs, cached, rebuilt on save) and `/robots.txt` from the global set.
 - **Share cards**: a picture drawn for each page that has none, at `/og/{uri}.png`, in the brand's colours; editors change its text or replace it with an upload.
 - **In the control panel**:
   - a live **Google and share preview** with length counters on every page
@@ -55,7 +55,7 @@ php please seo:install
 | Value | Order |
 |---|---|
 | `<title>` | SEO title as typed → `{title}{separator}{site}` if it fits `seo.title.max`, else the title → site name on home. `· Page N` past page 1 |
-| description | SEO description → `description` field → `description_fields` → first paragraph of `content` (skipping `skip_prefixes`) → global default. Cut to 155 on a word |
+| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 155 on a word |
 | share image | template `image` → SEO share image → `image_fields` → **generated card** → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
 | canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
 | robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
@@ -65,7 +65,6 @@ Empty fields count as unset.
 ## Not built yet
 
 - `/sitemap.xsl` (a readable sitemap in the browser).
-- `php please seo:import-runway`, to move moojing's Runway redirects and 404 log over (left for its rollout).
 - Multi-site defaults and GraphQL fields: they need Statamic Pro, and none of the sites runs it.
 
 ## Develop

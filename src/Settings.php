@@ -5,6 +5,7 @@ namespace JothamLec\Seo;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Globals\Variables;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Site;
 
 /**
  * The brand-and-defaults global set (config `seo.global`), read for the
@@ -42,9 +43,12 @@ class Settings
         return $value instanceof Asset ? $value : null;
     }
 
+    /**
+     * The site's name as Statamic knows it (Settings → Sites, else APP_NAME).
+     */
     public function siteName(): string
     {
-        return $this->string('site_name') ?? (string) config('app.name');
+        return (string) Site::current()->name();
     }
 
     /**

@@ -62,12 +62,10 @@ class Generator
 
     public function template(Entry $entry): Template
     {
-        $key = Context::make($entry)->seo()['og_template']
-            ?? config("seo.collections.{$entry->collectionHandle()}.og_template")
-            ?? 'default';
+        $key = config("seo.collections.{$entry->collectionHandle()}.og_template") ?? 'default';
 
-        // A key typed into the CP that names no template falls back to the default
-        // rather than breaking the image; a missing default is a setup error.
+        // A key that names no template falls back to the default rather than
+        // breaking the image; a missing default is a setup error.
         $class = config("seo.og.templates.{$key}") ?? config('seo.og.templates.default');
 
         if (! is_string($class) || ! is_subclass_of($class, Template::class)) {

@@ -47,7 +47,7 @@ class Seo extends SiteSeo
         return [[
             '@type' => 'Product',
             'name' => $context->entry->get('title'),
-            'offers' => ['@type' => 'Offer', 'price' => $context->entry->get('price'), 'priceCurrency' => 'MYR'],
+            'offers' => ['@type' => 'Offer', 'price' => $context->entry->get('price'), 'priceCurrency' => 'USD'],
         ]];
     }
 }
@@ -77,7 +77,7 @@ The methods you're most likely to override:
 | `extraNodes(Context)` | Your own nodes (Product, Offer, Event…). Empty by default. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
-| `robotsTxt()`, `humansTxt()` | The two text files. |
+| `robotsTxt()` | robots.txt. |
 
 Helpers available in a subclass: `settings()` (the brand global, with `string()`, `list()`, `asset()`, `siteName()`), `collectionConfig($context, $key, $default)`, and `absolute($url)`.
 
@@ -136,7 +136,7 @@ Register it and choose where it's used:
 'collections' => ['essays' => ['og_template' => 'essay']],
 ```
 
-Editors can also type a template key into a page's "Card template" field. Cards are cached per entry, last-modified time, template, version and text, and served from `/og.png` and `/og/{uri}.png` without cookies, so a CDN can cache them.
+Cards are cached per entry, last-modified time, template, version and text, and served from `/og.png` and `/og/{uri}.png` without cookies, so a CDN can cache them.
 
 ## Redirects, 404s and reports from code
 
@@ -150,8 +150,8 @@ Editors can also type a template key into a page's "Card template" field. Cards 
 | Piece | Where |
 |---|---|
 | Meta tags, JSON-LD | `SiteSeo`, `Meta`, `Tags/Seo.php`, `resources/views/meta.blade.php` |
-| Sitemap, robots.txt, humans.txt, share cards | `routes/web.php` (no session, no cookies), `Http/Controllers` |
-| Trailing slashes, redirects, 404 log | middleware in Statamic's `statamic.web` group: `TrailingSlash`, then `HandleMissing` (only acts on 404 responses) |
+| Sitemap, robots.txt, share cards | `routes/web.php` (no session, no cookies), `Http/Controllers` |
+| Redirects, 404 log | `HandleMissing`, middleware in Statamic's `statamic.web` group (only acts on 404 responses). Redirect targets get a trailing slash when Statamic adds them (`URL::enforceTrailingSlashes()`) |
 | Automatic redirects | `Listeners/RedirectChangedUris` (entry, term and collection-tree events) |
 | Control panel | `routes/cp.php`, `Http/Controllers/CP`, Vue in `resources/js` (built with Vite to `resources/dist`) |
 | Reports | `Reports/` (Runner, Renderer, HtmlInspector, LinkChecker, Rules), `Commands/Report.php` |
@@ -167,6 +167,6 @@ vendor/bin/pint
 
 Tests run as production with an `array` cache that serializes, and render pages through `tests/fixtures/views`. Statamic matches the site by its absolute URL, so request front-end pages as `https://example.test/…`.
 
-The suite runs on SQLite. To run it on Postgres, as the sites do, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
+The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`).
 
 Release: `git tag vX.Y.Z && git push --tags`; sites update with `composer update jotham-lec/statamic-co-seo`. Note the change in [CHANGELOG.md](../CHANGELOG.md).

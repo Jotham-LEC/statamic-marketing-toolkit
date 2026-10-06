@@ -52,13 +52,6 @@ fields:
             width: 50
             instructions: 'Empty: the description.'
         -
-          handle: og_template
-          field:
-            type: text
-            display: 'Card template'
-            width: 50
-            instructions: 'A template key from config/seo.php. Empty: the collection''s.'
-        -
           handle: og_type
           field:
             type: select

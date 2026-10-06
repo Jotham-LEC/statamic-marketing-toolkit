@@ -5,7 +5,7 @@ Two places, by who changes what:
 - **`config/seo.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=seo-config`; anything you leave out keeps its default.
 - **Tools → Addons → SEO** (Statamic's addon settings): report settings an editor may want to change.
 
-Brand details (site name, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
+The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
 
 ## config/seo.php
 
@@ -22,7 +22,6 @@ Brand details (site name, logo, colours, verification codes) are content, edited
 |---|---|---|
 | `title.max` | `60` | `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
 | `description.length` | `155` | A description taken from the page is cut to this, on a word. |
-| `description.skip_prefixes` | `[]` | A first paragraph starting with one of these isn't used as the description (e.g. `'This article first appeared'`). |
 
 ### Collections
 
@@ -51,7 +50,7 @@ Brand details (site name, logo, colours, verification codes) are content, edited
 | `robots.noindex_routes` | `[]` | Route names to noindex, e.g. `['thank-you']`. |
 | `robots.default` | `'max-snippet:-1, max-image-preview:large, max-video-preview:-1'` | The robots tag on pages that are indexed. |
 
-### Sitemap, robots.txt, humans.txt
+### Sitemap and robots.txt
 
 | Key | Default | |
 |---|---|---|
@@ -61,7 +60,6 @@ Brand details (site name, logo, colours, verification codes) are content, edited
 | `sitemap.taxonomies` | `[]` | Taxonomies whose terms are listed (only terms with published entries). Reports check these terms too. |
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
 | `robots_txt` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins. |
-| `humans_txt` | `true` | Serves `/humans.txt` when the global's humans.txt field is filled in. |
 
 The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another site, and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
@@ -76,11 +74,6 @@ The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose ca
 | `not_found.ignore_user_agents` | bots, crawlers, curl, wget… | Not logged when the user agent contains one of these (any case). |
 | `not_found.ignore_paths` | `*.php`, `/wp-*`, `/.env*`, `/.git*`… | Not logged when the path matches one (`*` matches anything). Scanner probes, mostly. |
 
-### Trailing slash
-
-| Key | Default | |
-|---|---|---|
-| `trailing_slash` | `null` | `'add'` or `'remove'` sends a 301 to the other form for GET and HEAD requests (not for the control panel, files or `/img`), and redirect targets get the same form. `null` leaves URLs alone. |
 
 ### Share cards and images
 
@@ -126,5 +119,5 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 
 | Command | |
 |---|---|
-| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (site name, separator, the home page's description, the robots.txt rule). Never overwrites a value. |
+| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:report` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. |

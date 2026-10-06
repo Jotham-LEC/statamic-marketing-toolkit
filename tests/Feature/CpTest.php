@@ -35,7 +35,7 @@ test('the addon registers its permissions in an SEO group', function () {
 });
 
 test('Tools → SEO opens the overview and links to the brand global', function () {
-    seoGlobal(['site_name' => 'Acme']);
+    seoGlobal([]);
     $this->actingAs(cpUser(super: true));
 
     $seo = toolsNav()->get('SEO');

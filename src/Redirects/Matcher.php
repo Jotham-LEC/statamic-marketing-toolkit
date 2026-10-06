@@ -3,6 +3,7 @@
 namespace JothamLec\Seo\Redirects;
 
 use Illuminate\Support\Facades\Cache;
+use Statamic\Facades\URL;
 
 /**
  * Finds the rule for a path. The active rules are cached as one array (an
@@ -92,12 +93,12 @@ class Matcher
     }
 
     /**
-     * On a site that adds trailing slashes, send visitors straight to the
-     * slashed address rather than through a second redirect.
+     * On a site that has Statamic add trailing slashes (URL::enforceTrailingSlashes()),
+     * send visitors straight to the slashed address rather than through a second redirect.
      */
     private function withTrailingSlash(string $target): string
     {
-        if (config('seo.trailing_slash') !== 'add' || ! str_starts_with($target, '/')) {
+        if (! URL::isEnforcingTrailingSlashes() || ! str_starts_with($target, '/')) {
             return $target;
         }
 

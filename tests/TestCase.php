@@ -25,7 +25,7 @@ abstract class TestCase extends AddonTestCase
         $app['config']->set('cache.stores.array.serialize', true);
         $app['config']->set('database.default', 'testing');
 
-        // SEO_TEST_DB=pgsql runs the suite on Postgres, as the sites do (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
+        // SEO_TEST_DB=pgsql runs the suite on Postgres (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
         if (env('SEO_TEST_DB') === 'pgsql') {
             $app['config']->set('database.connections.testing', [
                 'driver' => 'pgsql',

@@ -91,14 +91,6 @@ test('robots.txt lets crawlers in on production, names the sitemap, and shuts th
     expect($this->get('/robots.txt')->getContent())->toBe("User-agent: *\nDisallow: /\n");
 });
 
-test('humans.txt is served once filled in', function () {
-    $this->get('/humans.txt')->assertNotFound();
-
-    seoGlobal(['humans' => "/* TEAM */\nJotham Lim"]);
-
-    expect($this->get('/humans.txt')->assertOk()->getContent())->toBe("/* TEAM */\nJotham Lim\n");
-});
-
 test('an unpublished entry is not in the sitemap even when found by URI', function () {
     entryIn('pages', 'later')->published(false)->save();
 

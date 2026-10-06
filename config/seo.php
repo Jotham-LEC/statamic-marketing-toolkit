@@ -26,7 +26,7 @@ return [
     |
     | The global set editors fill in (create it with `php please seo:install`):
     | site name, default description and image, the publisher for JSON-LD,
-    | verification codes, robots.txt lines, humans.txt and the OG card colours.
+    | verification codes, robots.txt lines and the OG card colours.
     |
     */
 
@@ -40,10 +40,6 @@ return [
     'description' => [
         // A description taken from the page is cut to this, on a word.
         'length' => 155,
-
-        // A first paragraph starting with one of these is skipped when the
-        // description falls back to the body (e.g. "This article first appeared").
-        'skip_prefixes' => [],
     ],
 
     /*
@@ -87,7 +83,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Sitemap, robots.txt and humans.txt
+    | Sitemap and robots.txt
     |--------------------------------------------------------------------------
     */
 
@@ -107,8 +103,6 @@ return [
     ],
 
     'robots_txt' => true,
-
-    'humans_txt' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -152,20 +146,13 @@ return [
             '*.php', '*.asp', '*.aspx', '*.cgi', '/wp-*', '/wordpress*', '/.env*',
             '/.git*', '/.well-known/*', '/cgi-bin/*', '/vendor/*', '/xmlrpc*',
             '*.map',
+            // What browsers and crawlers ask for on their own: at max_rows they
+            // would push the broken links out.
+            '/favicon.ico', '/robots.txt', '/sitemap.xml', '/apple-touch-icon*', '/build/*',
+            '*.js', '*.css', '*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg', '*.webp', '*.ico',
+            '*.woff', '*.woff2', '*.ttf', '*.eot',
         ],
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Trailing slash
-    |--------------------------------------------------------------------------
-    |
-    | null leaves URLs alone; 'add' or 'remove' sends a 301 to the canonical
-    | form for GET and HEAD requests on Statamic's front-end routes.
-    |
-    */
-
-    'trailing_slash' => null,
 
     /*
     |--------------------------------------------------------------------------

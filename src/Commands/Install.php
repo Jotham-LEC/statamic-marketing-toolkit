@@ -15,7 +15,7 @@ use Statamic\Structures\Page;
 /**
  * `php please seo:install`: creates the "SEO & brand" global set and its
  * blueprint through Statamic's API, so editors can fill in the site name,
- * defaults, publisher, verification codes, robots.txt, humans.txt and the
+ * defaults, publisher, verification codes, robots.txt and the
  * share-card colours in the control panel. Safe to rerun: it adds nothing
  * that already exists.
  */
@@ -79,7 +79,6 @@ class Install extends Command
         $homeDescription = data_get($home?->get('seo'), 'description') ?: $home?->get('description');
 
         $defaults = array_filter([
-            'site_name' => $site->name(),
             'title_separator' => '·',
             'default_description' => is_string($homeDescription) && $homeDescription !== '' ? $homeDescription : null,
             'robots_disallow' => ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'],
@@ -108,7 +107,6 @@ class Install extends Command
 
         return [
             'brand' => ['display' => 'Brand', 'sections' => [['fields' => [
-                $field('site_name', ['type' => 'text', 'display' => 'Site name', 'width' => 50, 'instructions' => 'After each page title, and in og:site_name.']),
                 $field('title_separator', ['type' => 'text', 'display' => 'Title separator', 'width' => 50, 'placeholder' => '·', 'instructions' => 'Between the page title and the site name, with a space on each side.']),
                 $field('default_description', ['type' => 'textarea', 'display' => 'Default description', 'character_limit' => 160, 'instructions' => 'For pages with no description and no first paragraph.']),
                 $field('default_image', $asset('Default share image', 'For pages without an image or a generated card. 1200×630.')),
@@ -122,7 +120,7 @@ class Install extends Command
                 $field('telephone', ['type' => 'text', 'display' => 'Telephone', 'width' => 50]),
                 $field('email', ['type' => 'text', 'input_type' => 'email', 'display' => 'Email', 'width' => 50]),
                 $field('area_served', ['type' => 'text', 'display' => 'Area served', 'width' => 50]),
-                $field('price_range', ['type' => 'text', 'display' => 'Price range', 'width' => 50, 'placeholder' => 'RM 100–500']),
+                $field('price_range', ['type' => 'text', 'display' => 'Price range', 'width' => 50, 'placeholder' => '$$']),
                 $field('same_as', ['type' => 'list', 'display' => 'Profiles elsewhere', 'instructions' => 'Full URLs: LinkedIn, Instagram, Google Business Profile…']),
             ]]]],
             'share_cards' => ['display' => 'Share cards', 'sections' => [['instructions' => 'Colours and picture for generated share images.', 'fields' => [
@@ -138,7 +136,6 @@ class Install extends Command
                 $field('pinterest_verification', ['type' => 'text', 'display' => 'Pinterest verification', 'width' => 50]),
                 $field('robots_disallow', ['type' => 'list', 'display' => 'robots.txt Disallow', 'instructions' => 'Paths to keep crawlers out of. Empty: the control panel.']),
                 $field('robots_extra', ['type' => 'textarea', 'display' => 'robots.txt extra lines', 'instructions' => 'Added as typed, e.g. rules for AI crawlers.']),
-                $field('humans', ['type' => 'textarea', 'display' => 'humans.txt', 'instructions' => 'Served at /humans.txt when filled in.']),
             ]]]],
         ];
     }

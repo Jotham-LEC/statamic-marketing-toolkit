@@ -18,7 +18,7 @@ use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
 
-beforeEach(fn () => seoGlobal(['site_name' => 'Acme']));
+beforeEach(fn () => seoGlobal([]));
 
 /**
  * @param  array<string, mixed>  $values

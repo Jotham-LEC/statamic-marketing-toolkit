@@ -62,7 +62,6 @@ class OverviewController
             'files' => collect([
                 'Sitemap' => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
                 'robots.txt' => config('seo.robots_txt') ? 'robots.txt' : null,
-                'humans.txt' => config('seo.humans_txt') && $seo->humansTxt() ? 'humans.txt' : null,
                 'Home share card' => config('seo.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
         ]);

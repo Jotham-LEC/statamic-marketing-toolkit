@@ -10,7 +10,7 @@ use Statamic\Facades\Term;
 use Symfony\Component\Yaml\Yaml;
 
 beforeEach(function () {
-    seoGlobal(['site_name' => 'Acme']);
+    seoGlobal([]);
 
     foreach (['collections.pages' => 'page', 'taxonomies.topics' => 'topic'] as $namespace => $handle) {
         Blueprint::make($handle)->setNamespace($namespace)->setContents(['tabs' => ['main' => ['sections' => [['fields' => [

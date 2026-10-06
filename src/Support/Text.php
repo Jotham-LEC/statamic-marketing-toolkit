@@ -2,8 +2,6 @@
 
 namespace JothamLec\Seo\Support;
 
-use Illuminate\Support\Str;
-
 class Text
 {
     /**
@@ -33,19 +31,16 @@ class Text
     }
 
     /**
-     * The text of the first paragraph of an HTML body, skipping paragraphs
-     * that start with one of $skipPrefixes (a credit line, an editor's note).
-     *
-     * @param  list<string>  $skipPrefixes
+     * The text of the first paragraph of an HTML body that says something.
      */
-    public static function firstParagraph(string $html, array $skipPrefixes = []): ?string
+    public static function firstParagraph(string $html): ?string
     {
         preg_match_all('#<p[^>]*>(.*?)</p>#is', $html, $matches);
 
         foreach ($matches[1] as $paragraph) {
             $text = self::plain($paragraph);
 
-            if ($text !== '' && ! Str::startsWith($text, $skipPrefixes)) {
+            if ($text !== '') {
                 return $text;
             }
         }

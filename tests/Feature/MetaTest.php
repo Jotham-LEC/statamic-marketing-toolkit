@@ -5,7 +5,7 @@ use JothamLec\Seo\SiteSeo;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 
-beforeEach(fn () => seoGlobal(['site_name' => 'Acme', 'default_description' => 'The default.']));
+beforeEach(fn () => seoGlobal(['default_description' => 'The default.']));
 
 describe('title', function () {
     test('a page is "{title} · {site}"; home is the site name', function () {
@@ -37,10 +37,10 @@ describe('description', function () {
             ->and(metaFor(entryIn('pages', 'd'))->description)->toBe('The default.');
     });
 
-    test('a credit line at the top is skipped, and a long text is cut on a word', function () {
-        config(['seo.description.skip_prefixes' => ['This article first appeared'], 'seo.description.length' => 30]);
+    test('an empty first paragraph is passed over, and a long text is cut on a word', function () {
+        config(['seo.description.length' => 30]);
 
-        $entry = entryIn('pages', 'reprint', ['content' => "This article first appeared in The Times.\n\nThe real opening paragraph runs on for a while."]);
+        $entry = entryIn('pages', 'long', ['content' => "&nbsp;\n\nThe real opening paragraph runs on for a while."]);
 
         expect(metaFor($entry)->description)->toBe('The real opening paragraph…');
     });

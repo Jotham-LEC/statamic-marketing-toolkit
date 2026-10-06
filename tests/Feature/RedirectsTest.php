@@ -3,6 +3,7 @@
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 use JothamLec\Seo\Redirects\Redirect;
+use Statamic\Facades\URL;
 
 function rule(string $source, ?string $target, int $status = 301, bool $active = true): Redirect
 {
@@ -64,13 +65,12 @@ test('another site\'s address is kept as typed', function () {
     $this->get('/shop')->assertRedirect('https://shop.example.com/');
 });
 
-test('targets get the trailing slash on a site that adds them, so there is one hop', function () {
-    config(['seo.trailing_slash' => 'add']);
+test('targets get the trailing slash on a site that has Statamic add them, so there is one hop', function () {
+    URL::enforceTrailingSlashes();
     rule('/old', '/new');
     rule('/old-file', '/files/report.pdf');
 
-    // The test client strips trailing slashes (and TrailingSlash would add
-    // one first), so the slashed request goes straight to the kernel.
+    // The test client strips trailing slashes, so the slashed request goes straight to the kernel.
     $location = fn (string $uri) => app(Kernel::class)->handle(Request::create('https://example.test'.$uri))->headers->get('Location');
 
     expect($location('/old/'))->toBe('https://example.test/new/')

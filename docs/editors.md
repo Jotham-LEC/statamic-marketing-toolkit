@@ -13,7 +13,6 @@ The overview: the latest report's score, recent 404s, redirects, and the brand d
 **Globals → SEO & brand** holds what applies to the whole site. Fill it in once and come back when something changes.
 
 **Brand tab**
-- **Site name**: shown after each page's title in Google ("About us · Acme") and on share cards.
 - **Title separator**: what goes between the page title and the site name, with a space added on each side. Leave empty for "·".
 - **Default description**: used for pages that have no description and no text to borrow one from.
 - **Default share image**: shown when a page is shared and has no picture of its own. 1200 × 630 pixels works best.
@@ -27,7 +26,6 @@ The overview: the latest report's score, recent 404s, redirects, and the brand d
 - **Verification** codes from Google Search Console, Bing, Yandex or Pinterest, when they ask you to prove you own the site.
 - **robots.txt Disallow**: parts of the site search engines shouldn't visit. Leave empty unless you're told otherwise.
 - **robots.txt extra lines**: extra rules, for example for AI crawlers.
-- **humans.txt**: credits for the people behind the site, shown at `/humans.txt`.
 
 ## A page's SEO tab
 
@@ -61,7 +59,6 @@ All optional. Empty means "use the default".
 | **Description** | The text under the title in Google, and on share cards. | The page's own description, or its first paragraph. |
 | **Share image** | The picture when the page is shared. Cropped to 1200 × 630. | A share card is drawn for the page automatically (see below). |
 | **Card title** / **Card subtitle** | The words on the generated share card. | The title and the description. |
-| **Card template** | Another card design, if your developer has made more. | The usual design. |
 | **og:type** | What kind of page this is for Facebook (website, article…). | Set by the developer per section. |
 | **Canonical URL** | Only for a piece first published on another site: the original's address, so search engines credit it. | This page's own address. |
 | **Hide from search engines** | Keeps the page out of Google. | The page can be found. |

@@ -9,7 +9,6 @@ use JothamLec\Seo\Commands\Report;
 use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\Fieldtypes\SeoPreview;
 use JothamLec\Seo\Http\Middleware\HandleMissing;
-use JothamLec\Seo\Http\Middleware\TrailingSlash;
 use JothamLec\Seo\Listeners\FlushSitemap;
 use JothamLec\Seo\Listeners\RedirectChangedUris;
 use JothamLec\Seo\Reports\ReportSettings;
@@ -22,7 +21,6 @@ use Statamic\Events\EntryScheduleReached;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
-use Statamic\Facades\URL;
 use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
@@ -45,7 +43,7 @@ class ServiceProvider extends AddonServiceProvider
     ];
 
     protected $middlewareGroups = [
-        'statamic.web' => [TrailingSlash::class, HandleMissing::class],
+        'statamic.web' => [HandleMissing::class],
     ];
 
     protected $listen = [
@@ -75,10 +73,6 @@ class ServiceProvider extends AddonServiceProvider
     public function bootAddon(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-
-        if (config('seo.trailing_slash') === 'add') {
-            URL::enforceTrailingSlashes();
-        }
 
         Permission::extend(fn () => Permission::group('seo', 'SEO', function () {
             Permission::register('view seo')->label('View SEO overview, reports and 404s');

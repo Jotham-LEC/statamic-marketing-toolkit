@@ -4,7 +4,6 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use JothamLec\Seo\Http\Controllers\HumansController;
 use JothamLec\Seo\Http\Controllers\OgImageController;
 use JothamLec\Seo\Http\Controllers\RobotsController;
 use JothamLec\Seo\Http\Controllers\SitemapController;
@@ -32,10 +31,6 @@ Route::withoutMiddleware([
 
         if (config('seo.robots_txt') && ! file_exists(public_path('robots.txt'))) {
             Route::get('robots.txt', RobotsController::class)->name('robots');
-        }
-
-        if (config('seo.humans_txt')) {
-            Route::get('humans.txt', HumansController::class)->name('humans');
         }
 
         if (config('seo.og.enabled')) {

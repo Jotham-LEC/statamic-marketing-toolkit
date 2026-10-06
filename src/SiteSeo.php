@@ -568,7 +568,7 @@ class SiteSeo
 
     /*
     |--------------------------------------------------------------------------
-    | Robots.txt and humans.txt
+    | Robots.txt
     |--------------------------------------------------------------------------
     */
 
@@ -597,11 +597,6 @@ class SiteSeo
         }
 
         return implode("\n", $lines)."\n";
-    }
-
-    public function humansTxt(): ?string
-    {
-        return $this->settings->string('humans');
     }
 
     /*
@@ -662,7 +657,7 @@ class SiteSeo
             $html = Markdown::parse($html);
         }
 
-        return Text::firstParagraph($html, (array) config('seo.description.skip_prefixes'));
+        return Text::firstParagraph($html);
     }
 
     /**

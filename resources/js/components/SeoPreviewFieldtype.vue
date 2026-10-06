@@ -87,7 +87,7 @@ watch(values, fetchMeta, { deep: true, immediate: true });
 // The card is slower to draw, so redraw it only when its own words change.
 const cardKey = computed(() =>
     resolved.value?.image?.generated
-        ? JSON.stringify([ogTitle.value, description.value, seo.value.og_title, seo.value.og_subtitle, seo.value.og_template])
+        ? JSON.stringify([ogTitle.value, description.value, seo.value.og_title, seo.value.og_subtitle])
         : null,
 );
 watch(cardKey, (key) => key && props.meta.og && fetchCard());

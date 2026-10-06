@@ -17,15 +17,18 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Role;
 use Statamic\Facades\Site;
+use Statamic\Facades\URL;
 use Statamic\Facades\User;
 
 uses(TestCase::class)
     ->beforeEach(function () {
         $this->app['env'] = 'production';
+        // Statamic keeps this in a static flag; a test that turns it on must not leak.
+        URL::enforceTrailingSlashes(false);
         // Production env makes Laravel's CSRF check live; the CP sends the token.
         $this->withoutMiddleware([PreventRequestForgery::class, VerifyCsrfToken::class]);
 
-        Site::setSites(['default' => ['name' => 'Default', 'url' => 'https://example.test/', 'locale' => 'en_US']]);
+        Site::setSites(['default' => ['name' => 'Acme', 'url' => 'https://example.test/', 'locale' => 'en_US']]);
         AssetContainer::make('assets')->disk('assets')->save();
         Collection::make('home')->routes('/')->save();
         Collection::make('pages')->routes('{slug}')->save();

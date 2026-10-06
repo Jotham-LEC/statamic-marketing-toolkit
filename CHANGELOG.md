@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.5.0 – 2026-10-06
+
+Leaner, for fresh Statamic sites: Statamic's own settings first, and what only one site needs goes in that site's `SiteSeo` subclass.
+
+### Removed
+- **Trailing-slash redirects** (`seo.trailing_slash`, the `TrailingSlash` middleware). Leave them to the web server, or to the site. Redirect targets still get a trailing slash when the site has Statamic add them (`URL::enforceTrailingSlashes()`).
+- **The "Site name" field** of SEO & brand. The site's name is Statamic's own (Settings → Sites, else `APP_NAME`); a value saved in the global is no longer read.
+- **`seo.description.skip_prefixes`**. A site that must pass over some opening paragraphs overrides `contentDescription()` in its subclass.
+- **humans.txt** (`seo.humans_txt`, the global's humans.txt field, `SiteSeo::humansTxt()`).
+- **The per-entry "Card template" field.** A collection still picks a template with `og_template`.
+
+### Changed
+- The 404 log also leaves out what browsers and crawlers ask for on their own (`/favicon.ico`, `/apple-touch-icon*`, `/build/*`, scripts, styles, images, fonts), so broken links aren't pushed out.
+- The publisher's price-range placeholder is `$$`.
+
+### Upgrading
+Remove `trailing_slash`, `humans_txt` and `description.skip_prefixes` from a published `config/seo.php` (left in, they do nothing). Set the site's name under Settings → Sites if the global's differed from `APP_NAME`.
+
 ## 0.4.0 – 2026-10-06
 
 ### Added
