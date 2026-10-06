@@ -26,6 +26,17 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
 
 Nothing prints outside production (`seo.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it.
 
+A site that prints its own meta tags (a Laravel layout that doesn't use `<s:seo:meta />`) takes the tags alone, so the page doesn't get two sets of meta tags. Put any Consent Mode defaults of your own before them:
+
+```blade
+<head>
+    …
+    {!! app(\JothamLec\MarketingToolkit\Tracking\Tracking::class)->head() !!}
+</head>
+<body>
+    <s:seo:body />
+```
+
 ## One tool, one place: use Google Tag Manager
 
 With Google Tag Manager set, add GA4, PostHog, Meta and LinkedIn **as tags inside GTM** and leave their IDs empty here. A tool loaded by GTM and by this addon counts every visit twice. The Tracking tab shows a warning as soon as both are set, saving the global shows a reminder, and Tools → SEO lists the tools to move.

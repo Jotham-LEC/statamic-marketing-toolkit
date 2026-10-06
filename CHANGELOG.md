@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.18.1 – 2026-10-06
+
+Two fixes from Co-SEO 0.13.2 and 0.13.3 that 0.18.0 left out.
+
+### Fixed
+- With Runway installed, the Redirects and 404s listings answered 500: Statamic asks every registered action whether it applies to a row, and Runway's Publish and Unpublish assume any database row is one of theirs. The listings now offer only the addon's own actions (Delete, Create redirect).
+- Between installing or upgrading the addon and running `migrate`, a missing page answered 500: the redirect lookup read a table that wasn't there yet. The lookup, the hit count and the 404 log are now reported when they fail, and the page answers its 404 as it would without them.
+
+### Docs
+- A site that prints its own meta tags puts the tracking tags in its layout with `Tracking::head()` and `<s:seo:body />`, not `<s:seo:head />`.
+
 ## 0.18.0 – 2026-10-06
 
 Co-SEO is now **Marketing Toolkit**: the marketing fundamentals of a website, not only its SEO.
