@@ -3,6 +3,7 @@
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
 use Inertia\Testing\AssertableInertia;
@@ -309,4 +310,16 @@ test('a report page has no edit link for someone who may not edit it', function 
     $this->actingAs(cpUser(['view seo']));
 
     expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.edit_url'))->toBe([null, null]);
+});
+
+test('a report checks links to other sites only when its settings ask', function () {
+    Http::fake(['gone.test/*' => Http::response('', 404)]);
+    entryIn('pages', 'about', ['body' => '<a href="https://gone.test/a">Gone</a>']);
+
+    expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe([]);
+    Http::assertNothingSent();
+
+    reportSettings(['rule_external_links' => true]);
+
+    expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe(['https://gone.test/a']);
 });

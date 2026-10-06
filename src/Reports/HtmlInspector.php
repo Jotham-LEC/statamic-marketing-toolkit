@@ -5,6 +5,7 @@ namespace JothamLec\Seo\Reports;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use JothamLec\Seo\Support\Uris;
 use Statamic\Facades\Site;
 
 /**
@@ -34,7 +35,7 @@ class HtmlInspector
             }
         }
 
-        [$broken, $redirected] = $this->links($xpath);
+        [$broken, $redirected, $internal, $external] = $this->links($xpath);
         [$jsonLd, $jsonLdErrors] = $this->jsonLd($xpath);
 
         return new PageFacts(
@@ -48,6 +49,8 @@ class HtmlInspector
             imagesWithoutAlt: $imagesWithoutAlt,
             brokenLinks: $broken,
             redirectedLinks: $redirected,
+            internalLinks: $internal,
+            externalLinks: $external,
             ogImage: $this->attribute($xpath, '//head/meta[@property="og:image"]', 'content'),
             jsonLd: $jsonLd,
             jsonLdErrors: $jsonLdErrors,
@@ -55,12 +58,15 @@ class HtmlInspector
     }
 
     /**
-     * @return array{0: list<string>, 1: list<string>}
+     * The page's links: broken and redirected paths on this site, every path
+     * on this site it links to, and its links to other sites.
+     *
+     * @return array{0: list<string>, 1: list<string>, 2: list<string>, 3: list<string>}
      */
     private function links(DOMXPath $xpath): array
     {
         $host = parse_url(Site::current()->absoluteUrl(), PHP_URL_HOST);
-        $broken = $redirected = [];
+        $broken = $redirected = $internal = $external = [];
 
         foreach ($xpath->query('//body//a[@href]') as $link) {
             /** @var DOMElement $link */
@@ -72,7 +78,13 @@ class HtmlInspector
 
             $parts = parse_url($href);
 
-            if ($parts === false || (isset($parts['host']) && strcasecmp($parts['host'], (string) $host) !== 0) || (isset($parts['scheme']) && ! in_array(strtolower($parts['scheme']), ['http', 'https'], true))) {
+            if ($parts === false || (isset($parts['scheme']) && ! in_array(strtolower($parts['scheme']), ['http', 'https'], true))) {
+                continue;
+            }
+
+            if (isset($parts['host']) && strcasecmp($parts['host'], (string) $host) !== 0) {
+                $external[] = strtok($href, '#');
+
                 continue;
             }
 
@@ -83,6 +95,8 @@ class HtmlInspector
                 continue;
             }
 
+            $internal[] = Uris::normalizePath($path);
+
             match ($this->links->check($path)) {
                 'broken' => $broken[] = $path,
                 'redirect' => $redirected[] = $path,
@@ -90,7 +104,7 @@ class HtmlInspector
             };
         }
 
-        return [array_values(array_unique($broken)), array_values(array_unique($redirected))];
+        return array_map(fn (array $links) => array_values(array_unique($links)), [$broken, $redirected, $internal, $external]);
     }
 
     /**

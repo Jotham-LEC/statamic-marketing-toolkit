@@ -8,10 +8,12 @@ use JothamLec\Seo\Reports\Rules\BrokenLinks;
 use JothamLec\Seo\Reports\Rules\Canonical;
 use JothamLec\Seo\Reports\Rules\DescriptionLength;
 use JothamLec\Seo\Reports\Rules\DescriptionUnique;
+use JothamLec\Seo\Reports\Rules\ExternalLinks;
 use JothamLec\Seo\Reports\Rules\ImageAlt;
 use JothamLec\Seo\Reports\Rules\JsonLd;
 use JothamLec\Seo\Reports\Rules\NoindexInSitemap;
 use JothamLec\Seo\Reports\Rules\OgImage;
+use JothamLec\Seo\Reports\Rules\OrphanPages;
 use JothamLec\Seo\Reports\Rules\Rule;
 use JothamLec\Seo\Reports\Rules\SingleH1;
 use JothamLec\Seo\Reports\Rules\TitleLength;
@@ -35,13 +37,13 @@ class Runner
     public const array RULES = [
         TitleLength::class, TitleUnique::class, DescriptionLength::class, DescriptionUnique::class,
         SingleH1::class, Canonical::class, NoindexInSitemap::class, ImageAlt::class,
-        BrokenLinks::class, OgImage::class, JsonLd::class,
+        BrokenLinks::class, OgImage::class, JsonLd::class, OrphanPages::class, ExternalLinks::class,
     ];
 
     /** A running report that hasn't moved for this long is taken to have died. */
     private const int STALE_MINUTES = 30;
 
-    public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo) {}
+    public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo, private ExternalLinkChecker $externalLinks) {}
 
     /**
      * A new report, or the one already running. One start at a time: a click
@@ -104,7 +106,11 @@ class Runner
                     : new PageFacts(status: $rendered['status'], error: $rendered['error']);
             }
 
-            $facts = new PageFacts(...[...$facts->toArray(), 'inSitemap' => $page->in_sitemap]);
+            $broken = $report->settings()->ruleEnabled(ExternalLinks::handle()) && $facts->externalLinks !== []
+                ? $this->externalLinks->broken($facts->externalLinks)
+                : [];
+
+            $facts = new PageFacts(...[...$facts->toArray(), 'inSitemap' => $page->in_sitemap, 'brokenExternalLinks' => $broken]);
 
             $page->update(['checked' => true, 'facts' => $facts->toArray(), 'title' => $facts->title ?? $page->title]);
         }

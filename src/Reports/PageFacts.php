@@ -11,6 +11,9 @@ final readonly class PageFacts
      * @param  list<string>  $h1s
      * @param  list<string>  $brokenLinks  paths on this site that lead nowhere
      * @param  list<string>  $redirectedLinks  paths answered by a redirect rule
+     * @param  list<string>  $internalLinks  every path on this site the page links to
+     * @param  list<string>  $externalLinks  its links to other sites
+     * @param  list<string>  $brokenExternalLinks  those that lead nowhere (when checked)
      * @param  list<string>  $jsonLdErrors
      * @param  bool  $inSitemap  whether the sitemap lists the page (not read from the HTML)
      */
@@ -26,6 +29,9 @@ final readonly class PageFacts
         public int $imagesWithoutAlt = 0,
         public array $brokenLinks = [],
         public array $redirectedLinks = [],
+        public array $internalLinks = [],
+        public array $externalLinks = [],
+        public array $brokenExternalLinks = [],
         public ?string $ogImage = null,
         public int $jsonLd = 0,
         public array $jsonLdErrors = [],

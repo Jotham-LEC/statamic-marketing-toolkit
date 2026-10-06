@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Http;
 use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Reports\ExternalLinkChecker;
 use JothamLec\Seo\Reports\HtmlInspector;
 use JothamLec\Seo\Reports\PageFacts;
 use JothamLec\Seo\Reports\ReportSettings;
@@ -8,10 +10,12 @@ use JothamLec\Seo\Reports\Rules\BrokenLinks;
 use JothamLec\Seo\Reports\Rules\Canonical;
 use JothamLec\Seo\Reports\Rules\DescriptionLength;
 use JothamLec\Seo\Reports\Rules\DescriptionUnique;
+use JothamLec\Seo\Reports\Rules\ExternalLinks;
 use JothamLec\Seo\Reports\Rules\ImageAlt;
 use JothamLec\Seo\Reports\Rules\JsonLd;
 use JothamLec\Seo\Reports\Rules\NoindexInSitemap;
 use JothamLec\Seo\Reports\Rules\OgImage;
+use JothamLec\Seo\Reports\Rules\OrphanPages;
 use JothamLec\Seo\Reports\Rules\SingleH1;
 use JothamLec\Seo\Reports\Rules\TitleLength;
 use JothamLec\Seo\Reports\Rules\TitleUnique;
@@ -129,4 +133,47 @@ test('a share image and structured data', function () {
         ->and(verdict(JsonLd::class, ['jsonLd' => 0]))->toBe('warn')
         ->and(verdict(JsonLd::class, ['jsonLd' => 1]))->toBe('pass')
         ->and(verdict(JsonLd::class, ['jsonLd' => 1, 'jsonLdErrors' => ['Block 1: Syntax error']]))->toBe('fail');
+});
+
+test('the inspector keeps every link to this site and to others', function () {
+    entryIn('pages', 'about');
+
+    $facts = app(HtmlInspector::class)->inspect(<<<'HTML'
+        <html><head><title>T</title></head><body>
+        <a href="/about/">About</a><a href="https://example.test/">Home</a><a href="/about#team">Team</a>
+        <a href="https://other.test/x#top">Other</a><a href="mailto:a@b.c">Mail</a>
+        </body></html>
+        HTML);
+
+    expect($facts->internalLinks)->toBe(['/about', '/'])
+        ->and($facts->externalLinks)->toBe(['https://other.test/x']);
+});
+
+test('a page in the sitemap that no other page links to is flagged; home is not', function () {
+    $site = new SiteFacts(new ReportSettings([]));
+    $site->add('https://example.test/', new PageFacts(internalLinks: ['/', '/linked']));
+    $site->add('https://example.test/self', new PageFacts(internalLinks: ['/self']));
+
+    expect(verdict(OrphanPages::class, ['inSitemap' => true], $site, 'https://example.test/linked'))->toBe('pass')
+        ->and(verdict(OrphanPages::class, ['inSitemap' => true], $site, 'https://example.test/self'))->toBe('warn')
+        ->and(verdict(OrphanPages::class, ['inSitemap' => true], $site, 'https://example.test/'))->toBe('pass')
+        ->and(verdict(OrphanPages::class, ['inSitemap' => false], $site, 'https://example.test/hidden'))->toBe('pass');
+});
+
+test('only a clear miss is a broken link to another site, and each address is asked once a day', function () {
+    Http::fake([
+        'gone.test/*' => Http::response('', 404),
+        'fine.test/*' => Http::response('', 200),
+        'blocked.test/*' => Http::response('', 403),
+        'busy.test/*' => Http::response('', 503),
+    ]);
+    $checker = app(ExternalLinkChecker::class);
+    $urls = ['https://gone.test/a', 'https://fine.test/b', 'https://blocked.test/c', 'https://busy.test/d'];
+
+    expect($checker->broken($urls))->toBe(['https://gone.test/a'])
+        ->and($checker->broken($urls))->toBe(['https://gone.test/a']);
+
+    // Four HEADs, and a GET for the site that refused HEAD; nothing the second time.
+    Http::assertSentCount(5);
+    expect(verdict(ExternalLinks::class, ['brokenExternalLinks' => ['https://gone.test/a']]))->toBe('fail');
 });

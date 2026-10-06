@@ -34,6 +34,12 @@ tabs:
             handle: rule_broken_links
             field: { type: toggle, display: 'Broken links to this site', default: true, width: 33 }
           -
+            handle: rule_orphan_pages
+            field: { type: toggle, display: 'Pages no other page links to', default: true, width: 33 }
+          -
+            handle: rule_external_links
+            field: { type: toggle, display: 'Broken links to other sites', instructions: 'Asks each linked site; off by default.', default: false, width: 33 }
+          -
             handle: rule_og_image
             field: { type: toggle, display: 'Share image', default: true, width: 33 }
           -

@@ -46,7 +46,7 @@ php please seo:install
   - a live **Google and share preview** with length counters on every page
   - **Redirects** (wildcards, 301/302/410, CSV), added automatically when a page's address changes, with a question first
   - a **404 log** with one-click redirects
-  - **reports** that render every page, check it against eleven rules and score the site
+  - **reports** that render every page, check it against thirteen rules and score the site
   - a **dashboard widget**
 - **Rules in code**: one class, `SiteSeo`, works out every value; extend it to change one rule for one site.
 

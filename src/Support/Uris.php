@@ -11,6 +11,17 @@ use Statamic\Facades\Blink;
  */
 final class Uris
 {
+    /**
+     * A path compared with others: decoded, without a trailing slash (home
+     * stays `/`).
+     */
+    public static function normalizePath(string $path): string
+    {
+        $path = '/'.trim(rawurldecode((string) parse_url($path, PHP_URL_PATH)), '/');
+
+        return $path;
+    }
+
     public static function forget(): void
     {
         Blink::store('entry-uris')->flush();

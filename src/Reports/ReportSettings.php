@@ -11,6 +11,8 @@ use Statamic\Facades\Addon;
 class ReportSettings
 {
     public const array DEFAULTS = [
+        // Off until asked for: it sends requests to the sites a page links to.
+        'rule_external_links' => false,
         'title_min' => 30,
         'title_max' => 60,
         'description_min' => 50,

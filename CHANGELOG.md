@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 – 2026-10-06
+
+### Added
+- Report check **Linked from another page**: a page in the sitemap that no other page links to is a warning (the home page is exempt).
+- Report check **Links to other sites**, off by default (Tools → Addons → SEO): asks each site a page links to, several at a time, and flags only clear misses (404, 410, a host that doesn't resolve); refusals, server errors and timeouts aren't counted. Each answer is kept for a day.
+
 ## 0.8.0 – 2026-10-06
 
 ### Added

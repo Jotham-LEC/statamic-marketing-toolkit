@@ -2,6 +2,8 @@
 
 namespace JothamLec\Seo\Reports;
 
+use JothamLec\Seo\Support\Uris;
+
 /**
  * What the checks know about the whole run: its settings, and which titles
  * and descriptions more than one page uses.
@@ -14,6 +16,9 @@ final class SiteFacts
     /** @var array<string, list<string>> lowercased description => urls */
     private array $descriptions = [];
 
+    /** @var array<string, array<string, true>> path => urls of the pages that link to it */
+    private array $inbound = [];
+
     public function __construct(public readonly ReportSettings $settings) {}
 
     public function add(string $url, PageFacts $facts): void
@@ -25,6 +30,20 @@ final class SiteFacts
         if ($facts->description !== null) {
             $this->descriptions[mb_strtolower($facts->description)][] = $url;
         }
+
+        foreach ($facts->internalLinks as $path) {
+            $this->inbound[$path][$url] = true;
+        }
+    }
+
+    /**
+     * @return list<string> the other pages that link to this one
+     */
+    public function linkedFrom(string $url): array
+    {
+        $path = Uris::normalizePath($url);
+
+        return array_values(array_diff(array_keys($this->inbound[$path] ?? []), [$url]));
     }
 
     /**
