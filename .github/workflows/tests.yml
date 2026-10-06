@@ -50,7 +50,7 @@ jobs:
 
       # One Postgres database, so that run is serial.
       - name: Tests
-        run: vendor/bin/pest ${{ matrix.db == 'sqlite' && '--parallel' || '' }}
+        run: vendor/bin/pest --display-warnings --fail-on-warning ${{ matrix.db == 'sqlite' && '--parallel' || '' }}
         env:
           SEO_TEST_DB: ${{ matrix.db == 'pgsql' && 'pgsql' || '' }}
           DB_USERNAME: postgres
