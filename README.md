@@ -47,4 +47,4 @@ Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.c
 
 ## Licence and support
 
-Marketing Toolkit is a commercial addon by CoThinking. All rights reserved. Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).
+Marketing Toolkit is a commercial addon by CoThinking; see [the licence](LICENSE.md) for what it allows and the third-party software it uses. Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).
