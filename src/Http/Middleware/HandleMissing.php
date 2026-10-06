@@ -37,7 +37,9 @@ class HandleMissing
         }
 
         $path = $this->recorder->path($request);
-        $rule = config('seo.redirects.enabled') ? $this->matcher->match($path, (string) $request->getQueryString()) : null;
+        // The lookup reads the rules table. Missing (the addon installed, `migrate` not yet run) or
+        // failing, it is reported and the address answers its 404 as before, not a 500.
+        $rule = config('seo.redirects.enabled') ? rescue(fn () => $this->matcher->match($path, (string) $request->getQueryString()), null) : null;
 
         // A rule back to the address asked for would loop; the address is simply missing.
         if ($rule && $rule['target'] !== null && str_starts_with($rule['target'], '/') && Redirect::normalize($rule['target']) === $path) {
@@ -66,12 +68,13 @@ class HandleMissing
 
     public function terminate(Request $request, Response $response): void
     {
+        // Bookkeeping after the response has gone out: a failure is reported, not thrown.
         if ($id = $request->attributes->get('seo.redirect_hit')) {
-            Redirect::query()->whereKey($id)->increment('hits', 1, ['last_hit_at' => now()]);
+            rescue(fn () => Redirect::query()->whereKey($id)->increment('hits', 1, ['last_hit_at' => now()]));
         }
 
         if ($request->attributes->get('seo.record_missing')) {
-            $this->recorder->record($request);
+            rescue(fn () => $this->recorder->record($request));
         }
     }
 }
