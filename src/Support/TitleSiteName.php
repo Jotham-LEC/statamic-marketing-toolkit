@@ -19,17 +19,18 @@ final class TitleSiteName
     {
         try {
             $set = GlobalSet::findByHandle((string) config('seo.global', 'seo'));
-        } catch (Throwable) {
-            // Statamic's storage isn't ready (a fresh install): nothing to keep.
-            return;
-        }
 
-        foreach ($set?->localizations() ?? [] as $variables) {
-            $data = $variables->data();
+            foreach ($set?->localizations() ?? [] as $variables) {
+                $data = $variables->data();
 
-            if (filled($data->get('title_separator')) && ! $data->has('title_site_name')) {
-                $variables->set('title_site_name', true)->save();
+                if (filled($data->get('title_separator')) && ! $data->has('title_site_name')) {
+                    $variables->set('title_site_name', true)->save();
+                }
             }
+        } catch (Throwable $e) {
+            // Statamic's storage isn't ready (a fresh install), or a save failed: the
+            // titles stay as they are, and the deploy isn't held up for it.
+            report($e);
         }
     }
 }
