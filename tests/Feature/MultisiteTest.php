@@ -85,7 +85,7 @@ test('one process serves each site its own meta, whichever site it served first'
 test('each domain\'s sitemap lists that site\'s pages and terms only', function () {
     config(['seo.sitemap.taxonomies' => ['topics']]);
     Collection::make('services')->routes('services/{slug}')->sites(['cothinking'])->taxonomies(['topics'])->save();
-    Taxonomy::make('topics')->sites(['default', 'cothinking'])->save();
+    Taxonomy::make('topics')->termTemplate('default')->sites(['default', 'cothinking'])->save();
     Term::make()->taxonomy('topics')->slug('gardens')->dataForLocale('default', ['title' => 'Gardens'])->dataForLocale('cothinking', ['title' => 'Gardens'])->save();
 
     entryIn('pages', 'about');
@@ -233,7 +233,7 @@ describe('automatic redirects', function () {
     });
 
     test('a renamed term leaves a 301 on each site it moved on', function () {
-        Taxonomy::make('topics')->sites(['default', 'cothinking'])->save();
+        Taxonomy::make('topics')->termTemplate('default')->sites(['default', 'cothinking'])->save();
         tap(Term::make()->taxonomy('topics')->slug('gardens')->dataForLocale('default', ['title' => 'Gardens'])->dataForLocale('cothinking', ['title' => 'Gardens']))->save();
 
         Term::find('topics::gardens')->term()->syncOriginal()->slug('gardening')->save();
@@ -241,6 +241,17 @@ describe('automatic redirects', function () {
         expect(Redirect::query()->orderBy('site')->get(['site', 'source', 'target'])->toArray())->toBe([
             ['site' => 'cothinking', 'source' => '/topics/gardens', 'target' => '/topics/gardening'],
             ['site' => 'default', 'source' => '/topics/gardens', 'target' => '/topics/gardening'],
+        ]);
+    });
+
+    test('a renamed term of a taxonomy on another site only still leaves its 301', function () {
+        Taxonomy::make('topics')->termTemplate('default')->sites(['cothinking'])->save();
+        tap(Term::make()->taxonomy('topics')->slug('gardens')->dataForLocale('cothinking', ['title' => 'Gardens']))->save();
+
+        Term::find('topics::gardens')->term()->syncOriginal()->slug('gardening')->save();
+
+        expect(Redirect::query()->get(['site', 'source', 'target'])->toArray())->toBe([
+            ['site' => 'cothinking', 'source' => '/topics/gardens', 'target' => '/topics/gardening'],
         ]);
     });
 
