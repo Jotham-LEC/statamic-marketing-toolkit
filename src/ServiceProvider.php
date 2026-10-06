@@ -4,12 +4,11 @@ namespace JothamLec\Seo;
 
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
-use JothamLec\Seo\Actions\CreateRedirect;
-use JothamLec\Seo\Actions\DeleteSeoRecords;
 use JothamLec\Seo\Commands\Install;
 use JothamLec\Seo\Commands\Report;
 use JothamLec\Seo\Commands\SearchConsole;
 use JothamLec\Seo\Cp\Navigation;
+use JothamLec\Seo\Cp\RecordActions;
 use JothamLec\Seo\Fieldtypes\SeoPreview;
 use JothamLec\Seo\Http\Middleware\HandleMissing;
 use JothamLec\Seo\IndexNow\IndexNow;
@@ -46,7 +45,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $widgets = [SeoWidget::class];
 
-    protected $actions = [DeleteSeoRecords::class, CreateRedirect::class];
+    protected $actions = RecordActions::ACTIONS;
 
     protected $vite = [
         'input' => ['resources/js/addon.js', 'resources/css/addon.css'],
