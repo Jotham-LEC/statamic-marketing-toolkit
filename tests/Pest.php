@@ -105,3 +105,24 @@ function cpUser(array $permissions = [], bool $super = false): Statamic\Contract
 
     return tap($user)->save();
 }
+
+/**
+ * @return array<string, mixed>|null
+ */
+function nodeOf(Meta $meta, string $type): ?array
+{
+    return collect($meta->graph)->first(fn (array $node) => in_array($type, (array) $node['@type'], true));
+}
+
+/**
+ * The publisher node of a page, once the brand global holds $values.
+ *
+ * @param  array<string, mixed>  $values
+ * @return array<string, mixed>
+ */
+function publisherOf(array $values): array
+{
+    seoGlobal($values);
+
+    return collect(metaFor(entryIn('pages', 'about'))->graph)->firstWhere('@id', 'https://example.test/#publisher');
+}

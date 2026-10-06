@@ -56,6 +56,12 @@ return [
     |   'image_fields' => ['hero'],        // tried before the generated card
     |   'faq_field' => 'faqs',             // a grid of question / answer → FAQPage (valid markup; Google shows no FAQ results since 2026)
     |   'author_field' => 'authors',       // an entries or users field → the Article's authors (else the publisher)
+    |   'product' => [                     // a Product + Offer from these fields (needs a price above 0 and a currency)
+    |       'price_field' => 'price', 'availability_field' => 'in_stock', // a toggle, or InStock/PreOrder…
+    |       'sku_field' => 'sku', 'gtin_field' => null, 'brand_field' => null, 'brand' => 'Acme',
+    |       'currency' => null,            // else the SEO & brand global's Shop currency
+    |       'condition' => 'NewCondition',
+    |   ],
     |   'og_template' => 'default',        // a key of og.templates
     |
     */

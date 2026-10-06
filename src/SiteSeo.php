@@ -4,6 +4,7 @@ namespace JothamLec\Seo;
 
 use Closure;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use JothamLec\Seo\Support\SchemaTypes;
 use JothamLec\Seo\Support\Text;
 use Statamic\Contracts\Assets\Asset;
@@ -348,6 +349,7 @@ class SiteSeo
             $this->webPageNode($context),
             $this->breadcrumbNode($context),
             $this->articleNode($context),
+            $this->productNode($context),
             $this->faqNode($context),
             ...$this->customNodes($context),
             ...$this->extraNodes($context),
@@ -407,7 +409,68 @@ class SiteSeo
             'geo' => $local ? $this->geo() : null,
             'openingHoursSpecification' => $local ? $this->openingHours() : null,
             'sameAs' => $this->settings->list('same_as') ?: null,
+            'hasMerchantReturnPolicy' => $organization ? $this->returnPolicy() : null,
+            'hasShippingService' => $organization ? $this->shippingService() : null,
         ], fn ($value) => $value !== null && $value !== []);
+    }
+
+    /**
+     * The shop's return policy, for all its products (Google's preference):
+     * a window in days for a country, or just a link to the policy page.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function returnPolicy(): ?array
+    {
+        $link = $this->settings->string('return_policy_link');
+        $country = $this->settings->string('return_country');
+        $category = $this->settings->string('return_category');
+        $days = $this->settings->string('return_days');
+
+        if (! $link && ! ($country && $category)) {
+            return null;
+        }
+
+        return array_filter([
+            '@type' => 'MerchantReturnPolicy',
+            'applicableCountry' => $country,
+            'returnPolicyCategory' => $category ? 'https://schema.org/'.$category : null,
+            'merchantReturnDays' => $category === 'MerchantReturnFiniteReturnWindow' && is_numeric($days) ? (int) $days : null,
+            'merchantReturnLink' => $link,
+        ]);
+    }
+
+    /**
+     * The shop's shipping rates, from a grid: where to, for orders of what
+     * value, at what cost and how many days on the way.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function shippingService(): ?array
+    {
+        $currency = $this->settings->string('currency');
+
+        $conditions = collect($this->settings->rows('shipping_rates'))
+            ->filter(fn (array $row) => filled($row['country'] ?? null) && is_numeric($row['rate'] ?? null) && $currency)
+            ->map(fn (array $row) => array_filter([
+                '@type' => 'ShippingConditions',
+                'shippingDestination' => array_filter(['@type' => 'DefinedRegion', 'addressCountry' => $row['country'], 'addressRegion' => $row['region'] ?? null]),
+                'orderValue' => is_numeric($row['min_order'] ?? null) || is_numeric($row['max_order'] ?? null) ? array_filter([
+                    '@type' => 'MonetaryAmount',
+                    'minValue' => is_numeric($row['min_order'] ?? null) ? (float) $row['min_order'] : null,
+                    'maxValue' => is_numeric($row['max_order'] ?? null) ? (float) $row['max_order'] : null,
+                    'currency' => $currency,
+                ], fn ($value) => $value !== null) : null,
+                'shippingRate' => ['@type' => 'MonetaryAmount', 'value' => (float) $row['rate'], 'currency' => $currency],
+                'transitTime' => is_numeric($row['min_days'] ?? null) && is_numeric($row['max_days'] ?? null) ? [
+                    '@type' => 'ServicePeriod',
+                    'duration' => ['@type' => 'QuantitativeValue', 'minValue' => (int) $row['min_days'], 'maxValue' => (int) $row['max_days'], 'unitCode' => 'DAY'],
+                ] : null,
+            ]))
+            ->values()
+            ->all();
+
+        return $conditions === [] ? null : ['@type' => 'ShippingService', 'shippingConditions' => $conditions];
     }
 
     /**
@@ -644,6 +707,81 @@ class SiteSeo
             ->map(fn (array $author) => array_filter($author))
             ->values()
             ->all();
+    }
+
+    /**
+     * A product, from the fields the collection names (config `product`):
+     * price, availability, SKU, GTIN and brand, with the shop's currency.
+     * Left out without a price above zero, which Google requires.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function productNode(Context $context): ?array
+    {
+        $fields = $this->collectionConfig($context, 'product');
+        $entry = $context->entry;
+
+        if (! is_array($fields) || ! $entry) {
+            return null;
+        }
+
+        $value = fn (?string $field) => $field ? $this->plainValue($entry->augmentedValue($field)->value()) : null;
+        $price = $value($fields['price_field'] ?? 'price');
+        $currency = $fields['currency'] ?? $this->settings->string('currency');
+
+        if (! is_numeric($price) || (float) $price <= 0 || ! $currency) {
+            return null;
+        }
+
+        $brand = $value($fields['brand_field'] ?? null) ?? ($fields['brand'] ?? null);
+
+        return array_filter([
+            '@type' => 'Product',
+            '@id' => $this->url($context).'#product',
+            'name' => $this->contentTitle($context),
+            'description' => $this->description($context),
+            'image' => $this->articleImages($context) ?: null,
+            'sku' => $value($fields['sku_field'] ?? null),
+            'gtin' => $value($fields['gtin_field'] ?? null),
+            'brand' => is_string($brand) && $brand !== '' ? ['@type' => 'Brand', 'name' => $brand] : null,
+            'offers' => array_filter([
+                '@type' => 'Offer',
+                'url' => $this->url($context),
+                'price' => (float) $price,
+                'priceCurrency' => $currency,
+                'availability' => $this->availability($value($fields['availability_field'] ?? null) ?? true),
+                'itemCondition' => 'https://schema.org/'.($fields['condition'] ?? 'NewCondition'),
+            ]),
+        ], fn ($node) => $node !== null);
+    }
+
+    /**
+     * schema.org availability from a toggle (in stock or not) or a value such
+     * as `InStock`, `PreOrder` or `https://schema.org/OutOfStock`.
+     */
+    protected function availability(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return 'https://schema.org/'.($value ? 'InStock' : 'OutOfStock');
+        }
+
+        $value = (string) $value;
+
+        return str_starts_with($value, 'http') ? $value : 'https://schema.org/'.Str::studly($value);
+    }
+
+    /**
+     * A field's augmented value as a plain scalar: a select's value, a text.
+     */
+    protected function plainValue(mixed $value): mixed
+    {
+        $value = $value instanceof Value ? $value->value() : $value;
+
+        if (is_object($value) && method_exists($value, 'value')) {
+            $value = $value->value();
+        }
+
+        return $value === '' ? null : $value;
     }
 
     /**

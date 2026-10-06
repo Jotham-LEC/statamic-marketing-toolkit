@@ -39,7 +39,7 @@ class Install extends Command
 
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image} {--fields : Add fields a newer version brings to an existing blueprint}';
+    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image} {--fields : Add fields a newer version brings to an existing blueprint} {--tab=* : Add these tabs (e.g. shop) to an existing blueprint}';
 
     protected $description = 'Create the SEO & brand global set';
 
@@ -61,8 +61,16 @@ class Install extends Command
                 ->save();
 
             $this->components->info("Blueprint globals.{$handle} created.");
-        } elseif ($this->option('fields') && $added = $this->addMissingFields(Blueprint::find("globals.{$handle}"), $container)) {
-            $this->components->info('Fields added: '.implode(', ', $added).'.');
+        } else {
+            $blueprint = Blueprint::find("globals.{$handle}");
+            $added = [
+                ...$this->addTabs($blueprint, (array) $this->option('tab'), $container),
+                ...($this->option('fields') ? $this->addMissingFields($blueprint, $container) : []),
+            ];
+
+            if ($added !== []) {
+                $this->components->info('Added: '.implode(', ', $added).'.');
+            }
         }
 
         if (! GlobalSet::findByHandle($handle)) {
@@ -78,6 +86,29 @@ class Install extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Adds whole tabs a site asks for by handle and doesn't have.
+     *
+     * @param  list<string>  $handles
+     * @return list<string> the tabs added
+     */
+    private function addTabs(BlueprintContents $blueprint, array $handles, string $container): array
+    {
+        $contents = $blueprint->contents();
+        $tabs = self::tabs($container);
+        $added = array_values(array_filter($handles, fn (string $tab) => isset($tabs[$tab]) && ! isset($contents['tabs'][$tab])));
+
+        foreach ($added as $tab) {
+            $contents['tabs'][$tab] = $tabs[$tab];
+        }
+
+        if ($added !== []) {
+            $blueprint->setContents($contents)->save();
+        }
+
+        return array_map(fn (string $tab) => "{$tab} tab", $added);
     }
 
     /**
@@ -203,6 +234,32 @@ class Install extends Command
                         $field('days', ['type' => 'checkboxes', 'display' => 'Days', 'inline' => true, 'options' => array_combine(self::DAYS, array_map(fn (string $day) => substr($day, 0, 3), self::DAYS))]),
                         $field('opens', ['type' => 'time', 'display' => 'Opens']),
                         $field('closes', ['type' => 'time', 'display' => 'Closes']),
+                    ]]),
+                ]],
+            ]],
+            'shop' => ['display' => 'Shop', 'sections' => [
+                ['instructions' => 'For a site that sells: the currency of its prices, and the return and shipping policies for all its products.', 'fields' => [
+                    $field('currency', ['type' => 'text', 'display' => 'Currency', 'width' => 33, 'placeholder' => 'MYR, AUD, USD…', 'instructions' => 'Three-letter code.']),
+                ]],
+                ['display' => 'Returns', 'fields' => [
+                    $field('return_category', ['type' => 'select', 'display' => 'Returns', 'width' => 33, 'options' => [
+                        'MerchantReturnFiniteReturnWindow' => 'Within a number of days',
+                        'MerchantReturnUnlimitedWindow' => 'Any time',
+                        'MerchantReturnNotPermitted' => 'Not accepted',
+                    ]]),
+                    $field('return_days', ['type' => 'integer', 'display' => 'Days to return', 'width' => 33, 'if' => ['return_category' => 'equals MerchantReturnFiniteReturnWindow']]),
+                    $field('return_country', ['type' => 'text', 'display' => 'Country code', 'width' => 33, 'placeholder' => 'MY']),
+                    $field('return_policy_link', ['type' => 'text', 'input_type' => 'url', 'display' => 'Return policy page', 'instructions' => 'Enough on its own, or alongside the details above.']),
+                ]],
+                ['display' => 'Shipping', 'fields' => [
+                    $field('shipping_rates', ['type' => 'grid', 'display' => 'Shipping rates', 'mode' => 'table', 'add_row' => 'Add a rate', 'instructions' => 'One row per destination and order value. Leave the order values empty for a flat rate.', 'fields' => [
+                        $field('country', ['type' => 'text', 'display' => 'Country']),
+                        $field('region', ['type' => 'text', 'display' => 'Region']),
+                        $field('min_order', ['type' => 'float', 'display' => 'Orders from']),
+                        $field('max_order', ['type' => 'float', 'display' => 'Orders up to']),
+                        $field('rate', ['type' => 'float', 'display' => 'Rate']),
+                        $field('min_days', ['type' => 'integer', 'display' => 'Days, from']),
+                        $field('max_days', ['type' => 'integer', 'display' => 'Days, to']),
                     ]]),
                 ]],
             ]],

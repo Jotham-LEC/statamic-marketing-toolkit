@@ -37,6 +37,12 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
         'image_fields' => ['hero'],        // tried before the generated card
         'faq_field' => 'faqs',             // a grid of question / answer rows → FAQPage (valid markup; Google shows no FAQ results since 2026)
         'author_field' => 'authors',       // an entries or users field → the Article's authors (else the publisher)
+        'product' => [                     // a Product + Offer from these fields (needs a price above 0 and a currency)
+            'price_field' => 'price', 'availability_field' => 'in_stock', // a toggle, or InStock/PreOrder…
+            'sku_field' => 'sku', 'gtin_field' => null, 'brand_field' => null, 'brand' => 'Acme',
+            'currency' => null,            // else the SEO & brand global's Shop currency
+            'condition' => 'NewCondition',
+        ],
         'og_template' => 'default',        // a key of og.templates
     ],
 ],
@@ -128,6 +134,6 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 
 | Command | |
 |---|---|
-| `php please seo:install [--container=] [--fields]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has. |
+| `php please seo:install [--container=] [--fields] [--tab=shop]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has; `--tab` adds a whole tab it doesn't have (`shop`, `publisher`…). |
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:report` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. |

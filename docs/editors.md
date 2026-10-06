@@ -21,6 +21,8 @@ The overview: the latest report's score, recent 404s, redirects, and the brand d
 
 **Publisher tab.** Who is behind the site, so search engines can show it correctly. Pick the most specific **type** (a Store rather than a Local business; an Educational organization), or two (Educational organization and Local business), or type any other schema.org type. Then the name, another name, when it was founded, a description, logo or portrait, phone, email, area served, profiles elsewhere and contact points. **Address**: needed for a business people visit; leave it empty for one that only delivers or serves an area. **Local business**: price range, map coordinates and opening hours. Each value only goes out where the type accepts it, so filling in more than applies does no harm.
 
+**Shop tab** (for a site that sells; your developer adds it). The **currency** of your prices; your **return policy** (within so many days, any time, or not accepted, for a country, and/or a link to the policy page); and your **shipping rates**: one row per destination and order value (for example free over RM 300), with the delivery time in days. Search engines show these with your products.
+
 **Share cards tab.** The background, text and accent colours of the generated share pictures, and a logo or portrait to put on every card.
 
 **Crawlers tab**

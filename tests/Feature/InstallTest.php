@@ -58,3 +58,14 @@ test('--fields adds what a newer version brings, in the tabs the site kept', fun
     expect($keys)->toContain('site_alternate_name', 'street_address', 'opening_hours', 'publisher_type')
         ->not->toContain('og_background', 'google_verification');
 });
+
+test('--tab adds a whole tab a site asks for', function () {
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => [
+        'brand' => ['display' => 'Brand', 'sections' => [['fields' => [['handle' => 'title_separator', 'field' => ['type' => 'text']]]]]],
+    ]])->save();
+
+    $this->artisan('statamic:seo:install', ['--tab' => ['shop']])->assertSuccessful();
+
+    expect(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('currency', 'shipping_rates', 'return_category')
+        ->not->toContain('publisher_type');
+});

@@ -1,25 +1,9 @@
 <?php
 
-use JothamLec\Seo\Meta;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\User;
-
-/**
- * @return array<string, mixed>|null
- */
-function nodeOf(Meta $meta, string $type): ?array
-{
-    return collect($meta->graph)->first(fn (array $node) => in_array($type, (array) $node['@type'], true));
-}
-
-function publisherOf(array $values): array
-{
-    seoGlobal($values);
-
-    return collect(metaFor(entryIn('pages', 'about'))->graph)->firstWhere('@id', 'https://example.test/#publisher');
-}
 
 describe('the publisher', function () {
     test('a Person has a job title and a portrait, but no organisation or business properties', function () {

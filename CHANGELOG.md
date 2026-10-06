@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.8.0 – 2026-10-06
+
+### Added
+- **Products**: a collection's `product` config names its price, availability, SKU, GTIN and brand fields, and its pages get a Product with an Offer (price, currency, availability, condition, URL) and the images in three shapes. Without a price above zero or a currency there is none, as Google requires.
+- **Shop tab** on SEO & brand: the currency, the return policy (a window in days, any time or none, for a country, and/or the policy's page) and shipping rates (destination, order value range, rate, days in transit). They are the publisher's `hasMerchantReturnPolicy` and `hasShippingService`, which Google recommends over per-product policies.
+- `php please seo:install --tab=shop` adds the tab to an installed site.
+
 ## 0.7.0 – 2026-10-06
 
 ### Added
