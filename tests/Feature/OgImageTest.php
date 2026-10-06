@@ -72,6 +72,24 @@ test('an uploaded share image replaces the card in the meta tags', function () {
         ->and(metaFor($entry)->image['url'])->not->toContain('/og/');
 });
 
+test('an uploaded share image is served at the size the meta tags give, cropped on its focal point', function (?string $focus) {
+    Blueprint::make('page')->setNamespace('collections.pages')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
+        ['handle' => 'title', 'field' => ['type' => 'text']],
+        ['import' => 'seo::seo'],
+    ]]]]]])->save();
+    $container = AssetContainer::find('assets');
+    $container->disk()->put('share.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    $container->makeAsset('share.png')->set('focus', $focus)->save();
+
+    $image = metaFor(entryIn('pages', 'about', ['seo' => ['image' => 'share.png']]))->image;
+    $served = $this->get($image['url'])->assertOk();
+
+    // The 1600×900 fixture is wider than 1200×630: only a crop fills both sides.
+    expect(getimagesizefromstring($served->streamedContent() ?: $served->getContent()))
+        ->toMatchArray([0 => $image['width'], 1 => $image['height'], 'mime' => 'image/jpeg'])
+        ->and([$image['width'], $image['height']])->toBe([1200, 630]);
+})->with(['no focal point' => null, 'a focal point' => '20-70-1']);
+
 test('cards can be turned off, leaving the site default', function () {
     config(['seo.og.enabled' => false]);
 

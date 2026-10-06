@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 – 2026-10-06
+
+### Fixed
+- Uploaded share images are cropped to 1200×630 again, on their focal point. The crop was asked of Glide in a form it doesn't understand, so it shrank the image to fit inside 1200×630 instead (a 2000×1125 upload came out 1120×630, a smaller one wasn't enlarged) while the meta tags said 1200×630.
+
 ## 0.3.0 – 2026-10-06
 
 ### Changed

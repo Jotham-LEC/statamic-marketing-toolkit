@@ -710,13 +710,16 @@ class SiteSeo
      */
     protected function cropped(Asset $asset): array
     {
-        $url = Image::manipulate($asset, [
-            'w' => $this->imageWidth(),
-            'h' => $this->imageHeight(),
-            'fit' => 'crop_focal',
-            'fm' => 'jpg',
-            'q' => 85,
-        ]);
+        // Fluently, not as an array: only fit() turns `crop_focal` into Glide's
+        // `crop-{x}-{y}`. Glide takes an unknown fit as `contain`, which neither
+        // fills the card nor enlarges a small image.
+        $url = Image::manipulate($asset)
+            ->width($this->imageWidth())
+            ->height($this->imageHeight())
+            ->fit('crop_focal')
+            ->format('jpg')
+            ->quality(85)
+            ->build();
 
         $alt = $asset->get('alt');
 
