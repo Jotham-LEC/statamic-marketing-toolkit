@@ -882,11 +882,12 @@ class SiteSeo
         $seo = is_array($seo) ? $seo : [];
         $canonical = $seo['canonical'] ?? null;
 
+        // Only canonical addresses: a page that names another (here or on another site) as its canonical is left out.
         return $content->url() !== null
             && ! ($content instanceof Entry && $content->isRedirect())
             && ! ($seo['noindex'] ?? false)
             && ($seo['sitemap'] ?? true) !== false
-            && (blank($canonical) || str_starts_with($canonical, $this->home()));
+            && (blank($canonical) || rtrim((string) $canonical, '/') === rtrim((string) $content->absoluteUrl(), '/'));
     }
 
     /**

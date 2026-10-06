@@ -19,10 +19,12 @@ use JothamLec\Seo\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\Seo\Support\Config;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
+use Statamic\Events\CollectionSaved;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
+use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
@@ -59,6 +61,9 @@ class ServiceProvider extends AddonServiceProvider
         TermSaved::class => [FlushSitemap::class, SubmitToIndexNow::class],
         TermDeleted::class => [FlushSitemap::class, SubmitToIndexNow::class],
         CollectionTreeSaved::class => [FlushSitemap::class],
+        // A new route moves every entry or term in it.
+        CollectionSaved::class => [FlushSitemap::class],
+        TaxonomySaved::class => [FlushSitemap::class],
     ];
 
     protected $subscribe = [RedirectChangedUris::class];

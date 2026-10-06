@@ -18,7 +18,7 @@ function sitemapLocs(string $xml): array
     return array_map('strval', iterator_to_array($sitemap->xpath('//*[local-name()="loc"]'), false));
 }
 
-test('lists published pages, and leaves out drafts, hidden pages, redirects and pieces canonical elsewhere', function () {
+test('lists published pages, and leaves out drafts, hidden pages, redirects and pages canonical elsewhere, on this site or another', function () {
     entryIn('home', 'home');
     entryIn('pages', 'about');
     entryIn('pages', 'draft')->published(false)->save();
@@ -27,6 +27,8 @@ test('lists published pages, and leaves out drafts, hidden pages, redirects and 
     entryIn('pages', 'moved', ['redirect' => 'https://elsewhere.example']);
     entryIn('pages', 'reprint', ['seo' => ['canonical' => 'https://times.example/x']]);
     entryIn('pages', 'self-canonical', ['seo' => ['canonical' => 'https://example.test/self-canonical']]);
+    // Google: list only canonical addresses, and never one whose canonical names another page.
+    entryIn('pages', 'duplicate', ['seo' => ['canonical' => 'https://example.test/about']]);
 
     $response = $this->get('/sitemap.xml')->assertOk()->assertHeader('Content-Type', 'text/xml; charset=UTF-8');
 
@@ -52,6 +54,21 @@ test('saving an entry refreshes the cached sitemap', function () {
     expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toContain('https://example.test/new-page');
 });
 
+test('a collection given a new route, or sitemap settings changed by a deploy, refresh the cached sitemap', function () {
+    entryIn('essays', 'first', [], '2026-01-02');
+    $this->get('/sitemap.xml');
+
+    // Saved without events, as Statamic rewrites a collection's entries when its route changes.
+    Entry::make()->collection('pages')->slug('about')->data(['title' => 'About'])->saveQuietly();
+    Collection::find('pages')->routes('info/{slug}')->save();
+
+    expect($this->get('/sitemap.xml')->getContent())->toContain('about</loc>');
+
+    config(['seo.sitemap.exclude_collections' => ['essays']]);
+
+    expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->not->toContain('https://example.test/essays/first');
+});
+
 test('past the page size the sitemap becomes an index of numbered pages', function () {
     config(['seo.sitemap.per_page' => 2]);
     collect(['a', 'b', 'c'])->each(fn ($slug) => entryIn('pages', $slug));
@@ -63,6 +80,8 @@ test('past the page size the sitemap becomes an index of numbered pages', functi
         ->and(sitemapLocs($this->get('/sitemap_2.xml')->getContent()))->toBe(['https://example.test/c']);
 
     $this->get('/sitemap_3.xml')->assertNotFound();
+    $this->get('/sitemap_0.xml')->assertNotFound();
+    $this->get('/sitemap_99999999999999999999.xml')->assertNotFound();
 });
 
 test('a project adds URLs that are not entries', function () {

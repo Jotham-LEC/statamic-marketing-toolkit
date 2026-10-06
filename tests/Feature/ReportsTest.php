@@ -324,3 +324,12 @@ test('a report checks links to other sites only when its settings ask', function
 
     expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe(['https://gone.test/a']);
 });
+
+test('a title longer than its column is cut to fit, so the report still runs on MySQL and Postgres', function () {
+    entryIn('pages', 'long', ['title' => str_repeat('Long ', 60)]);
+
+    $page = reportPage(fullReport(), '/long');
+
+    expect(mb_strlen($page->title))->toBe(255)
+        ->and($page->facts['title'])->toStartWith('Long Long');
+});

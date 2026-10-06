@@ -61,8 +61,9 @@ class RedirectChangedUris
         $before->slug($original['slug'] ?? $entry->slug());
         $before->data(Arr::except($original, ['collection', 'locale', 'origin', 'slug', 'date', 'published', 'path']));
 
+        // Statamic keeps the date as UTC; read in the app's timezone it would move by the offset.
         if ($entry->collection()?->dated() && ($date = $original['date'] ?? null)) {
-            $before->date(Carbon::createFromFormat('Y-m-d-Hi', $date));
+            $before->date(Carbon::createFromFormat('Y-m-d-Hi', $date, 'UTC'));
         }
 
         // Worked out last, so Statamic's caches end up holding the entry being saved.

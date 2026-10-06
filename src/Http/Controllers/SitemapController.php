@@ -11,8 +11,8 @@ use Statamic\Facades\Site;
 /**
  * /sitemap.xml: every published page search engines should index. Up to
  * `seo.sitemap.per_page` URLs it is one <urlset>; past that it becomes an
- * index of /sitemap_{n}.xml. Cached until an entry, term or tree is saved
- * (JothamLec\Seo\Listeners\FlushSitemap).
+ * index of /sitemap_{n}.xml. Cached until an entry, term, tree, collection
+ * or taxonomy is saved (JothamLec\Seo\Listeners\FlushSitemap).
  */
 class SitemapController
 {
@@ -34,11 +34,14 @@ class SitemapController
         ])->render());
     }
 
-    public function page(int $page): Response
+    public function page(string $page): Response
     {
-        $chunk = $this->urls()->forPage($page, $this->perPage());
+        // Taken as text: a number too big for an int would fail the type, a 500 rather than a 404.
+        abort_if(strlen($page) > 9 || (int) $page < 1, 404);
 
-        abort_if($page < 1 || $chunk->isEmpty(), 404);
+        $chunk = $this->urls()->forPage((int) $page, $this->perPage());
+
+        abort_if($chunk->isEmpty(), 404);
 
         return $this->xml(view('seo::sitemap', ['urls' => $chunk])->render());
     }
@@ -48,10 +51,16 @@ class SitemapController
      */
     private function urls(): Collection
     {
-        return Cache::rememberForever(
-            self::CACHE_KEY.':'.Site::current()->handle(),
-            fn () => app(SiteSeo::class)->sitemapUrls(),
-        );
+        return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
+    }
+
+    /**
+     * Per site, and per `seo.sitemap` settings, so a deploy that changes
+     * them doesn't serve the old list until the next save.
+     */
+    public static function cacheKey(string $site): string
+    {
+        return self::CACHE_KEY.':'.$site.':'.md5(serialize(config('seo.sitemap')));
     }
 
     private function perPage(): int

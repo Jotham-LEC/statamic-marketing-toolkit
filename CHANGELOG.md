@@ -9,6 +9,13 @@
 - IndexNow is no longer told about a draft that is deleted: its address was never public.
 - A draft parent page no longer appears, with its title and address, in its children's breadcrumbs (JSON-LD).
 
+### Fixed
+- Automatic redirects on a site whose timezone isn't UTC: an entry's saved date was read in the site's timezone, so in a collection whose route has the day (`{year}/{month}/{day}`) any save could add a redirect from a day that never existed, and a real move started from the wrong address.
+- The sitemap leaves out a page whose canonical names another page of the same site, as Google asks (it already left out pages canonical to another site).
+- The sitemap follows a collection or taxonomy saved with a new route, and a deploy that changes `seo.sitemap`, instead of waiting for the next content save.
+- `/sitemap_{n}.xml` with a number too big for PHP answered 500; it is a 404.
+- Reports no longer stop on a page title longer than 255 characters (MySQL in strict mode and Postgres refused it); the stored title is cut to fit.
+
 ## 0.10.0 – 2026-10-06
 
 Run `php artisan migrate` after updating: there is a new table.

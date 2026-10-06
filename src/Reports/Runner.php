@@ -112,7 +112,7 @@ class Runner
 
             $facts = new PageFacts(...[...$facts->toArray(), 'inSitemap' => $page->in_sitemap, 'brokenExternalLinks' => $broken]);
 
-            $page->update(['checked' => true, 'facts' => $facts->toArray(), 'title' => $facts->title ?? $page->title]);
+            $page->update(['checked' => true, 'facts' => $facts->toArray(), 'title' => self::title($facts->title) ?? $page->title]);
         }
 
         $report->update(['pages_done' => $report->pages()->where('checked', true)->count()]);
@@ -275,8 +275,17 @@ class Runner
             'url' => (string) $content->absoluteUrl(),
             'content_type' => $content instanceof EntryContract ? 'entry' : 'term',
             'content_id' => (string) $content->id(),
-            'title' => (string) $content->get('title'),
+            'title' => (string) self::title((string) $content->get('title')),
         ];
+    }
+
+    /**
+     * A title as its column holds it: MySQL (strict) and Postgres refuse more
+     * than 255 characters, which would stop the report.
+     */
+    private static function title(?string $title): ?string
+    {
+        return $title === null ? null : mb_substr($title, 0, 255);
     }
 
     private function content(ReportPage $page): EntryContract|TermContract|null

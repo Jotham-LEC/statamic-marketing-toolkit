@@ -216,3 +216,25 @@ test('a save that is cancelled leaves nothing behind for the next save', functio
 
     expect(redirectMap())->toBe([]);
 });
+
+test('on a site in another timezone, an edit that keeps a dated address adds nothing, and a move starts from the right day', function () {
+    config(['app.timezone' => 'Asia/Kuala_Lumpur']);
+    date_default_timezone_set('Asia/Kuala_Lumpur');
+    Collection::make('news')->routes('news/{year}/{month}/{day}/{slug}')->dated(true)->save();
+
+    try {
+        // 20:00 UTC is the next morning in Kuala Lumpur, the day the address shows.
+        $entry = Entry::make()->collection('news')->slug('launch')->data(['title' => 'Launch']);
+        $entry->date(Carbon\Carbon::parse('2026-01-01 20:00', 'UTC'))->save();
+        $entry = reloaded($entry);
+        expect($entry->uri())->toBe('/news/2026/01/02/launch');
+
+        $entry->set('description', 'Edited.')->save();
+        expect(redirectMap())->toBe([]);
+
+        reloaded($entry)->slug('lift-off')->save();
+        expect(redirectMap())->toBe(['/news/2026/01/02/launch' => '/news/2026/01/02/lift-off']);
+    } finally {
+        date_default_timezone_set('UTC');
+    }
+});
