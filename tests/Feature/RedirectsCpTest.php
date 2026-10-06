@@ -92,6 +92,20 @@ test('CSV export, and import that adds, updates and reports bad rows', function 
         ]);
 });
 
+test('an import refuses a row that loops back through an earlier row of the same file, or through a wildcard', function () {
+    $this->actingAs(cpUser(['manage seo redirects']));
+    Redirect::query()->create(['source' => '/shop/*', 'target' => '/store/$1']);
+
+    $csv = "/a,/b\n/b,/a\n/store/x,/shop/x\n";
+    $result = $this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
+
+    expect($result['created'])->toBe(1)
+        ->and($result['errors'])->toBe([
+            'Line 2: The redirect from that address leads back here, so the two would loop.',
+            'Line 3: The redirect from that address leads back here, so the two would loop.',
+        ]);
+});
+
 test('the 404 log listing, newest first, with a "Create redirect" action per row', function () {
     $this->actingAs(cpUser(['view seo', 'manage seo redirects']));
     $old = MissingPath::query()->create(['path' => '/old-miss', 'hits' => 9, 'first_seen_at' => now()->subDay(), 'last_seen_at' => now()->subDay()]);

@@ -2,6 +2,7 @@
 
 namespace JothamLec\Seo\Redirects;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Statamic\Facades\URL;
 
@@ -19,9 +20,29 @@ class Matcher
      */
     public function match(string $path, string $query = ''): ?array
     {
+        return $this->matchIn($this->rules(), $path, $query);
+    }
+
+    /**
+     * The rule for a path among the given ones: the rules that could match
+     * it, without reading (or rebuilding) every rule.
+     *
+     * @param  iterable<Redirect>  $redirects
+     * @return array{id: int, status: int, target: ?string}|null
+     */
+    public function matchAmong(iterable $redirects, string $path): ?array
+    {
+        return $this->matchIn(self::compile(collect($redirects)), $path, '');
+    }
+
+    /**
+     * @param  array{exact: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}  $rules
+     * @return array{id: int, status: int, target: ?string}|null
+     */
+    private function matchIn(array $rules, string $path, string $query): ?array
+    {
         // Already decoded and without a query string: a `?` here was `%3F`, part of the path.
         $path = '/'.trim($path, '/');
-        $rules = $this->rules();
 
         if ($rule = $rules['exact'][$path] ?? null) {
             return $this->resolved($rule, [], $query);
@@ -46,26 +67,32 @@ class Matcher
      */
     private function rules(): array
     {
-        return Cache::rememberForever(self::KEY, function () {
-            $rules = Redirect::query()->where('active', true)->get(['id', 'source', 'target', 'status']);
-            $rule = fn (Redirect $redirect) => ['id' => $redirect->id, 'status' => $redirect->status, 'target' => $redirect->target];
+        return Cache::rememberForever(self::KEY, fn () => self::compile(Redirect::query()->where('active', true)->get(['id', 'source', 'target', 'status'])));
+    }
 
-            [$wildcards, $exact] = $rules->partition(fn (Redirect $redirect) => $redirect->isWildcard());
+    /**
+     * @param  Collection<int, Redirect>  $redirects
+     * @return array{exact: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
+     */
+    private static function compile(Collection $redirects): array
+    {
+        $rule = fn (Redirect $redirect) => ['id' => $redirect->id, 'status' => $redirect->status, 'target' => $redirect->target];
 
-            return [
-                // Normalized again for sources saved before they were decoded on save.
-                'exact' => $exact->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => $rule($redirect)])->all(),
-                // The most specific (longest) source wins when several match.
-                'wildcards' => $wildcards
-                    ->sortByDesc(fn (Redirect $redirect) => strlen($redirect->source))
-                    ->map(fn (Redirect $redirect) => [
-                        ...$rule($redirect),
-                        'pattern' => '#^'.str_replace('\*', '(.*)', preg_quote(Redirect::normalize($redirect->source), '#')).'$#',
-                    ])
-                    ->values()
-                    ->all(),
-            ];
-        });
+        [$wildcards, $exact] = $redirects->partition(fn (Redirect $redirect) => $redirect->isWildcard());
+
+        return [
+            // Normalized again for sources saved before they were decoded on save.
+            'exact' => $exact->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => $rule($redirect)])->all(),
+            // The most specific (longest) source wins when several match.
+            'wildcards' => $wildcards
+                ->sortByDesc(fn (Redirect $redirect) => strlen($redirect->source))
+                ->map(fn (Redirect $redirect) => [
+                    ...$rule($redirect),
+                    'pattern' => '#^'.str_replace('\*', '(.*)', preg_quote(Redirect::normalize($redirect->source), '#')).'$#',
+                ])
+                ->values()
+                ->all(),
+        ];
     }
 
     /**

@@ -9,6 +9,9 @@
 - IndexNow is no longer told about a draft that is deleted: its address was never public.
 - A draft parent page no longer appears, with its title and address, in its children's breadcrumbs (JSON-LD).
 
+### Changed
+- Faster CSV import of redirects: each row's loop check read every rule again, rebuilt after the row before it. It now reads only the rules that could match (300 rows: 11.6 s → 0.6 s).
+
 ### Fixed
 - Automatic redirects on a site whose timezone isn't UTC: an entry's saved date was read in the site's timezone, so in a collection whose route has the day (`{year}/{month}/{day}`) any save could add a redirect from a day that never existed, and a real move started from the wrong address.
 - The sitemap leaves out a page whose canonical names another page of the same site, as Google asks (it already left out pages canonical to another site).

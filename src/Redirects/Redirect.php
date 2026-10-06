@@ -167,8 +167,14 @@ class Redirect extends Model
 
         $source = self::normalize($source);
 
-        // The rule already at the target, if it leads straight back here.
-        $next = str_contains($source, '*') ? null : app(Matcher::class)->match(self::normalize($target));
+        // The rule already at the target, if it leads straight back here. Read from the
+        // rules that could match it, not the cached set, which an import would rebuild
+        // after every row.
+        $target = self::normalize($target);
+        $next = str_contains($source, '*') ? null : app(Matcher::class)->matchAmong(
+            self::query()->where('active', true)->where(fn ($query) => $query->where('source', $target)->orWhere('source', 'like', '%*%'))->get(['id', 'source', 'target', 'status']),
+            $target,
+        );
 
         if ($next && $next['id'] !== $ignoreId && $next['target'] !== null && str_starts_with($next['target'], '/') && self::normalize($next['target']) === $source) {
             return 'The redirect from that address leads back here, so the two would loop.';
