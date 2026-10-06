@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Inertia\Inertia;
 use Inertia\Response;
+use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Reports\Report;
@@ -79,6 +80,8 @@ class OverviewController
             'files' => collect([
                 __('seo::cp.overview.files.sitemap') => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
                 __('seo::cp.overview.files.robots') => config('seo.robots_txt') ? 'robots.txt' : null,
+                __('seo::cp.overview.files.llms') => config('seo.llms_txt') ? 'llms.txt' : null,
+                __('seo::cp.overview.files.favicon') => config('seo.favicons.enabled') && app(Favicons::class)->version() ? 'site.webmanifest' : null,
                 __('seo::cp.overview.files.card') => config('seo.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
         ]);

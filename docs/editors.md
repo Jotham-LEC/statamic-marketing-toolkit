@@ -42,6 +42,9 @@ The overview: the latest link check *(Pro)*, recent 404s *(Pro)*, redirects, the
 - **Allow AI training**: off turns away the crawlers that gather pages to train AI models (OpenAI's GPTBot, Anthropic's ClaudeBot, Google-Extended for Gemini, Applebot-Extended, and Common Crawl's CCBot, whose open dataset AI developers train on). Google Search is unaffected.
 - **Allow AI search**: off turns away the crawlers behind ChatGPT search, Claude and Perplexity answers, so the site isn't quoted there. Fetchers a person sends from those apps don't all read robots.txt.
 - **robots.txt extra lines**: extra rules, for example for AI crawlers.
+- **ads.txt**: only for a site that sells ad space (AdSense and others): paste the lines your ad network gives you; they're served at `/ads.txt`.
+
+The site also serves **/llms.txt**, a list of its pages with their descriptions for AI assistants, made from the same pages as the sitemap.
 
 ## A page's SEO tab
 

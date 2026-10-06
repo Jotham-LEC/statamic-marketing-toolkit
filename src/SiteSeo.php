@@ -1156,6 +1156,89 @@ class SiteSeo
 
     /*
     |--------------------------------------------------------------------------
+    | llms.txt and ads.txt
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * /llms.txt (llmstxt.org): the site's name and description, then, per
+     * collection the sitemap lists, its pages as Markdown links with their
+     * descriptions, the most recently changed first. For AI assistants that
+     * read a site's summary before its pages.
+     */
+    public function llmsTxt(): string
+    {
+        $lines = ['# '.$this->settings->siteName(), ''];
+
+        if ($description = $this->settings->string('default_description')) {
+            $lines = [...$lines, '> '.Text::plain($description), ''];
+        }
+
+        foreach ($this->llmsCollections() as $collection) {
+            $entries = Entries::query()
+                ->where('collection', $collection->handle())
+                ->where('site', Site::current()->handle())
+                ->whereStatus('published')
+                ->get()
+                ->filter(fn (Entry $entry) => $this->inSitemap($entry))
+                ->sortByDesc(fn (Entry $entry) => $entry->lastModified()?->timestamp)
+                ->take($this->llmsPerCollection());
+
+            if ($entries->isEmpty()) {
+                continue;
+            }
+
+            $lines[] = '## '.$collection->title();
+            $lines[] = '';
+
+            foreach ($entries as $entry) {
+                $context = Context::make($entry);
+                $description = $context->seo()['description'] ?? $this->contentDescription($context);
+                $description = $description === null ? null : Text::limit(Text::plain($description), 200);
+                $title = str_replace(['[', ']'], ['(', ')'], (string) $entry->get('title'));
+
+                $lines[] = '- ['.$title.']('.$entry->absoluteUrl().')'.($description ? ': '.$description : '');
+            }
+
+            $lines[] = '';
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * The collections llms.txt lists: those the sitemap lists, by title.
+     *
+     * @return Collection<int, \Statamic\Contracts\Entries\Collection>
+     */
+    protected function llmsCollections(): Collection
+    {
+        $handles = config('seo.sitemap.collections');
+        $excluded = (array) config('seo.sitemap.exclude_collections');
+
+        return \Statamic\Facades\Collection::all()
+            ->filter(fn ($collection) => $collection->route(Site::current()->handle()) && ($handles === null || in_array($collection->handle(), (array) $handles, true)) && ! in_array($collection->handle(), $excluded, true))
+            ->sortBy(fn ($collection) => $collection->title())
+            ->values();
+    }
+
+    protected function llmsPerCollection(): int
+    {
+        return 100;
+    }
+
+    /**
+     * /ads.txt: the lines in SEO & brand → Crawlers, for a site that sells ad space.
+     */
+    public function adsTxt(): ?string
+    {
+        $text = trim((string) $this->settings->string('ads_txt'));
+
+        return $text === '' ? null : $text."\n";
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Robots.txt
     |--------------------------------------------------------------------------
     */

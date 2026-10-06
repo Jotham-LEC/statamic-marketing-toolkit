@@ -129,6 +129,12 @@ return [
 
     'robots_txt' => true,
 
+    // /llms.txt: the site's pages as a Markdown list for AI assistants (llmstxt.org).
+    'llms_txt' => true,
+
+    // /ads.txt: the lines in SEO & brand → Crawlers, when there are any.
+    'ads_txt' => true,
+
     /*
     |--------------------------------------------------------------------------
     | Languages (hreflang)

@@ -92,6 +92,8 @@ return [
             'title' => 'What the site serves',
             'sitemap' => 'Sitemap',
             'robots' => 'robots.txt',
+            'llms' => 'llms.txt',
+            'favicon' => 'Web app manifest',
             'card' => 'Home share card',
         ],
     ],

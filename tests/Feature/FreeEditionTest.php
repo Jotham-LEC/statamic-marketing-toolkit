@@ -83,7 +83,7 @@ test('the nav, permissions and overview show only what the free edition has', fu
         ->where('searchConsole', null)
         ->where('redirects.active', 0)
         // No home share card among the files the site serves.
-        ->where('files', fn ($files) => collect($files)->pluck('label')->all() === ['Sitemap', 'robots.txt']));
+        ->where('files', fn ($files) => collect($files)->pluck('label')->all() === ['Sitemap', 'robots.txt', 'llms.txt']));
 
     $this->get(cp_route('seo.redirects.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('exportUrl', null)
@@ -220,4 +220,12 @@ test('no campaign link fields: the UTM builder is Pro', function () {
 
     expect(Redirect::query()->sole()->target)->toBe('/offer');
     $this->get(cp_route('seo.redirects.create'))->assertInertia(fn (AssertableInertia $page) => $page->missing('blueprint.tabs.0.sections.1'));
+});
+
+test('llms.txt and ads.txt work as in Pro', function () {
+    seoGlobal(['ads_txt' => 'google.com, pub-1, DIRECT']);
+    entryIn('pages', 'about');
+
+    $this->get('https://example.test/llms.txt')->assertOk()->assertSee('https://example.test/about', false);
+    $this->get('https://example.test/ads.txt')->assertOk()->assertSee('pub-1');
 });

@@ -151,6 +151,10 @@ return [
             'display' => 'Save where each lead came from',
             'instructions' => 'The campaign (UTM tags), the site that sent them and the page they landed on, with each form submission. It keeps them in a cookie: in the EU and UK, use Consent Mode too. Your developer adds the fields to the forms once.',
         ],
+        'ads_txt' => [
+            'display' => 'ads.txt',
+            'instructions' => 'Only for a site that sells ad space: the lines your ad network gives you. Served at /ads.txt.',
+        ],
         'tracking_overlap' => [
             'display' => 'Move these tags into Google Tag Manager',
             'instructions' => 'Google Tag Manager is set, and so is at least one other tool here. If GTM loads that tool too, every visit counts twice. Add each tool as a tag in GTM, then clear its ID here.',

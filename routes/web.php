@@ -10,6 +10,7 @@ use JothamLec\MarketingToolkit\Http\Controllers\IndexNowKeyController;
 use JothamLec\MarketingToolkit\Http\Controllers\OgImageController;
 use JothamLec\MarketingToolkit\Http\Controllers\RobotsController;
 use JothamLec\MarketingToolkit\Http\Controllers\SitemapController;
+use JothamLec\MarketingToolkit\Http\Controllers\TextFileController;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 
 /*
@@ -41,6 +42,14 @@ Route::withoutMiddleware([
 
         if (config('seo.indexnow.enabled')) {
             Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
+        }
+
+        if (config('seo.llms_txt', true) && ! file_exists(public_path('llms.txt'))) {
+            Route::get('llms.txt', [TextFileController::class, 'llms'])->name('llms');
+        }
+
+        if (config('seo.ads_txt', true) && ! file_exists(public_path('ads.txt'))) {
+            Route::get('ads.txt', [TextFileController::class, 'ads'])->name('ads');
         }
 
         if (config('seo.favicons.enabled', true)) {

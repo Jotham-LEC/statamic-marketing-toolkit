@@ -182,6 +182,15 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 
 An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed. Consent Mode is set in the global only.
 
+## llms.txt and ads.txt
+
+| Key | Default | |
+|---|---|---|
+| `llms_txt` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Cached until content changes, like the sitemap. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
+| `ads_txt` | `true` | `/ads.txt`: the lines in **SEO & brand → Crawlers → ads.txt**; a 404 while that's empty. |
+
+A file of the same name in `public/` wins over either.
+
 ## Favicons
 
 | Key | Default | |

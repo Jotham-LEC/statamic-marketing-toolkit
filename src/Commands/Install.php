@@ -353,6 +353,7 @@ class Install extends Command
                 $field('allow_ai_training', ['type' => 'toggle', 'display' => 'seo::fields.brand.allow_ai_training.display', 'default' => true, 'width' => 50, 'instructions' => 'seo::fields.brand.allow_ai_training.instructions']),
                 $field('allow_ai_search', ['type' => 'toggle', 'display' => 'seo::fields.brand.allow_ai_search.display', 'default' => true, 'width' => 50, 'instructions' => 'seo::fields.brand.allow_ai_search.instructions']),
                 $field('robots_extra', ['type' => 'textarea', 'display' => 'seo::fields.brand.robots_extra.display', 'instructions' => 'seo::fields.brand.robots_extra.instructions']),
+                $field('ads_txt', ['type' => 'textarea', 'display' => 'seo::fields.brand.ads_txt.display', 'instructions' => 'seo::fields.brand.ads_txt.instructions']),
             ]]]],
         ];
     }
