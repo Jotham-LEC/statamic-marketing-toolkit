@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.3 – 2026-10-06
+
+The redirects and 404 listings work beside Runway.
+
+### Fixed
+- With Runway installed, the Redirects and 404s listings answered 500: Statamic asks every registered action whether it applies to a row, and Runway's Publish and Unpublish assume any database row is one of theirs. The listings now offer only the addon's own actions (Delete, Create redirect).
+
 ## 0.13.2 – 2026-10-06
 
 A missing page answers 404 even before `migrate`.
