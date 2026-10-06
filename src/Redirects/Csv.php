@@ -25,7 +25,8 @@ class Csv
 
         fputcsv($out, $sites ? [...self::HEADER, 'site'] : self::HEADER, escape: '');
 
-        Redirect::query()->orderBy('source')->orderBy('site')->each(function (Redirect $redirect) use ($out, $sites) {
+        // Each address's rule for every site (no site) first: databases sort a null differently.
+        Redirect::query()->orderBy('source')->orderByRaw('site is not null')->orderBy('site')->each(function (Redirect $redirect) use ($out, $sites) {
             $row = [$redirect->source, $redirect->target, $redirect->status, $redirect->active ? 1 : 0];
 
             fputcsv($out, $sites ? [...$row, $redirect->site] : $row, escape: '');
