@@ -22,6 +22,7 @@ The overview: the latest link check *(Pro)*, recent 404s *(Pro)*, redirects, the
 - **Default share image**: shown when a page is shared and has no picture of its own. 1200 × 630 pixels works best.
 - **Other site name**: a shorter name or acronym search engines may show instead of the site name.
 - **X handle**: your account on X (Twitter), without the @.
+- **Icon**: the site's icon in browser tabs, bookmarks and phone home screens. Upload one square image, 512 × 512 pixels or more (PNG, or SVG to stay sharp); every size is made from it. **Theme colour** tints the browser's bar on phones; **Icon background** sits behind the icon on an iPhone home screen (white unless set).
 
 **Publisher tab.** Who is behind the site, so search engines can show it correctly. Pick the most specific **type** (a Store rather than a Local business; an Educational organization), or two (Educational organization and Local business), or type any other schema.org type. Then the name, another name, when it was founded, a description, logo or portrait, phone, email, area served, profiles elsewhere and contact points. **Address**: needed for a business people visit; leave it empty for one that only delivers or serves an area. **Local business**: price range, map coordinates and opening hours. Each value only goes out where the type accepts it, so filling in more than applies does no harm.
 

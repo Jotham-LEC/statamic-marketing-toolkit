@@ -4,6 +4,8 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use JothamLec\MarketingToolkit\Favicons\Favicons;
+use JothamLec\MarketingToolkit\Http\Controllers\FaviconController;
 use JothamLec\MarketingToolkit\Http\Controllers\IndexNowKeyController;
 use JothamLec\MarketingToolkit\Http\Controllers\OgImageController;
 use JothamLec\MarketingToolkit\Http\Controllers\RobotsController;
@@ -39,6 +41,14 @@ Route::withoutMiddleware([
 
         if (config('seo.indexnow.enabled')) {
             Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
+        }
+
+        if (config('seo.favicons.enabled', true)) {
+            foreach (array_keys(Favicons::FILES) as $file) {
+                if (! file_exists(public_path($file))) {
+                    Route::get($file, FaviconController::class)->name('favicons.'.$file);
+                }
+            }
         }
 
         if (config('seo.og.enabled')) {

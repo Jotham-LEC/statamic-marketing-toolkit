@@ -77,6 +77,10 @@ return [
             'crawlers' => 'Crawlers',
         ],
         'sections' => [
+            'icon' => [
+                'display' => 'Icon',
+                'instructions' => 'The site’s icon in browser tabs, bookmarks and phone home screens. Every size is made from this one image.',
+            ],
             'tracking' => [
                 'instructions' => 'Paste each tool’s ID; leave the others empty. They load on the live site only, never while editing. An ID your developer set in .env wins over the one here.',
             ],
@@ -110,6 +114,18 @@ return [
         ],
 
         // Brand
+        'favicon' => [
+            'display' => 'Icon',
+            'instructions' => 'A square image, 512 × 512 pixels or more: PNG, or SVG (which stays sharp at any size).',
+        ],
+        'theme_color' => [
+            'display' => 'Theme colour',
+            'instructions' => 'Phones tint the browser’s bar with it.',
+        ],
+        'background_color' => [
+            'display' => 'Icon background',
+            'instructions' => 'Behind the icon on an iPhone home screen. White unless set.',
+        ],
         'tracking_overlap' => [
             'display' => 'Move these tags into Google Tag Manager',
             'instructions' => 'Google Tag Manager is set, and so is at least one other tool here. If GTM loads that tool too, every visit counts twice. Add each tool as a tag in GTM, then clear its ID here.',

@@ -182,6 +182,14 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 
 An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed. Consent Mode is set in the global only.
 
+## Favicons
+
+| Key | Default | |
+|---|---|---|
+| `favicons.enabled` | `true` | Make the icons from **Icon** in SEO & brand, serve them, and print their links in `<s:seo:head />` (or `<s:seo:favicons />`). |
+
+From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg` (an SVG upload, as it is), `/apple-touch-icon.png` (180 px, on the icon background), `/icon-192.png`, `/icon-512.png` and `/site.webmanifest` (the site's name, short name and colours). They're made once per version of the image and colours, kept in `storage/app/marketing-toolkit/favicons`, made again when SEO & brand is saved, and served without a session or cookie. A file of the same name in `public/` wins, so delete old ones there. Drawing SVG needs PHP's Imagick; with GD alone an SVG gives `/favicon.svg` and the manifest, so upload a PNG on such hosts.
+
 ## Link check (Pro)
 
 | Key | Default | |

@@ -239,6 +239,10 @@ class Install extends Command
                 $field('default_image', $asset('seo::fields.brand.default_image.display', 'seo::fields.brand.default_image.instructions')),
                 $field('site_alternate_name', ['type' => 'text', 'display' => 'seo::fields.brand.site_alternate_name.display', 'width' => 50, 'instructions' => 'seo::fields.brand.site_alternate_name.instructions']),
                 $field('twitter_handle', ['type' => 'text', 'display' => 'seo::fields.brand.twitter_handle.display', 'width' => 50, 'prepend' => '@']),
+            ]], ['display' => 'seo::fields.brand.sections.icon.display', 'instructions' => 'seo::fields.brand.sections.icon.instructions', 'fields' => [
+                $field('favicon', $asset('seo::fields.brand.favicon.display', 'seo::fields.brand.favicon.instructions')),
+                $field('theme_color', ['type' => 'color', 'display' => 'seo::fields.brand.theme_color.display', 'width' => 50, 'instructions' => 'seo::fields.brand.theme_color.instructions']),
+                $field('background_color', ['type' => 'color', 'display' => 'seo::fields.brand.background_color.display', 'width' => 50, 'instructions' => 'seo::fields.brand.background_color.instructions']),
             ]]]],
             'publisher' => ['display' => 'seo::fields.brand.tabs.publisher', 'sections' => [
                 ['instructions' => 'seo::fields.brand.sections.publisher.instructions', 'fields' => [

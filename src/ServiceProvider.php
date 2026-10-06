@@ -15,6 +15,7 @@ use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
 use JothamLec\MarketingToolkit\Listeners\RedirectChangedUris;
+use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
 use JothamLec\MarketingToolkit\Listeners\SubmitToIndexNow;
 use JothamLec\MarketingToolkit\Reports\ReportSettings;
 use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
@@ -31,6 +32,7 @@ use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
+use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Events\StacheCleared;
 use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
@@ -89,6 +91,7 @@ class ServiceProvider extends AddonServiceProvider
         TaxonomySaved::class => [FlushSitemap::class],
         // A deploy clears the Stache; the rules may have changed with the code.
         StacheCleared::class => [FlushSitemap::class],
+        GlobalVariablesSaved::class => [RemakeFavicons::class],
     ];
 
     protected $subscribe = [RedirectChangedUris::class];

@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Tags;
 
 use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
@@ -12,7 +13,8 @@ use Statamic\Tags\Tags;
  * <body> (`{{ seo:head }}`, `{{ seo:body }}` in Antlers): everything the
  * addon adds to a page. The head is the Consent Mode defaults and tracking
  * tags, which must come before anything else that loads Google's tags, then
- * the meta tags; the body is the tags' <noscript> fallbacks.
+ * the meta tags, then the icons' links; the body is the tags' <noscript>
+ * fallbacks. `<s:seo:favicons />` is the icons' links alone.
  *
  * `<s:seo:meta />` alone is the meta tags: every tag the
  * <head> needs for the current page's SEO. It reads the entry or term from the
@@ -26,7 +28,21 @@ class Seo extends Tags
 
     public function head(): string
     {
-        return app(Tracking::class)->head().$this->meta();
+        return app(Tracking::class)->head().$this->meta().$this->favicons();
+    }
+
+    /**
+     * The icons' <link> tags and theme colour, when SEO & brand has an icon.
+     */
+    public function favicons(): string
+    {
+        if (! config('seo.favicons.enabled', true)) {
+            return '';
+        }
+
+        $favicons = app(Favicons::class);
+
+        return view('seo::favicons', ['links' => $favicons->links(), 'themeColor' => $favicons->themeColor()])->render();
     }
 
     public function body(): string

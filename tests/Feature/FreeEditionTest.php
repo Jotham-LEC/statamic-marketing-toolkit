@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
 use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
@@ -183,4 +184,13 @@ test('tracking tags and Consent Mode work; regions are Pro, so the defaults appl
         ->and($head)->toContain('gtm.js')
         ->toContain("gtag('consent','default',{\"ad_storage\":\"denied\"")
         ->not->toContain('"region"');
+});
+
+test('favicons are made from the brand\'s icon', function () {
+    app(Favicons::class)->flush();
+    AssetContainer::find('assets')->disk()->put('icon.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    seoGlobal(['favicon' => 'icon.png']);
+
+    $this->get('https://example.test/favicon.ico')->assertOk();
+    expect(renderAt('/', '<s:seo:head />'))->toContain('rel="apple-touch-icon"');
 });

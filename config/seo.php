@@ -263,6 +263,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Favicons
+    |--------------------------------------------------------------------------
+    |
+    | /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
+    | /icon-512.png and /site.webmanifest, made from the icon in SEO & brand,
+    | and their <link> tags in <s:seo:head />. A file of the same name in
+    | public/ wins.
+    |
+    */
+
+    'favicons' => [
+        'enabled' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Link check (Pro)
     |--------------------------------------------------------------------------
     |
