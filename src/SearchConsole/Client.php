@@ -57,6 +57,23 @@ class Client
         return $rows;
     }
 
+    /**
+     * The property as Search Console describes it, with the key's access to it:
+     * a cheap call that fails as an import would.
+     *
+     * @return array{siteUrl: string, permissionLevel: string}
+     */
+    public function site(): array
+    {
+        $property = rawurlencode((string) config('seo.search_console.property'));
+
+        return Http::withToken($this->token())
+            ->timeout(15)
+            ->get("https://www.googleapis.com/webmasters/v3/sites/{$property}")
+            ->throw()
+            ->json();
+    }
+
     private function token(): string
     {
         $credentials = $this->credentials();

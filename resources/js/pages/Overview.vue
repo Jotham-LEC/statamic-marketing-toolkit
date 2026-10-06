@@ -1,18 +1,24 @@
 <script setup>
 import { Head } from '@statamic/cms/inertia';
 import { Button, Card, Description, Header, Heading } from '@statamic/cms/ui';
+import { ref } from 'vue';
 import Score from '../components/Score.vue';
+import SearchConsoleSetup from '../components/SearchConsoleSetup.vue';
 import When from '../components/When.vue';
 
-defineProps({
+const props = defineProps({
     siteName: { type: String, required: true },
     global: { type: Object, required: true },
     report: { type: Object, required: true },
     redirects: { type: Object, default: null },
     notFound: { type: Object, required: true },
     search: { type: Object, default: null },
+    searchSetup: { type: Object, required: true },
     files: { type: Array, required: true },
 });
+
+// Once the numbers come in, the steps fold away behind a button.
+const showSetup = ref(props.searchSetup.can_set_up && !props.search?.fetched_at);
 </script>
 
 <template>
@@ -80,8 +86,11 @@ defineProps({
         </div>
 
         <Card v-if="search" class="space-y-3 p-4">
-            <Heading size="lg">Google Search</Heading>
-            <Description v-if="!search.fetched_at">Not imported yet. It runs daily, or now with <code>php please seo:search-console</code>.</Description>
+            <div class="flex items-center justify-between gap-3">
+                <Heading size="lg">Google Search</Heading>
+                <Button v-if="searchSetup.can_set_up && search.fetched_at" size="sm" variant="ghost" :text="showSetup ? 'Hide the connection' : 'Connection'" @click="showSetup = !showSetup" />
+            </div>
+            <Description v-if="!search.fetched_at">Set up, not imported yet. It runs daily, or now with Import now below.</Description>
             <template v-else>
                 <Description>
                     {{ search.clicks.toLocaleString() }} clicks from {{ search.impressions.toLocaleString() }} appearances, {{ search.from }} to {{ search.to }}.
@@ -101,6 +110,13 @@ defineProps({
                     </tbody>
                 </table>
             </template>
+        </Card>
+
+        <SearchConsoleSetup v-if="showSetup" :setup="searchSetup" />
+
+        <Card v-else-if="!search && !searchSetup.can_set_up" class="space-y-2 p-4">
+            <Heading size="lg">Google Search</Heading>
+            <Description>Not connected. Whoever can change the SEO addon's settings can connect Google Search Console here, to see how often each page is found and clicked.</Description>
         </Card>
 
         <Card class="space-y-2 p-4">

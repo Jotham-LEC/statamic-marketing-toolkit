@@ -249,7 +249,7 @@ test('reports run on the schedule set in the addon settings', function () {
         $schedule = new Schedule;
         (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
 
-        return collect($schedule->events())->map(fn ($event) => $event->expression)->all();
+        return collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'seo:report'))->map(fn ($event) => $event->expression)->values()->all();
     };
 
     expect($events(['schedule' => 'off']))->toBe([])

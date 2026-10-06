@@ -107,7 +107,9 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 
 ### Google Search Console
 
-Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until both keys are set.
+Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until there is a key and a property.
+
+**From the control panel**: Tools → SEO walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/seo/search-console-key.json` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
 
 | Key | Default | |
 |---|---|---|
@@ -120,7 +122,7 @@ Setting it up:
 1. In [Google Cloud](https://console.cloud.google.com/), create a project (or use one), enable the **Google Search Console API**, and create a **service account** with a **JSON key**.
 2. In [Search Console](https://search.google.com/search-console), open the property → Settings → Users and permissions, and add the service account's email (`…@….iam.gserviceaccount.com`) as a **Restricted** user.
 3. Put the key on the server (outside the web root) and set `SEO_SEARCH_CONSOLE_CREDENTIALS=/path/to/key.json` and `SEO_SEARCH_CONSOLE_PROPERTY` in `.env`.
-4. Run `php please seo:search-console` once; the schedule then runs it daily at 04:30 (Laravel's scheduler must be running).
+4. Run `php please seo:search-console` once (or Import now on Tools → SEO); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running).
 
 ### Share cards and images
 
@@ -153,6 +155,8 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 | Pages per step | 25 | Pages one step renders. Lower it if a step times out. |
 | Reports to keep | 10 | Older reports are deleted when a new one finishes. |
 | Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. |
+
+**Search Console** tab: the **Property**, as set from Tools → SEO. `SEO_SEARCH_CONSOLE_PROPERTY` wins over it.
 
 ## Permissions
 

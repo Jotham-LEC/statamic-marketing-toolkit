@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- **Connect Google Search Console from the control panel.** Tools → SEO lists the steps with their links, takes the service account key as an upload (kept in `storage/app/private`, never in git) and the property (the site's domain suggested; an addon setting), checks the connection, saying what to fix when Google refuses (the API not enabled, the key's email not a user of the property, no such property), and imports. Values in `.env` still win. For whoever may change the addon's settings.
 - **Rules per taxonomy**: `seo.taxonomies`, like `collections`, gives term pages an `og_type`, `page_schema`, `description_fields`, `image_fields` and `faq_field`. `contentConfig()` reads a page's rules from its collection or its taxonomy.
 - `SiteSeo::termHasEntries()`: one place, used by the sitemap and the reports, that decides whether a term has published entries. Override it for a taxonomy that isn't attached to the collection whose entries use it (Statamic counts none there).
 
@@ -31,6 +32,7 @@ Remove `og.cache_store`, `image` and `indexnow.endpoint` from a published `confi
 - Report link checks no longer look at files above `public/` (`/../composer.json` counted as a working link).
 - IndexNow is no longer told about a draft that is deleted: its address was never public.
 - A draft parent page no longer appears, with its title and address, in its children's breadcrumbs (JSON-LD).
+
 
 ### Changed
 - Faster CSV import of redirects: each row's loop check read every rule again, rebuilt after the row before it. It now reads only the rules that could match (300 rows: 11.6 s → 0.6 s).

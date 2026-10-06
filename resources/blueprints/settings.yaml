@@ -113,3 +113,12 @@ tabs:
               default: '03:00'
               width: 50
               unless: { schedule: 'equals off' }
+  search_console:
+    display: 'Search Console'
+    sections:
+      -
+        instructions: 'Tools → SEO walks you through connecting Google Search Console. A value in .env (SEO_SEARCH_CONSOLE_PROPERTY) wins over this one.'
+        fields:
+          -
+            handle: search_console_property
+            field: { type: text, display: 'Property', instructions: 'As Search Console names it: sc-domain:example.com for a domain, https://example.com/ for an address prefix.' }

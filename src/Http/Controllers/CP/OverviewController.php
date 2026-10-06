@@ -8,6 +8,7 @@ use JothamLec\Seo\NotFound\MissingPath;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\Report;
 use JothamLec\Seo\SearchConsole\Client;
+use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\SiteSeo;
 use Statamic\Facades\Addon;
@@ -61,6 +62,7 @@ class OverviewController
                 'url' => cp_route('seo.404s.index'),
             ],
             'search' => $this->search($searchConsole),
+            'searchSetup' => $this->searchSetup($searchConsole, $user->can('editSettings', $addon)),
             // On the site's own address, which can differ from the control panel's.
             'files' => collect([
                 'Sitemap' => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
@@ -68,6 +70,34 @@ class OverviewController
                 'Home share card' => config('seo.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
         ]);
+    }
+
+    /**
+     * Where Search Console's setup stands, for the steps on Tools → SEO.
+     * Without permission to change it, only whether it is connected.
+     *
+     * @return array<string, mixed>
+     */
+    private function searchSetup(Client $client, bool $canSetUp): array
+    {
+        $connection = new Connection;
+
+        return [
+            'configured' => $client->configured(),
+            'can_set_up' => $canSetUp,
+            'email' => $canSetUp ? $connection->email() : null,
+            'key_source' => $connection->keySource(),
+            'property' => $canSetUp ? config('seo.search_console.property') : null,
+            'property_source' => $connection->propertySource(),
+            'suggested_property' => $connection->suggestedProperty(),
+            'urls' => $canSetUp ? [
+                'key' => cp_route('seo.search-console.key'),
+                'forget_key' => cp_route('seo.search-console.key.forget'),
+                'property' => cp_route('seo.search-console.property'),
+                'check' => cp_route('seo.search-console.check'),
+                'import' => cp_route('seo.search-console.import'),
+            ] : null,
+        ];
     }
 
     /**

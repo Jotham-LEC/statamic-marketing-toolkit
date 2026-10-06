@@ -18,6 +18,7 @@ use JothamLec\Seo\Listeners\RedirectChangedUris;
 use JothamLec\Seo\Listeners\SubmitToIndexNow;
 use JothamLec\Seo\Reports\ReportSettings;
 use JothamLec\Seo\SearchConsole\Client as SearchConsoleClient;
+use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\Support\Config;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
@@ -26,8 +27,8 @@ use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
-use Statamic\Events\TaxonomySaved;
 use Statamic\Events\StacheCleared;
+use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
@@ -67,9 +68,9 @@ class ServiceProvider extends AddonServiceProvider
         // A new route moves every entry or term in it.
         CollectionSaved::class => [FlushSitemap::class],
         TaxonomySaved::class => [FlushSitemap::class],
-    ];
         // A deploy clears the Stache; the rules may have changed with the code.
         StacheCleared::class => [FlushSitemap::class],
+    ];
 
     protected $subscribe = [RedirectChangedUris::class];
 
@@ -105,6 +106,9 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon(): void
     {
+        // A key and property set up in the control panel, where .env has none.
+        Connection::apply();
+
         $this->app->terminating(fn () => $this->app->make(IndexNow::class)->flush());
 
         // A queue worker doesn't terminate between jobs: send what each job changed once it is done.
@@ -143,9 +147,9 @@ class ServiceProvider extends AddonServiceProvider
 
         $event?->withoutOverlapping()->runInBackground();
 
-        // Search Console's numbers, daily, once it is set up.
-        if (app(SearchConsoleClient::class)->configured()) {
-            $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping();
-        }
+        // Search Console's numbers, daily, once it is set up. Asked when the
+        // schedule runs: a key set up in the control panel is read later in boot.
+        $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping()
+            ->when(fn () => app(SearchConsoleClient::class)->configured());
     }
 }

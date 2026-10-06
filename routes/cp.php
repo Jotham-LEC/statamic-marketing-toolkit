@@ -7,6 +7,7 @@ use JothamLec\Seo\Http\Controllers\CP\OverviewController;
 use JothamLec\Seo\Http\Controllers\CP\PreviewController;
 use JothamLec\Seo\Http\Controllers\CP\RedirectsController;
 use JothamLec\Seo\Http\Controllers\CP\ReportsController;
+use JothamLec\Seo\Http\Controllers\CP\SearchConsoleController;
 
 Route::name('seo.')->prefix('seo')->group(function () {
     Route::get('/', OverviewController::class)->name('index');
@@ -32,6 +33,12 @@ Route::name('seo.')->prefix('seo')->group(function () {
     Route::get('reports/{report}', [ReportsController::class, 'show'])->whereNumber('report')->name('reports.show');
     Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
     Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');
+
+    Route::post('search-console/key', [SearchConsoleController::class, 'key'])->name('search-console.key');
+    Route::delete('search-console/key', [SearchConsoleController::class, 'forgetKey'])->name('search-console.key.forget');
+    Route::post('search-console/property', [SearchConsoleController::class, 'property'])->name('search-console.property');
+    Route::post('search-console/check', [SearchConsoleController::class, 'check'])->name('search-console.check');
+    Route::post('search-console/import', [SearchConsoleController::class, 'import'])->name('search-console.import');
 
     Route::post('actions', [ActionController::class, 'run'])->name('actions.run');
     Route::post('actions/list', [ActionController::class, 'bulkActions'])->name('actions.bulk');
