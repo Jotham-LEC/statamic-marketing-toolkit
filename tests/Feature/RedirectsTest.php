@@ -138,6 +138,22 @@ test('a rule that sends an address back to itself, directly or through another r
         ->and($fails('/c', '/a'))->toBeFalse();
 });
 
+test('a rule that comes back to its own address through a longer chain of rules is refused', function () {
+    $validator = fn (string $source, string $target, ?int $ignore = null) => Redirect::validator(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true], $ignore);
+    rule('/b', '/c');
+    rule('/c', '/d/x');
+    rule('/d/*', '/a');
+    // A chain that loops without passing through here stops being followed.
+    rule('/p', '/q');
+    rule('/q', '/p');
+
+    expect($validator('/a', '/b')->errors()->first('target'))->toBe('The redirects from that address lead back here after 3 steps, so visitors would go round in a loop.')
+        ->and($validator('/z', '/b')->fails())->toBeFalse()
+        ->and($validator('/z', '/p')->fails())->toBeFalse()
+        // Editing the rule at the end of the chain: its old version doesn't count.
+        ->and($validator('/d/*', '/elsewhere', Redirect::query()->where('source', '/d/*')->value('id'))->fails())->toBeFalse();
+});
+
 test('a rule saved before that check, sending an address to itself, is not served', function () {
     Redirect::query()->insert(['source' => '/a', 'target' => '/a/', 'status' => 301, 'active' => true, 'automatic' => false, 'hits' => 0]);
 

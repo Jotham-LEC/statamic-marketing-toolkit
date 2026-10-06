@@ -30,6 +30,7 @@ Remove `og.cache_store`, `image` and `indexnow.endpoint` from a published `confi
 - The sitemap follows a collection or taxonomy saved with a new route, and a deploy that changes `seo.sitemap`, instead of waiting for the next content save.
 - `/sitemap_{n}.xml` with a number too big for PHP answered 500; it is a 404.
 - Redirects send visitors to the site's own address (Statamic's site URL), not to whatever Host header the request carried, so a forged Host can't turn a redirect into one to another domain (or poison a cache with it).
+- Redirects: a rule that would come back to its own address through a chain of other rules (`/a` → `/b` → `/c` → `/a`, up to ten steps, wildcards included) is refused; only a rule leading straight back was caught.
 - IndexNow from a queue worker: what a job changed is sent when the job is done, not when the worker stops (which could be days later).
 - Reports no longer stop on a page title longer than 255 characters (MySQL in strict mode and Postgres refused it); the stored title is cut to fit.
 

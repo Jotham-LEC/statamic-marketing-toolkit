@@ -28,6 +28,9 @@ class Redirect extends Model
 {
     public const array STATUSES = [301, 302, 410];
 
+    /** How far a chain of rules is followed when looking for a loop. */
+    private const int MAX_HOPS = 10;
+
     protected $table = 'seo_redirects';
 
     protected $guarded = ['id'];
@@ -167,17 +170,34 @@ class Redirect extends Model
 
         $source = self::normalize($source);
 
-        // The rule already at the target, if it leads straight back here. Read from the
-        // rules that could match it, not the cached set, which an import would rebuild
-        // after every row.
-        $target = self::normalize($target);
-        $next = str_contains($source, '*') ? null : app(Matcher::class)->matchAmong(
-            self::query()->where('active', true)->where(fn ($query) => $query->where('source', $target)->orWhere('source', 'like', '%*%'))->get(['id', 'source', 'target', 'status']),
-            $target,
-        );
+        if (str_contains($source, '*')) {
+            return null;
+        }
 
-        if ($next && $next['id'] !== $ignoreId && $next['target'] !== null && str_starts_with($next['target'], '/') && self::normalize($next['target']) === $source) {
-            return 'The redirect from that address leads back here, so the two would loop.';
+        // Follow the rules from the target, as a visitor would be sent on, and see whether
+        // they come back here. Each step reads only the rules that could match (an exact
+        // source, the wildcards), not the cached set, which an import would rebuild after
+        // every row; the rule being edited stands aside for its new version.
+        $wildcards = self::query()->where('active', true)->where('source', 'like', '%*%')->whereKeyNot($ignoreId ?? 0)->get(['id', 'source', 'target', 'status']);
+        $path = self::normalize($target);
+        $seen = [];
+
+        for ($hops = 1; $hops <= self::MAX_HOPS && ! isset($seen[$path]); $hops++) {
+            $seen[$path] = true;
+            $exact = self::query()->where('active', true)->where('source', $path)->whereKeyNot($ignoreId ?? 0)->get(['id', 'source', 'target', 'status']);
+            $next = app(Matcher::class)->matchAmong($exact->merge($wildcards), $path);
+
+            if ($next === null || $next['target'] === null || ! str_starts_with($next['target'], '/')) {
+                return null;
+            }
+
+            $path = self::normalize($next['target']);
+
+            if ($path === $source) {
+                return $hops === 1
+                    ? 'The redirect from that address leads back here, so the two would loop.'
+                    : "The redirects from that address lead back here after {$hops} steps, so visitors would go round in a loop.";
+            }
         }
 
         return null;
