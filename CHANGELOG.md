@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased (0.18.0)
+## 0.18.0 – 2026-10-06
 
 Co-SEO is now **Marketing Toolkit**: the marketing fundamentals of a website, not only its SEO.
 
 ### Upgrading
+- **Pro is $75 per site**, a perpetual licence, on the [Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit).
 - **New package name.** `composer remove jotham-lec/statamic-co-seo --no-update && composer require jotham-lec/statamic-marketing-toolkit`, then rename the key in `config/statamic/editions.php` to `jotham-lec/statamic-marketing-toolkit`. Everything else stays: see [Upgrading from Co-SEO](docs/upgrading.md).
 - PHP classes moved from `JothamLec\Seo` to `JothamLec\MarketingToolkit`.
 - For tracking: swap `<s:seo:meta />` for `<s:seo:head />` at the top of the `<head>`, add `<s:seo:body />` after `<body>`, remove the site's own tracking snippets, and run `php please seo:install --fields --tab=tracking` (it also adds the icon fields).
