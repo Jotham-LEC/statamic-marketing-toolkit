@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.12.0 – 2026-10-06
+
+Search Console set up from the control panel, rules per taxonomy, and fixes for gallery fields and static caching.
 
 ### Added
 - **Connect Google Search Console from the control panel.** Tools → SEO lists the steps with their links, takes the service account key as an upload (kept in `storage/app/private`, never in git) and the property (the site's domain suggested; an addon setting), checks the connection, saying what to fix when Google refuses (the API not enabled, the key's email not a user of the property, no such property), and imports. Values in `.env` still win. For whoever may change the addon's settings.
