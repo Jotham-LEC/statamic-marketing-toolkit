@@ -80,3 +80,28 @@ test('listeners and middleware of modules that are off aren\'t registered', func
         ->and($middleware)->toBe([])
         ->and((fn () => $this->subscribe)->call($provider))->toBe([]);
 });
+
+test('a module config/seo.php switches off shows off, locked, and a save leaves it be', function () {
+    config(['seo.indexnow.enabled' => false]);
+    $this->actingAs(cpUser(super: true));
+
+    $this->get(cp_route('seo.features.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('values.indexnow', false)
+        ->where('values.sitemap', true)
+        ->where('blueprint.tabs.0.sections.0.fields.4.handle', 'indexnow')
+        ->where('blueprint.tabs.0.sections.0.fields.4.visibility', 'read_only')
+        ->where('blueprint.tabs.0.sections.0.fields.4.instructions', 'Tells Bing and others when a page changes. Off in config/seo.php.'));
+
+    // Turning it on here can't override the config; turning it off here would only be saved twice.
+    $this->postJson(cp_route('seo.features.update'), ['indexnow' => true, 'sitemap' => false])->assertOk();
+
+    expect(Features::off())->toBe(['sitemap'])
+        ->and(Features::offInConfig())->toBe(['indexnow']);
+});
+
+test('a module off on the screen isn\'t counted as off in the config', function () {
+    Features::save(['sitemap']);
+    rebootFeatures();
+
+    expect(Features::offInConfig())->toBe([]);
+});

@@ -166,7 +166,7 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 **Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot, before anything registers: its routes answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted.
 
-Each switch sets the matching key below to off, whatever `config/seo.php` says. In Free, the screen isn't there and every module follows `config/seo.php`.
+Each switch sets the matching key below to off, whatever `config/seo.php` says. A module `config/seo.php` already switches off shows off on the screen, locked, with "Off in config/seo.php": a switch can't turn it back on. In Free, the screen isn't there and every module follows `config/seo.php`.
 
 ## Editions
 

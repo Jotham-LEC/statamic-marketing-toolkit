@@ -231,6 +231,7 @@ return [
     'features' => [
         'title' => 'Features',
         'intro' => 'Switch off what this site doesn’t use. A feature that’s off isn’t loaded at all, so it costs nothing on any page. Nothing you set up is lost: switch it back on and it’s there.',
+        'off_in_config' => 'Off in config/seo.php.',
         'groups' => [
             'search' => 'Search engines',
             'redirects' => 'Redirects and broken links',

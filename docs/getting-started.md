@@ -16,25 +16,34 @@ Marketing Toolkit comes as **Free** and **Pro**. Pro is $39 per site. A licence 
 
 | | Free | Pro |
 |---|:---:|:---:|
+| **SEO** | | |
 | Titles, descriptions, Open Graph and X cards, structured data (JSON-LD) | ✓ | ✓ |
-| Live Google and share preview, with counters | ✓ | ✓ |
+| Live Google and social preview as you type | ✓ | ✓ |
 | Sitemap, robots.txt, llms.txt and ads.txt | ✓ | ✓ |
-| IndexNow (Bing and others told of every change) | ✓ | ✓ |
-| Redirects by hand, with wildcards and 410s | ✓ | ✓ |
-| Favicons and web app manifest from one image | ✓ | ✓ |
-| Google Tag Manager, Analytics 4, PostHog, Meta Pixel and LinkedIn tags | ✓ | ✓ |
-| `SiteSeo` and `Tracking` overrides in code | ✓ | ✓ |
-| Site reports with a score out of 100, on a schedule (`seo:report`) | | ✓ |
+| IndexNow: Bing and others told of every change | ✓ | ✓ |
+| Share cards generated for every page | | ✓ |
+| **Score and reports** | | |
+| Every page scored out of 100, with a report, on a schedule | | ✓ |
 | Google Search Console numbers per page | | ✓ |
-| Google Consent Mode v2, by region | | ✓ |
-| Form submissions sent to the tools as leads, with where they came from | | ✓ |
-| Campaign links with UTM tags | | ✓ |
-| Generated share cards | | ✓ |
-| Redirects added when a page moves, and the 404 log | | ✓ |
-| CSV import and export of redirects | | ✓ |
-| Several sites and languages, with hreflang | | ✓ |
-| Features: switch off what a site doesn't use | | ✓ |
 | Dashboard widget | | ✓ |
+| **Redirects and 404s** | | |
+| Redirects by hand, with wildcards and 410s | ✓ | ✓ |
+| A redirect added when a page's address changes | | ✓ |
+| The 404 log: the pages people couldn't find | | ✓ |
+| CSV import and export of redirects | | ✓ |
+| **Tracking and consent** | | |
+| Google Tag Manager, Analytics 4, PostHog, Meta Pixel and LinkedIn tags | ✓ | ✓ |
+| Google Consent Mode v2, by region | | ✓ |
+| Consent for Meta, LinkedIn and PostHog without GTM | | ✓ |
+| **Leads and campaigns** | | |
+| Form submissions sent to your tools as leads, with where they came from | | ✓ |
+| Campaign links with UTM tags | | ✓ |
+| **Sites and languages** | | |
+| Several sites and languages, with hreflang | Default site only | ✓ |
+| **For developers** | | |
+| Favicons and web app manifest from one image | ✓ | ✓ |
+| Any value overridden in code (`SiteSeo`, `Tracking`) | ✓ | ✓ |
+| Switch off the modules a site doesn't use | In `config/seo.php` | Also in the control panel |
 
 To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
 

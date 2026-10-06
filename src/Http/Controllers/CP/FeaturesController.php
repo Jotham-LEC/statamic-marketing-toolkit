@@ -22,11 +22,12 @@ class FeaturesController
     public function index(): Response
     {
         $this->authorize();
-        $off = Features::off();
-        $fields = $this->blueprint()->fields()->addValues(collect(Features::MODULES)->map(fn ($config, string $module) => ! in_array($module, $off, true))->all())->preProcess();
+        $off = [...Features::off(), ...Features::offInConfig()];
+        $blueprint = $this->blueprint(Features::offInConfig());
+        $fields = $blueprint->fields()->addValues(collect(Features::MODULES)->map(fn ($config, string $module) => ! in_array($module, $off, true))->all())->preProcess();
 
         return Inertia::render('seo::Features', [
-            'blueprint' => $this->blueprint()->toPublishArray(),
+            'blueprint' => $blueprint->toPublishArray(),
             'values' => $fields->values()->all(),
             'meta' => $fields->meta()->all(),
             'submitUrl' => cp_route('seo.features.update'),
@@ -37,24 +38,30 @@ class FeaturesController
     {
         $this->authorize();
 
-        // A module the request leaves out keeps its state.
+        // A module the request leaves out keeps its state, as does one config/seo.php switches off.
         $off = Features::off();
+        $locked = Features::offInConfig();
         Features::save(array_values(array_filter(
             array_keys(Features::MODULES),
-            fn (string $module) => $request->has($module) ? ! $request->boolean($module) : in_array($module, $off, true),
+            fn (string $module) => $request->has($module) && ! in_array($module, $locked, true) ? ! $request->boolean($module) : in_array($module, $off, true),
         )));
 
         return response()->json(['saved' => true]);
     }
 
-    private function blueprint(): BlueprintObject
+    /**
+     * @param  list<string>  $locked  the modules config/seo.php switches off
+     */
+    private function blueprint(array $locked = []): BlueprintObject
     {
         $toggle = fn (string $module) => ['handle' => $module, 'field' => [
             'type' => 'toggle',
             'display' => __('seo::cp.features.modules.'.$module.'.display'),
-            'instructions' => __('seo::cp.features.modules.'.$module.'.instructions'),
+            'instructions' => __('seo::cp.features.modules.'.$module.'.instructions')
+                .(in_array($module, $locked, true) ? ' '.__('seo::cp.features.off_in_config') : ''),
             'default' => true,
             'width' => 50,
+            ...(in_array($module, $locked, true) ? ['visibility' => 'read_only'] : []),
         ]];
         $section = fn (string $group, array $modules) => ['display' => __('seo::cp.features.groups.'.$group), 'fields' => array_map($toggle, $modules)];
 

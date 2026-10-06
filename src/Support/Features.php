@@ -51,6 +51,20 @@ final class Features
     }
 
     /**
+     * The modules config/seo.php switches off, rather than this screen: shown
+     * off there, and locked, since a switch can't turn them back on.
+     *
+     * @return list<string>
+     */
+    public static function offInConfig(): array
+    {
+        $off = self::off();
+
+        return array_values(array_filter(array_keys(self::MODULES), fn (string $module) => ! in_array($module, $off, true)
+            && array_filter(array_keys(self::MODULES[$module]), fn (string $key) => ! config($key, true)) !== []));
+    }
+
+    /**
      * Sets the modules that are off, off in the config.
      */
     public static function apply(): void

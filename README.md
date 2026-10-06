@@ -24,7 +24,20 @@ The marketing fundamentals for a Statamic website, in one addon: SEO with a scor
 
 ## Free and Pro
 
-The free edition is free on any site. Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. A licence covers every release of one major version, and one bought during 0.x also covers 1.x; a new major version needs a new licence. Local and staging sites don't need a licence. The free edition shows Pro's features in the control panel as cards you can upgrade from; nothing you set up is lost when you switch. See [the editions](docs/getting-started.md#the-editions) for the full list.
+**Free** covers the fundamentals, and doesn't expire: every page's tags and structured data, a sitemap, robots.txt and llms.txt, redirects, favicons and your tracking tags.
+
+**Pro** is for teams who market through their site:
+
+- **The score and the report**: every page checked and scored out of 100, on a schedule.
+- **Google Search Console** numbers beside each page.
+- **No lost visitors**: a redirect added when a page moves, and a list of the pages people couldn't find.
+- **Consent Mode v2**, by region, for the cookie banner you already have.
+- **Leads**: every form sent to your tools with where the visitor came from, and campaign links with UTM tags.
+- **Share cards** made for every page.
+- **Several sites and languages**, with hreflang.
+- **Feature toggles** and a dashboard widget in the control panel.
+
+Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. A licence covers every release of one major version, and one bought during 0.x also covers 1.x; a new major version needs a new licence. Local and staging sites don't need one. Switch editions at any time; nothing you set up is lost. See [the editions](docs/getting-started.md#the-editions) for the full comparison.
 
 ## Documentation
 
