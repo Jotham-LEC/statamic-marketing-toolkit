@@ -181,14 +181,14 @@ test('several sites: the overview is the default site\'s, with a Pro card for th
         ->where('siteName', 'Acme'));
 });
 
-test('tracking tags and Consent Mode work; regions are Pro, so the defaults apply everywhere', function () {
-    seoGlobal(['gtm_id' => 'GTM-ABC1234', 'consent_mode' => true, 'consent_regions' => ['EEA']]);
+test('tracking tags work; Consent Mode is Pro, so none of its defaults print', function () {
+    seoGlobal(['gtm_id' => 'GTM-ABC1234', 'meta_pixel_id' => '123456789012', 'consent_mode' => true, 'consent_regions' => ['EEA']]);
     $head = renderAt('/', '<s:seo:head />');
 
-    expect(app(Tracking::class)->consent()['regions'])->toBe([])
-        ->and($head)->toContain('gtm.js')
-        ->toContain("gtag('consent','default',{\"ad_storage\":\"denied\"")
-        ->not->toContain('"region"');
+    expect(app(Tracking::class)->consent())->toBeNull()
+        ->and($head)->toContain('gtm.js')->toContain("fbq('init'")
+        ->not->toContain("gtag('consent'")
+        ->not->toContain('mtConsent');
 });
 
 test('favicons are made from the brand\'s icon', function () {

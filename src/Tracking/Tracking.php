@@ -7,7 +7,7 @@ use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\Support\Edition;
 
 /**
- * The tracking tags and Consent Mode defaults of the current site: IDs from
+ * The tracking tags of the current site, and (Pro) its Consent Mode defaults: IDs from
  * the "Tracking" tab of the SEO & brand global, with config/seo.php (and so
  * .env) winning over it. Printed by <s:seo:head /> and <s:seo:body />, in
  * production only and never in Live Preview.
@@ -121,15 +121,15 @@ class Tracking
     }
 
     /**
-     * Consent Mode v2 defaults, for a cookie banner that updates them; null
-     * while Consent Mode is off. Regions (Pro): the defaults apply there, and
-     * everything is granted elsewhere.
+     * Pro: Consent Mode v2 defaults, for a cookie banner that updates them;
+     * null while Consent Mode is off, and in Free. With regions, the
+     * defaults apply there, and everything is granted elsewhere.
      *
      * @return array{defaults: array<string, string>, regions: list<string>, wait_for_update: int}|null
      */
     public function consent(): ?array
     {
-        if (! $this->settings->bool('consent_mode')) {
+        if (! Edition::pro() || ! $this->settings->bool('consent_mode')) {
             return null;
         }
 
@@ -139,7 +139,7 @@ class Tracking
 
         return [
             'defaults' => $defaults,
-            'regions' => Edition::pro() ? $this->regions() : [],
+            'regions' => $this->regions(),
             'wait_for_update' => max(0, min(10000, (int) ($this->settings->string('consent_wait_for_update') ?? 500))),
         ];
     }

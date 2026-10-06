@@ -180,7 +180,7 @@ return [
                 'instructions' => 'A form sent on the site counts as a lead in your tools: generate_lead in Google Tag Manager and Analytics, Lead for Meta, “form submitted” in PostHog, and your LinkedIn conversion.',
             ],
             'consent' => [
-                'display' => 'Consent Mode',
+                'display' => 'Consent Mode (Pro)',
                 'instructions' => 'For a cookie banner you already have (Cookiebot, CookieYes, Iubenda…): what Google’s tags may do before a visitor answers. The banner then tells them the answer.',
             ],
             'publisher' => [
@@ -269,7 +269,7 @@ return [
             'instructions' => 'How long Google’s tags wait for the banner’s answer before using these defaults.',
         ],
         'consent_regions' => [
-            'display' => 'Only in these regions (Pro)',
+            'display' => 'Only in these regions',
             'instructions' => 'Country codes (FR, US-CA). The defaults above apply there; everywhere else, everything is granted. Empty: everywhere.',
             'options' => [
                 'eea' => 'EEA, UK and Switzerland',

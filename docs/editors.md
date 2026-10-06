@@ -30,7 +30,7 @@ The overview: the latest report's score *(Pro)*, recent 404s *(Pro)*, redirects,
 
 **Leads** *(Pro)* (same tab): **Send form submissions as leads** sends every form sent on the site to your tools as a lead (and to a LinkedIn conversion, if you paste its ID); **Save where each lead came from** adds the campaign, the site that sent them and their first page to each submission, under **Forms**. See [tracking.md](tracking.md#leads-pro).
 
-**Consent Mode** (same tab), for a cookie banner you already have: what Google's tags may do before a visitor answers it. Turn it on, choose what's denied until the visitor agrees (everything, by default), and how long to wait for the banner. *(Pro)* **Only in these regions**: the defaults apply there (for example the EEA, the UK and Switzerland), and everything is granted elsewhere. See [tracking.md](tracking.md) for how the banner passes on the answer.
+**Consent Mode** *(Pro)* (same tab), for a cookie banner you already have: what Google's tags may do before a visitor answers it. Turn it on, choose what's denied until the visitor agrees (everything, by default), and how long to wait for the banner. **Only in these regions**: the defaults apply there (for example the EEA, the UK and Switzerland), and everything is granted elsewhere. See [tracking.md](tracking.md) for how the banner passes on the answer.
 
 **Shop tab** (for a site that sells; your developer adds it). The **currency** of your prices; your **return policy** (within so many days, any time, or not accepted, for a country, and/or a link to the policy page); and your **shipping rates**: one row per destination and order value (for example free over RM 300), with the delivery time in days. Search engines show these with your products.
 

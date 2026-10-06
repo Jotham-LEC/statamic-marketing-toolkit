@@ -1,6 +1,6 @@
 # Tracking and Consent Mode
 
-Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the LinkedIn Insight Tag, with Google's Consent Mode v2 defaults ahead of them. It has no cookie banner: it works with the one you have (Cookiebot, CookieYes, Iubenda, Complianz, or your own).
+Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the LinkedIn Insight Tag, with *(Pro)* Google's Consent Mode v2 defaults ahead of them. It has no cookie banner: it works with the one you have (Cookiebot, CookieYes, Iubenda, Complianz, or your own).
 
 ## Where the tags go
 
@@ -30,7 +30,10 @@ With Google Tag Manager set, add GA4, PostHog, Meta and LinkedIn **as tags insid
 
 GTM also handles consent better than any page snippet: each tag has its own consent checks, and Google's tags read Consent Mode by themselves.
 
-## Consent Mode
+## Consent Mode *(Pro)*
+
+The tags are Free; Consent Mode, and the consent bridge below, are Pro. In Free the tags load as soon as the page does, so a site that needs consent first loads them through its banner or through GTM's consent settings.
+
 
 Turn on **Use Consent Mode** in the Tracking tab and choose, for each of Google's four signals, whether it is denied until the visitor agrees (the default) or granted:
 
@@ -43,7 +46,7 @@ Turn on **Use Consent Mode** in the Tracking tab and choose, for each of Google'
 
 **Wait for the banner** (`wait_for_update`, 500 ms by default) is how long Google's tags hold their first hit for the banner's answer before using the defaults.
 
-*(Pro)* **Only in these regions**: country or region codes (`FR`, `DE`, `US-CA`), or **EEA, UK and Switzerland**. The defaults apply to visitors there; everyone else is granted everything. Google works out the visitor's region.
+**Only in these regions**: country or region codes (`FR`, `DE`, `US-CA`), or **EEA, UK and Switzerland**. The defaults apply to visitors there; everyone else is granted everything. Google works out the visitor's region.
 
 The page then starts with:
 
@@ -75,7 +78,7 @@ and does the same on every later page, from the answer it stored. Most banners d
 
 Without an update, the defaults stay: Google's tags send cookieless pings, and the others below don't load.
 
-## Meta, LinkedIn and PostHog without GTM
+## Meta, LinkedIn and PostHog without GTM *(Pro)*
 
 These three don't read Google's Consent Mode. When they load directly (not through GTM) with Consent Mode on, a small script, the **consent bridge**, watches the dataLayer for the defaults and each update, and:
 
@@ -83,7 +86,7 @@ These three don't read Google's Consent Mode. When they load directly (not throu
 - **LinkedIn Insight Tag**, which has no consent setting, isn't loaded until `ad_storage` is granted.
 - **PostHog** starts opted out, keeping nothing in cookies, and opts in once `analytics_storage` is granted.
 
-With regions *(Pro)*, the page can't know where the visitor is, so the bridge waits for the banner's update everywhere. Most banners send one on every page, also where they don't show (they grant everything there). If yours doesn't, these three tools stay off outside the regions. GTM's consent checks don't have this problem: one more reason to load them through GTM.
+With regions, the page can't know where the visitor is, so the bridge waits for the banner's update everywhere. Most banners send one on every page, also where they don't show (they grant everything there). If yours doesn't, these three tools stay off outside the regions. GTM's consent checks don't have this problem: one more reason to load them through GTM.
 
 ## Leads *(Pro)*
 
