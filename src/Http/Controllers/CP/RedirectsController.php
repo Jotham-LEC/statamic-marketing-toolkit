@@ -11,6 +11,7 @@ use JothamLec\Seo\Preview\Draft;
 use JothamLec\Seo\Redirects\AutoRedirects;
 use JothamLec\Seo\Redirects\Csv;
 use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Support\Sites;
 use JothamLec\Seo\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
@@ -47,13 +48,21 @@ class RedirectsController
     {
         $this->authorize();
 
+        $sites = Sites::options();
+
         return Listing::respond(
             Redirect::query(),
             $request,
-            ['source' => 'From', 'target' => 'To', 'status' => 'Status', 'active' => 'Active', 'hits' => 'Hits', 'last_hit_at' => 'Last used'],
+            [
+                'source' => 'From', 'target' => 'To',
+                // The site column only where there is more than one.
+                ...(Sites::multiple() ? ['site' => 'Site'] : []),
+                'status' => 'Status', 'active' => 'Active', 'hits' => 'Hits', 'last_hit_at' => 'Last used',
+            ],
             ['source', 'target'],
             fn (Redirect $redirect) => [
                 'id' => $redirect->id,
+                'site' => $redirect->site === null ? 'All sites' : ($sites[$redirect->site] ?? $redirect->site),
                 'source' => $redirect->source,
                 'target' => $redirect->target,
                 'status' => $redirect->status,
@@ -72,7 +81,12 @@ class RedirectsController
         $this->authorize();
 
         return $this->form(
-            new Redirect(['source' => (string) $request->query('source', ''), 'status' => 301, 'active' => true]),
+            new Redirect([
+                'source' => (string) $request->query('source', ''),
+                'site' => Sites::scope($request->query('site') === null ? null : (string) $request->query('site')),
+                'status' => 301,
+                'active' => true,
+            ]),
             title: 'Create redirect',
             submitUrl: cp_route('seo.redirects.store'),
             method: 'post',
@@ -207,9 +221,11 @@ class RedirectsController
      */
     private function validated(Request $request, ?int $ignoreId = null): array
     {
-        $values = $this->blueprint()->fields()->addValues($request->all())->process()->values()->only(['source', 'target', 'status', 'active'])->all();
+        $values = $this->blueprint()->fields()->addValues($request->all())->process()->values()->only(['source', 'target', 'status', 'active', 'site'])->all();
         $values['status'] = (int) ($values['status'] ?? 301);
         $values['active'] = (bool) ($values['active'] ?? false);
+        // Without a choice (or on a single site): every site.
+        $values['site'] = is_string($values['site'] ?? null) && $values['site'] !== '' && Sites::multiple() ? $values['site'] : null;
 
         return Redirect::validator($values, $ignoreId)->validate();
     }
@@ -221,6 +237,7 @@ class RedirectsController
             'target' => $redirect->target,
             'status' => (string) $redirect->status,
             'active' => $redirect->active,
+            'site' => $redirect->site,
         ])->preProcess();
 
         return Inertia::render('seo::RedirectForm', [
@@ -251,6 +268,11 @@ class RedirectsController
                 'options' => ['301' => '301 Moved for good', '302' => '302 Moved for now', '410' => '410 Gone'],
             ]],
             ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => 'Active', 'width' => 33, 'default' => true]],
+            // Only where there is more than one site to choose from.
+            ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
+                'type' => 'select', 'display' => 'Site', 'options' => Sites::options(), 'clearable' => true, 'placeholder' => 'All sites',
+                'instructions' => 'The site whose address this is. Empty: every site. A site’s own redirect wins over one for every site.',
+            ]]] : []),
         ]]]]]]);
     }
 }

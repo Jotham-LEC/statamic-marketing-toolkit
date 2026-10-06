@@ -4,18 +4,23 @@ namespace JothamLec\Seo\Redirects;
 
 use Closure;
 use Illuminate\Contracts\Validation\Validator as ValidatorContract;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use JothamLec\Seo\Support\Sites;
 
 /**
  * One rule: requests for `source` go to `target` with `status` (301, 302),
  * or are answered 410 Gone. A `*` in the source matches anything, and the
  * target takes what it matched as $1, $2… Rules apply only to addresses the
- * site would otherwise answer with a 404.
+ * site would otherwise answer with a 404. On a multi-site install a rule
+ * names the site it applies on, or none for every site; a site's own rule
+ * wins over one for every site from the same address.
  *
  * @property int $id
+ * @property ?string $site
  * @property string $source
  * @property ?string $target
  * @property int $status
@@ -27,6 +32,9 @@ use Illuminate\Validation\Rule;
 class Redirect extends Model
 {
     public const array STATUSES = [301, 302, 410];
+
+    /** The longest source: MySQL's unique index on site and source must stay under 3072 bytes. */
+    public const int MAX_SOURCE = 736;
 
     /** How far a chain of rules is followed when looking for a loop. */
     private const int MAX_HOPS = 10;
@@ -51,12 +59,33 @@ class Redirect extends Model
     protected static function booted(): void
     {
         static::saving(function (self $redirect) {
+            $redirect->site = $redirect->site === '' ? null : $redirect->site;
             $redirect->source = self::normalize($redirect->source);
             $redirect->target = $redirect->status === 410 ? null : self::normalizeTarget($redirect->target);
         });
 
         static::saved(fn () => Matcher::flush());
         static::deleted(fn () => Matcher::flush());
+    }
+
+    /**
+     * Rules stored for exactly this site; null: those for every site.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeOnSite(Builder $query, ?string $site): void
+    {
+        $site === null ? $query->whereNull('site') : $query->where('site', $site);
+    }
+
+    /**
+     * Rules that apply on this site: its own and those for every site.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeAppliesOn(Builder $query, string $site): void
+    {
+        $query->where(fn (Builder $query) => $query->where('site', $site)->orWhereNull('site'));
     }
 
     /**
@@ -92,14 +121,14 @@ class Redirect extends Model
     }
 
     /**
-     * The rule that starts from this address, in any letter case when matching
-     * ignores it. Sources are stored as typed, and databases fold letters
+     * The rule that starts from this address on $site (null: the rules for
+     * every site), in any letter case when matching ignores it. Sources are stored as typed, and databases fold letters
      * differently (SQLite only A–Z, MySQL by its collation), so that comparison is made here.
      */
-    public static function forSource(string $source, ?int $ignoreId = null): ?self
+    public static function forSource(string $source, ?int $ignoreId = null, ?string $site = null): ?self
     {
         $source = self::normalize($source);
-        $query = self::query()->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId));
+        $query = self::query()->onSite($site)->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId));
 
         if (! self::ignoresCase()) {
             return $query->where('source', $source)->first();
@@ -139,7 +168,9 @@ class Redirect extends Model
      */
     public static function validator(array $data, ?int $ignoreId = null): ValidatorContract
     {
-        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $ignoreId), [
+        $site = is_string($data['site'] ?? null) && $data['site'] !== '' ? $data['site'] : null;
+
+        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId), [
             'source.required' => 'Which address should be redirected?',
             'source.starts_with' => 'Start with / — the part of the address after the domain.',
             'source.not_regex' => 'Leave out the query string (?…); addresses are matched without it.',
@@ -148,27 +179,29 @@ class Redirect extends Model
             'target.regex' => 'Start with / for a page on this site, or https:// for another site.',
             'target.not_regex' => 'An address can’t contain line breaks or other control characters.',
             'status.in' => 'Choose 301, 302 or 410.',
+            'site.in' => 'Choose one of the sites, or none for every site.',
         ]);
     }
 
     /**
      * @return array<string, mixed>
      */
-    private static function rules(string $source, ?int $ignoreId): array
+    private static function rules(string $source, ?string $site, ?int $ignoreId): array
     {
         return [
+            'site' => ['nullable', 'string', Rule::in(Sites::handles())],
             'source' => [
                 // Control characters would go into the Location header (a line break starts a new header).
-                'required', 'string', 'max:768', 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
-                function (string $attribute, mixed $value, Closure $fail) use ($ignoreId) {
-                    if (self::forSource((string) $value, $ignoreId)) {
+                'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
+                function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId) {
+                    if (self::forSource((string) $value, $ignoreId, $site)) {
                         $fail('Another redirect already starts from this address.');
                     }
                 },
             ],
             'target' => [
                 'nullable', 'required_unless:status,410', 'string', 'max:2048', 'regex:#^(/|https?://)#i', 'not_regex:/[\x00-\x1F\x7F]/',
-                function (string $attribute, mixed $value, Closure $fail) use ($source, $ignoreId) {
+                function (string $attribute, mixed $value, Closure $fail) use ($source, $site, $ignoreId) {
                     $wildcards = substr_count($source, '*');
                     preg_match_all('/\$(\d+)/', (string) $value, $used);
 
@@ -177,7 +210,7 @@ class Redirect extends Model
                     } elseif (preg_match('#^https?://[^/]*\$\d#i', (string) $value)) {
                         // What a visitor typed would choose the site they are sent to (`https://example.com$1` → example.com.evil.test).
                         $fail('A $ number can only come after the domain and a /.');
-                    } elseif ($loop = self::loop($source, (string) $value, $ignoreId)) {
+                    } elseif ($loop = self::loop($source, (string) $value, $site, $ignoreId)) {
                         $fail($loop);
                     }
                 },
@@ -190,9 +223,11 @@ class Redirect extends Model
     /**
      * Why a rule from $source to $target would send visitors round in a
      * circle, or null. A target under a wildcard's own source (`/blog/*` to
-     * `/blog/new/$1`) is allowed: the pages there usually exist.
+     * `/blog/new/$1`) is allowed: the pages there usually exist. A rule for
+     * one site is followed through that site's rules; one for every site,
+     * through each site's.
      */
-    private static function loop(string $source, string $target, ?int $ignoreId): ?string
+    private static function loop(string $source, string $target, ?string $site, ?int $ignoreId): ?string
     {
         if (! str_starts_with($target, '/') || $source === '') {
             return null;
@@ -208,12 +243,29 @@ class Redirect extends Model
             return null;
         }
 
-        // Follow the rules from the target, as a visitor would be sent on, and see whether
-        // they come back here. Each step reads only the rules that could match (an exact
-        // source, the wildcards), not the cached set, which an import would rebuild after
-        // every row; the rule being edited stands aside for its new version. Ignoring case,
-        // an exact source can't be looked up in SQL (see forSource()), so all are read once.
-        $rules = fn () => self::query()->where('active', true)->whereKeyNot($ignoreId ?? 0)->select(['id', 'source', 'target', 'status']);
+        foreach ($site !== null ? [$site] : (Sites::multiple() ? Sites::handles() : [null]) as $on) {
+            if ($loop = self::loopOn($source, $target, $on, $ignoreId)) {
+                return $loop;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Follows the rules from the target, as a visitor on $site would be sent
+     * on (null: a single site, every rule), and sees whether they come back.
+     * Each step reads only the rules that could match (an exact source, the
+     * wildcards), not the cached set, which an import would rebuild after
+     * every row; the rule being edited stands aside for its new version.
+     * Ignoring case, an exact source can't be looked up in SQL (see
+     * forSource()), so all are read once.
+     */
+    private static function loopOn(string $source, string $target, ?string $site, ?int $ignoreId): ?string
+    {
+        $rules = fn () => self::query()->where('active', true)->whereKeyNot($ignoreId ?? 0)
+            ->when($site, fn (Builder $query, string $site) => $query->appliesOn($site))
+            ->select(['id', 'site', 'source', 'target', 'status']);
         $everything = self::ignoresCase() ? $rules()->get() : null;
         $wildcards = $everything ?? $rules()->where('source', 'like', '%*%')->get();
         $path = self::normalize($target);
@@ -222,7 +274,7 @@ class Redirect extends Model
         for ($hops = 1; $hops <= self::MAX_HOPS && ! isset($seen[self::key($path)]); $hops++) {
             $seen[self::key($path)] = true;
             $candidates = $everything ?? $rules()->where('source', $path)->get()->merge($wildcards);
-            $next = app(Matcher::class)->matchAmong($candidates, $path);
+            $next = app(Matcher::class)->matchAmong($candidates, $path, $site);
 
             if ($next === null || $next['target'] === null || ! str_starts_with($next['target'], '/')) {
                 return null;

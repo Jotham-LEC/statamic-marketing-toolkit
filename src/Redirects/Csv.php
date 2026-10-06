@@ -3,12 +3,14 @@
 namespace JothamLec\Seo\Redirects;
 
 use Illuminate\Support\Facades\DB;
+use JothamLec\Seo\Support\Sites;
 
 /**
  * Redirects as CSV: `source,target,status,active`, one rule per row, with that
- * header. Import adds new sources and updates existing ones (in any letter
- * case, when matching ignores it); a row that fails the form's checks is
- * skipped and reported by its line number.
+ * header, and a fifth column `site` on a multi-site install (a site's handle,
+ * or empty for every site). Import adds new sources and updates existing ones
+ * on the row's site (in any letter case, when matching ignores it); a row
+ * that fails the form's checks is skipped and reported by its line number.
  */
 class Csv
 {
@@ -19,10 +21,14 @@ class Csv
      */
     public function export($out): void
     {
-        fputcsv($out, self::HEADER, escape: '');
+        $sites = Sites::multiple();
 
-        Redirect::query()->orderBy('source')->each(function (Redirect $redirect) use ($out) {
-            fputcsv($out, [$redirect->source, $redirect->target, $redirect->status, $redirect->active ? 1 : 0], escape: '');
+        fputcsv($out, $sites ? [...self::HEADER, 'site'] : self::HEADER, escape: '');
+
+        Redirect::query()->orderBy('source')->orderBy('site')->each(function (Redirect $redirect) use ($out, $sites) {
+            $row = [$redirect->source, $redirect->target, $redirect->status, $redirect->active ? 1 : 0];
+
+            fputcsv($out, $sites ? [...$row, $redirect->site] : $row, escape: '');
         });
     }
 
@@ -47,9 +53,10 @@ class Csv
                     'target' => ($cells[1] ?? '') ?: null,
                     'status' => (int) (($cells[2] ?? '') ?: 301),
                     'active' => filter_var(($cells[3] ?? '') === '' ? true : $cells[3], FILTER_VALIDATE_BOOLEAN),
+                    'site' => Sites::multiple() ? (($cells[4] ?? '') ?: null) : null,
                 ];
 
-                $existing = Redirect::forSource($row['source']);
+                $existing = Redirect::forSource($row['source'], site: $row['site']);
                 $validator = Redirect::validator($row, $existing?->id);
 
                 if ($validator->fails()) {
