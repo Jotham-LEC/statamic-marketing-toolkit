@@ -3,6 +3,7 @@
 use JothamLec\Seo\Context;
 use JothamLec\Seo\SiteSeo;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalSet;
 
 beforeEach(fn () => seoGlobal(['default_description' => 'The default.']));
@@ -91,7 +92,7 @@ describe('open graph', function () {
         expect(metaFor(entryIn('essays', 'first', ['seo' => ['og_type' => 'profile']], '2026-01-02'))->ogType)->toBe('article')
             ->and(metaFor(entryIn('pages', 'team', ['seo' => ['og_type' => 'profile']]))->ogType)->toBe('website')
             ->and(metaFor(entryIn('pages', 'me'), '/me', ['og_type' => 'profile'])->ogType)->toBe('profile')
-            ->and(Statamic\Facades\Fieldset::find('seo::seo')->fields()->get('seo')->config()['fields'])
+            ->and(Fieldset::find('seo::seo')->fields()->get('seo')->config()['fields'])
             ->each(fn ($field) => $field->handle->not->toBe('og_type'));
     });
 

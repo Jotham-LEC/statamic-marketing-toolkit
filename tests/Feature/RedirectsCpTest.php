@@ -129,7 +129,7 @@ test('deleting redirects and 404 rows through the listing action', function () {
     $redirect = Redirect::query()->create(['source' => '/old', 'target' => '/new']);
     $row = MissingPath::query()->create(['path' => '/x', 'first_seen_at' => now(), 'last_seen_at' => now()]);
 
-    $this->get('/old')->assertRedirect('/new');
+    $this->get('/old')->assertRedirect('https://example.test/new');
 
     $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
     $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])->assertOk();

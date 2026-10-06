@@ -9,6 +9,7 @@ use JothamLec\Seo\NotFound\Recorder;
 use JothamLec\Seo\Redirects\Matcher;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Support\StatamicRoutes;
+use Statamic\Facades\Site;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -50,8 +51,9 @@ class HandleMissing
             return $response->setStatusCode(410);
         }
 
-        // Built by hand: Laravel's redirect() would trim a trailing slash the site wants.
-        $target = str_starts_with($rule['target'], '/') ? $request->getSchemeAndHttpHost().$request->getBaseUrl().$rule['target'] : $rule['target'];
+        // Built by hand: Laravel's redirect() would trim a trailing slash the site wants. On the
+        // site's own address, not the request's Host header, which a client can set to anything.
+        $target = str_starts_with($rule['target'], '/') ? rtrim(Site::current()->absoluteUrl(), '/').$rule['target'] : $rule['target'];
 
         return new RedirectResponse($target, $rule['status']);
     }

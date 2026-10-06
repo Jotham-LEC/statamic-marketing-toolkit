@@ -37,7 +37,7 @@ test('a changed slug leaves a marked 301 behind', function () {
         'source' => '/essays/on-reading', 'target' => '/essays/on-slow-reading', 'status' => 301, 'active' => true, 'automatic' => true,
     ]);
 
-    $this->get('/essays/on-reading')->assertRedirect('/essays/on-slow-reading');
+    $this->get('/essays/on-reading')->assertRedirect('https://example.test/essays/on-slow-reading');
 });
 
 test('a changed date moves a dated address', function () {
@@ -155,7 +155,7 @@ test('moving a collection\'s mount page redirects its entries with one wildcard 
     $tree->tree([['entry' => $about->id(), 'children' => [['entry' => $journal->id()]]]])->save();
 
     expect(redirectMap())->toBe(['/journal' => '/about/journal', '/journal/*' => '/about/journal/$1']);
-    $this->get('/journal/first-post')->assertRedirect('/about/journal/first-post');
+    $this->get('/journal/first-post')->assertRedirect('https://example.test/about/journal/first-post');
 
     // Renamed rather than moved: the same, and the earlier wildcard follows.
     reloaded($journal)->slug('notes')->save();
