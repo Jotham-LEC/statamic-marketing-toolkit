@@ -107,7 +107,7 @@ trait BuildsTextFiles
 
     public function robotsTxt(): string
     {
-        if (config('seo.robots.noindex_outside_production') && ! app()->isProduction()) {
+        if ($this->hiddenOutsideProduction()) {
             return "User-agent: *\nDisallow: /\n";
         }
 

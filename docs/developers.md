@@ -86,6 +86,7 @@ The methods you're most likely to override:
 | `canonical(Context)` | The canonical URL, or `null` for none. |
 | `robots(Context)` | The robots meta content. |
 | `shouldNoindex(Context)` | Extra reasons to noindex (an empty listing, a thank-you page). Return `parent::shouldNoindex($context) || …`. |
+| `hiddenOutsideProduction()` | Whether this copy of the site is kept out of search engines (every page noindexed, robots.txt disallowing all): `seo.robots.noindex_outside_production` unless `APP_ENV=production`. |
 | `ogType(Context)` | og:type. |
 | `graph(Context)` | Every JSON-LD node. Usually you override one of the node methods instead. |
 | `publisherTypes()`, `profileEntity(Context)`, `authors(Context)`, `articleImages(Context)` | The publisher's schema.org types; who a ProfilePage is about; an Article's authors; its images in three shapes. |

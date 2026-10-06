@@ -243,12 +243,22 @@ trait BuildsMeta
     }
 
     /**
+     * Whether search engines are kept off this copy of the site: every page
+     * noindexed and robots.txt disallowing all, unless APP_ENV is production
+     * (config `seo.robots.noindex_outside_production`).
+     */
+    protected function hiddenOutsideProduction(): bool
+    {
+        return config('seo.robots.noindex_outside_production') && ! app()->isProduction();
+    }
+
+    /**
      * Site-wide reasons to keep a page out of the index. Override to add your
      * own (an empty taxonomy listing, a thank-you page).
      */
     public function shouldNoindex(Context $context): bool
     {
-        if (config('seo.robots.noindex_outside_production') && ! app()->isProduction()) {
+        if ($this->hiddenOutsideProduction()) {
             return true;
         }
 
