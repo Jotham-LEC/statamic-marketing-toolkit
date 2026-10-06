@@ -17,6 +17,19 @@ use Statamic\Http\Controllers\CP\ActionController as StatamicActionController;
 class ActionController extends StatamicActionController
 {
     /**
+     * Only the addon's actions run here: Statamic's `run()` would run any
+     * registered action on our rows, and asks only that action to authorize.
+     */
+    public function run(Request $request)
+    {
+        $handles = array_map(fn (string $class): string => $class::handle(), RecordActions::ACTIONS);
+
+        abort_unless(in_array($request->input('action'), $handles, true), 403);
+
+        return parent::run($request);
+    }
+
+    /**
      * Only the addon's actions; see RecordActions.
      *
      * @return Collection<int, Action>

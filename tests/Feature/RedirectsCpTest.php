@@ -160,6 +160,31 @@ test('another addon\'s action that cannot handle our rows does not break the lis
     $this->postJson(cp_route('seo.actions.bulk'), ['selections' => [$row->id], 'context' => ['type' => '404s']])->assertOk();
 });
 
+test('the action endpoint runs only the addon\'s own actions', function () {
+    $permissive = new class extends Action
+    {
+        public static function handle()
+        {
+            return 'permissive_foreign_action';
+        }
+
+        public function run($items, $values)
+        {
+            $items->each->delete();
+        }
+    };
+    app()->instance($permissive::class, $permissive);
+    app('statamic.actions')->put($permissive::handle(), $permissive::class);
+
+    $this->actingAs(cpUser(['view seo']));
+    $row = MissingPath::query()->create(['path' => '/miss', 'hits' => 1, 'first_seen_at' => now(), 'last_seen_at' => now()]);
+
+    $this->postJson(cp_route('seo.actions.run'), ['action' => $permissive::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])
+        ->assertForbidden();
+
+    expect(MissingPath::query()->count())->toBe(1);
+});
+
 test('the 404 log listing, newest first, with a "Create redirect" action per row', function () {
     $this->actingAs(cpUser(['view seo', 'manage seo redirects']));
     $old = MissingPath::query()->create(['path' => '/old-miss', 'hits' => 9, 'first_seen_at' => now()->subDay(), 'last_seen_at' => now()->subDay()]);
