@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.2 – 2026-10-06
+
+A missing page answers 404 even before `migrate`.
+
+### Fixed
+- Between installing or upgrading the addon and running `migrate`, a missing page answered 500: the redirect lookup read a table that wasn't there yet. The lookup, the hit count and the 404 log are now reported when they fail, and the page answers its 404 as it would without them.
+
 ## 0.13.1 – 2026-10-06
 
 No redirects for renamed terms that have no page.
