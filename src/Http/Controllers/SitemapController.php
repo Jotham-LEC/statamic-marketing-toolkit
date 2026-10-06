@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Sites;
+use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
 /**
@@ -38,11 +39,11 @@ class SitemapController
     public function page(string $page): Response
     {
         // Taken as text: a number too big for an int would fail the type, a 500 rather than a 404.
-        abort_if(strlen($page) > 9 || (int) $page < 1, 404);
+        throw_if(strlen($page) > 9 || (int) $page < 1, NotFoundHttpException::class);
 
         $chunk = $this->urls()->forPage((int) $page, $this->perPage());
 
-        abort_if($chunk->isEmpty(), 404);
+        throw_if($chunk->isEmpty(), NotFoundHttpException::class);
 
         return $this->xml(view('seo::sitemap', ['urls' => $chunk])->render());
     }
@@ -53,7 +54,7 @@ class SitemapController
     private function urls(): Collection
     {
         // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
-        abort_unless(config('seo.sitemap.enabled') && Sites::served(), 404);
+        throw_unless(config('seo.sitemap.enabled') && Sites::served(), NotFoundHttpException::class);
 
         return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
     }

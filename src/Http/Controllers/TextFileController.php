@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Sites;
+use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
 /**
@@ -20,17 +21,17 @@ class TextFileController
     public function llms(SiteSeo $seo): Response
     {
         // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
-        abort_unless(config('seo.llms_txt') && Sites::served(), 404);
+        throw_unless(config('seo.llms_txt') && Sites::served(), NotFoundHttpException::class);
 
         return $this->text(Cache::rememberForever(self::llmsCacheKey(Site::current()->handle()), fn () => $seo->llmsTxt()));
     }
 
     public function ads(SiteSeo $seo): Response
     {
-        abort_unless(config('seo.ads_txt') && Sites::served(), 404);
+        throw_unless(config('seo.ads_txt') && Sites::served(), NotFoundHttpException::class);
 
         $text = $seo->adsTxt();
-        abort_if($text === null, 404);
+        throw_if($text === null, NotFoundHttpException::class);
 
         return $this->text($text);
     }

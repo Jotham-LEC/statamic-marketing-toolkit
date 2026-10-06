@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\TitleSiteName;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
@@ -323,4 +324,22 @@ describe('taxonomies', function () {
             ->and($meta->ogType)->toBe('website')
             ->and(collect($meta->graph)->pluck('@type'))->toContain('WebPage')->not->toContain('CollectionPage');
     });
+});
+
+/**
+ * Before the toggle, a saved separator meant the site name; in the control
+ * panel the new toggle showed off there, and the next save dropped it.
+ */
+test('the migration turns the toggle on where a separator is saved, and leaves a choice alone', function () {
+    seoGlobal(['title_separator' => '|']);
+    TitleSiteName::keep();
+    expect(GlobalSet::findByHandle('seo')->in('default')->get('title_site_name'))->toBeTrue();
+
+    seoGlobal(['title_separator' => '|', 'title_site_name' => false]);
+    TitleSiteName::keep();
+    expect(GlobalSet::findByHandle('seo')->in('default')->get('title_site_name'))->toBeFalse();
+
+    seoGlobal(['default_description' => 'The default.']);
+    TitleSiteName::keep();
+    expect(GlobalSet::findByHandle('seo')->in('default')->data()->has('title_site_name'))->toBeFalse();
 });

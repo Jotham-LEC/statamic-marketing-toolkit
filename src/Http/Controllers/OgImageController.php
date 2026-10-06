@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Og\Generator;
+use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Structures\Page;
@@ -18,12 +19,12 @@ class OgImageController
     public function __invoke(Generator $generator, ?string $path = null): Response
     {
         // A cached route can outlive the setting (or the edition).
-        abort_unless(config('seo.og.enabled'), 404);
+        throw_unless(config('seo.og.enabled'), NotFoundHttpException::class);
 
         $entry = Entry::findByUri('/'.trim((string) $path, '/'), Site::current()->handle());
         $entry = $entry instanceof Page ? $entry->entry() : $entry;
 
-        abort_unless($entry?->status() === 'published', 404);
+        throw_unless($entry?->status() === 'published', NotFoundHttpException::class);
 
         return new Response($generator->png($entry), 200, [
             'Content-Type' => 'image/png',

@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
 use Statamic\Facades\Collection;
 
 test('llms.txt lists each collection\'s pages with their descriptions, without hidden ones', function () {
@@ -34,4 +36,21 @@ test('ads.txt serves the lines from SEO & brand, and nothing until there are som
 
     seoGlobal(['ads_txt' => "google.com, pub-123, DIRECT, f08c47fec0942fa0\n"]);
     $this->get('https://example.test/ads.txt')->assertOk()->assertContent("google.com, pub-123, DIRECT, f08c47fec0942fa0\n");
+});
+
+/**
+ * A site's 404 page often reads Statamic's cascade ($site, globals). Laravel's
+ * abort(404) renders it without one, so it failed and answered a bare error
+ * page, logging an error for every crawler that asked for /ads.txt.
+ */
+test('a file that has nothing to serve answers with the site\'s own 404 page', function () {
+    $views = sys_get_temp_dir().'/mt-404-'.uniqid();
+    File::ensureDirectoryExists($views.'/errors');
+    File::put($views.'/errors/404.blade.php', 'Nothing here on {{ $site->handle() }}.');
+    View::getFinder()->prependLocation($views);
+
+    $this->get('https://example.test/ads.txt')->assertNotFound()->assertSee('Nothing here on default.');
+    $this->get('https://example.test/sitemap_999.xml')->assertNotFound()->assertSee('Nothing here on default.');
+
+    File::deleteDirectory($views);
 });

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.18.3 – 2026-10-06
+
+### Fixed
+- **A site with a title separator saved keeps the site name in its titles after saving SEO & brand.** Since 0.18.2 the new **Add the site name to page titles** toggle showed off there, and the next save dropped the site name from every title. A migration turns the toggle on wherever a separator is saved and the toggle isn't; run `php artisan migrate`.
+- `/ads.txt` with nothing to serve, a sitemap page past the last, a missing favicon, robots.txt, llms.txt or share card answer with the site's own 404 page, like any missing page. They used Laravel's bare 404, which renders the 404 view without Statamic's cascade: a 404 page that reads `$site` or a global failed, and the visitor got an error page instead.
+
 ## 0.18.2 – 2026-10-06
 
 ### Changed

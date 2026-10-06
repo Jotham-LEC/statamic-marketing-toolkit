@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\Support\Sites;
+use Statamic\Exceptions\NotFoundHttpException;
 
 /**
  * /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
@@ -18,10 +19,10 @@ class FaviconController
     {
         $name = ltrim($request->getPathInfo(), '/');
         // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
-        abort_unless(config('seo.favicons.enabled', true) && Sites::served(), 404);
+        throw_unless(config('seo.favicons.enabled', true) && Sites::served(), NotFoundHttpException::class);
 
         $bytes = $favicons->file($name);
-        abort_if($bytes === null, 404);
+        throw_if($bytes === null, NotFoundHttpException::class);
 
         return new Response($bytes, 200, array_filter([
             'Content-Type' => Favicons::FILES[$name],
