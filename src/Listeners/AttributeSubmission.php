@@ -8,13 +8,15 @@ use Statamic\Events\FormSubmitted;
 
 /**
  * Pro: copies where the lead came from into the submission, before it is
- * saved. Not registered in Free or with leads off (ServiceProvider::leaveOutUnused()).
+ * saved. Not registered in Free or with leads off (ServiceProvider::leaveOutUnused());
+ * the check here covers a queue worker or Octane process booted before
+ * leads were switched off.
  */
 class AttributeSubmission
 {
     public function handle(FormSubmitted $event): void
     {
-        if (app(Settings::class)->bool('attribution')) {
+        if (config('seo.leads.enabled') && app(Settings::class)->bool('attribution')) {
             app(Attribution::class)->apply($event->submission, request());
         }
     }

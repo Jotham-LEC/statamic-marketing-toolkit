@@ -15,7 +15,9 @@ class RemakeFavicons
 {
     public function handle(GlobalVariablesSaved $event): void
     {
-        if ($event->variables->handle() !== config('seo.global') || ! config('seo.favicons.enabled', true)) {
+        // Not registered with favicons off (ServiceProvider::leaveOutUnused()); asked again
+        // for a queue worker or Octane process booted before they were switched off.
+        if ($event->variables->handle() !== config('seo.global') || ! config('seo.favicons.enabled')) {
             return;
         }
 
