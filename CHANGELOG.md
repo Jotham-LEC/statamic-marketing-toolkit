@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.15.0 – 2026-10-06
 
 Statamic Pro with several sites, each on its own domain. Single sites work as before. Run `php artisan migrate` after updating: see Upgrading.
 
@@ -25,6 +25,10 @@ Statamic Pro with several sites, each on its own domain. Single sites work as be
 
 ### Fixed
 - The sitemap listed every site's terms, and a term counted as used by another site's entries; reports did the same. `SiteSeo::termHasEntries()` counts the current site's entries.
+
+## 0.14.0 – 2026-10-06
+
+The same code as 0.13.1, tagged by mistake before the several-sites work was merged; that work is 0.15.0.
 
 ## 0.13.1 – 2026-10-06
 
