@@ -25,8 +25,6 @@ use Statamic\Tags\Tags;
  */
 class Seo extends Tags
 {
-    protected static $handle = 'seo';
-
     public function head(): string
     {
         return app(Tracking::class)->head().$this->meta().$this->favicons();
