@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.13.1 – 2026-10-06
+
+No redirects for renamed terms that have no page.
 
 ### Fixed
 - Renaming a term in a taxonomy without term pages (no `{taxonomy}.show` template, so Statamic answers its addresses with a 404) no longer adds a redirect between two missing addresses, and the save dialog no longer asks about one. A site that shows such terms at an address of its own (`/tags/{slug}`) adds that redirect itself.
