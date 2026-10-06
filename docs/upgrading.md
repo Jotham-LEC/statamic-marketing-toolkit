@@ -10,7 +10,7 @@ composer require jotham-lec/statamic-marketing-toolkit
 php artisan migrate
 ```
 
-The new package replaces the old one, so Composer won't install both. `jotham-lec/statamic-co-seo` is abandoned on Packagist and points to the new package.
+The new package replaces the old one, so Composer won't install both. `jotham-lec/statamic-co-seo` has been removed from Packagist.
 
 ## 2. Rename the edition key
 
