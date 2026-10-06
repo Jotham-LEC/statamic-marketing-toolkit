@@ -18,6 +18,7 @@ use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Structures\CollectionTree;
+use Statamic\Structures\Tree;
 use Statamic\Support\Arr;
 use Throwable;
 
@@ -30,7 +31,7 @@ use Throwable;
  */
 class RedirectChangedUris
 {
-    /** @var array<string, array<string, list<string>>> */
+    /** @var array<string, array<string, array<int, mixed>>> */
     private array $pending = [];
 
     public function __construct(private AutoRedirects $redirects) {}
@@ -117,10 +118,10 @@ class RedirectChangedUris
         $before = clone $term;
         $before->slug($slug);
 
-        $from = $this->termUri($before);
-        $to = $this->termUri($term);
+        $from = $this->termUris($before);
+        $to = $this->termUris($term);
 
-        if ($from && $to && $from !== $to) {
+        if ($from !== $to) {
             // The editor's dialog answered for the id the form knew: the old slug's.
             $this->pending['term'][$term->id()] = [$from, $to, $term->taxonomyHandle().'::'.$slug];
         }
@@ -135,7 +136,11 @@ class RedirectChangedUris
         [$from, $to, $formId] = $move;
 
         if ($this->redirects->wanted($formId)) {
-            $this->redirects->create($from, $to);
+            foreach ($from as $site => $uri) {
+                if (isset($to[$site]) && $uri !== $to[$site]) {
+                    $this->redirects->create($uri, $to[$site], $site);
+                }
+            }
         }
     }
 
@@ -143,7 +148,7 @@ class RedirectChangedUris
     {
         $tree = $event->tree;
         $original = $tree->getOriginal('tree');
-        unset($this->pending['tree:'.$tree->handle()]);
+        unset($this->pending[$this->treeKey($tree)]);
 
         if (! $this->enabled() || ! $tree instanceof CollectionTree || $original === null || $original === $tree->tree()) {
             return;
@@ -155,32 +160,43 @@ class RedirectChangedUris
 
         foreach ($from as $id => $uri) {
             if (isset($to[$id]) && $uri !== $to[$id]) {
-                $this->pending['tree:'.$tree->handle()][$id] = [$uri, $to[$id]];
+                $this->pending[$this->treeKey($tree)][$id] = [$uri, $to[$id]];
             }
         }
     }
 
     public function treeSaved(CollectionTreeSaved $event): void
     {
-        foreach ($this->pending['tree:'.$event->tree->handle()] ?? [] as $id => [$from, $to]) {
+        $key = $this->treeKey($event->tree);
+
+        foreach ($this->pending[$key] ?? [] as $id => [$from, $to]) {
             if ($entry = Entry::find($id)) {
                 $this->moved($entry, $from, $to);
             }
         }
 
-        unset($this->pending['tree:'.$event->tree->handle()]);
+        unset($this->pending[$key]);
+    }
+
+    /**
+     * Each site has its own tree of a collection.
+     */
+    private function treeKey(Tree $tree): string
+    {
+        return 'tree:'.$tree->handle().':'.$tree->locale();
     }
 
     /**
      * The page's own 301, and when it is a collection's mount, one wildcard
-     * rule for the entries that moved with it.
+     * rule for the entries that moved with it: among the rules of the
+     * entry's site.
      */
     private function moved(EntryContract $entry, string $from, string $to): void
     {
-        $this->redirects->create($from, $to);
+        $this->redirects->create($from, $to, $entry->locale());
 
         if (Collection::findByMount($entry)) {
-            $this->redirects->createForPrefix($from, $to);
+            $this->redirects->createForPrefix($from, $to, $entry->locale());
         }
     }
 
@@ -201,9 +217,21 @@ class RedirectChangedUris
         }
     }
 
-    private function termUri(Term $term): ?string
+    /**
+     * The term's address on each site its taxonomy is on. A slug is shared
+     * by the sites that don't set their own, so a new one moves the term on
+     * each of those.
+     *
+     * @return array<string, string> site handle => URI
+     */
+    private function termUris(Term $term): array
     {
-        return $term->in(Site::default()->handle())?->uri();
+        $sites = $term->taxonomy()?->sites() ?? collect([Site::default()->handle()]);
+
+        return collect($sites)
+            ->mapWithKeys(fn (string $site) => [$site => $term->in($site)?->uri()])
+            ->filter()
+            ->all();
     }
 
     /**
@@ -221,7 +249,7 @@ class RedirectChangedUris
     }
 
     /**
-     * @return array<int, string>|null
+     * @return array<int, mixed>|null
      */
     private function pull(string $type, string $id): ?array
     {

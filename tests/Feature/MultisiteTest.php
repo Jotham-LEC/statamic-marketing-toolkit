@@ -8,6 +8,7 @@ use JothamLec\Seo\IndexNow\IndexNow;
 use JothamLec\Seo\Redirects\Redirect;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
+use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
@@ -182,5 +183,52 @@ describe('redirects', function () {
                 ['site' => 'cothinking', 'source' => '/one', 'target' => '/eins'],
                 ['site' => 'cothinking', 'source' => '/two', 'target' => '/2'],
             ]);
+    });
+});
+
+describe('automatic redirects', function () {
+    test('a moved page\'s 301 is for its own site, and only that site\'s rules change', function () {
+        Redirect::query()->create(['site' => 'default', 'source' => '/older', 'target' => '/about']);
+        Redirect::query()->create(['site' => 'default', 'source' => '/about-us', 'target' => '/elsewhere']);
+        Redirect::query()->create(['site' => 'cothinking', 'source' => '/oldest', 'target' => '/about']);
+        $entry = entryOn('cothinking', 'pages', 'about');
+
+        Entry::find($entry->id())->syncOriginal()->slug('about-us')->save();
+
+        expect(Redirect::query()->orderBy('site')->orderBy('source')->get(['site', 'source', 'target', 'automatic'])->toArray())->toBe([
+            ['site' => 'cothinking', 'source' => '/about', 'target' => '/about-us', 'automatic' => true],
+            ['site' => 'cothinking', 'source' => '/oldest', 'target' => '/about-us', 'automatic' => false],
+            // The default site's page at /about hasn't moved, and nothing changed /about-us there.
+            ['site' => 'default', 'source' => '/about-us', 'target' => '/elsewhere', 'automatic' => false],
+            ['site' => 'default', 'source' => '/older', 'target' => '/about', 'automatic' => false],
+        ]);
+
+        $this->get('https://cothink.test/about')->assertRedirect('https://cothink.test/about-us');
+    });
+
+    test('a renamed term leaves a 301 on each site it moved on', function () {
+        Taxonomy::make('topics')->sites(['default', 'cothinking'])->save();
+        tap(Term::make()->taxonomy('topics')->slug('gardens')->dataForLocale('default', ['title' => 'Gardens'])->dataForLocale('cothinking', ['title' => 'Gardens']))->save();
+
+        Term::find('topics::gardens')->term()->syncOriginal()->slug('gardening')->save();
+
+        expect(Redirect::query()->orderBy('site')->get(['site', 'source', 'target'])->toArray())->toBe([
+            ['site' => 'cothinking', 'source' => '/topics/gardens', 'target' => '/topics/gardening'],
+            ['site' => 'default', 'source' => '/topics/gardens', 'target' => '/topics/gardening'],
+        ]);
+    });
+
+    test('a page moved in one site\'s tree redirects on that site', function () {
+        $collection = Collection::make('docs')->routes('{parent_uri}/{slug}')->sites(['default', 'cothinking'])->structureContents(['max_depth' => 3])->save();
+        $guide = entryOn('cothinking', 'docs', 'guide');
+        $setup = entryOn('cothinking', 'docs', 'setup');
+        $collection->structure()->in('cothinking')->tree([['entry' => $guide->id()], ['entry' => $setup->id()]])->save();
+
+        $tree = $collection->structure()->in('cothinking')->syncOriginal();
+        $tree->tree([['entry' => $guide->id(), 'children' => [['entry' => $setup->id()]]]])->save();
+
+        expect(Redirect::query()->get(['site', 'source', 'target'])->toArray())->toBe([
+            ['site' => 'cothinking', 'source' => '/setup', 'target' => '/guide/setup'],
+        ]);
     });
 });
