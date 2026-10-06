@@ -46,7 +46,7 @@ test('lang/en has no key left unused', function () {
         ->all();
 
     // Built from parts at run time: a rule's handle, a report check's message.
-    $dynamic = fn (string $key) => str_starts_with($key, 'seo::reports.') || str_starts_with($key, 'seo::cp.tracking.names.') || str_starts_with($key, 'seo::fields.attribution.');
+    $dynamic = fn (string $key) => str_starts_with($key, 'seo::reports.') || str_starts_with($key, 'seo::cp.tracking.names.') || str_starts_with($key, 'seo::fields.attribution.') || str_starts_with($key, 'seo::cp.features.');
 
     expect(array_values(array_filter($defined, fn (string $key) => ! in_array($key, $used, true) && ! $dynamic($key))))->toBe([]);
 });

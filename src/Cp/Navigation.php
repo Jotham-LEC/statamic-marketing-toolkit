@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Cp;
 use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\CP\Navigation\Nav;
 use Statamic\CP\Navigation\NavItem;
+use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav as NavFacade;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -38,6 +39,7 @@ class Navigation
             $pro ? $nav->item(__('seo::cp.nav.not_found'))->route('seo.404s.index')->can('view seo') : null,
             $pro ? $nav->item(__('seo::cp.nav.search_console'))->route('seo.search-console.index')->can('view seo') : null,
             $variables ? $nav->item(__('seo::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
+            $pro ? $nav->item(__('seo::cp.nav.features'))->route('seo.features.index')->can('editSettings', Addon::get(Edition::PACKAGE)) : null,
         ]));
     }
 }

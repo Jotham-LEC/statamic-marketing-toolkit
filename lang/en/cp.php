@@ -14,6 +14,7 @@ return [
         'not_found' => '404s',
         'search_console' => 'Search Console',
         'brand' => 'Brand & defaults',
+        'features' => 'Features',
     ],
 
     'permissions' => [
@@ -223,6 +224,33 @@ return [
         'intro' => 'Addresses visitors asked for that don’t exist, one row per address; the :max most recent are kept. Bots and scanner probes are left out.',
         'create' => 'Use a row’s menu to create a redirect for it.',
         'off' => 'The 404 log is turned off (:setting).',
+    ],
+
+    // Tools → SEO → Features (Pro).
+    'features' => [
+        'title' => 'Features',
+        'intro' => 'Switch off what this site doesn’t use. A feature that’s off isn’t loaded at all, so it costs nothing on any page. Nothing you set up is lost: switch it back on and it’s there.',
+        'groups' => [
+            'search' => 'Search engines',
+            'redirects' => 'Redirects and broken links',
+            'marketing' => 'Marketing',
+        ],
+        'modules' => [
+            'sitemap' => ['display' => 'Sitemap', 'instructions' => '/sitemap.xml, for search engines.'],
+            'robots_txt' => ['display' => 'robots.txt', 'instructions' => '/robots.txt, from Brand & defaults → Crawlers.'],
+            'llms_txt' => ['display' => 'llms.txt', 'instructions' => '/llms.txt, a list of the pages for AI assistants.'],
+            'hreflang' => ['display' => 'Languages (hreflang)', 'instructions' => 'Links between a page’s languages.'],
+            'indexnow' => ['display' => 'IndexNow', 'instructions' => 'Tells Bing and others when a page changes.'],
+            'share_cards' => ['display' => 'Generated share cards', 'instructions' => 'A picture drawn for pages shared without one.'],
+            'redirects' => ['display' => 'Redirects', 'instructions' => 'The redirects listed under Redirects.'],
+            'automatic_redirects' => ['display' => 'Redirects when a page moves', 'instructions' => 'Asks, then adds a redirect from the old address.'],
+            'not_found' => ['display' => '404 log', 'instructions' => 'Counts the addresses visitors ask for that don’t exist.'],
+            'link_check' => ['display' => 'Weekly link check', 'instructions' => 'You can still run one by hand.'],
+            'tracking' => ['display' => 'Tracking tags and Consent Mode', 'instructions' => 'Google Tag Manager, Analytics, PostHog, Meta and LinkedIn.'],
+            'leads' => ['display' => 'Leads and their source', 'instructions' => 'Form submissions sent to your tools, and where each lead came from.'],
+            'favicons' => ['display' => 'Favicons', 'instructions' => 'The icons made from Brand & defaults → Icon.'],
+            'ads_txt' => ['display' => 'ads.txt', 'instructions' => '/ads.txt, for a site that sells ad space.'],
+        ],
     ],
 
     // The tracking tags (src/Tracking), on the overview and in the Tracking tab's warning.

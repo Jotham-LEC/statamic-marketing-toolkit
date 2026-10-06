@@ -145,6 +145,10 @@ With more than one site, the overview, the 404s, the link checks and the dashboa
 
 It runs every week on its own (Monday, 03:00). Click **Check now** to run it straight away; a few hundred pages take under a minute. Click a check to see only the pages it flagged; each page has a **Fix** link to its edit screen. Pages hidden from search engines are checked for broken links only.
 
+## Features *(Pro)*
+
+**Tools → SEO → Features** switches off what the site doesn't use (the 404 log, IndexNow, tracking…), for whoever may change the addon's settings. A feature that's off isn't loaded at all; switch it back on and everything it saved is still there.
+
 ## The dashboard *(Pro)*
 
 The **SEO** box on the dashboard (if your administrator added it) shows how many pages the latest link check found to fix, and the most recent 404s. Click through for the details.

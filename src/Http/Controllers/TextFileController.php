@@ -19,14 +19,15 @@ class TextFileController
 
     public function llms(SiteSeo $seo): Response
     {
-        abort_unless(Sites::served(), 404); // Free: the default site's domain only.
+        // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
+        abort_unless(config('seo.llms_txt') && Sites::served(), 404);
 
         return $this->text(Cache::rememberForever(self::llmsCacheKey(Site::current()->handle()), fn () => $seo->llmsTxt()));
     }
 
     public function ads(SiteSeo $seo): Response
     {
-        abort_unless(Sites::served(), 404);
+        abort_unless(config('seo.ads_txt') && Sites::served(), 404);
 
         $text = $seo->adsTxt();
         abort_if($text === null, 404);

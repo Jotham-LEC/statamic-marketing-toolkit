@@ -26,6 +26,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\Support\Config;
 use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\LegacySettings;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tags\Seo;
@@ -105,6 +106,9 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $subscribe = [RedirectChangedUris::class];
 
+    /** @var list<class-string> listeners and middleware of modules that are off (leaveOutUnused) */
+    private array $unused = [];
+
     /** What the free edition leaves out of the lists above and of Statamic's autoloading. */
     private const array PRO_ONLY = [Report::class, SearchConsole::class, SeoWidget::class, CreateRedirect::class];
 
@@ -161,27 +165,52 @@ class ServiceProvider extends AddonServiceProvider
     protected function bootEdition(): void
     {
         if (Edition::pro()) {
-            return;
+            // Tools → SEO → Features: the modules a site switched off, off before anything registers.
+            Features::apply();
+        } else {
+            config([
+                'seo.og.enabled' => false,
+                'seo.redirects.automatic' => false,
+                'seo.not_found.enabled' => false,
+            ]);
+
+            $this->commands = array_values(array_diff($this->commands, self::PRO_ONLY));
+            $this->widgets = array_values(array_diff($this->widgets, self::PRO_ONLY));
+            $this->actions = array_values(array_diff($this->actions, self::PRO_ONLY));
         }
 
-        config([
-            'seo.og.enabled' => false,
-            'seo.redirects.automatic' => false,
-            'seo.not_found.enabled' => false,
-        ]);
-
-        $this->commands = array_values(array_diff($this->commands, self::PRO_ONLY));
-        $this->widgets = array_values(array_diff($this->widgets, self::PRO_ONLY));
-        $this->actions = array_values(array_diff($this->actions, self::PRO_ONLY));
+        $this->leaveOutUnused();
     }
 
     /**
-     * Statamic also registers every command, widget and action in their
-     * folders: the free edition's leave Pro's out there too.
+     * Listeners and middleware of modules that are off aren't registered at
+     * all, so they cost nothing on a request or a save.
+     */
+    protected function leaveOutUnused(): void
+    {
+        $this->unused = array_keys(array_filter([
+            FlushSitemap::class => ! config('seo.sitemap.enabled') && ! config('seo.llms_txt'),
+            SubmitToIndexNow::class => ! config('seo.indexnow.enabled'),
+            RemakeFavicons::class => ! config('seo.favicons.enabled', true),
+            AttributeSubmission::class => ! Edition::pro() || ! config('seo.leads.enabled', true),
+            CountConversion::class => ! Edition::pro() || ! config('seo.leads.enabled', true),
+            RedirectChangedUris::class => ! config('seo.redirects.automatic'),
+            HandleMissing::class => ! config('seo.redirects.enabled') && ! config('seo.not_found.enabled'),
+        ]));
+
+        $this->listen = array_filter(array_map(fn (array $listeners) => array_values(array_diff($listeners, $this->unused)), $this->listen));
+        $this->subscribe = array_values(array_diff($this->subscribe, $this->unused));
+        $this->middlewareGroups = array_filter(array_map(fn (array $middleware) => array_values(array_diff($middleware, $this->unused)), $this->middlewareGroups));
+    }
+
+    /**
+     * Statamic also registers every command, widget, action and listener in
+     * their folders: the free edition's leave Pro's out there too, and none
+     * registers one of a module that's off.
      */
     protected function autoloadFilesFromFolder($folder, $requiredClass = null)
     {
-        $classes = parent::autoloadFilesFromFolder($folder, $requiredClass);
+        $classes = array_values(array_diff(parent::autoloadFilesFromFolder($folder, $requiredClass), $this->unused));
 
         return Edition::pro() ? $classes : array_values(array_diff($classes, self::PRO_ONLY));
     }

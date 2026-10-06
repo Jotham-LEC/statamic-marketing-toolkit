@@ -257,6 +257,7 @@ return [
     */
 
     'tracking' => [
+        'enabled' => true,
         'environments' => ['production'],
         'gtm' => env('SEO_GTM_ID'),
         'ga4' => env('SEO_GA4_ID'),

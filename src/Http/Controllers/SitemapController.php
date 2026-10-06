@@ -52,7 +52,8 @@ class SitemapController
      */
     private function urls(): Collection
     {
-        abort_unless(Sites::served(), 404); // Free: the default site's domain only.
+        // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
+        abort_unless(config('seo.sitemap.enabled') && Sites::served(), 404);
 
         return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
     }

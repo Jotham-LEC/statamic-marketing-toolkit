@@ -13,6 +13,7 @@ use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\ServiceProvider;
 use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Tests\FreeEdition;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
@@ -228,4 +229,18 @@ test('llms.txt and ads.txt work as in Pro', function () {
 
     $this->get('https://example.test/llms.txt')->assertOk()->assertSee('https://example.test/about', false);
     $this->get('https://example.test/ads.txt')->assertOk()->assertSee('pub-1');
+});
+
+test('the Features screen is Pro: saved switches are ignored', function () {
+    Features::save(['sitemap']);
+
+    try {
+        (fn () => $this->bootEdition())->call(app()->getProvider(ServiceProvider::class));
+        $this->actingAs(cpUser(super: true));
+
+        expect(config('seo.sitemap.enabled'))->toBeTrue();
+        $this->get(cp_route('seo.features.index'))->assertNotFound();
+    } finally {
+        File::delete(resource_path('addons/marketing-toolkit.yaml'));
+    }
 });

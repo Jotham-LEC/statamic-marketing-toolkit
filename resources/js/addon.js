@@ -2,6 +2,7 @@ import { router } from '@statamic/cms/inertia';
 import RedirectConfirm from './components/RedirectConfirm.vue';
 import SeoPreviewFieldtype from './components/SeoPreviewFieldtype.vue';
 import SeoWidget from './components/SeoWidget.vue';
+import Features from './pages/Features.vue';
 import NotFound from './pages/NotFound.vue';
 import Overview from './pages/Overview.vue';
 import RedirectForm from './pages/RedirectForm.vue';
@@ -89,6 +90,7 @@ Statamic.booting(() => {
     Statamic.$inertia.register('seo::Reports', Reports);
     Statamic.$inertia.register('seo::Report', Report);
     Statamic.$inertia.register('seo::SearchConsole', SearchConsole);
+    Statamic.$inertia.register('seo::Features', Features);
 
     router.on('navigate', (event) => {
         page = event.detail.page;

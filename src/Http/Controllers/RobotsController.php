@@ -15,7 +15,8 @@ class RobotsController
 {
     public function __invoke(): Response
     {
-        abort_unless(Sites::served(), 404); // Free: the default site's domain only.
+        // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
+        abort_unless(config('seo.robots_txt') && Sites::served(), 404);
 
         return new Response(app(SiteSeo::class)->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

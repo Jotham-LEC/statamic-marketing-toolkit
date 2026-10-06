@@ -24,7 +24,7 @@ test('Tools → SEO opens the overview and links to the brand global', function 
 
     expect($seo)->not->toBeNull()
         ->and($seo->url())->toBe(cp_route('seo.index'))
-        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Link check', 'Redirects', '404s', 'Search Console', 'Brand & defaults']);
+        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Link check', 'Redirects', '404s', 'Search Console', 'Brand & defaults', 'Features']);
 
     $this->get(cp_route('seo.index'))
         ->assertOk()

@@ -161,6 +161,12 @@ Setting it up:
 
 Uploaded share images are cropped to 1200×630 and served as JPEG; for another size, override `imageWidth()` and `imageHeight()` in your `SiteSeo` subclass.
 
+## Features (Pro)
+
+**Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, the weekly link check, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot, before anything registers: its routes answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted.
+
+Each switch sets the matching key below to off, whatever `config/seo.php` says. In Free, the screen isn't there and every module follows `config/seo.php`.
+
 ## Editions
 
 `config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the link check, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
@@ -177,6 +183,7 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 | `tracking.posthog_host` | `SEO_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. |
 | `tracking.meta_pixel` | `SEO_META_PIXEL_ID` | Meta Pixel ID (digits). |
 | `tracking.linkedin` | `SEO_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
+| `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
 | `tracking.class` | | A subclass of `Tracking` to change how the tags are worked out. |
 

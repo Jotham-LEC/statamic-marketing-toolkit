@@ -17,7 +17,8 @@ class FaviconController
     public function __invoke(Request $request, Favicons $favicons): Response
     {
         $name = ltrim($request->getPathInfo(), '/');
-        abort_unless(Sites::served(), 404); // Free: the default site's domain only.
+        // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
+        abort_unless(config('seo.favicons.enabled', true) && Sites::served(), 404);
 
         $bytes = $favicons->file($name);
         abort_if($bytes === null, 404);

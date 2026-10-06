@@ -55,7 +55,8 @@ class Tracking
      */
     public function enabled(): bool
     {
-        return app()->environment((array) config('seo.tracking.environments', ['production']))
+        return config('seo.tracking.enabled', true)
+            && app()->environment((array) config('seo.tracking.environments', ['production']))
             && ! request()->isLivePreview();
     }
 
@@ -212,7 +213,7 @@ class Tracking
      */
     public function conversions(): bool
     {
-        return Edition::pro() && $this->settings->bool('conversions', true);
+        return Edition::pro() && config('seo.leads.enabled', true) && $this->settings->bool('conversions', true);
     }
 
     /**
@@ -230,7 +231,7 @@ class Tracking
      */
     public function attribution(): bool
     {
-        return Edition::pro() && $this->settings->bool('attribution');
+        return Edition::pro() && config('seo.leads.enabled', true) && $this->settings->bool('attribution');
     }
 
     /**

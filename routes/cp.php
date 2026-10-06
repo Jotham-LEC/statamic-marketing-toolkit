@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\ActionController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\FeaturesController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\NotFoundController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\OverviewController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\PreviewController;
@@ -41,6 +42,9 @@ Route::name('seo.')->prefix('seo')->group(function () {
         Route::get('reports/{report}', [ReportsController::class, 'show'])->whereNumber('report')->name('reports.show');
         Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
         Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');
+
+        Route::get('features', [FeaturesController::class, 'index'])->name('features.index');
+        Route::post('features', [FeaturesController::class, 'update'])->name('features.update');
 
         Route::get('search-console', [SearchConsoleController::class, 'index'])->name('search-console.index');
         Route::post('search-console/key', [SearchConsoleController::class, 'key'])->name('search-console.key');
