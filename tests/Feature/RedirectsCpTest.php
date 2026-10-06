@@ -84,7 +84,7 @@ test('CSV export, and import that adds, updates and reports bad rows', function 
 
     expect($result)->toMatchArray(['created' => 2, 'updated' => 1])
         ->and($result['errors'])->toHaveCount(1)
-        ->and($result['errors'][0])->toStartWith('Line 4:')
+        ->and($result['errors'][0])->toStartWith('Row 4:')
         ->and(Redirect::query()->orderBy('source')->get(['source', 'target', 'status'])->toArray())->toBe([
             ['source' => '/gone', 'target' => null, 'status' => 410],
             ['source' => '/one', 'target' => '/uno', 'status' => 301],
@@ -102,8 +102,8 @@ test('an import refuses a row that loops back through an earlier row of the same
 
     expect($result['created'])->toBe(1)
         ->and($result['errors'])->toBe([
-            'Line 2: The redirect from that address leads back here, so the two would loop.',
-            'Line 3: The redirect from that address leads back here, so the two would loop.',
+            'Row 2: The redirect from that address leads back here, so the two would loop.',
+            'Row 3: The redirect from that address leads back here, so the two would loop.',
         ]);
 });
 
@@ -115,7 +115,7 @@ test('the checks, the import report and the listing speak the editor\'s language
         'cp.listing.from' => 'XX From',
         'validation.redirect.source_required' => 'XX Which address?',
         'validation.redirect.loop' => 'XX Loop.',
-        'validation.csv_line' => 'XX line :line: :message',
+        'validation.csv_row' => 'XX row :row: :message',
     ], 'xx', 'seo');
     app()->setLocale('xx');
 
@@ -124,7 +124,7 @@ test('the checks, the import report and the listing speak the editor\'s language
 
     $csv = "/b,/a\n";
     expect($this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->json('errors'))
-        ->toBe(['XX line 1: XX Loop.'])
+        ->toBe(['XX row 1: XX Loop.'])
         ->and($this->getJson(cp_route('seo.redirects.listing'))->json('meta.columns.0.label'))->toBe('XX From');
 });
 
