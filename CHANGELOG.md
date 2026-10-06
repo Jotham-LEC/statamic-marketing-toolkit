@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.13.0 – 2026-10-06
+
+Redirects that match in any letter case, and faster console boots.
 
 ### Added
 - Config `redirects.case_sensitive`: set to `false`, a redirect's From matches in any letter case (`/ABOUT-US/` as `/about-us`), for a site moved off one whose addresses worked in any case (Wix, IIS). Exact and `*` sources, accented letters and other alphabets included; what a `*` matched keeps the visitor's case. Sources differing only in case then count as one address: a second one is refused, a CSV row updates the first, and a chain of redirects that would loop is caught. Default `true`: nothing changes.
