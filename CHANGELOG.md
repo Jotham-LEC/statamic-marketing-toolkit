@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.3 – 2026-10-06
+
+### Changed
+- The X card in the search and share preview shows the title under the picture, as X does, instead of on a label over it that covered the card's own text.
+
 ## 0.3.2 – 2026-10-06
 
 ### Changed

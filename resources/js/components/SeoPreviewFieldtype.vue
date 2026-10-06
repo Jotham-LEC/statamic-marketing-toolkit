@@ -146,9 +146,10 @@ onBeforeUnmount(() => {
                 <div class="relative aspect-[1200/630] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
                     <img v-if="image" :src="image" :alt="resolved?.image?.alt ?? ''" class="size-full object-cover" />
                     <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? 'Drawing the card…' : 'No share image' }}</span>
-                    <span class="absolute bottom-3 left-3 max-w-[85%] truncate rounded bg-black/70 px-1.5 py-0.5 text-xs text-white">{{ ogTitle }}</span>
                 </div>
-                <p class="mt-1 text-xs text-gray-500">From {{ host }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
+                <!-- The title under the picture rather than over it, where it covered the card's own text. -->
+                <p class="mt-1.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ogTitle }}</p>
+                <p class="text-xs text-gray-500">From {{ host }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
             </section>
         </div>
     </div>
