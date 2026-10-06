@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Cache;
 use InvalidArgumentException;
 use JothamLec\Seo\Context;
 use JothamLec\Seo\SiteSeo;
+use JothamLec\Seo\Support\Sites;
 use Statamic\Contracts\Entries\Entry;
 
 /**
@@ -39,13 +40,24 @@ class Generator
         );
     }
 
+    /**
+     * What the card says, worked out with the entry's site as the current one
+     * (its brand values and colours), wherever it is asked for.
+     */
     public function card(Entry $entry): Card
+    {
+        return Sites::as($entry->locale(), fn () => $this->cardInSite($entry));
+    }
+
+    private function cardInSite(Entry $entry): Card
     {
         $seo = app(SiteSeo::class);
         $context = Context::make($entry);
         $settings = $seo->settings();
         $overrides = $context->seo();
+        // The mount page as it is on the entry's site, where it has its own title.
         $mount = $entry->collection()->mount();
+        $mount = $mount?->in($entry->locale()) ?? $mount;
 
         return new Card(
             title: $overrides['og_title'] ?? (string) $entry->get('title'),

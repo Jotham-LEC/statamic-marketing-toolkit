@@ -9,6 +9,7 @@ use JothamLec\Seo\Context;
 use JothamLec\Seo\Og\Generator;
 use JothamLec\Seo\Preview\Draft;
 use JothamLec\Seo\SiteSeo;
+use JothamLec\Seo\Support\Sites;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Site;
@@ -23,6 +24,13 @@ class PreviewController
     public function meta(Request $request, SiteSeo $seo): JsonResponse
     {
         $content = Draft::fromRequest($request);
+
+        // Worked out on the content's site: its brand values, its locale, its address.
+        return Sites::as($content->locale(), fn () => $this->metaOf($content, $seo));
+    }
+
+    private function metaOf(Entry|Term $content, SiteSeo $seo): JsonResponse
+    {
         $context = $this->context($content);
         $meta = $seo->meta($context);
         $generated = $content instanceof Entry ? $seo->generatedImageUrl($content) : null;
@@ -56,7 +64,7 @@ class PreviewController
 
         abort_unless($content instanceof Entry && config('seo.og.enabled'), 404);
 
-        $png = $generator->template($content)->image($generator->card($content))->toString();
+        $png = Sites::as($content->locale(), fn () => $generator->template($content)->image($generator->card($content))->toString());
 
         return new Response($png, 200, [
             'Content-Type' => 'image/png',
@@ -71,7 +79,7 @@ class PreviewController
      */
     private function context(Entry|Term $content): Context
     {
-        $url = $content->absoluteUrl() ?? rtrim(Site::current()->absoluteUrl(), '/').'/'.$content->slug();
+        $url = $content->absoluteUrl() ?? rtrim(Site::get($content->locale())?->absoluteUrl() ?? Site::current()->absoluteUrl(), '/').'/'.$content->slug();
 
         return Context::make($content, Request::create($url));
     }

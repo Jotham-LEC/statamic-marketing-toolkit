@@ -7,9 +7,11 @@ use Inertia\Testing\AssertableInertia;
 use JothamLec\Seo\Actions\CreateRedirect;
 use JothamLec\Seo\IndexNow\IndexNow;
 use JothamLec\Seo\NotFound\MissingPath;
+use JothamLec\Seo\Og\Generator;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\Report;
 use JothamLec\Seo\Reports\Runner;
+use JothamLec\Seo\SiteSeo;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
@@ -363,4 +365,40 @@ test('the overview and the dashboard widget are of the site selected in the cont
 
     expect($props['report'])->toBeNull()
         ->and(collect($props['notFound'])->pluck('path')->all())->toBe(['/gone']);
+});
+
+describe('the control panel preview and share cards', function () {
+    beforeEach(function () {
+        seoGlobal(['title_separator' => '|', 'og_background' => '#111111']);
+        seoGlobal(['title_separator' => '–', 'og_background' => '#fad03a'], 'cothinking');
+        Blueprint::make('page')->setNamespace('collections.pages')->setContents(['fields' => [['handle' => 'title', 'field' => ['type' => 'text']], ['import' => 'seo::seo']]])->save();
+    });
+
+    test('a page is previewed as its own site shows it, from whichever domain the control panel is on', function () {
+        $this->actingAs(cpUser(super: true));
+        $entry = entryOn('cothinking', 'pages', 'about');
+
+        $this->postJson(cp_route('seo.preview.meta'), ['blueprint' => 'collections.pages.page', 'reference' => $entry->reference(), 'site' => 'cothinking', 'values' => ['title' => 'About', 'slug' => 'about']])
+            ->assertOk()
+            ->assertJson([
+                'title' => 'About – CoThinking',
+                'url' => 'https://cothink.test/about',
+                'site_name' => 'CoThinking',
+                'image' => ['url' => app(SiteSeo::class)->generatedImageUrl($entry), 'generated' => true],
+            ]);
+
+        expect(app(SiteSeo::class)->generatedImageUrl($entry))->toStartWith('https://cothink.test/og/about.png?v=');
+    });
+
+    test('a card has its site\'s colours and its site\'s mount page title as the label', function () {
+        $collection = Collection::make('services')->routes('{mount}/{slug}')->sites(['default', 'cothinking'])->save();
+        $mount = entryIn('pages', 'services', ['title' => 'Services']);
+        $local = Entry::make()->collection('pages')->locale('cothinking')->origin($mount->id())->slug('services')->data(['title' => 'What I do']);
+        $local->save();
+        $collection->mount($mount->id())->save();
+
+        $card = app(Generator::class)->card(entryOn('cothinking', 'services', 'websites'));
+
+        expect([$card->label, $card->siteName, $card->background])->toBe(['What I do', 'CoThinking', '#fad03a']);
+    });
 });

@@ -184,7 +184,8 @@ class SiteSeo
         $path = trim((string) $entry->uri(), '/');
         $route = $path === '' ? route('seo.og.home', [], false) : route('seo.og', ['path' => $path], false);
 
-        return $this->absolute($route.'?v='.$entry->lastModified()->timestamp);
+        // On the entry's own site's domain, which serves its card.
+        return rtrim((string) $entry->site()->absoluteUrl(), '/').'/'.ltrim($route, '/').'?v='.$entry->lastModified()->timestamp;
     }
 
     /*
