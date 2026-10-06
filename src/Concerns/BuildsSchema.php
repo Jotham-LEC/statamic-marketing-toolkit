@@ -393,13 +393,13 @@ trait BuildsSchema
     {
         $field = $this->collectionConfig($context, 'author_field');
         $value = $field ? $context->entry?->augmentedValue($field)->value() : null;
-        $value = $value instanceof Builder ? $value->get() : $value;
+        $value = $value instanceof Builder ? $value->get()->all() : $value;
         $items = is_iterable($value) ? collect($value) : collect(array_filter([$value]));
 
         return $items
             ->map(fn ($author): ?array => match (true) {
-                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->get('title'), 'url' => $author->absoluteUrl()],
-                $author instanceof User => ['@type' => 'Person', 'name' => (string) ($author->name() ?: $author->get('name')), 'url' => $author->get('url')],
+                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->get('title'), 'url' => (string) $author->absoluteUrl()],
+                $author instanceof User => ['@type' => 'Person', 'name' => (string) ($author->name() ?: $author->get('name')), 'url' => (string) $author->get('url')],
                 default => null,
             })
             ->filter(fn ($author) => $author && filled($author['name']))

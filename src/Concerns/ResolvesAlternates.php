@@ -107,12 +107,12 @@ trait ResolvesAlternates
                 ->filter(fn (Entry $entry) => $entry->status() === 'published');
         } else {
             $versions = collect($content->taxonomy()?->sites() ?? [])
-                ->map(fn (string $site) => $content->in($site))
+                ->map(fn (string $site): Term => $content->in($site))
                 ->filter(fn (Term $term) => Sites::as($term->locale(), fn () => $this->termHasEntries($term)));
         }
 
         $versions = $versions->filter(fn (Entry|Term $version) => $this->inSitemap($version))
-            ->keyBy(fn (Entry|Term $version) => $version->locale());
+            ->keyBy(fn (Entry|Term $version): string => $version->locale());
 
         return collect(Sites::handles())
             ->filter(fn (string $site) => $versions->has($site))

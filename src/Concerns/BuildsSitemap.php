@@ -148,8 +148,8 @@ trait BuildsSitemap
     {
         // Each site's terms counted on that site: termHasEntries() asks of the current one.
         return collect($this->sitemapSites())->flatMap(fn (string $site) => Sites::as($site, fn () => collect((array) config('seo.sitemap.taxonomies'))
-            ->flatMap(fn (string $taxonomy) => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
-            ->map(fn (Term $term) => $term->in($site))
+            ->flatMap(fn (string $taxonomy): Collection => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
+            ->map(fn (Term $term): Term => $term->in($site))
             ->filter(fn (Term $term) => $this->inSitemap($term) && $this->termHasEntries($term))
             ->map(fn (Term $term) => $this->sitemapRow($term))
             ->values()
