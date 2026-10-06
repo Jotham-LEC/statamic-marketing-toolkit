@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\Seo\IndexNow\IndexNow;
 use JothamLec\Seo\Redirects\Redirect;
+use JothamLec\Seo\Reports\Report;
+use JothamLec\Seo\Reports\Runner;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
@@ -244,5 +246,68 @@ describe('automatic redirects', function () {
         expect(Redirect::query()->get(['site', 'source', 'target'])->toArray())->toBe([
             ['site' => 'cothinking', 'source' => '/setup', 'target' => '/guide/setup'],
         ]);
+    });
+});
+
+describe('reports', function () {
+    beforeEach(fn () => seoGlobal([]));
+
+    test('the command reports on each site in turn, each of its own pages', function () {
+        entryIn('pages', 'about');
+        entryOn('cothinking', 'pages', 'hello');
+
+        $this->artisan('statamic:seo:report')->assertSuccessful();
+
+        $reports = Report::query()->orderBy('id')->get();
+
+        expect($reports->pluck('site')->all())->toBe(['default', 'cothinking'])
+            ->and($reports[0]->pages()->pluck('url')->all())->toBe(['https://example.test/about'])
+            ->and($reports[1]->pages()->pluck('url')->all())->toBe(['https://cothink.test/hello']);
+
+        $this->artisan('statamic:seo:report', ['--site' => 'cothinking'])->assertSuccessful();
+        $this->artisan('statamic:seo:report', ['--site' => 'nowhere'])->assertFailed();
+
+        expect(Report::query()->orderBy('id')->pluck('site')->all())->toBe(['default', 'cothinking', 'cothinking']);
+    });
+
+    test('links are checked against the report\'s own site, its pages and its redirects', function () {
+        entryIn('pages', 'only-here');
+        entryOn('cothinking', 'pages', 'work');
+        Redirect::query()->create(['site' => 'cothinking', 'source' => '/old-work', 'target' => '/work']);
+        entryOn('cothinking', 'pages', 'hello', ['body' => '<a href="/work">w</a> <a href="/old-work">o</a> <a href="/only-here">h</a> <a href="https://example.test/only-here">x</a> <a href="https://cothink.test/work">c</a>']);
+
+        $runner = app(Runner::class);
+        $report = $runner->runToEnd($runner->start(site: 'cothinking'));
+        $facts = $report->pages()->where('url', 'https://cothink.test/hello')->sole()->facts();
+
+        expect($facts->brokenLinks)->toBe(['/only-here'])
+            ->and($facts->redirectedLinks)->toBe(['/old-work'])
+            ->and($facts->externalLinks)->toBe(['https://example.test/only-here'])
+            ->and($facts->internalLinks)->toBe(['/work', '/old-work', '/only-here']);
+    });
+
+    test('a report running on one site doesn\'t stop another site\'s from starting', function () {
+        entryIn('pages', 'about');
+        entryOn('cothinking', 'pages', 'hello');
+        $runner = app(Runner::class);
+
+        $default = $runner->start(site: 'default');
+        $cothinking = $runner->start(site: 'cothinking');
+
+        expect($cothinking->id)->not->toBe($default->id)
+            ->and($runner->start(site: 'cothinking')->id)->toBe($cothinking->id);
+    });
+
+    test('the control panel runs and lists the selected site\'s reports', function () {
+        entryOn('cothinking', 'pages', 'hello');
+        Report::query()->create(['site' => 'default', 'settings' => [], 'status' => Report::DONE]);
+        $this->actingAs(cpUser(['view seo', 'run seo reports']));
+        session(['statamic.cp.selected-site' => 'cothinking']);
+
+        $this->postJson(cp_route('seo.reports.run'))->assertOk();
+
+        expect(Report::query()->latest('id')->first()->site)->toBe('cothinking');
+        $this->get(cp_route('seo.reports.index'))
+            ->assertInertia(fn (AssertableInertia $page) => $page->has('reports', 1));
     });
 });

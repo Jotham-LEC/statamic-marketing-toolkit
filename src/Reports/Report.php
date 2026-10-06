@@ -2,15 +2,19 @@
 
 namespace JothamLec\Seo\Reports;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use JothamLec\Seo\Support\Sites;
 
 /**
  * One run over the site: its settings when it started, how far it has got,
  * and, once done, the site's score and a count of pages failing each check.
+ * On a multi-site install each report is of one site.
  *
  * @property int $id
+ * @property ?string $site null on a single site
  * @property string $status running, done or failed
  * @property int $pages_total
  * @property int $pages_done
@@ -57,6 +61,29 @@ class Report extends Model
     public function isRunning(): bool
     {
         return $this->status === self::RUNNING;
+    }
+
+    /**
+     * Reports of exactly this site; null: those of a single-site install.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeOfSite(Builder $query, ?string $site): void
+    {
+        $site === null ? $query->whereNull('site') : $query->where('site', $site);
+    }
+
+    /**
+     * The reports the control panel shows while $site is selected: its own,
+     * and those from before the install had more than one site.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeShownOn(Builder $query, string $site): void
+    {
+        if (Sites::multiple()) {
+            $query->where(fn (Builder $query) => $query->where('site', $site)->orWhereNull('site'));
+        }
     }
 
     public function settings(): ReportSettings

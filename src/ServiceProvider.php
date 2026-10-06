@@ -20,6 +20,7 @@ use JothamLec\Seo\Reports\ReportSettings;
 use JothamLec\Seo\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\Support\Config;
+use JothamLec\Seo\Support\Sites;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Events\CollectionSaved;
@@ -155,13 +156,18 @@ class ServiceProvider extends AddonServiceProvider
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);
 
-        $event = match ($settings->get('schedule')) {
-            'daily' => $schedule->command('statamic:seo:report')->dailyAt($time),
-            'weekly' => $schedule->command('statamic:seo:report')->weeklyOn($day === false ? 1 : $day, $time),
-            default => null,
-        };
+        // One run per site on a multi-site install, each with its own overlap lock.
+        foreach (Sites::multiple() ? Sites::handles() : [null] as $site) {
+            $command = $site === null ? 'statamic:seo:report' : 'statamic:seo:report --site='.$site;
 
-        $event?->withoutOverlapping()->runInBackground();
+            $event = match ($settings->get('schedule')) {
+                'daily' => $schedule->command($command)->dailyAt($time),
+                'weekly' => $schedule->command($command)->weeklyOn($day === false ? 1 : $day, $time),
+                default => null,
+            };
+
+            $event?->withoutOverlapping()->runInBackground();
+        }
 
         // Search Console's numbers, daily, once it is set up. Asked when the
         // schedule runs: a key set up in the control panel is read later in boot.

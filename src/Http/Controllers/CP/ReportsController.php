@@ -13,6 +13,7 @@ use JothamLec\Seo\Reports\Runner;
 use JothamLec\Seo\Reports\RunReportStep;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
 
@@ -20,7 +21,8 @@ use Statamic\Facades\User;
  * Tools → SEO → Reports: the list, "Run report", one report's checks and
  * pages, and the progress endpoint a running report's screen polls. Without
  * a queue worker that endpoint also does the work, one step per request, so
- * a report finishes on the sync queue without any request timing out.
+ * a report finishes on the sync queue without any request timing out. On a
+ * multi-site install the list and "Run report" are of the selected site.
  */
 class ReportsController
 {
@@ -31,7 +33,7 @@ class ReportsController
         $addon = Addon::get('jotham-lec/statamic-co-seo');
 
         return Inertia::render('seo::Reports', [
-            'reports' => Report::query()->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
+            'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
             'canRun' => (bool) User::current()?->can('run seo reports'),
             'runUrl' => cp_route('seo.reports.run'),
             'settingsUrl' => $addon && User::current()?->can('editSettings', $addon) ? $addon->settingsUrl() : null,
@@ -45,7 +47,7 @@ class ReportsController
     {
         $this->authorize('run seo reports');
 
-        $report = $runner->start();
+        $report = $runner->start(site: Site::selected()->handle());
 
         if ($report->isRunning() && $report->pages_done === 0 && RunReportStep::usesWorker()) {
             RunReportStep::dispatch($report->id);

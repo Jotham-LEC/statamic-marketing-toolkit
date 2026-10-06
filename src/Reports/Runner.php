@@ -19,6 +19,7 @@ use JothamLec\Seo\Reports\Rules\SingleH1;
 use JothamLec\Seo\Reports\Rules\TitleLength;
 use JothamLec\Seo\Reports\Rules\TitleUnique;
 use JothamLec\Seo\SiteSeo;
+use JothamLec\Seo\Support\Sites;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Facades\Entry;
@@ -30,6 +31,10 @@ use Statamic\Facades\Term;
  * them and reads what each says; the last step runs the checks, which need
  * every page (to find repeated titles), scores the pages and the site, and
  * drops reports beyond the number to keep.
+ *
+ * A report is of one site: on a multi-site install each runs with its site
+ * as Statamic's current one, so the pages, the sitemap, the brand global and
+ * the links it follows are that site's.
  */
 class Runner
 {
@@ -46,17 +51,23 @@ class Runner
     public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo, private ExternalLinkChecker $externalLinks) {}
 
     /**
-     * A new report, or the one already running. One start at a time: a click
-     * and the schedule at the same moment would each find nothing running.
+     * A new report of the site, or the one already running. One start at a
+     * time per site: a click and the schedule at the same moment would each
+     * find nothing running.
+     *
+     * @param  ?string  $site  a site handle; null: the current site
      */
-    public function start(?ReportSettings $settings = null): Report
+    public function start(?ReportSettings $settings = null, ?string $site = null): Report
     {
-        return Cache::lock('seo:reports:start', 120)->block(30, fn () => $this->startOrJoin($settings));
+        $site = Sites::scope($site ?? Site::current()->handle());
+
+        return Cache::lock('seo:reports:start'.($site === null ? '' : ':'.$site), 120)
+            ->block(30, fn () => Sites::as($site, fn () => $this->startOrJoin($settings, $site)));
     }
 
-    private function startOrJoin(?ReportSettings $settings): Report
+    private function startOrJoin(?ReportSettings $settings, ?string $site): Report
     {
-        $running = Report::query()->where('status', Report::RUNNING)->latest('id')->first();
+        $running = Report::query()->ofSite($site)->where('status', Report::RUNNING)->latest('id')->first();
 
         if ($running && $running->updated_at->gt(now()->subMinutes(self::STALE_MINUTES))) {
             return $running;
@@ -68,7 +79,7 @@ class Runner
         $sitemap = $this->seo->sitemapUrls()->pluck('loc')->flip();
         $targets = $this->targets($settings);
 
-        $report = Report::query()->create(['settings' => $settings->all(), 'pages_total' => $targets->count()]);
+        $report = Report::query()->create(['site' => $site, 'settings' => $settings->all(), 'pages_total' => $targets->count()]);
 
         $targets->chunk(500)->each(fn (Collection $chunk) => ReportPage::query()->insert($chunk->map(fn (array $page) => [
             ...$page,
@@ -92,6 +103,11 @@ class Runner
             return $report;
         }
 
+        return Sites::as($report->site, fn () => $this->stepInSite($report));
+    }
+
+    private function stepInSite(Report $report): Report
+    {
         $pages = $report->pages()->where('checked', false)->orderBy('id')->limit(max(1, $report->settings()->int('chunk_size')))->get();
 
         foreach ($pages as $page) {
@@ -156,6 +172,11 @@ class Runner
     }
 
     public function finish(Report $report): void
+    {
+        Sites::as($report->site, fn () => $this->finishInSite($report));
+    }
+
+    private function finishInSite(Report $report): void
     {
         $settings = $report->settings();
         $rules = $this->rules($settings);
@@ -223,12 +244,15 @@ class Runner
             'finished_at' => now(),
         ]);
 
-        $this->prune($settings->int('keep_reports'));
+        $this->prune($settings->int('keep_reports'), $report->site);
     }
 
-    private function prune(int $keep): void
+    /**
+     * Keeps the latest $keep reports of each site.
+     */
+    private function prune(int $keep, ?string $site): void
     {
-        $stale = Report::query()->where('status', '!=', Report::RUNNING)->orderByDesc('id')->skip(max(1, $keep))->take(PHP_INT_MAX)->pluck('id');
+        $stale = Report::query()->ofSite($site)->where('status', '!=', Report::RUNNING)->orderByDesc('id')->skip(max(1, $keep))->take(PHP_INT_MAX)->pluck('id');
 
         // Pages first: SQLite only cascades with foreign keys switched on.
         ReportPage::query()->whereIn('report_id', $stale)->delete();
@@ -254,7 +278,7 @@ class Runner
             ->sortBy('url');
 
         $terms = collect((array) config('seo.sitemap.taxonomies'))
-            ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->get())
+            ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
             ->map(fn ($term) => $term->in($site))
             ->filter(fn ($term) => $term?->url() && $this->seo->termHasEntries($term))
             ->map(fn (TermContract $term) => $this->row($term))

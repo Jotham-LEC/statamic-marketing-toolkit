@@ -7,16 +7,18 @@ use Illuminate\Routing\Router;
 use JothamLec\Seo\Redirects\Matcher;
 use Statamic\Facades\Asset;
 use Statamic\Facades\Data;
+use Statamic\Facades\Site;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Whether a path on this site leads somewhere, without fetching it: a page
- * Statamic knows, a file in public/, an asset, a route the app registers
- * (other than Statamic's catch-all), or a redirect rule.
+ * Whether a path on the current site leads somewhere, without fetching it:
+ * a page Statamic knows there, a file in public/, an asset, a route the app
+ * registers (other than Statamic's catch-all), or a redirect rule that
+ * applies there.
  */
 class LinkChecker
 {
-    /** @var array<string, string> path => ok, redirect or broken */
+    /** @var array<string, string> site and path => ok, redirect or broken */
     private array $known = [];
 
     public function __construct(private Router $router, private Matcher $redirects) {}
@@ -27,13 +29,14 @@ class LinkChecker
     public function check(string $path): string
     {
         $path = '/'.trim(rawurldecode($path), '/');
+        $site = Site::current()->handle();
 
-        return $this->known[$path] ??= $this->resolve($path);
+        return $this->known[$site.' '.$path] ??= $this->resolve($path, $site);
     }
 
-    private function resolve(string $path): string
+    private function resolve(string $path, string $site): string
     {
-        if (Data::findByUri($path) || Data::findByUri($path.'/')) {
+        if (Data::findByUri($path, $site) || Data::findByUri($path.'/', $site)) {
             return 'ok';
         }
 
@@ -50,7 +53,7 @@ class LinkChecker
             return 'ok';
         }
 
-        return $this->redirects->match($path) ? 'redirect' : 'broken';
+        return $this->redirects->match($path, '', $site) ? 'redirect' : 'broken';
     }
 
     private function isAppRoute(string $path): bool

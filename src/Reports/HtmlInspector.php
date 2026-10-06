@@ -65,6 +65,7 @@ class HtmlInspector
      */
     private function links(DOMXPath $xpath): array
     {
+        // The report's site: the Runner makes it the current one.
         $host = parse_url(Site::current()->absoluteUrl(), PHP_URL_HOST);
         $broken = $redirected = $internal = $external = [];
 
