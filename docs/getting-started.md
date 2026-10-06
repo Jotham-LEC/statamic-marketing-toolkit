@@ -12,7 +12,29 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## The editions
 
-Marketing Toolkit comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, reports (on a schedule, with link checks and `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, several sites and languages with hreflang, and the dashboard widget.
+Marketing Toolkit comes as **Free** and **Pro**. Pro is $75 per site, a perpetual licence.
+
+| | Free | Pro |
+|---|:---:|:---:|
+| Titles, descriptions, Open Graph and X cards, structured data (JSON-LD) | ✓ | ✓ |
+| Live Google and share preview, with counters | ✓ | ✓ |
+| Sitemap, robots.txt, llms.txt and ads.txt | ✓ | ✓ |
+| IndexNow (Bing and others told of every change) | ✓ | ✓ |
+| Redirects by hand, with wildcards and 410s | ✓ | ✓ |
+| Favicons and web app manifest from one image | ✓ | ✓ |
+| Google Tag Manager, Analytics 4, PostHog, Meta Pixel and LinkedIn tags | ✓ | ✓ |
+| `SiteSeo` and `Tracking` overrides in code | ✓ | ✓ |
+| Site reports with a score out of 100, on a schedule (`seo:report`) | | ✓ |
+| Google Search Console numbers per page | | ✓ |
+| Google Consent Mode v2, by region | | ✓ |
+| Form submissions sent to the tools as leads, with where they came from | | ✓ |
+| Campaign links with UTM tags | | ✓ |
+| Generated share cards | | ✓ |
+| Redirects added when a page moves, and the 404 log | | ✓ |
+| CSV import and export of redirects | | ✓ |
+| Several sites and languages, with hreflang | | ✓ |
+| Features: switch off what a site doesn't use | | ✓ |
+| Dashboard widget | | ✓ |
 
 To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
 
