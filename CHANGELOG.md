@@ -5,6 +5,9 @@
 ### Added
 - Config `redirects.case_sensitive`: set to `false`, a redirect's From matches in any letter case (`/ABOUT-US/` as `/about-us`), for a site moved off one whose addresses worked in any case (Wix, IIS). Exact and `*` sources, accented letters and other alphabets included; what a `*` matched keeps the visitor's case. Sources differing only in case then count as one address: a second one is refused, a CSV row updates the first, and a chain of redirects that would loop is caught. Default `true`: nothing changes.
 
+### Changed
+- Faster artisan commands, queue workers and test suites: the report schedule is built only for the commands that run it (`schedule:run`, `schedule:work`, `schedule:test`, `schedule:list`, `schedule:finish`). Statamic built it on every console boot, and reading the report settings cost 15–25 ms each time.
+
 ## 0.12.0 – 2026-10-06
 
 Search Console set up from the control panel, rules per taxonomy, and fixes for gallery fields and static caching.

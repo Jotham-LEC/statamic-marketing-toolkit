@@ -257,6 +257,27 @@ test('reports run on the schedule set in the addon settings', function () {
         ->and($events(['schedule' => 'weekly', 'schedule_day' => 'wednesday', 'schedule_time' => '03:00']))->toBe(['0 3 * * 3']);
 });
 
+test('the schedule is built only for the commands that need it', function (string $command, bool $built) {
+    reportSettings(['schedule' => 'daily']);
+    app()->instance(Schedule::class, $schedule = new Schedule);
+    $argv = $_SERVER['argv'];
+    $_SERVER['argv'] = ['artisan', $command];
+
+    try {
+        (fn () => $this->bootSchedule())->call(app()->getProvider(ServiceProvider::class));
+    } finally {
+        $_SERVER['argv'] = $argv;
+    }
+
+    expect(collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'seo:report')))->toBe($built);
+})->with([
+    'schedule:run' => ['schedule:run', true],
+    'schedule:finish, which finishes a background event' => ['schedule:finish', true],
+    'schedule:list' => ['schedule:list', true],
+    'a queue worker' => ['queue:work', false],
+    'any other command' => ['migrate', false],
+]);
+
 test('the preview counters use the report thresholds', function () {
     reportSettings(['title_min' => 20, 'title_max' => 70, 'description_min' => 80, 'description_max' => 150]);
 

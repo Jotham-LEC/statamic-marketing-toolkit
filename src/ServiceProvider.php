@@ -133,6 +133,22 @@ class ServiceProvider extends AddonServiceProvider
     /**
      * Reports on the schedule set under Tools → Addons → SEO.
      */
+    /**
+     * Statamic builds an addon's schedule on every console boot: each artisan
+     * command, queue job process and test. Reading the report settings costs
+     * 15 to 25 ms there (Statamic parses each default value as Antlers), spent
+     * only to learn that reports are off. The schedule is needed only by the
+     * commands that run it, list it, or finish a background event of it.
+     */
+    protected function bootSchedule()
+    {
+        if ($this->app->runningConsoleCommand(['schedule:run', 'schedule:work', 'schedule:test', 'schedule:list', 'schedule:finish'])) {
+            parent::bootSchedule();
+        }
+
+        return $this;
+    }
+
     protected function schedule($schedule)
     {
         $settings = app(ReportSettings::class);

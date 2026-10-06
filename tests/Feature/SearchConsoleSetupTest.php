@@ -8,6 +8,7 @@ use Inertia\Testing\AssertableInertia;
 use JothamLec\Seo\SearchConsole\Client;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\SearchStat;
+use JothamLec\Seo\ServiceProvider;
 use Statamic\Facades\Addon;
 
 beforeEach(function () {
@@ -133,7 +134,9 @@ test('importing from the control panel brings in the numbers', function () {
 });
 
 test('the daily import runs once it is set up, however that was done', function () {
-    $event = collect(app(Schedule::class)->events())->first(fn ($event) => str_contains((string) $event->command, 'seo:search-console'));
+    $schedule = new Schedule;
+    (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
+    $event = collect($schedule->events())->first(fn ($event) => str_contains((string) $event->command, 'seo:search-console'));
 
     expect($event)->not->toBeNull()
         ->and($event->filtersPass(app()))->toBeFalse();
