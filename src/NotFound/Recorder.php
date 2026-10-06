@@ -26,7 +26,7 @@ class Recorder
 
         $agent = strtolower((string) $request->userAgent());
 
-        foreach ((array) config('seo.not_found.ignore_user_agents', []) as $bot) {
+        foreach ((array) config('seo.not_found.ignore_user_agents') as $bot) {
             if ($bot !== '' && str_contains($agent, strtolower($bot))) {
                 return false;
             }
@@ -35,7 +35,7 @@ class Recorder
         $path = $this->path($request);
 
         // Postgres refuses text that isn't UTF-8, and a probe is all such a path can be.
-        return self::isText($path) && ! Str::is((array) config('seo.not_found.ignore_paths', []), $path);
+        return self::isText($path) && ! Str::is((array) config('seo.not_found.ignore_paths'), $path);
     }
 
     public function record(Request $request): void
@@ -99,7 +99,7 @@ class Recorder
      */
     private function trim(): void
     {
-        $max = max(1, (int) config('seo.not_found.max_rows', 1000));
+        $max = max(1, (int) config('seo.not_found.max_rows'));
 
         if (random_int(1, max(1, intdiv($max, 10))) !== 1) {
             return;
@@ -108,10 +108,19 @@ class Recorder
         $excess = MissingPath::query()->count() - $max;
 
         if ($excess > 0) {
-            // One-off misses go first (one hit, no page linking there: what a flood of
-            // made-up addresses looks like), so they can't push out the broken links.
+            // One-off misses go first (one hit, no page of the site's linking there: what
+            // a flood of made-up addresses looks like), so they can't push out the broken
+            // links. Only the site's own pages count: a Referer header is whatever the
+            // request says, so a flood could name any other.
+            $internal = Site::all()
+                ->map(fn ($site) => strtolower((string) parse_url((string) $site->absoluteUrl(), PHP_URL_HOST)))
+                ->filter()->unique()
+                ->flatMap(fn (string $host) => ["http://{$host}/%", "https://{$host}/%"])
+                ->values()->all();
+            $linked = str_repeat(' or referrer like ?', count($internal));
+
             $stale = MissingPath::query()
-                ->orderByRaw('case when hits > 1 or referrer is not null then 1 else 0 end')
+                ->orderByRaw("case when hits > 1{$linked} then 1 else 0 end", $internal)
                 ->orderBy('last_seen_at')
                 ->orderBy('id')
                 ->limit($excess)
