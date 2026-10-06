@@ -11,9 +11,11 @@ use JothamLec\Seo\Http\Controllers\SitemapController;
 use JothamLec\Seo\IndexNow\IndexNow;
 
 /*
- * Statamic registers these inside its front-end group, ahead of the catch-all.
- * None of them needs a session or a CSRF token, and a Set-Cookie header would
- * stop Cloudflare and browsers from caching the images and the sitemap.
+ * Statamic registers these with its front-end routes (the `web` group), ahead
+ * of the catch-all. They aren't pages: Statamic's own `statamic.web`
+ * middleware, static caching included, runs only for the catch-all. None of
+ * them needs a session or a CSRF token, and a Set-Cookie header would stop
+ * Cloudflare and browsers from caching the images and the sitemap.
  */
 Route::withoutMiddleware([
     StartSession::class,
