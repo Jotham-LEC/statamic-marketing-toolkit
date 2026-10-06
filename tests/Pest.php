@@ -61,29 +61,79 @@ function entryIn(string $collection, string $slug, array $data = [], ?string $da
  */
 function metaFor(?EntryContract $entry, string $uri = '/', array $overrides = [], int $status = 200): Meta
 {
-    return app(SiteSeo::class)->meta(Context::make($entry, Request::create('https://example.test'.$uri), $overrides, $status));
+    // Bound as the app's request too: Statamic works out the current site from it.
+    app()->instance('request', $request = Request::create(absoluteTestUrl($uri)));
+
+    return app(SiteSeo::class)->meta(Context::make($entry, $request, $overrides, $status));
 }
 
 /**
+ * A path on the default site, or a full address (another site's) as it is.
+ */
+function absoluteTestUrl(string $uri): string
+{
+    return preg_match('#^https?://#', $uri) ? $uri : 'https://example.test'.$uri;
+}
+
+/**
+ * The brand global with these values on one site. On a multi-site install
+ * the set is on every site, and each other site's origin is the default.
+ *
  * @param  array<string, mixed>  $values
  */
-function seoGlobal(array $values): void
+function seoGlobal(array $values, string $site = 'default'): void
 {
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => Install::tabs('assets')])->save();
 
-    $set = GlobalSet::make('seo')->title('SEO & brand');
+    $set = GlobalSet::findByHandle('seo') ?? GlobalSet::make('seo')->title('SEO & brand');
+
+    if (Site::multiEnabled()) {
+        $set->sites(Site::all()->mapWithKeys(fn ($each) => [$each->handle() => $each->handle() === 'default' ? null : 'default'])->all());
+    }
+
     $set->save();
-    $set->in('default')->data($values)->save();
+    $set->in($site)->data($values)->save();
 }
 
 /**
- * Renders Blade as if for a request to $uri: what a layout's <s:seo:meta /> prints.
+ * Two sites on two domains, as Statamic Pro runs them: `default` on
+ * example.test and `cothinking` on cothink.test. Home and pages are on both.
+ */
+function multisite(): void
+{
+    config(['statamic.editions.pro' => true, 'statamic.system.multisite' => true]);
+
+    Site::setSites([
+        'default' => ['name' => 'Acme', 'url' => 'https://example.test/', 'locale' => 'en_US'],
+        'cothinking' => ['name' => 'CoThinking', 'url' => 'https://cothink.test/', 'locale' => 'en_GB'],
+    ]);
+
+    Collection::findByHandle('home')->sites(['default', 'cothinking'])->save();
+    Collection::findByHandle('pages')->sites(['default', 'cothinking'])->save();
+}
+
+/**
+ * An entry on another site than the default.
+ *
+ * @param  array<string, mixed>  $data
+ */
+function entryOn(string $site, string $collection, string $slug, array $data = []): EntryContract
+{
+    $entry = Entry::make()->collection($collection)->locale($site)->slug($slug)->data(['title' => ucfirst(str_replace('-', ' ', $slug)), ...$data]);
+    $entry->save();
+
+    return $entry;
+}
+
+/**
+ * Renders Blade as if for a request to $uri (a path on the default site, or
+ * a full address): what a layout's <s:seo:meta /> prints.
  *
  * @param  array<string, mixed>  $data
  */
 function renderAt(string $uri, string $blade, array $data = []): string
 {
-    app()->instance('request', Request::create('https://example.test'.$uri));
+    app()->instance('request', Request::create(absoluteTestUrl($uri)));
 
     return Blade::render($blade, $data);
 }

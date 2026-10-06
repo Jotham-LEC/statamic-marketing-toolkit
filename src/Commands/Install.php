@@ -74,12 +74,26 @@ class Install extends Command
         }
 
         if (! GlobalSet::findByHandle($handle)) {
-            GlobalSet::make($handle)->title('SEO & brand')->save();
+            $set = GlobalSet::make($handle)->title('SEO & brand');
+
+            // On every site; the others take what they leave empty from the default site's.
+            if (Site::multiEnabled()) {
+                $set->sites(Site::all()->mapWithKeys(fn ($site) => [$site->handle() => $site->handle() === Site::default()->handle() ? null : Site::default()->handle()])->all());
+            }
+
+            $set->save();
 
             $this->components->info("Global set [{$handle}] created.");
         }
 
-        $filled = $this->fillDefaults(GlobalSet::findByHandle($handle));
+        $set = GlobalSet::findByHandle($handle);
+        $missing = Site::all()->map->handle()->diff($set->sites())->values();
+
+        if (Site::multiEnabled() && $missing->isNotEmpty()) {
+            $this->components->warn("Global set [{$handle}] isn't enabled on: {$missing->implode(', ')}. Those sites use the addon's defaults until it is (Globals → SEO & brand → Sites).");
+        }
+
+        $filled = $this->fillDefaults($set);
 
         if ($filled !== []) {
             $this->components->info('Defaults filled in: '.implode(', ', $filled).'. Change them under Globals → SEO & brand.');
@@ -151,37 +165,47 @@ class Install extends Command
 
     /**
      * Fills the brand fields that are empty, and only those, with what the
-     * site uses when they are.
+     * site uses when they are: on each site the set is enabled on that has
+     * no origin. A site with an origin takes the origin's values, so filling
+     * it would cut it off from them.
      *
      * @return list<string> the fields filled
      */
     private function fillDefaults(GlobalSetContract $set): array
     {
-        $site = Site::default();
-        $variables = $set->in($site->handle()) ?? $set->makeLocalization($site->handle());
         $fields = Blueprint::find('globals.'.$set->handle())?->fields()->all()->keys()->all() ?? [];
+        $filled = [];
 
-        $home = Entry::findByUri('/', $site->handle());
-        $home = $home instanceof Page ? $home->entry() : $home;
-        $homeDescription = data_get($home?->get('seo'), 'description') ?: $home?->get('description');
+        foreach ($set->origins()->filter(fn ($origin) => $origin === null)->keys() as $site) {
+            if (! Site::get($site)) {
+                continue;
+            }
 
-        $defaults = array_filter([
-            'title_separator' => '·',
-            'default_description' => is_string($homeDescription) && $homeDescription !== '' ? $homeDescription : null,
-            'robots_disallow' => ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'],
-        ], fn ($value, $field) => $value !== null && in_array($field, $fields, true) && blank($variables->get($field)), ARRAY_FILTER_USE_BOTH);
+            $variables = $set->in($site) ?? $set->makeLocalization($site);
 
-        if ($defaults === []) {
-            return [];
+            $home = Entry::findByUri('/', $site);
+            $home = $home instanceof Page ? $home->entry() : $home;
+            $homeDescription = data_get($home?->get('seo'), 'description') ?: $home?->get('description');
+
+            $defaults = array_filter([
+                'title_separator' => '·',
+                'default_description' => is_string($homeDescription) && $homeDescription !== '' ? $homeDescription : null,
+                'robots_disallow' => ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'],
+            ], fn ($value, $field) => $value !== null && in_array($field, $fields, true) && blank($variables->get($field)), ARRAY_FILTER_USE_BOTH);
+
+            if ($defaults === []) {
+                continue;
+            }
+
+            foreach ($defaults as $field => $value) {
+                $variables->set($field, $value);
+            }
+
+            $variables->save();
+            $filled = [...$filled, ...array_keys($defaults)];
         }
 
-        foreach ($defaults as $field => $value) {
-            $variables->set($field, $value);
-        }
-
-        $variables->save();
-
-        return array_keys($defaults);
+        return array_values(array_unique($filled));
     }
 
     /**

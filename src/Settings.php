@@ -10,18 +10,18 @@ use Statamic\Facades\Site;
 
 /**
  * The brand-and-defaults global set (config `seo.global`), read for the
- * current site. Every getter tolerates the set or the field being missing,
+ * current site. A site whose localization leaves a field empty takes its
+ * origin's value. Every getter tolerates the set or the field being missing,
  * so a site works before `php please seo:install` has run.
  */
 class Settings
 {
-    private ?Variables $variables = null;
-
-    private bool $loaded = false;
+    /** @var array<string, ?Variables> site handle => its localization */
+    private array $variables = [];
 
     public function string(string $key, ?string $default = null): ?string
     {
-        $value = $this->variables()?->get($key);
+        $value = $this->variables()?->value($key);
 
         return filled($value) && is_scalar($value) ? (string) $value : $default;
     }
@@ -31,7 +31,7 @@ class Settings
      */
     public function bool(string $key, bool $default = false): bool
     {
-        $value = $this->variables()?->get($key);
+        $value = $this->variables()?->value($key);
 
         return $value === null ? $default : (bool) $value;
     }
@@ -41,7 +41,7 @@ class Settings
      */
     public function list(string $key): array
     {
-        $value = $this->variables()?->get($key);
+        $value = $this->variables()?->value($key);
 
         return array_values(array_filter(is_array($value) ? $value : [], fn ($item) => filled($item) && is_string($item)));
     }
@@ -53,7 +53,7 @@ class Settings
      */
     public function rows(string $key): array
     {
-        $value = $this->variables()?->get($key);
+        $value = $this->variables()?->value($key);
 
         return collect(is_array($value) ? $value : [])
             ->filter(fn ($row) => is_array($row))
@@ -92,13 +92,18 @@ class Settings
         return ' '.($separator === '' ? '·' : $separator).' ';
     }
 
+    /**
+     * The current site's localization, or null where the set isn't enabled.
+     * Kept per site: the current site can change while one instance lives.
+     */
     private function variables(): ?Variables
     {
-        if (! $this->loaded) {
-            $this->loaded = true;
-            $this->variables = GlobalSet::findByHandle((string) config('seo.global'))?->inCurrentSite();
+        $site = Site::current()->handle();
+
+        if (! array_key_exists($site, $this->variables)) {
+            $this->variables[$site] = GlobalSet::findByHandle((string) config('seo.global'))?->in($site);
         }
 
-        return $this->variables;
+        return $this->variables[$site];
     }
 }
