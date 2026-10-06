@@ -12,8 +12,8 @@ use JothamLec\MarketingToolkit\Support\Edition;
  * .env) winning over it. Printed by <s:seo:head /> and <s:seo:body />, in
  * production only and never in Live Preview.
  *
- * Override a method in a subclass named in `seo.tracking.class`, as with
- * SiteSeo: e.g. ids() to read them from somewhere else.
+ * Override a method in a subclass bound in its place in the container:
+ * e.g. ids() to read them from somewhere else.
  */
 class Tracking
 {
@@ -55,8 +55,8 @@ class Tracking
      */
     public function enabled(): bool
     {
-        return config('seo.tracking.enabled', true)
-            && app()->environment((array) config('seo.tracking.environments', ['production']))
+        return config('seo.tracking.enabled')
+            && app()->environment((array) config('seo.tracking.environments'))
             && ! request()->isLivePreview();
     }
 
@@ -213,7 +213,7 @@ class Tracking
      */
     public function conversions(): bool
     {
-        return config('seo.leads.enabled', true) && $this->settings->bool('conversions', true);
+        return config('seo.leads.enabled') && $this->settings->bool('conversions', true);
     }
 
     /**
@@ -231,7 +231,7 @@ class Tracking
      */
     public function attribution(): bool
     {
-        return config('seo.leads.enabled', true) && $this->settings->bool('attribution');
+        return config('seo.leads.enabled') && $this->settings->bool('attribution');
     }
 
     /**

@@ -67,7 +67,7 @@ test('a module that is off is off in the config, and its pages answer 404 even w
 });
 
 test('listeners and middleware of modules that are off aren\'t registered', function () {
-    Features::save(['favicons', 'redirects', 'not_found', 'automatic_redirects']);
+    Features::save(['favicons', 'sitemap', 'llms_txt', 'redirects', 'not_found', 'automatic_redirects']);
     $provider = app()->getProvider(ServiceProvider::class);
     rebootFeatures();
 
@@ -75,7 +75,7 @@ test('listeners and middleware of modules that are off aren\'t registered', func
     $middleware = (fn () => $this->middlewareGroups)->call($provider);
     $discovered = (fn () => $this->autoloadFilesFromFolder('Listeners'))->call($provider);
 
-    expect(collect($listen)->flatten()->all())->not->toContain(RemakeFavicons::class)
+    expect($listen)->toBe([])
         ->and($discovered)->not->toContain(RemakeFavicons::class)
         ->and($middleware)->toBe([])
         ->and((fn () => $this->subscribe)->call($provider))->toBe([]);

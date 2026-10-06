@@ -6,13 +6,10 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
-use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Commands\Report;
 use JothamLec\MarketingToolkit\Commands\SearchConsole;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Cp\Navigation;
-use JothamLec\MarketingToolkit\Cp\RecordActions;
-use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Listeners\AttributeSubmission;
@@ -28,7 +25,6 @@ use JothamLec\MarketingToolkit\Support\Config;
 use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
-use JothamLec\MarketingToolkit\Tags\Seo;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Events\CollectionSaved;
@@ -36,10 +32,7 @@ use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
-use Statamic\Events\FormSubmitted;
-use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Events\StacheCleared;
-use Statamic\Events\SubmissionCreated;
 use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
@@ -65,16 +58,6 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $translations = false;
 
-    protected $tags = [Seo::class];
-
-    protected $commands = [Install::class, Report::class, SearchConsole::class];
-
-    protected $fieldtypes = [SeoPreview::class];
-
-    protected $widgets = [SeoWidget::class];
-
-    protected $actions = RecordActions::ACTIONS;
-
     protected $vite = [
         'input' => ['resources/js/addon.js', 'resources/css/addon.css'],
         'publicDirectory' => 'resources/dist',
@@ -84,23 +67,23 @@ class ServiceProvider extends AddonServiceProvider
         'statamic.web' => [HandleMissing::class],
     ];
 
+    /*
+     * FlushSitemap takes no event, so Statamic can't find its events from its
+     * handle() as it does for the other listeners in Listeners/.
+     */
     protected $listen = [
-        EntrySaved::class => [FlushSitemap::class, SubmitToIndexNow::class],
-        EntryDeleted::class => [FlushSitemap::class, SubmitToIndexNow::class],
+        EntrySaved::class => [FlushSitemap::class],
+        EntryDeleted::class => [FlushSitemap::class],
         // A scheduled entry going live, or an expiring one going away (Statamic's scheduler).
-        EntryScheduleReached::class => [FlushSitemap::class, SubmitToIndexNow::class],
-        TermSaved::class => [FlushSitemap::class, SubmitToIndexNow::class],
-        TermDeleted::class => [FlushSitemap::class, SubmitToIndexNow::class],
+        EntryScheduleReached::class => [FlushSitemap::class],
+        TermSaved::class => [FlushSitemap::class],
+        TermDeleted::class => [FlushSitemap::class],
         CollectionTreeSaved::class => [FlushSitemap::class],
         // A new route moves every entry or term in it.
         CollectionSaved::class => [FlushSitemap::class],
         TaxonomySaved::class => [FlushSitemap::class],
         // A deploy clears the Stache; the rules may have changed with the code.
         StacheCleared::class => [FlushSitemap::class],
-        GlobalVariablesSaved::class => [RemakeFavicons::class],
-        // Pro: where each lead came from, and the lead sent to the tracking tools.
-        FormSubmitted::class => [AttributeSubmission::class],
-        SubmissionCreated::class => [CountConversion::class],
     ];
 
     protected $subscribe = [RedirectChangedUris::class];
@@ -108,7 +91,7 @@ class ServiceProvider extends AddonServiceProvider
     /** @var list<class-string> listeners and middleware of modules that are off (leaveOutUnused) */
     private array $unused = [];
 
-    /** What the free edition leaves out of the lists above and of Statamic's autoloading. */
+    /** What the free edition leaves out of Statamic's autoloading (autoloadFilesFromFolder). */
     private const array PRO_ONLY = [Report::class, SearchConsole::class, SeoWidget::class, CreateRedirect::class];
 
     public function register(): void
@@ -118,9 +101,7 @@ class ServiceProvider extends AddonServiceProvider
         // Merged here rather than in Statamic's bootConfig(), which would name the file after the slug.
         $this->mergeConfigFrom(__DIR__.'/../config/seo.php', 'seo');
 
-        $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class') ?: SiteSeo::class));
-
-        $this->app->bind(Tracking::class, fn ($app) => $app->build(config('seo.tracking.class') ?: Tracking::class));
+        $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class')));
 
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
@@ -155,18 +136,11 @@ class ServiceProvider extends AddonServiceProvider
 
     /**
      * The modules that are off (Features), off before anything registers. The
-     * free edition also has no Search Console, dashboard widget or
-     * redirect-from-404 action.
+     * free edition's Pro classes are left out of the autoloading below.
      */
     protected function bootEdition(): void
     {
         Features::apply();
-
-        if (! Edition::pro()) {
-            $this->commands = array_values(array_diff($this->commands, self::PRO_ONLY));
-            $this->widgets = array_values(array_diff($this->widgets, self::PRO_ONLY));
-            $this->actions = array_values(array_diff($this->actions, self::PRO_ONLY));
-        }
 
         $this->leaveOutUnused();
     }
@@ -180,9 +154,9 @@ class ServiceProvider extends AddonServiceProvider
         $this->unused = array_keys(array_filter([
             FlushSitemap::class => ! config('seo.sitemap.enabled') && ! config('seo.llms_txt'),
             SubmitToIndexNow::class => ! config('seo.indexnow.enabled'),
-            RemakeFavicons::class => ! config('seo.favicons.enabled', true),
-            AttributeSubmission::class => ! config('seo.leads.enabled', true),
-            CountConversion::class => ! config('seo.leads.enabled', true),
+            RemakeFavicons::class => ! config('seo.favicons.enabled'),
+            AttributeSubmission::class => ! config('seo.leads.enabled'),
+            CountConversion::class => ! config('seo.leads.enabled'),
             RedirectChangedUris::class => ! config('seo.redirects.automatic'),
             HandleMissing::class => ! config('seo.redirects.enabled') && ! config('seo.not_found.enabled'),
         ]));
@@ -296,7 +270,7 @@ class ServiceProvider extends AddonServiceProvider
 
         $settings = app(ReportSettings::class);
         // Off under Features (or in config/seo.php): reports run only by hand.
-        $schedules = config('seo.reports.enabled', true) ? $settings->get('schedule') : 'off';
+        $schedules = config('seo.reports.enabled') ? $settings->get('schedule') : 'off';
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);
 
