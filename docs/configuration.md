@@ -92,6 +92,7 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 |---|---|---|
 | `redirects.enabled` | `true` | Applies the rules under Tools → SEO → Redirects. |
 | `redirects.automatic` | `true` | Adds a 301 when published content moves (slug, date, place in a tree). |
+| `redirects.case_sensitive` | `true` | `false` matches a redirect's From in any letter case, accents and other alphabets included: `/ABOUT-US` and `/About-Us` as `/about-us`, `/CAFÉ` as `/café`. What a `*` matched keeps the visitor's case. Two redirects whose From differs only in case are then refused as the same address, and a CSV row updates the redirect with that From in any case. For a site moved off one whose addresses worked in any case (Wix, IIS). |
 | `not_found.enabled` | `true` | Logs 404s. |
 | `not_found.max_rows` | `1000` | Most paths kept. One-off misses (one hit, no page linking there) go first, then the least recently seen, so a flood of made-up addresses can't push out real broken links. |
 | `not_found.ignore_user_agents` | bots, crawlers, curl, wget… | Not logged when the user agent contains one of these (any case). |
