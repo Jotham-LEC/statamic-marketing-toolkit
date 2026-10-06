@@ -920,11 +920,13 @@ class SiteSeo
      * Whether a term has published entries, so its page is worth listing and
      * checking. Statamic counts only entries of the collections the taxonomy
      * is attached to; override for one that isn't attached (the entries name
-     * their terms in a `terms` field), or to count only some entries.
+     * their terms in a `terms` field), or to count only some entries. Only
+     * the current site's entries count (Statamic counts every site's): the
+     * sitemap and a report each ask on the site they are of.
      */
     public function termHasEntries(Term $term): bool
     {
-        return $term->queryEntries()->whereStatus('published')->count() > 0;
+        return $term->queryEntries()->where('site', Site::current()->handle())->whereStatus('published')->count() > 0;
     }
 
     /**
@@ -933,7 +935,7 @@ class SiteSeo
     protected function sitemapTerms(): Collection
     {
         return collect((array) config('seo.sitemap.taxonomies'))
-            ->flatMap(fn (string $taxonomy) => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->get())
+            ->flatMap(fn (string $taxonomy) => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->where('site', Site::current()->handle())->get())
             ->filter(fn (Term $term) => $this->inSitemap($term) && $this->termHasEntries($term))
             ->map(fn (Term $term) => ['loc' => $term->absoluteUrl(), 'lastmod' => $term->lastModified()?->toAtomString()])
             ->values();

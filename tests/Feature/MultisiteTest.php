@@ -1,7 +1,10 @@
 <?php
 
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Collection;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term;
 
 /*
  * Statamic Pro with two sites on two domains: `default` (example.test) and
@@ -44,4 +47,25 @@ test('a site reads its own brand values, and what it leaves empty from its origi
 
     $this->get('https://cothink.test/robots.txt')->assertSee('User-agent: GPTBot');
     expect(metaFor(entryIn('pages', 'about'))->twitterSite)->toBe('@acme');
+});
+
+test('each domain\'s sitemap lists that site\'s pages and terms only', function () {
+    config(['seo.sitemap.taxonomies' => ['topics']]);
+    Collection::make('services')->routes('services/{slug}')->sites(['cothinking'])->taxonomies(['topics'])->save();
+    Taxonomy::make('topics')->sites(['default', 'cothinking'])->save();
+    Term::make()->taxonomy('topics')->slug('gardens')->dataForLocale('default', ['title' => 'Gardens'])->dataForLocale('cothinking', ['title' => 'Gardens'])->save();
+
+    entryIn('pages', 'about');
+    entryOn('cothinking', 'pages', 'hello');
+    entryOn('cothinking', 'services', 'websites', ['topics' => ['gardens']]);
+
+    $cothinking = $this->get('https://cothink.test/sitemap.xml')->assertOk()->getContent();
+    $default = $this->get('https://example.test/sitemap.xml')->assertOk()->getContent();
+
+    expect($cothinking)->toContain('https://cothink.test/hello', 'https://cothink.test/services/websites', 'https://cothink.test/topics/gardens')
+        ->not->toContain('example.test')
+        ->and($default)->toContain('https://example.test/about')
+        ->not->toContain('cothink.test')
+        // No published entry on this site uses the term.
+        ->not->toContain('/topics/gardens');
 });
