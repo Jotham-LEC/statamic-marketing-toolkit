@@ -2,6 +2,8 @@
 
 Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the LinkedIn Insight Tag, with *(Pro)* Google's Consent Mode v2 defaults ahead of them. It has no cookie banner: it works with the one you have (Cookiebot, CookieYes, Iubenda, Complianz, or your own).
 
+![The Tracking tab, warning that GTM and Google Analytics are both set](images/tracking.png)
+
 ## Where the tags go
 
 ```blade

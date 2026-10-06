@@ -134,6 +134,8 @@ With more than one site, the overview, the 404s, the reports and the dashboard c
 
 ## Reports *(Pro)*
 
+![A report: the score and its checks](images/report.png)
+
 **Tools → SEO → Reports** checks every page of the site the way a search engine sees it, and gives each page a score out of 100. The site's score is the average.
 
 Click **Run report**. A bar shows the progress; a few hundred pages take under a minute. When it's done you see:
@@ -165,6 +167,8 @@ A **warning** counts half. Pages set to hide from search engines are listed but 
 Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → Addons → SEO). Reports can also run on their own, daily or weekly.
 
 ## Features *(Pro)*
+
+![Tools → SEO → Features](images/features.png)
 
 **Tools → SEO → Features** switches off what the site doesn't use (the 404 log, IndexNow, tracking…), for whoever may change the addon's settings. A feature that's off isn't loaded at all; switch it back on and everything it saved is still there.
 
