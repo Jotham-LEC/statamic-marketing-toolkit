@@ -63,6 +63,22 @@ test('a flood of made-up addresses pushes out one-off misses, not links that rec
     expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/linked', '/popular', '/random-5']);
 });
 
+test('only a link from one of the site\'s own pages keeps a one-off miss: any request can name another', function () {
+    config(['seo.not_found.max_rows' => 3]);
+    $browser = ['User-Agent' => 'Mozilla/5.0'];
+
+    $this->get('/linked', [...$browser, 'Referer' => 'https://example.test/news']);
+    $this->travel(1)->minutes();
+    $this->get('/spoofed', [...$browser, 'Referer' => 'https://elsewhere.test/news']);
+
+    foreach (range(1, 4) as $i) {
+        $this->travel(1)->minutes();
+        $this->get("/random-{$i}", $browser);
+    }
+
+    expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/linked', '/random-3', '/random-4']);
+});
+
 test('logging can be turned off', function () {
     config(['seo.not_found.enabled' => false]);
 

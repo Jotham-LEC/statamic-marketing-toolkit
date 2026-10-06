@@ -323,6 +323,31 @@ test('only one report starts at a time', function () {
     expect(Report::query()->count())->toBe(1);
 });
 
+test('only one step of a report runs at a time, and a second click doesn\'t queue a second chain of steps', function () {
+    config(['queue.default' => 'database', 'queue.connections.database.driver' => 'database']);
+    Queue::fake();
+    reportSettings(['chunk_size' => 1]);
+    entryIn('pages', 'a');
+    entryIn('pages', 'b');
+    $this->actingAs(cpUser(['view seo', 'run seo reports']));
+
+    $report = $this->postJson(cp_route('seo.reports.run'))->json();
+    $this->postJson(cp_route('seo.reports.run'))->assertJson(['id' => $report['id']]);
+    Queue::assertPushed(RunReportStep::class, 1);
+
+    // Another process is stepping it: this step leaves it be, and the queued one comes back later.
+    $other = Cache::lock('seo:reports:step:'.$report['id'], 600);
+    $other->get();
+    expect(app(Runner::class)->step(Report::query()->find($report['id']))->pages_done)->toBe(0);
+
+    (new RunReportStep($report['id']))->handle(app(Runner::class));
+    Queue::assertPushed(RunReportStep::class, 2);
+    expect(Report::query()->find($report['id'])->pages_done)->toBe(0);
+
+    $other->release();
+    expect(app(Runner::class)->step(Report::query()->find($report['id']))->pages_done)->toBe(1);
+});
+
 function reportOnAboutAndATerm(): array
 {
     Taxonomy::make('topics')->save();

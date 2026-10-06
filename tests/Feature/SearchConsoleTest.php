@@ -92,3 +92,36 @@ test('a site with more pages than one answer holds is read in turns', function (
     expect(SearchStat::query()->count())->toBe(25003);
     Http::assertSent(fn (HttpRequest $request) => str_contains($request->url(), 'searchAnalytics') && $request['startRow'] === 25000);
 });
+
+test('the access token is kept per key, so a new key for the same account signs in afresh', function () {
+    [$credentials] = serviceAccountKey();
+    config(['seo.search_console' => ['credentials' => $credentials, 'property' => 'sc-domain:example.test', 'days' => 28]]);
+    Http::fake([
+        'oauth2.googleapis.com/token' => Http::sequence()->push(['access_token' => 'token-1'])->push(['access_token' => 'token-2']),
+        'www.googleapis.com/webmasters/*' => Http::response(['rows' => []]),
+    ]);
+
+    $this->artisan('statamic:seo:search-console')->assertSuccessful();
+    $this->artisan('statamic:seo:search-console')->assertSuccessful();
+
+    [$replaced] = serviceAccountKey();
+    config(['seo.search_console.credentials' => $replaced]);
+    $this->artisan('statamic:seo:search-console')->assertSuccessful();
+
+    Http::assertSentCount(5);
+    Http::assertSent(fn (HttpRequest $request) => str_contains($request->url(), 'searchAnalytics') && $request->hasHeader('Authorization', 'Bearer token-2'));
+});
+
+test('an answer without an access token is not kept', function () {
+    [$credentials] = serviceAccountKey();
+    config(['seo.search_console' => ['credentials' => $credentials, 'property' => 'sc-domain:example.test', 'days' => 28]]);
+    Http::fake([
+        'oauth2.googleapis.com/token' => Http::sequence()->push([])->push(['access_token' => 'token-1']),
+        'www.googleapis.com/webmasters/*' => Http::response(['rows' => []]),
+    ]);
+
+    $this->artisan('statamic:seo:search-console')->assertFailed();
+    $this->artisan('statamic:seo:search-console')->assertSuccessful();
+
+    Http::assertSent(fn (HttpRequest $request) => str_contains($request->url(), 'searchAnalytics') && $request->hasHeader('Authorization', 'Bearer token-1'));
+});

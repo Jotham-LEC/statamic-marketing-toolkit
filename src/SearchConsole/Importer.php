@@ -9,31 +9,32 @@ use Statamic\Facades\Site;
 /**
  * Replaces the stored numbers with Search Console's for the last
  * `seo.search_console.days` days, one row per page. On a multi-site install,
- * a site's own rows from its own property, keeping only its own domain's
- * pages (a property may be shared by every site).
+ * a site's own rows from its own property, keeping only its own pages (a
+ * property may be shared by every site, and sites may share a domain, one
+ * under another's path).
  */
 class Importer
 {
+    /** @var ?array<string, string> each site's address as comparable(), longest first */
+    private ?array $prefixes = null;
+
     public function __construct(private Client $client) {}
 
     /**
-     * @return int the pages imported
-     */
-    /**
      * @param  ?string  $site  a site handle; null: the current site
+     * @return int the pages imported
      */
     public function import(?string $site = null): int
     {
         $site ??= Site::current()->handle();
         $stored = Sites::scope($site);
         $to = now('America/Los_Angeles')->toDateString(); // Search Console's dates are Pacific time.
-        $from = now('America/Los_Angeles')->subDays(max(1, (int) config('seo.search_console.days', 28)) - 1)->toDateString();
+        $from = now('America/Los_Angeles')->subDays(max(1, (int) config('seo.search_console.days')) - 1)->toDateString();
         $rows = $this->client->pages($from, $to, $site);
         $now = now();
 
         if ($stored !== null) {
-            $host = preg_replace('/^www\./', '', (string) parse_url((string) Site::get($site)?->absoluteUrl(), PHP_URL_HOST));
-            $rows = array_values(array_filter($rows, fn (array $row) => preg_replace('/^www\./', '', (string) parse_url((string) ($row['keys'][0] ?? ''), PHP_URL_HOST)) === $host));
+            $rows = array_values(array_filter($rows, fn (array $row) => $this->siteOf((string) ($row['keys'][0] ?? '')) === $site));
         }
 
         DB::transaction(function () use ($rows, $from, $to, $now, $stored) {
@@ -56,5 +57,37 @@ class Importer
         });
 
         return count($rows);
+    }
+
+    /**
+     * The site a page belongs to: the one whose address is the longest start
+     * of it (`example.test/fr/` before `example.test/`), whatever the scheme
+     * or a `www.`.
+     */
+    private function siteOf(string $url): ?string
+    {
+        $this->prefixes ??= Site::all()
+            ->mapWithKeys(fn ($site) => [$site->handle() => self::comparable((string) $site->absoluteUrl())])
+            ->sortByDesc(fn (string $prefix) => strlen($prefix))
+            ->all();
+        $url = self::comparable($url);
+
+        foreach ($this->prefixes as $handle => $prefix) {
+            if (str_starts_with($url, $prefix)) {
+                return $handle;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * An address as host and path, ending in a slash: `https://www.Example.test/fr` → `example.test/fr/`.
+     */
+    private static function comparable(string $url): string
+    {
+        $host = preg_replace('/^www\./', '', strtolower((string) parse_url($url, PHP_URL_HOST)));
+
+        return $host.rtrim((string) parse_url($url, PHP_URL_PATH), '/').'/';
     }
 }

@@ -283,7 +283,7 @@ test('with case_sensitive off, a CSV import folds the stored sources once and cl
     expect($scans)->toBe(1)
         ->and($result['created'])->toBe(1)
         ->and($result['updated'])->toBe(2)
-        ->and($result['errors'])->toBe(['Line 5: Another redirect already starts from this address.'])
+        ->and($result['errors'])->toBe(['Row 5: Another redirect already starts from this address.'])
         ->and($about->fresh()->target)->toBe('/company')
         ->and(Redirect::forSource('/new')->target)->toBe('/b')
         ->and(Cache::has('seo:redirects:default:any-case'))->toBeFalse();
@@ -298,6 +298,43 @@ test('a CSV import clears the cached rules once, after its rows are saved', func
     app(Csv::class)->import("/a,/b\n/c,/d\n/e,/f\n");
 
     expect($forgotten)->toBe([['seo:redirects:default', 3], ['seo:redirects:default:any-case', 3]]);
+});
+
+test('a CSV import reads the redirects a fixed number of times, however many rows it has', function (bool $caseSensitive) {
+    config(['seo.redirects.case_sensitive' => $caseSensitive]);
+    rule('/shop/*', '/store/$1');
+    rule('/kept', '/elsewhere');
+
+    $reads = function (int $rows): int {
+        $csv = "source,target,status,active\n";
+
+        for ($row = 1; $row <= $rows; $row++) {
+            // Each row leads on to the next, so the loop check follows earlier rows of the file.
+            $csv .= "/r{$rows}-{$row},/r{$rows}-".($row + 1)."\n";
+        }
+
+        $count = 0;
+        DB::listen(function ($query) use (&$count) {
+            $count += (int) preg_match('/^select .* from "seo_redirects"/', $query->sql);
+        });
+
+        expect(app(Csv::class)->import($csv)['created'])->toBe($rows);
+
+        return $count;
+    };
+
+    expect($reads(2))->toBe($reads(20));
+})->with(['case-sensitive' => true, 'any case' => false]);
+
+test('a CSV cell in quotes may hold a line break, and rows are counted as records', function () {
+    $result = app(Csv::class)->import("source,target,status,active\n\"/a\nb\",/x,301,1\n/two,/2,301,1\n\n/two,/two,301,1\n");
+
+    expect($result['created'])->toBe(1)
+        ->and($result['errors'])->toBe([
+            'Row 2: '.__('seo::validation.redirect.control_characters'),
+            'Row 4: '.__('seo::validation.redirect.points_back'),
+        ])
+        ->and(Redirect::query()->pluck('source')->all())->toBe(['/two']);
 });
 
 test('with case_sensitive off, a chain of rules that comes back in another letter case is refused', function () {

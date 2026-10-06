@@ -23,6 +23,6 @@ return [
     ],
 
     // A CSV row that fails those checks.
-    'csv_line' => 'Line :line: :message',
+    'csv_row' => 'Row :row: :message',
 
 ];

@@ -84,11 +84,16 @@ class Client
             ->json();
     }
 
+    /**
+     * An access token, kept for most of its hour. Kept per key, not per account:
+     * a new key for the same account (the old one revoked) gets a new token.
+     */
     private function token(): string
     {
         $credentials = $this->credentials();
+        $key = $credentials['private_key_id'] ?? md5($credentials['private_key']);
 
-        return Cache::remember('seo:search-console-token:'.md5($credentials['client_email']), now()->addMinutes(50), function () use ($credentials) {
+        return Cache::remember('seo:search-console-token:'.md5($credentials['client_email'].'|'.$key), now()->addMinutes(50), function () use ($credentials) {
             $now = time();
             $segments = [
                 $this->base64(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])),
@@ -99,22 +104,29 @@ class Client
                 throw new RuntimeException('The Search Console key could not sign a request.');
             }
 
-            return (string) Http::asForm()->post(self::TOKEN_URL, [
+            $token = Http::asForm()->post(self::TOKEN_URL, [
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
                 'assertion' => implode('.', [...$segments, $this->base64($signature)]),
             ])->throw()->json('access_token');
+
+            // Not kept: an empty token would fail every request for the next 50 minutes.
+            if (! is_string($token) || $token === '') {
+                throw new RuntimeException('Google answered without an access token for the Search Console key.');
+            }
+
+            return $token;
         });
     }
 
     /**
      * The service account key: a path to its JSON file, or the JSON itself.
      *
-     * @return array{client_email: string, private_key: string}
+     * @return array{client_email: string, private_key: string, private_key_id?: string}
      */
     private function credentials(): array
     {
         $value = (string) config('seo.search_console.credentials');
-        $json = is_file($value) ? (string) file_get_contents($value) : $value;
+        $json = (new Connection)->readKey($value);
         $credentials = json_decode($json, true);
 
         if (! is_array($credentials) || ! isset($credentials['client_email'], $credentials['private_key'])) {

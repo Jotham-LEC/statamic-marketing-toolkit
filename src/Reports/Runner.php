@@ -95,7 +95,10 @@ class Runner
     }
 
     /**
-     * Renders and reads the next chunk of pages; finishes the report after the last.
+     * Renders and reads the next chunk of pages; finishes the report after the
+     * last. One step at a time per report: a progress request, a queued step
+     * and a second click may come together, and would check the same pages
+     * twice. While another step runs, this one leaves the report as it is.
      */
     public function step(Report $report): Report
     {
@@ -103,7 +106,10 @@ class Runner
             return $report;
         }
 
-        return Sites::as($report->site, fn () => $this->stepInSite($report));
+        return Cache::lock('seo:reports:step:'.$report->id, 600)
+            // Read again once the lock is held: a step that just ended may have finished it.
+            ->get(fn () => $report->refresh()->isRunning() ? Sites::as($report->site, fn () => $this->stepInSite($report)) : $report)
+            ?: $report->refresh();
     }
 
     private function stepInSite(Report $report): Report

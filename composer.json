@@ -20,7 +20,7 @@
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "simonhamp/the-og": "^0.8",
-        "statamic/cms": "^6.31"
+        "statamic/cms": "^6.34"
     },
     "suggest": {
         "ext-gd": "Draws favicons when Imagick isn't installed",

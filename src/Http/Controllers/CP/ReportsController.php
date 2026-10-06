@@ -52,7 +52,9 @@ class ReportsController
     {
         $report = $runner->start(site: Site::selected()->handle());
 
-        if ($report->isRunning() && $report->pages_done === 0 && RunReportStep::usesWorker()) {
+        // Only a report this click started gets its queued steps: one already
+        // running has its own (a second chain would step it twice over).
+        if ($report->wasRecentlyCreated && $report->isRunning() && RunReportStep::usesWorker()) {
             RunReportStep::dispatch($report->id);
         }
 

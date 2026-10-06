@@ -44,7 +44,7 @@ Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.c
 ## Requirements
 
 - **PHP 8.3+** with the `curl`, `dom`, `mbstring` and `openssl` extensions (link checks, reading pages for reports, text, the Search Console key).
-- **Statamic 6.31+**. Core is enough; several sites and languages need Statamic Pro.
+- **Statamic 6.34+**. Core is enough; several sites and languages need Statamic Pro.
 - **`imagick`** for the generated share cards (Pro) and the favicons; without it, **`gd`** draws the favicons, from a PNG or JPEG but not an SVG.
 - **A database** Laravel can migrate, even on a flat-file site: redirects, the 404 log and reports live in tables. SQLite is fine.
 - **A cache store that serializes** (`file`, `redis`, `database`, `memcached`), not `array`.
