@@ -104,6 +104,15 @@ describe('json-ld', function () {
             ->and($graph['Article']['author'])->toBe(['@id' => 'https://example.test/#publisher']);
     });
 
+    test('a draft ancestor is left out of the breadcrumbs: its title and address aren\'t public yet', function () {
+        entryIn('pages', 'essays')->published(false)->save();
+
+        $crumbs = nodeOf(metaFor(entryIn('essays', 'first', [], '2026-01-02')), 'BreadcrumbList')['itemListElement'];
+
+        expect(collect($crumbs)->pluck('name')->all())->toBe(['Acme', 'First'])
+            ->and(collect($crumbs)->pluck('position')->all())->toBe([1, 2]);
+    });
+
     test('an FAQ grid becomes an FAQPage with the answers as the page shows them', function () {
         config(['seo.collections.pages' => ['faq_field' => 'faqs']]);
 

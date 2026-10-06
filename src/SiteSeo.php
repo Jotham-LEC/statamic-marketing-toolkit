@@ -18,6 +18,7 @@ use Statamic\Facades\Image;
 use Statamic\Facades\Markdown;
 use Statamic\Facades\Site;
 use Statamic\Fields\Value;
+use Statamic\Structures\Page;
 use WeakMap;
 
 /**
@@ -599,7 +600,7 @@ class SiteSeo
     }
 
     /**
-     * Home, then each ancestor that is a page of its own, then this page.
+     * Home, then each published ancestor that is a page of its own, then this page.
      *
      * @return array<string, mixed>|null
      */
@@ -618,7 +619,11 @@ class SiteSeo
         foreach (array_slice($segments, 0, -1) as $segment) {
             $path .= '/'.$segment;
 
-            if ($ancestor = Entries::findByUri($path, Site::current()->handle())) {
+            $ancestor = Entries::findByUri($path, Site::current()->handle());
+            $ancestor = $ancestor instanceof Page ? $ancestor->entry() : $ancestor;
+
+            // A draft's title and address aren't public yet.
+            if ($ancestor instanceof Entry && $ancestor->status() === 'published') {
                 $trail->push(['name' => (string) $ancestor->get('title'), 'item' => $ancestor->absoluteUrl()]);
             }
         }

@@ -11,7 +11,8 @@ use Statamic\Events\TermSaved;
 
 /**
  * Queues the address of published content that was saved, went live on
- * schedule, or was deleted (so engines see it gone) for IndexNow.
+ * schedule, or was deleted (so engines see it gone) for IndexNow. Drafts
+ * are never sent.
  */
 class SubmitToIndexNow
 {
@@ -20,9 +21,9 @@ class SubmitToIndexNow
     public function handle(EntrySaved|EntryDeleted|EntryScheduleReached|TermSaved|TermDeleted $event): void
     {
         $content = $event instanceof TermSaved || $event instanceof TermDeleted ? $event->term : $event->entry;
-        $deleted = $event instanceof EntryDeleted || $event instanceof TermDeleted;
 
-        if ($deleted || ! method_exists($content, 'status') || $content->status() === 'published') {
+        // Deleted too only if it was live: a draft's address was never public.
+        if (! method_exists($content, 'status') || $content->status() === 'published') {
             $this->indexNow->queue($content->absoluteUrl());
         }
     }

@@ -314,6 +314,7 @@ test('a report page has no edit link for someone who may not edit it', function 
 
 test('a report checks links to other sites only when its settings ask', function () {
     Http::fake(['gone.test/*' => Http::response('', 404)]);
+    fakeDns(['gone.test' => '93.184.215.14']);
     entryIn('pages', 'about', ['body' => '<a href="https://gone.test/a">Gone</a>']);
 
     expect(reportPage(fullReport(), '/about')->facts['brokenExternalLinks'])->toBe([]);

@@ -102,8 +102,10 @@ class Redirect extends Model
             'source.required' => 'Which address should be redirected?',
             'source.starts_with' => 'Start with / — the part of the address after the domain.',
             'source.not_regex' => 'Leave out the query string (?…); addresses are matched without it.',
+            'source.regex' => 'An address can’t contain line breaks or other control characters.',
             'target.required_unless' => 'Where should it go? Only “410 Gone” needs no target.',
             'target.regex' => 'Start with / for a page on this site, or https:// for another site.',
+            'target.not_regex' => 'An address can’t contain line breaks or other control characters.',
             'status.in' => 'Choose 301, 302 or 410.',
         ]);
     }
@@ -115,7 +117,8 @@ class Redirect extends Model
     {
         return [
             'source' => [
-                'required', 'string', 'max:768', 'starts_with:/', 'not_regex:/[?#]/',
+                // Control characters would go into the Location header (a line break starts a new header).
+                'required', 'string', 'max:768', 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
                 function (string $attribute, mixed $value, Closure $fail) use ($ignoreId) {
                     $taken = self::query()->where('source', self::normalize((string) $value))
                         ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
@@ -127,13 +130,16 @@ class Redirect extends Model
                 },
             ],
             'target' => [
-                'nullable', 'required_unless:status,410', 'string', 'max:2048', 'regex:#^(/|https?://)#i',
+                'nullable', 'required_unless:status,410', 'string', 'max:2048', 'regex:#^(/|https?://)#i', 'not_regex:/[\x00-\x1F\x7F]/',
                 function (string $attribute, mixed $value, Closure $fail) use ($source, $ignoreId) {
                     $wildcards = substr_count($source, '*');
                     preg_match_all('/\$(\d+)/', (string) $value, $used);
 
                     if ($used[1] !== [] && max(array_map('intval', $used[1])) > $wildcards) {
                         $fail('The target uses a $ number the source has no * for.');
+                    } elseif (preg_match('#^https?://[^/]*\$\d#i', (string) $value)) {
+                        // What a visitor typed would choose the site they are sent to (`https://example.com$1` → example.com.evil.test).
+                        $fail('A $ number can only come after the domain and a /.');
                     } elseif ($loop = self::loop($source, (string) $value, $ignoreId)) {
                         $fail($loop);
                     }

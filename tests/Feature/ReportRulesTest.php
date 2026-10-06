@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Http;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\ExternalLinkChecker;
 use JothamLec\Seo\Reports\HtmlInspector;
+use JothamLec\Seo\Reports\LinkChecker;
 use JothamLec\Seo\Reports\PageFacts;
 use JothamLec\Seo\Reports\ReportSettings;
 use JothamLec\Seo\Reports\Rules\BrokenLinks;
@@ -167,6 +168,7 @@ test('only a clear miss is a broken link to another site, and each address is as
         'blocked.test/*' => Http::response('', 403),
         'busy.test/*' => Http::response('', 503),
     ]);
+    fakeDns(['gone.test' => '93.184.215.14', 'fine.test' => '93.184.215.14', 'blocked.test' => '93.184.215.14', 'busy.test' => '93.184.215.14']);
     $checker = app(ExternalLinkChecker::class);
     $urls = ['https://gone.test/a', 'https://fine.test/b', 'https://blocked.test/c', 'https://busy.test/d'];
 
@@ -176,4 +178,42 @@ test('only a clear miss is a broken link to another site, and each address is as
     // Four HEADs, and a GET for the site that refused HEAD; nothing the second time.
     Http::assertSentCount(5);
     expect(verdict(ExternalLinks::class, ['brokenExternalLinks' => ['https://gone.test/a']]))->toBe('fail');
+});
+
+test('links to this machine or a private network are never asked, nor followed there by a redirect', function () {
+    Http::fake([
+        'moved.test/*' => Http::response('', 301, ['Location' => 'http://internal.test/admin']),
+        '*' => Http::response('', 404),
+    ]);
+    fakeDns(['internal.test' => '10.0.0.5', 'moved.test' => '93.184.215.14', 'split.test' => ['93.184.215.14', '127.0.0.1']]);
+
+    $broken = app(ExternalLinkChecker::class)->broken([
+        'http://127.0.0.1/admin', 'http://169.254.169.254/latest/meta-data', 'http://[::1]/', 'http://localhost.test/',
+        'http://internal.test/', 'https://split.test/', 'https://moved.test/a',
+    ]);
+
+    // Only moved.test was asked; its redirect into the private network was not followed.
+    Http::assertSentCount(1);
+    expect($broken)->toBe(['http://localhost.test/']);
+});
+
+test('a link that redirects is judged where it ends, and a host that doesn\'t resolve is broken without asking', function () {
+    Http::fake([
+        'old.test/new' => Http::response('', 404),
+        'old.test/*' => Http::response('', 301, ['Location' => '/new']),
+        'hop.test/*' => Http::response('', 302, ['Location' => 'https://fine.test/landing']),
+        'fine.test/*' => Http::response('', 200),
+    ]);
+    fakeDns(['old.test' => '93.184.215.14', 'hop.test' => '93.184.215.14', 'fine.test' => '93.184.215.15']);
+
+    expect(app(ExternalLinkChecker::class)->broken(['https://old.test/a', 'https://hop.test/b', 'https://nowhere.test/c']))
+        ->toBe(['https://old.test/a', 'https://nowhere.test/c']);
+});
+
+test('a link is checked against files in public/ and nowhere above it', function () {
+    $links = app(LinkChecker::class);
+
+    expect($links->check('/index.php'))->toBe('ok')
+        ->and($links->check('/../composer.json'))->toBe('broken')
+        ->and($links->check('/x/../../composer.json'))->toBe('broken');
 });

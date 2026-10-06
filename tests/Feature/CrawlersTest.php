@@ -51,8 +51,10 @@ describe('IndexNow', function () {
     test('is told, once the request is answered, about published content that changed or went away', function () {
         $about = entryIn('pages', 'about');
         entryIn('pages', 'contact');
-        Entry::make()->collection('pages')->slug('draft')->data(['title' => 'Draft'])->published(false)->save();
+        $draft = tap(Entry::make()->collection('pages')->slug('draft')->data(['title' => 'Draft'])->published(false))->save();
         $about->delete();
+        // A deleted draft's address was never public: engines aren't told it exists.
+        $draft->delete();
 
         app()->terminate();
 

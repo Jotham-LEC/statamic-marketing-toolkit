@@ -2,7 +2,9 @@
 
 namespace JothamLec\Seo\Reports;
 
-use Illuminate\Http\Client\ConnectionException;
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\UriResolver;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
@@ -16,6 +18,11 @@ use Throwable;
  * clear miss counts as broken: a 404 or 410, or a host that doesn't
  * resolve. A refusal (401, 403, 429), a server error or a timeout says
  * nothing about the link and is left alone.
+ *
+ * Only the public internet is asked. A link (or a redirect) to this machine
+ * or a private network is not followed, and each request goes to the
+ * address that was checked, so a page's links can't reach the server's own
+ * network.
  */
 class ExternalLinkChecker
 {
@@ -24,6 +31,10 @@ class ExternalLinkChecker
 
     private const int TIMEOUT = 8;
 
+    private const int MAX_REDIRECTS = 5;
+
+    private const string USER_AGENT = 'Mozilla/5.0 (compatible; statamic-co-seo link check)';
+
     /**
      * @param  list<string>  $urls
      * @return list<string> the broken ones
@@ -31,45 +42,139 @@ class ExternalLinkChecker
     public function broken(array $urls): array
     {
         $urls = array_slice(array_values(array_unique($urls)), 0, self::LIMIT);
-        $unknown = array_values(array_filter($urls, fn (string $url) => Cache::get($this->key($url)) === null));
+        $addresses = [];
 
-        if ($unknown !== []) {
+        foreach ($urls as $url) {
+            if (Cache::get($this->key($url)) !== null) {
+                continue;
+            }
+
+            $address = $this->address($url);
+
+            // A host that doesn't resolve is decided already; a private one is never asked.
+            is_string($address) ? $addresses[$url] = $address : $this->remember($url, $address === null);
+        }
+
+        if ($addresses !== []) {
             $responses = Http::pool(fn (Pool $pool) => array_map(
-                fn (string $url) => $pool->as($url)->withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; statamic-co-seo link check)'])->timeout(self::TIMEOUT)->head($url),
-                $unknown,
+                fn (string $url) => $this->request($pool->as($url), $url, $addresses[$url])->head($url),
+                array_keys($addresses),
             ));
 
-            foreach ($unknown as $url) {
-                $response = $responses[$url] ?? null;
-
-                // Some servers refuse HEAD; ask them with GET.
-                if ($response instanceof Response && in_array($response->status(), [403, 405, 501], true)) {
-                    $response = $this->get($url);
-                }
-
-                Cache::put($this->key($url), $this->isBroken($response) ? 'broken' : 'fine', now()->addDay());
+            foreach (array_keys($addresses) as $url) {
+                $this->remember($url, $this->isBroken($this->followed($url, $responses[$url] ?? null)));
             }
         }
 
         return array_values(array_filter($urls, fn (string $url) => Cache::get($this->key($url)) === 'broken'));
     }
 
-    private function get(string $url): Response|Throwable
+    /**
+     * The IP addresses a host name resolves to (IPv4 from the hosts file and
+     * DNS, IPv6 from DNS).
+     *
+     * @return list<string>
+     */
+    protected function resolve(string $host): array
     {
+        $records = @dns_get_record($host, DNS_AAAA) ?: [];
+
+        return [...(gethostbynamel($host) ?: []), ...array_filter(array_column($records, 'ipv6'))];
+    }
+
+    /**
+     * The address to ask for $url: null when its host doesn't resolve, false
+     * when it isn't on the public internet (or isn't http or https).
+     */
+    private function address(string $url): string|false|null
+    {
+        $parts = parse_url($url);
+        $host = strtolower(trim((string) ($parts['host'] ?? ''), '[]'));
+
+        if ($host === '' || ! in_array(strtolower((string) ($parts['scheme'] ?? '')), ['http', 'https'], true)) {
+            return false;
+        }
+
+        $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : $this->resolve($host);
+
+        if ($ips === []) {
+            return null;
+        }
+
+        foreach ($ips as $ip) {
+            if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)) {
+                return false;
+            }
+        }
+
+        return $ips[0];
+    }
+
+    /**
+     * The last answer for $url: asked again with GET where HEAD was refused,
+     * and redirects followed one by one, each to a public address.
+     */
+    private function followed(string $url, mixed $response): mixed
+    {
+        for ($hops = 0; ; $hops++) {
+            if ($response instanceof Response && in_array($response->status(), [403, 405, 501], true)) {
+                $response = $this->send('get', $url);
+            }
+
+            $location = $response instanceof Response && $response->redirect() ? $response->header('Location') : '';
+
+            if ($location === '' || $hops === self::MAX_REDIRECTS) {
+                return $response;
+            }
+
+            $url = (string) UriResolver::resolve(new Uri($url), new Uri($location));
+            $response = $this->send('head', $url);
+        }
+    }
+
+    /**
+     * @return Response|Throwable|false|null null: the host doesn't resolve; false: not asked
+     */
+    private function send(string $method, string $url): Response|Throwable|false|null
+    {
+        $address = $this->address($url);
+
+        if (! is_string($address)) {
+            return $address;
+        }
+
         try {
-            return Http::withHeaders(['User-Agent' => 'Mozilla/5.0 (compatible; statamic-co-seo link check)'])->timeout(self::TIMEOUT)->get($url);
+            return $this->request(Http::createPendingRequest(), $url, $address)->send($method, $url);
         } catch (Throwable $exception) {
             return $exception;
         }
     }
 
+    /**
+     * A request pinned to the address that was checked, so DNS can't answer
+     * differently when the connection is made.
+     */
+    private function request(PendingRequest $request, string $url, string $address): PendingRequest
+    {
+        $parts = parse_url($url);
+        $port = $parts['port'] ?? (strtolower((string) $parts['scheme']) === 'https' ? 443 : 80);
+        $ip = str_contains($address, ':') ? "[{$address}]" : $address;
+
+        return $request
+            ->withHeaders(['User-Agent' => self::USER_AGENT])
+            ->timeout(self::TIMEOUT)
+            ->withoutRedirecting()
+            ->withOptions(['curl' => [CURLOPT_RESOLVE => [trim((string) $parts['host'], '[]').":{$port}:{$ip}"]]]);
+    }
+
     private function isBroken(mixed $response): bool
     {
-        if ($response instanceof Response) {
-            return in_array($response->status(), [404, 410], true);
-        }
+        return $response === null || ($response instanceof Response && in_array($response->status(), [404, 410], true));
+    }
 
-        return $response instanceof ConnectionException && str_contains($response->getMessage(), 'resolve host');
+    private function remember(string $url, bool $broken): void
+    {
+        Cache::put($this->key($url), $broken ? 'broken' : 'fine', now()->addDay());
     }
 
     private function key(string $url): string

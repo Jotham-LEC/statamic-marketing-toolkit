@@ -38,7 +38,8 @@ class LinkChecker
             return 'ok';
         }
 
-        if ($path !== '/' && is_file(public_path(ltrim($path, '/')))) {
+        // Only inside public/: a `..` in a link would ask about files beyond it.
+        if ($path !== '/' && ! in_array('..', explode('/', $path), true) && is_file(public_path(ltrim($path, '/')))) {
             return 'ok';
         }
 

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 use JothamLec\Seo\Commands\Install;
 use JothamLec\Seo\Context;
 use JothamLec\Seo\Meta;
+use JothamLec\Seo\Reports\ExternalLinkChecker;
 use JothamLec\Seo\SiteSeo;
 use JothamLec\Seo\Tests\TestCase;
 use Statamic\Contracts\Entries\Entry as EntryContract;
@@ -125,4 +126,24 @@ function publisherOf(array $values): array
     seoGlobal($values);
 
     return collect(metaFor(entryIn('pages', 'about'))->graph)->firstWhere('@id', 'https://example.test/#publisher');
+}
+
+/**
+ * Host names the external link checker resolves, to these addresses; any
+ * other doesn't resolve. Nothing leaves the test run for DNS either.
+ *
+ * @param  array<string, string|list<string>>  $hosts
+ */
+function fakeDns(array $hosts): void
+{
+    app()->instance(ExternalLinkChecker::class, new class($hosts) extends ExternalLinkChecker
+    {
+        /** @param  array<string, string|list<string>>  $hosts */
+        public function __construct(private array $hosts) {}
+
+        protected function resolve(string $host): array
+        {
+            return array_values((array) ($this->hosts[$host] ?? []));
+        }
+    });
 }

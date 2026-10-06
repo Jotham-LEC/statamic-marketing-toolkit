@@ -143,3 +143,21 @@ test('a rule saved before that check, sending an address to itself, is not serve
 
     $this->get('/a')->assertNotFound();
 });
+
+test('an address with a line break or another control character is refused, as it would go into the Location header', function () {
+    $fails = fn (string $source, string $target) => Redirect::validator(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true])->fails();
+
+    expect($fails('/a', "/b\r\nSet-Cookie: x=1"))->toBeTrue()
+        ->and($fails('/a', "https://elsewhere.test/\nx"))->toBeTrue()
+        ->and($fails("/a\nb", '/b'))->toBeTrue()
+        ->and($fails('/a', '/b'))->toBeFalse();
+});
+
+test('what a visitor typed can\'t choose the site a wildcard sends them to', function () {
+    $fails = fn (string $target) => Redirect::validator(['source' => '/go/*', 'target' => $target, 'status' => 301, 'active' => true])->fails();
+
+    expect($fails('https://example.com$1'))->toBeTrue()
+        ->and($fails('https://$1'))->toBeTrue()
+        ->and($fails('https://example.com/$1'))->toBeFalse()
+        ->and($fails('/new/$1'))->toBeFalse();
+});

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Security
+- The report check **Links to other sites** asked any address a page linked to, and followed redirects anywhere, so a link (or a redirect) to `localhost`, `169.254.169.254` or a private network made the server send requests into its own network. It now asks only public addresses, follows redirects itself (each checked the same way) and connects to the address it checked, so DNS can't answer differently in between.
+- Redirects: a From or To address with a line break or another control character is refused (it would go into the Location header), and so is a `$1` before the path of another site's address (`https://example.com$1` let a visitor's path pick the domain).
+- Report link checks no longer look at files above `public/` (`/../composer.json` counted as a working link).
+- IndexNow is no longer told about a draft that is deleted: its address was never public.
+- A draft parent page no longer appears, with its title and address, in its children's breadcrumbs (JSON-LD).
+
 ## 0.10.0 – 2026-10-06
 
 Run `php artisan migrate` after updating: there is a new table.
