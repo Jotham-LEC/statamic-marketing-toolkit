@@ -10,7 +10,8 @@ use RuntimeException;
  * Google Search Console's Search Analytics API, signed in as a service
  * account: a JSON key from Google Cloud whose email is a user of the
  * property. No client library: a JWT signed with the key buys an access
- * token, kept until shortly before it expires.
+ * token, kept until shortly before it expires. The property is the
+ * site's (Connection::property()); a null site is the current one.
  */
 class Client
 {
@@ -21,9 +22,17 @@ class Client
     /** The most rows the Search Analytics API returns at once. */
     private const int ROW_LIMIT = 25000;
 
-    public function configured(): bool
+    public function configured(?string $site = null): bool
     {
-        return filled(config('seo.search_console.credentials')) && filled(config('seo.search_console.property'));
+        return filled(config('seo.search_console.credentials')) && (new Connection)->property($site) !== null;
+    }
+
+    /**
+     * Whether any site can be imported: the key, and a property for one site at least.
+     */
+    public function configuredForAnySite(): bool
+    {
+        return filled(config('seo.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
     }
 
     /**
@@ -31,9 +40,9 @@ class Client
      *
      * @return list<array{keys: list<string>, clicks: int|float, impressions: int|float, ctr: float, position: float}>
      */
-    public function pages(string $from, string $to): array
+    public function pages(string $from, string $to, ?string $site = null): array
     {
-        $property = rawurlencode((string) config('seo.search_console.property'));
+        $property = rawurlencode((string) (new Connection)->property($site));
         $rows = [];
 
         // At most ROW_LIMIT rows an answer: a site with more pages is read in turns.
@@ -63,9 +72,9 @@ class Client
      *
      * @return array{siteUrl: string, permissionLevel: string}
      */
-    public function site(): array
+    public function site(?string $site = null): array
     {
-        $property = rawurlencode((string) config('seo.search_console.property'));
+        $property = rawurlencode((string) (new Connection)->property($site));
 
         return Http::withToken($this->token())
             ->timeout(15)

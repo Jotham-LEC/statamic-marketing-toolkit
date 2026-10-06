@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\Seo\Actions\CreateRedirect;
@@ -11,8 +12,12 @@ use JothamLec\Seo\Og\Generator;
 use JothamLec\Seo\Redirects\Redirect;
 use JothamLec\Seo\Reports\Report;
 use JothamLec\Seo\Reports\Runner;
+use JothamLec\Seo\SearchConsole\Client;
+use JothamLec\Seo\SearchConsole\Connection;
+use JothamLec\Seo\SearchConsole\SearchStat;
 use JothamLec\Seo\SiteSeo;
 use JothamLec\Seo\Widgets\SeoWidget;
+use Statamic\Facades\Addon;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
@@ -400,5 +405,69 @@ describe('the control panel preview and share cards', function () {
         $card = app(Generator::class)->card(entryOn('cothinking', 'services', 'websites'));
 
         expect([$card->label, $card->siteName, $card->background])->toBe(['What I do', 'CoThinking', '#fad03a']);
+    });
+});
+
+describe('Search Console', function () {
+    beforeEach(function () {
+        openssl_pkey_export(openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]), $private);
+        config(['seo.search_console' => ['credentials' => json_encode(['type' => 'service_account', 'client_email' => 'seo@project.iam.gserviceaccount.com', 'private_key' => $private]), 'property' => null, 'days' => 28]]);
+
+        $row = fn (string $url, int $clicks) => ['keys' => [$url], 'clicks' => $clicks, 'impressions' => 10, 'ctr' => 0.1, 'position' => 2.0];
+        Http::fake([
+            'oauth2.googleapis.com/token' => Http::response(['access_token' => 'token-1', 'expires_in' => 3599]),
+            'www.googleapis.com/webmasters/v3/sites/sc-domain%3Aexample.test/searchAnalytics/query' => Http::response(['rows' => [$row('https://example.test/', 5), $row('https://cothink.test/', 99)]]),
+            'www.googleapis.com/webmasters/v3/sites/sc-domain%3Acothink.test/searchAnalytics/query' => Http::response(['rows' => [$row('https://cothink.test/', 7), $row('https://cothink.test/work', 2)]]),
+        ]);
+    });
+
+    afterEach(fn () => File::delete(resource_path('addons/seo.yaml')));
+
+    test('each site imports its own property, and the overview shows the selected site\'s numbers', function () {
+        config(['seo.search_console.property' => ['default' => 'sc-domain:example.test', 'cothinking' => 'sc-domain:cothink.test']]);
+
+        $this->artisan('statamic:seo:search-console')->assertSuccessful();
+
+        expect(SearchStat::query()->orderBy('site')->orderBy('url')->get(['site', 'url', 'clicks'])->toArray())->toBe([
+            ['site' => 'cothinking', 'url' => 'https://cothink.test/', 'clicks' => 7],
+            ['site' => 'cothinking', 'url' => 'https://cothink.test/work', 'clicks' => 2],
+            // A property's pages on another site's domain aren't this site's.
+            ['site' => 'default', 'url' => 'https://example.test/', 'clicks' => 5],
+        ]);
+
+        $this->actingAs(cpUser(super: true));
+        session(['statamic.cp.selected-site' => 'cothinking']);
+
+        $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('search.clicks', 9)
+            ->where('searchSetup.property', 'sc-domain:cothink.test')
+            ->where('searchSetup.property_source', 'env'));
+
+        $this->artisan('statamic:seo:search-console', ['--site' => 'default'])->assertSuccessful();
+        expect(SearchStat::query()->count())->toBe(3);
+    });
+
+    test('the control panel sets up the selected site\'s property; the default site\'s stays where it was', function () {
+        $this->actingAs(cpUser(super: true));
+        session(['statamic.cp.selected-site' => 'cothinking']);
+
+        $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('searchSetup.configured', false)
+            ->where('searchSetup.suggested_property', 'sc-domain:cothink.test'));
+
+        $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:cothink.test'])->assertOk();
+        $this->postJson(cp_route('seo.search-console.import'))->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 2 pages.']);
+
+        $settings = Addon::get('jotham-lec/statamic-co-seo')->settings();
+
+        expect($settings->get(Connection::SITES_SETTING))->toBe(['cothinking' => 'sc-domain:cothink.test'])
+            ->and($settings->get(Connection::SETTING))->toBeNull()
+            ->and(app(Client::class)->configured('default'))->toBeFalse()
+            ->and(app(Client::class)->configured('cothinking'))->toBeTrue()
+            ->and(SearchStat::query()->pluck('site')->unique()->all())->toBe(['cothinking']);
+
+        // The command imports the sites that have a property.
+        $this->artisan('statamic:seo:search-console')->assertSuccessful();
+        Http::assertSentCount(3);
     });
 });

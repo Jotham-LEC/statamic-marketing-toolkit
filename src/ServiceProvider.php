@@ -172,6 +172,6 @@ class ServiceProvider extends AddonServiceProvider
         // Search Console's numbers, daily, once it is set up. Asked when the
         // schedule runs: a key set up in the control panel is read later in boot.
         $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping()
-            ->when(fn () => app(SearchConsoleClient::class)->configured());
+            ->when(fn () => app(SearchConsoleClient::class)->configuredForAnySite());
     }
 }

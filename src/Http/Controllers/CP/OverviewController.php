@@ -73,8 +73,8 @@ class OverviewController
                     ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])->all(),
                 'url' => cp_route('seo.404s.index'),
             ],
-            'search' => $this->search($searchConsole),
-            'searchSetup' => $this->searchSetup($searchConsole, $user->can('editSettings', $addon)),
+            'search' => $this->search($searchConsole, $site),
+            'searchSetup' => $this->searchSetup($searchConsole, $user->can('editSettings', $addon), $site),
             // On the site's own address, which can differ from the control panel's.
             'files' => collect([
                 'Sitemap' => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
@@ -90,18 +90,18 @@ class OverviewController
      *
      * @return array<string, mixed>
      */
-    private function searchSetup(Client $client, bool $canSetUp): array
+    private function searchSetup(Client $client, bool $canSetUp, string $site): array
     {
         $connection = new Connection;
 
         return [
-            'configured' => $client->configured(),
+            'configured' => $client->configured($site),
             'can_set_up' => $canSetUp,
             'email' => $canSetUp ? $connection->email() : null,
             'key_source' => $connection->keySource(),
-            'property' => $canSetUp ? config('seo.search_console.property') : null,
-            'property_source' => $connection->propertySource(),
-            'suggested_property' => $connection->suggestedProperty(),
+            'property' => $canSetUp ? $connection->property($site) : null,
+            'property_source' => $connection->propertySource($site),
+            'suggested_property' => $connection->suggestedProperty($site),
             'urls' => $canSetUp ? [
                 'key' => cp_route('seo.search-console.key'),
                 'forget_key' => cp_route('seo.search-console.key.forget'),
@@ -118,21 +118,22 @@ class OverviewController
      *
      * @return array<string, mixed>|null
      */
-    private function search(Client $client): ?array
+    private function search(Client $client, string $site): ?array
     {
-        if (! $client->configured()) {
+        if (! $client->configured($site)) {
             return null;
         }
 
-        $first = SearchStat::query()->first();
+        $stats = fn () => SearchStat::query()->shownOn($site);
+        $first = $stats()->first();
 
         return [
             'fetched_at' => $first?->fetched_at?->toIso8601String(),
             'from' => $first?->from?->toDateString(),
             'to' => $first?->to?->toDateString(),
-            'clicks' => (int) SearchStat::query()->sum('clicks'),
-            'impressions' => (int) SearchStat::query()->sum('impressions'),
-            'top' => SearchStat::query()->orderByDesc('clicks')->orderByDesc('impressions')->limit(5)->get()
+            'clicks' => (int) $stats()->sum('clicks'),
+            'impressions' => (int) $stats()->sum('impressions'),
+            'top' => $stats()->orderByDesc('clicks')->orderByDesc('impressions')->limit(5)->get()
                 ->map(fn (SearchStat $row) => [
                     'path' => parse_url($row->url, PHP_URL_PATH) ?: '/',
                     'clicks' => $row->clicks,

@@ -9,6 +9,7 @@ use JothamLec\Seo\SearchConsole\Client;
 use JothamLec\Seo\SearchConsole\Connection;
 use JothamLec\Seo\SearchConsole\Importer;
 use Statamic\Facades\Addon;
+use Statamic\Facades\Site;
 use Statamic\Facades\User;
 use Throwable;
 
@@ -16,7 +17,8 @@ use Throwable;
  * Setting up Search Console from Tools → SEO: the service account key, the
  * property, a check that Google lets the key read it, and the first import.
  * For whoever may change the addon's settings; `.env` values win and can't
- * be changed here.
+ * be changed here. The property, the check and the import are of the site
+ * selected in the control panel; the key serves every site.
  */
 class SearchConsoleController
 {
@@ -55,7 +57,9 @@ class SearchConsoleController
     {
         $this->authorize();
 
-        if ($this->connection->propertySource() === 'env') {
+        $site = Site::selected()->handle();
+
+        if ($this->connection->propertySource($site) === 'env') {
             abort(409, 'The property is set in .env (SEO_SEARCH_CONSOLE_PROPERTY).');
         }
 
@@ -65,8 +69,7 @@ class SearchConsoleController
             throw ValidationException::withMessages(['property' => 'Type it as Search Console names it: sc-domain:example.com, or https://example.com/ with the slash at the end.']);
         }
 
-        $this->connection->saveProperty($property);
-        Connection::apply();
+        $this->connection->saveProperty($property, $site);
 
         return response()->json(['property' => $property]);
     }
@@ -75,21 +78,23 @@ class SearchConsoleController
     {
         $this->authorize();
 
-        return response()->json($this->connection->check($client));
+        return response()->json($this->connection->check($client, Site::selected()->handle()));
     }
 
     public function import(Client $client, Importer $importer): JsonResponse
     {
         $this->authorize();
 
-        if (! $client->configured()) {
+        $site = Site::selected()->handle();
+
+        if (! $client->configured($site)) {
             return response()->json(['ok' => false, 'message' => 'Add the key and the property first.']);
         }
 
         try {
-            $count = $importer->import();
+            $count = $importer->import($site);
         } catch (Throwable) {
-            return response()->json($this->connection->check($client));
+            return response()->json($this->connection->check($client, $site));
         }
 
         return response()->json(['ok' => true, 'message' => "Imported {$count} pages."]);

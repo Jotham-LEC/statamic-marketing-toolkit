@@ -122,3 +122,6 @@ tabs:
           -
             handle: search_console_property
             field: { type: text, display: 'Property', instructions: 'As Search Console names it: sc-domain:example.com for a domain, https://example.com/ for an address prefix.' }
+          -
+            handle: search_console_properties
+            field: { type: array, mode: dynamic, display: 'Properties of the other sites', key_header: 'Site handle', value_header: 'Property', instructions: 'Only with several sites: the property of each site but the default (whose is above). Tools → SEO fills it in for the site selected there.' }

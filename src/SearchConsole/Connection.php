@@ -14,15 +14,24 @@ use Throwable;
  * the service account key and the property, from `.env` (which wins) or
  * from the control panel. A key uploaded there is kept in
  * storage/app/private, never in git; the property is an addon setting.
- * apply() hands what the control panel saved to the `seo.search_console`
- * config keys that Client reads.
+ * apply() hands an uploaded key to the `seo.search_console.credentials`
+ * config key that Client reads.
+ *
+ * One key serves every site (a service account can be a user of several
+ * properties). The property is per site: `seo.search_console.property` is a
+ * string (every site) or a map of site handle => property; else the control
+ * panel's, saved for the default site as before and for each other site in
+ * a second setting.
  */
 class Connection
 {
     public const string SETTING = 'search_console_property';
 
+    /** The properties of the sites other than the default: site handle => property. */
+    public const string SITES_SETTING = 'search_console_properties';
+
     /**
-     * Fills the config keys `.env` left empty from what the control panel saved.
+     * Fills the key `.env` left empty from what the control panel saved.
      */
     public static function apply(): void
     {
@@ -31,10 +40,37 @@ class Connection
         if (blank(config('seo.search_console.credentials')) && File::exists($connection->keyPath())) {
             config(['seo.search_console.credentials' => $connection->keyPath()]);
         }
+    }
 
-        if (blank(config('seo.search_console.property')) && filled($property = $connection->savedProperty())) {
-            config(['seo.search_console.property' => $property]);
-        }
+    /**
+     * The site's property: from the config (`.env`), else as saved in the
+     * control panel. Null: the current site.
+     */
+    public function property(?string $site = null): ?string
+    {
+        return $this->configuredProperty($site) ?? $this->savedProperty($site);
+    }
+
+    /**
+     * The property the config gives the site: a string for every site, or the
+     * site's entry in a map.
+     */
+    public function configuredProperty(?string $site = null): ?string
+    {
+        $value = config('seo.search_console.property');
+        $value = is_array($value) ? ($value[$site ?? Site::current()->handle()] ?? null) : $value;
+
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+    }
+
+    /**
+     * The handles of the sites that have a property.
+     *
+     * @return list<string>
+     */
+    public function sitesWithProperty(): array
+    {
+        return array_values(array_filter(Site::all()->map->handle()->all(), fn (string $site) => $this->property($site) !== null));
     }
 
     public function keyPath(): string
@@ -56,14 +92,12 @@ class Connection
         };
     }
 
-    public function propertySource(): ?string
+    public function propertySource(?string $site = null): ?string
     {
-        $value = (string) config('seo.search_console.property');
-
         return match (true) {
-            $value === '' => null,
-            $value === $this->savedProperty() => 'cp',
-            default => 'env',
+            $this->configuredProperty($site) !== null => 'env',
+            $this->savedProperty($site) !== null => 'cp',
+            default => null,
         };
     }
 
@@ -82,9 +116,9 @@ class Connection
      * The property to suggest: the site's domain, which covers http, https and
      * every subdomain; an address prefix where there is no domain (an IP, localhost).
      */
-    public function suggestedProperty(): string
+    public function suggestedProperty(?string $site = null): string
     {
-        $url = Site::default()->absoluteUrl();
+        $url = (Site::get($site ?? Site::current()->handle()) ?? Site::default())->absoluteUrl();
         $host = (string) parse_url($url, PHP_URL_HOST);
 
         return str_contains($host, '.') && ! filter_var($host, FILTER_VALIDATE_IP)
@@ -122,21 +156,36 @@ class Connection
         File::delete($this->keyPath());
     }
 
-    public function savedProperty(): ?string
+    public function savedProperty(?string $site = null): ?string
     {
+        $site ??= Site::current()->handle();
+
         try {
-            $value = Addon::get('jotham-lec/statamic-co-seo')?->settings()->get(self::SETTING);
+            $addon = Addon::get('jotham-lec/statamic-co-seo');
+            $key = $site === Site::default()->handle() ? self::SETTING : self::SITES_SETTING;
+            $value = $addon?->settings()->get($key);
+            $value = $key === self::SITES_SETTING ? ((array) $value)[$site] ?? null : $value;
         } catch (Throwable) {
             return null; // Before Statamic has booted the addon.
         }
 
-        return filled($value) ? trim((string) $value) : null;
+        return filled($value) && is_scalar($value) ? trim((string) $value) : null;
     }
 
-    public function saveProperty(?string $property): void
+    public function saveProperty(?string $property, ?string $site = null): void
     {
+        $site ??= Site::current()->handle();
+        $property = filled($property) ? trim((string) $property) : null;
         $settings = Addon::get('jotham-lec/statamic-co-seo')->settings();
-        $settings->set(self::SETTING, filled($property) ? trim($property) : null);
+
+        if ($site === Site::default()->handle()) {
+            $settings->set(self::SETTING, $property);
+        } else {
+            $others = (array) $settings->get(self::SITES_SETTING);
+            $others[$site] = $property;
+            $settings->set(self::SITES_SETTING, array_filter($others) ?: null);
+        }
+
         $settings->save();
     }
 
@@ -146,16 +195,16 @@ class Connection
      *
      * @return array{ok: bool, message: string}
      */
-    public function check(Client $client): array
+    public function check(Client $client, ?string $site = null): array
     {
-        if (! $client->configured()) {
+        if (! $client->configured($site)) {
             return ['ok' => false, 'message' => 'Add the key and the property first.'];
         }
 
-        $property = (string) config('seo.search_console.property');
+        $property = (string) $this->property($site);
 
         try {
-            $client->site();
+            $client->site($site);
         } catch (RequestException $exception) {
             return ['ok' => false, 'message' => $this->explain($exception, $property)];
         } catch (Throwable $exception) {
