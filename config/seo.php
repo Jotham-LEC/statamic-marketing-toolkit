@@ -34,7 +34,8 @@ return [
     'global' => 'seo',
 
     'title' => [
-        // Appended as "{title}{separator}{site name}" only when the result fits.
+        // With "Add the site name to page titles" on (SEO & brand), the title
+        // becomes "{title}{separator}{site name}" only when the result fits.
         'max' => 60,
     ],
 

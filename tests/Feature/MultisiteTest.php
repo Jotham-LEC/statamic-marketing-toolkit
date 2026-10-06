@@ -39,10 +39,10 @@ test('install puts the brand global on every site, the others inheriting from th
     $set = GlobalSet::findByHandle('seo');
 
     expect($set->origins()->all())->toBe(['default' => null, 'cothinking' => 'default'])
-        ->and($set->in('default')->data()->all())->toMatchArray(['title_separator' => '·', 'default_description' => 'We make things.'])
+        ->and($set->in('default')->data()->all())->toMatchArray(['default_description' => 'We make things.'])
         // Left empty, so it follows the default site's values rather than a copy of them.
         ->and($set->in('cothinking')->data()->all())->toBe([])
-        ->and($set->in('cothinking')->value('title_separator'))->toBe('·');
+        ->and($set->in('cothinking')->value('default_description'))->toBe('We make things.');
 });
 
 test('install leaves an existing set\'s sites alone and says which it is missing', function () {

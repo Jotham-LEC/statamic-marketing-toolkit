@@ -82,6 +82,15 @@ class Settings
     }
 
     /**
+     * Whether page titles end with the site name. Off by default; a site set
+     * up before the toggle existed, with a separator saved, keeps its titles.
+     */
+    public function titleSiteName(): bool
+    {
+        return $this->bool('title_site_name', $this->string('title_separator') !== null);
+    }
+
+    /**
      * The separator with a space on each side, however it was typed: the
      * control panel may trim a value, so `·` and ` · ` read the same.
      */

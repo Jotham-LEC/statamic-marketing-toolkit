@@ -108,6 +108,10 @@ class SiteSeo
             return $site.$suffix;
         }
 
+        if (! $this->settings->titleSiteName()) {
+            return $title.$suffix;
+        }
+
         $full = $title.$this->settings->separator().$site;
 
         return (mb_strlen($full.$suffix) <= (int) config('seo.title.max', 60) ? $full : $title).$suffix;

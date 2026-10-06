@@ -29,7 +29,7 @@ final readonly class Context
 
 | Value | Order |
 |---|---|
-| `<title>` | SEO title as typed → `{title}{separator}{site}` if it fits `seo.title.max`, else the title → site name on home. `· Page N` past page 1, in the page's language |
+| `<title>` | SEO title as typed → the title (with **Add the site name to page titles** on: `{title}{separator}{site}` if it fits `seo.title.max`) → site name on home. `· Page N` past page 1, in the page's language |
 | description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 155 on a word |
 | share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** (Pro) → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
 | canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |

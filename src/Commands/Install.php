@@ -203,7 +203,6 @@ class Install extends Command
             $homeDescription = data_get($home?->get('seo'), 'description') ?: $home?->get('description');
 
             $defaults = array_filter([
-                'title_separator' => '·',
                 'default_description' => is_string($homeDescription) && $homeDescription !== '' ? $homeDescription : null,
                 'robots_disallow' => ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'],
             ], fn ($value, $field) => $value !== null && in_array($field, $fields, true) && blank($variables->get($field)), ARRAY_FILTER_USE_BOTH);
@@ -240,7 +239,8 @@ class Install extends Command
 
         return [
             'brand' => ['display' => 'seo::fields.brand.tabs.brand', 'sections' => [['fields' => [
-                $field('title_separator', ['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display', 'width' => 50, 'placeholder' => '·', 'instructions' => 'seo::fields.brand.title_separator.instructions']),
+                $field('title_site_name', ['type' => 'toggle', 'display' => 'seo::fields.brand.title_site_name.display', 'width' => 50, 'instructions' => 'seo::fields.brand.title_site_name.instructions']),
+                $field('title_separator', ['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display', 'width' => 50, 'placeholder' => '·', 'if' => ['title_site_name' => 'true'], 'instructions' => 'seo::fields.brand.title_separator.instructions']),
                 $field('default_description', ['type' => 'textarea', 'display' => 'seo::fields.brand.default_description.display', 'character_limit' => 160, 'instructions' => 'seo::fields.brand.default_description.instructions']),
                 $field('default_image', $asset('seo::fields.brand.default_image.display', 'seo::fields.brand.default_image.instructions')),
                 $field('site_alternate_name', ['type' => 'text', 'display' => 'seo::fields.brand.site_alternate_name.display', 'width' => 50, 'instructions' => 'seo::fields.brand.site_alternate_name.instructions']),

@@ -35,7 +35,7 @@ test('Tools → SEO opens the overview and links to the brand global', function 
             ->where('siteName', 'Acme')
             ->where('global.exists', true)
             ->where('files.0', ['label' => 'Sitemap', 'url' => 'https://example.test/sitemap.xml'])
-            ->where('global.separator', ' · ')
+            ->where('global.separator', null)
             ->where('report.latest', null)
             ->where('redirects.active', 0)
             ->where('notFound.paths', 0)

@@ -17,7 +17,8 @@ The overview: the latest report's score *(Pro)*, recent 404s *(Pro)*, redirects,
 **Globals → SEO & brand** holds what applies to the whole site. Fill it in once and come back when something changes.
 
 **Brand tab**
-- **Title separator**: what goes between the page title and the site name, with a space added on each side. Leave empty for "·".
+- **Add the site name to page titles**: off by default, so a page's title is just its own ("Pricing"), as most top Google results are. On, it becomes "Pricing · Your site" when that fits in 60 characters.
+- **Title separator**: shown when the site name is added; what goes between the two, with a space added on each side. Leave empty for "·".
 - **Default description**: used for pages that have no description and no text to borrow one from.
 - **Default share image**: shown when a page is shared and has no picture of its own. 1200 × 630 pixels works best.
 - **Other site name**: a shorter name or acronym search engines may show instead of the site name.

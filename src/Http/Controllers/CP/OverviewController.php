@@ -55,7 +55,7 @@ class OverviewController
             'global' => [
                 'exists' => $variables !== null,
                 'url' => $variables && $user->can('edit', $variables) ? $variables->editUrl() : null,
-                'separator' => $seo->settings()->separator(),
+                'separator' => $seo->settings()->titleSiteName() ? $seo->settings()->separator() : null,
                 'description' => $seo->settings()->string('default_description'),
             ],
             // Pro's panels are null in the free edition, which shows what they would add instead.

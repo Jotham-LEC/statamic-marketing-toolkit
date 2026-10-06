@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.18.2 – 2026-10-06
+
+### Changed
+- **Page titles no longer end with the site name by default**: "Pricing", not "Pricing · Your site", as most top Google results are. A new toggle in SEO & brand, **Add the site name to page titles**, turns it back on, with the separator beside it. Sites that already have a separator saved keep their titles until the toggle is changed; run `php please seo:install --fields` to add the toggle to an existing blueprint.
+
 ## 0.18.1 – 2026-10-06
 
 Two fixes from Co-SEO 0.13.2 and 0.13.3 that 0.18.0 left out, two security fixes, and a new price.

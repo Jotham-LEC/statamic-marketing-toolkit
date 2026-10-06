@@ -92,7 +92,7 @@ defineProps({
                         <dt class="text-gray-500">{{ __('seo::cp.overview.brand.site_name') }}</dt>
                         <dd>{{ siteName }}</dd>
                         <dt class="text-gray-500">{{ __('seo::cp.overview.brand.titles') }}</dt>
-                        <dd>{{ __('seo::cp.overview.brand.page_title') }}{{ global.separator }}{{ siteName }}</dd>
+                        <dd>{{ __('seo::cp.overview.brand.page_title') }}<template v-if="global.separator">{{ global.separator }}{{ siteName }}</template></dd>
                         <dt class="text-gray-500">{{ __('seo::cp.overview.brand.default_description') }}</dt>
                         <dd>{{ global.description ?? __('seo::cp.overview.brand.no_description') }}</dd>
                     </dl>

@@ -56,7 +56,7 @@ test('an entry being edited is previewed from the form, not from what was saved'
     previewOf('collections.pages.page', ['title' => 'About us', 'description' => 'Who we are, typed just now.', 'slug' => 'about'], $entry->reference())
         ->assertOk()
         ->assertJson([
-            'title' => 'About us · Acme',
+            'title' => 'About us',
             'og_title' => 'About us',
             'description' => 'Who we are, typed just now.',
             'url' => 'https://example.test/about',
@@ -84,7 +84,7 @@ test('a new entry is previewed at the address it will have', function () {
 
     previewOf('collections.pages.page', ['title' => 'Brand new', 'slug' => 'brand-new'])
         ->assertOk()
-        ->assertJson(['title' => 'Brand new · Acme', 'url' => 'https://example.test/brand-new', 'image' => ['generated' => true]]);
+        ->assertJson(['title' => 'Brand new', 'url' => 'https://example.test/brand-new', 'image' => ['generated' => true]]);
 });
 
 test('a noindexed entry says so, and an uploaded image replaces the card', function () {
@@ -104,10 +104,10 @@ test('a term is previewed too', function () {
 
     previewOf('taxonomies.topics.topic', ['title' => 'Gardens and parks', 'slug' => 'gardens'], $term->in('default')->reference())
         ->assertOk()
-        ->assertJson(['title' => 'Gardens and parks · Acme', 'url' => 'https://example.test/topics/gardens', 'image' => null]);
+        ->assertJson(['title' => 'Gardens and parks', 'url' => 'https://example.test/topics/gardens', 'image' => null]);
 
     previewOf('taxonomies.topics.topic', ['title' => 'Ponds', 'slug' => 'ponds'])
-        ->assertJson(['title' => 'Ponds · Acme', 'url' => 'https://example.test/topics/ponds']);
+        ->assertJson(['title' => 'Ponds', 'url' => 'https://example.test/topics/ponds']);
 });
 
 test('the card is drawn from the form as a PNG and never cached', function () {

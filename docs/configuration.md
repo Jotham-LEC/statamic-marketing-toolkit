@@ -20,7 +20,7 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
 
 | Key | Default | |
 |---|---|---|
-| `title.max` | `60` | `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
+| `title.max` | `60` | With **Add the site name to page titles** on, `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
 | `description.length` | `155` | A description taken from the page is cut to this, on a word. |
 
 ### Collections

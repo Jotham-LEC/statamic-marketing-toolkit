@@ -55,7 +55,7 @@ php please seo:install                       # the "SEO & brand" global set
 php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to change the defaults
 ```
 
-`seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (`·` as the separator, the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing. With several sites it creates the set on each, the others taking what they leave empty from the default site; a set that already exists must be enabled on each site by hand (the command names the sites it is missing).
+`seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing. With several sites it creates the set on each, the others taking what they leave empty from the default site; a set that already exists must be enabled on each site by hand (the command names the sites it is missing).
 
 The control panel's scripts and styles are published to `public/vendor/statamic-marketing-toolkit` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 

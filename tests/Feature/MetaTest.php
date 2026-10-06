@@ -14,12 +14,27 @@ use Statamic\Facades\Term;
 beforeEach(fn () => seoGlobal(['default_description' => 'The default.']));
 
 describe('title', function () {
-    test('a page is "{title} · {site}"; home is the site name', function () {
-        expect(metaFor(entryIn('pages', 'about'))->title)->toBe('About · Acme')
+    test('a page is its own title; home is the site name', function () {
+        expect(metaFor(entryIn('pages', 'about'))->title)->toBe('About')
             ->and(metaFor(entryIn('home', 'home'))->title)->toBe('Acme');
     });
 
+    test('with the toggle on, a page is "{title} · {site}"', function () {
+        seoGlobal(['title_site_name' => true]);
+
+        expect(metaFor(entryIn('pages', 'about'))->title)->toBe('About · Acme');
+    });
+
+    test('a site with a separator saved before the toggle existed keeps the site name, until the toggle is turned off', function () {
+        seoGlobal(['title_separator' => '|']);
+        expect(metaFor(entryIn('pages', 'about'))->title)->toBe('About | Acme');
+
+        seoGlobal(['title_separator' => '|', 'title_site_name' => false]);
+        expect(metaFor(entryIn('pages', 'team'))->title)->toBe('Team');
+    });
+
     test('the site name is dropped when it would push the title past the limit', function () {
+        seoGlobal(['title_site_name' => true]);
         config(['seo.title.max' => 20]);
 
         expect(metaFor(entryIn('pages', 'a-rather-long-page-title'))->title)->toBe('A rather long page title');
@@ -27,11 +42,11 @@ describe('title', function () {
 
     test('an SEO title replaces the whole title; an empty one counts as not set', function () {
         expect(metaFor(entryIn('pages', 'about', ['seo' => ['title' => 'Who we are']]))->title)->toBe('Who we are')
-            ->and(metaFor(entryIn('pages', 'team', ['seo' => ['title' => '']]))->title)->toBe('Team · Acme');
+            ->and(metaFor(entryIn('pages', 'team', ['seo' => ['title' => '']]))->title)->toBe('Team');
     });
 
     test('a later page of a listing says which page it is', function () {
-        expect(metaFor(entryIn('pages', 'news'), '/news?page=3')->title)->toBe('News · Acme · Page 3');
+        expect(metaFor(entryIn('pages', 'news'), '/news?page=3')->title)->toBe('News · Page 3');
     });
 });
 
@@ -228,7 +243,7 @@ test('the tag prints the tags, escaped, with JSON-LD that cannot close its scrip
     entryIn('pages', 'quotes', ['title' => 'Say "hi" </script><b>&']);
     $html = renderAt('/quotes', '<s:seo:meta :entry="$entry" />', ['entry' => Entry::findByUri('/quotes')]);
 
-    expect($html)->toContain('<title>Say &quot;hi&quot; &lt;/script&gt;&lt;b&gt;&amp; · Acme</title>')
+    expect($html)->toContain('<title>Say &quot;hi&quot; &lt;/script&gt;&lt;b&gt;&amp;</title>')
         ->toContain('<link rel="canonical" href="https://example.test/quotes">')
         ->toContain('<meta property="og:image" content="https://example.test/og/quotes.png?v=')
         ->not->toContain('</script><b>');
@@ -240,7 +255,7 @@ test('the tag prints the tags, escaped, with JSON-LD that cannot close its scrip
 
 test('a page without an entry passes what it knows', function () {
     expect(renderAt('/contact-form', '<s:seo:meta title="Contact" description="Write to us." />'))
-        ->toContain('<title>Contact · Acme</title>')
+        ->toContain('<title>Contact</title>')
         ->toContain('<meta name="description" content="Write to us.">')
         ->toContain('<link rel="canonical" href="https://example.test/contact-form">');
 });

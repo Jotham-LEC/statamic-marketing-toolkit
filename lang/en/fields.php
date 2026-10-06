@@ -275,6 +275,10 @@ return [
                 'eea' => 'EEA, UK and Switzerland',
             ],
         ],
+        'title_site_name' => [
+            'display' => 'Add the site name to page titles',
+            'instructions' => 'Off: "Pricing". On: "Pricing · Your site", when it fits in 60 characters.',
+        ],
         'title_separator' => [
             'display' => 'Title separator',
             'instructions' => 'Between the page title and the site name, with a space on each side.',
