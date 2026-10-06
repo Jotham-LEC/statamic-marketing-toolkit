@@ -33,6 +33,15 @@ test('the Features screen saves what is off, for whoever may change the addon\'s
     $this->get(cp_route('seo.features.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('values.sitemap', false)->where('values.robots_txt', true));
 });
 
+test('a module the request leaves out keeps its state', function () {
+    Features::save(['tracking']);
+    $this->actingAs(cpUser(super: true));
+
+    $this->postJson(cp_route('seo.features.update'), ['not_found' => false])->assertOk();
+
+    expect(Features::off())->toBe(['not_found', 'tracking']);
+});
+
 test('someone who may not change the addon\'s settings can\'t open it, or see it in the nav', function () {
     $this->actingAs(cpUser(['view seo']));
 

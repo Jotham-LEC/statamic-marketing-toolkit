@@ -37,8 +37,12 @@ class FeaturesController
     {
         $this->authorize();
 
-        $on = $this->blueprint()->fields()->addValues($request->all())->process()->values();
-        Features::save(array_values(array_filter(array_keys(Features::MODULES), fn (string $module) => ! $on->get($module, true))));
+        // A module the request leaves out keeps its state.
+        $off = Features::off();
+        Features::save(array_values(array_filter(
+            array_keys(Features::MODULES),
+            fn (string $module) => $request->has($module) ? ! $request->boolean($module) : in_array($module, $off, true),
+        )));
 
         return response()->json(['saved' => true]);
     }

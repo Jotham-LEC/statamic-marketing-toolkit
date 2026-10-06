@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Support\LegacySettings;
@@ -121,3 +123,29 @@ test('Co-SEO\'s addon settings are carried over once, under the new slug', funct
         @unlink($new);
     }
 });
+
+test('Co-SEO\'s addon settings in the database (Eloquent driver) are carried over, the new name\'s own winning', function () {
+    Schema::create('addon_settings', function ($table) {
+        $table->id();
+        $table->string('addon')->unique();
+        $table->json('settings')->nullable();
+        $table->timestamps();
+    });
+    config(['statamic.eloquent-driver.addon_settings' => ['driver' => 'eloquent', 'model' => TestAddonSettings::class]]);
+    TestAddonSettings::query()->create(['addon' => 'jotham-lec/statamic-co-seo', 'settings' => ['search_console_property' => 'sc-domain:example.test', 'features_off' => ['old']]]);
+    TestAddonSettings::query()->create(['addon' => 'jotham-lec/statamic-marketing-toolkit', 'settings' => ['features_off' => ['sitemap']]]);
+
+    LegacySettings::carryOver();
+
+    expect(TestAddonSettings::query()->where('addon', 'jotham-lec/statamic-marketing-toolkit')->sole()->settings)
+        ->toBe(['search_console_property' => 'sc-domain:example.test', 'features_off' => ['sitemap']]);
+});
+
+class TestAddonSettings extends Model
+{
+    protected $table = 'addon_settings';
+
+    protected $guarded = [];
+
+    protected $casts = ['settings' => 'array'];
+}

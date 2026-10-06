@@ -27,7 +27,6 @@ use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\Support\Config;
 use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Features;
-use JothamLec\MarketingToolkit\Support\LegacySettings;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tags\Seo;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
@@ -268,8 +267,8 @@ class ServiceProvider extends AddonServiceProvider
 
     /**
      * config/seo.php and the `seo::` translations, under the names the SEO
-     * module has always had (see the namespaces above); and the addon
-     * settings Co-SEO saved under its old slug, carried over once.
+     * module has always had (see the namespaces above). The addon settings
+     * Co-SEO saved under its old name are copied over by a migration.
      */
     protected function bootSeoNames(): void
     {
@@ -277,8 +276,6 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'seo');
         $this->publishes([__DIR__.'/../lang' => $this->app->langPath('vendor/seo')], 'seo-translations');
-
-        LegacySettings::carryOver();
     }
 
     /**

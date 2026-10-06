@@ -32,7 +32,7 @@ A site without this line runs as Free. Since Co-SEO 0.17 that leaves out the rep
 - The `seo::` translation keys and `--tag=seo-translations`.
 - Control panel addresses (`/cp/seo/…`), route names (`seo.*`) and permissions (`view seo`, `manage seo redirects`).
 - The database tables (`seo_redirects`, `seo_404s`, `seo_reports`, `seo_search_stats`).
-- The addon settings (the Search Console property): copied from `resources/addons/seo.yaml` to `resources/addons/marketing-toolkit.yaml` the first time the site boots. Commit the new file.
+- The addon settings (the Search Console property): `php artisan migrate` copies them to the new name, from `resources/addons/seo.yaml` to `resources/addons/marketing-toolkit.yaml`, or, with Statamic's Eloquent driver, from the `addon_settings` row of `jotham-lec/statamic-co-seo`. Commit the new file if you keep it in git.
 
 ## 4. What changes
 
