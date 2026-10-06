@@ -186,7 +186,6 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 | `tracking.linkedin` | `SEO_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
 | `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
-| `tracking.class` | | A subclass of `Tracking` to change how the tags are worked out. |
 | `leads.enabled` | | `true` (Pro). Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads-pro). |
 
 An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed. Consent Mode is set in the global only.

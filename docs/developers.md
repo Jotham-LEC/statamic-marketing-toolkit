@@ -114,7 +114,14 @@ Helpers available in a subclass: `settings()` (the brand global, with `string()`
 
 ## Tracking from code
 
-`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `besideGtm()`, `head()` and `body()`. As with `SiteSeo`, extend it and name your class in `seo.tracking.class` to change one rule, e.g. `ids()` to read the IDs from somewhere else. See [tracking.md](tracking.md) for how the tags and Consent Mode behave.
+`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `besideGtm()`, `head()` and `body()`. To change one rule, e.g. `ids()` to read the IDs from somewhere else, extend it and bind your class in a service provider of your own:
+
+```php
+// app/Providers/AppServiceProvider.php, in register()
+$this->app->bind(\JothamLec\MarketingToolkit\Tracking\Tracking::class, \App\Tracking::class);
+```
+
+See [tracking.md](tracking.md) for how the tags and Consent Mode behave.
 
 ## Add a share-card template
 

@@ -266,7 +266,6 @@ return [
         'posthog_host' => env('SEO_POSTHOG_HOST'),
         'meta_pixel' => env('SEO_META_PIXEL_ID'),
         'linkedin' => env('SEO_LINKEDIN_PARTNER_ID'),
-        'class' => null,
     ],
 
     /*
