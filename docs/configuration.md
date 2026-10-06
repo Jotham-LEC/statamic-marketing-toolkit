@@ -135,7 +135,7 @@ A sitemap lists every site on its domain: languages under `/fr/` are in `example
 
 Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until there is a key and a property.
 
-**From the control panel**: **Tools → SEO → Search Console** walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/seo/search-console-key.json` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
+**From the control panel**: **Tools → SEO → Search Console** walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/seo/search-console-key.json`, encrypted with `APP_KEY` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects; if `APP_KEY` changes, upload the key again), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
 
 | Key | Default | |
 |---|---|---|
@@ -247,3 +247,16 @@ The Search Console property is kept here too (`search_console_property`, and `se
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:search-console [--site=]` (Pro) | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
 | `php please seo:report [--site=]` (Pro) | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |
+
+## What it sends where
+
+The addon sends nothing to its author: no licence check, no usage numbers, no updates check. The server or the visitor's browser talks to another service only for a feature that is on and set up:
+
+| When | From | To | What is sent |
+|---|---|---|---|
+| Published content is saved, goes live or is deleted (IndexNow on, production only) | The server | `https://api.indexnow.org/indexnow` | The site's host, the IndexNow key, where the key file is, and the changed addresses. |
+| A Search Console check or import (Pro, with a key and a property) | The server | `https://oauth2.googleapis.com/token`, then `https://www.googleapis.com/webmasters/v3/sites/…` | A token request signed with the service account key (its email, the read-only Search Console scope, an expiry; the private key itself never leaves the server); then the property, and for an import the date range and which rows. |
+| A report runs with **Check external links** on (Pro, off unless switched on in the report settings) | The server | The sites the pages link to | A `HEAD` request (a `GET` where `HEAD` is refused) for each linked address, at most 50 a page, each answer kept for a day. Addresses on this machine or a private network are never asked. |
+| A visitor opens a page, with a tracking ID set, in the environments in `tracking.environments` (production unless changed), never in Live Preview | The visitor's browser | Google Tag Manager and Google Analytics (`googletagmanager.com`), the Meta Pixel (`connect.facebook.net`, `facebook.com`), LinkedIn (`snap.licdn.com`, `px.ads.linkedin.com`), PostHog (your `tracking.posthog_host`) | Whatever each tool's own script collects, and with leads on (Pro), a lead event when a form is sent. How each behaves before consent: [tracking.md](tracking.md#meta-linkedin-and-posthog-without-gtm-pro). |
+
+Reports render pages and check internal links inside the application, without a request over the network.
