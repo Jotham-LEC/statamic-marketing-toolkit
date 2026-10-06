@@ -2,6 +2,7 @@
 
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
+use JothamLec\Seo\Redirects\Csv;
 use JothamLec\Seo\Redirects\Redirect;
 use Statamic\Facades\URL;
 
@@ -193,4 +194,79 @@ test('a missing address is never kept by Statamic\'s static cache, so a redirect
     rule('/old', '/new');
 
     $this->get('https://example.test/old')->assertRedirect('https://example.test/new');
+});
+
+test('letter case counts by default', function () {
+    rule('/About-Us', '/about');
+    rule('/Blog/*', '/essays/$1');
+
+    $this->get('/about-us')->assertNotFound();
+    $this->get('/blog/post')->assertNotFound();
+    expect(Redirect::validator(['source' => '/about-us', 'target' => '/x', 'status' => 301, 'active' => true])->fails())->toBeFalse();
+});
+
+test('with case_sensitive off, a source matches in any letter case, and a wildcard passes on what it matched as typed', function () {
+    config(['seo.redirects.case_sensitive' => false]);
+    rule('/about-us', '/about');
+    rule('/Café', '/coffee');
+    rule('/blog/*', '/essays/$1');
+    rule('/ÉTÉ/*', '/summer/$1');
+
+    $this->get('/ABOUT-US/')->assertRedirect('https://example.test/about');
+    $this->get('/About-Us')->assertRedirect('https://example.test/about');
+    $this->get('/CAF%C3%89')->assertRedirect('https://example.test/coffee');
+    $this->get('/BLOG/My-Post')->assertRedirect('https://example.test/essays/My-Post');
+    $this->get('/%C3%A9t%C3%A9/Plage')->assertRedirect('https://example.test/summer/Plage');
+});
+
+test('turning case_sensitive off takes effect though the rules are cached', function () {
+    rule('/about-us', '/about');
+    $this->get('/ABOUT-US')->assertNotFound();
+
+    config(['seo.redirects.case_sensitive' => false]);
+
+    $this->get('/ABOUT-US')->assertRedirect('https://example.test/about');
+});
+
+test('with case_sensitive off, a source in the very case asked for wins over one differing only in case', function () {
+    rule('/Old', '/one');
+    rule('/old', '/two');
+    config(['seo.redirects.case_sensitive' => false]);
+
+    $this->get('/old')->assertRedirect('https://example.test/two');
+    $this->get('/Old')->assertRedirect('https://example.test/one');
+    // Neither in that case: the older rule.
+    $this->get('/OLD')->assertRedirect('https://example.test/one');
+});
+
+test('with case_sensitive off, a source differing only in case is the same one, on the form and in a CSV import', function () {
+    config(['seo.redirects.case_sensitive' => false]);
+    $existing = rule('/about-us', '/about');
+
+    expect(Redirect::validator(['source' => '/ABOUT-US/', 'target' => '/x', 'status' => 301, 'active' => true])->errors()->first('source'))
+        ->toBe('Another redirect already starts from this address.')
+        ->and(Redirect::validator(['source' => '/ABOUT-US', 'target' => '/x', 'status' => 301, 'active' => true], $existing->id)->fails())->toBeFalse();
+
+    rule('/Café', '/coffee');
+    expect(Redirect::validator(['source' => '/CAFÉ', 'target' => '/x', 'status' => 301, 'active' => true])->fails())->toBeTrue();
+
+    $result = app(Csv::class)->import("source,target,status,active\n/About-Us,/company,301,1\n");
+
+    expect($result)->toBe(['created' => 0, 'updated' => 1, 'errors' => []])
+        ->and(Redirect::query()->count())->toBe(2)
+        ->and($existing->fresh()->target)->toBe('/company');
+});
+
+test('with case_sensitive off, a chain of rules that comes back in another letter case is refused', function () {
+    config(['seo.redirects.case_sensitive' => false]);
+    $validator = fn (string $source, string $target) => Redirect::validator(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true]);
+    rule('/b', '/A');
+    rule('/c', '/d');
+    rule('/D', '/E/x');
+    rule('/e/*', '/F');
+
+    expect($validator('/a', '/B')->errors()->first('target'))->toBe('The redirect from that address leads back here, so the two would loop.')
+        ->and($validator('/f', '/C')->errors()->first('target'))->toBe('The redirects from that address lead back here after 3 steps, so visitors would go round in a loop.')
+        // A capitalised old address sent to its page is how this option is used, not a loop.
+        ->and($validator('/About', '/about')->fails())->toBeFalse();
 });

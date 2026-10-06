@@ -133,6 +133,9 @@ return [
     | Rules managed under Tools → SEO → Redirects, applied only to addresses the
     | site would answer with a 404. `automatic` adds a 301 when an entry's or
     | a term's address changes (its slug, its date, its place in a tree).
+    | `case_sensitive` false matches a rule's From in any letter case
+    | (`/ABOUT-US` as `/about-us`), for a site moved off one whose addresses
+    | worked in any case (Wix, IIS).
     |
     */
 
@@ -140,6 +143,8 @@ return [
         'enabled' => true,
 
         'automatic' => true,
+
+        'case_sensitive' => true,
     ],
 
     /*

@@ -87,6 +87,16 @@ test('a manual rule into the old address follows the content too', function () {
     expect(redirectMap())->toBe(['/a' => '/b', '/legacy' => '/b']);
 });
 
+test('with case_sensitive off, the rule from the old address in another case is the one updated', function () {
+    config(['seo.redirects.case_sensitive' => false]);
+    Redirect::query()->create(['source' => '/About', 'target' => '/elsewhere']);
+    $entry = reloaded(entryIn('pages', 'about'));
+
+    $entry->slug('company')->save();
+
+    expect(redirectMap())->toBe(['/about' => '/company']);
+});
+
 test('a rule into a similar-looking address is left alone', function () {
     Redirect::query()->create(['source' => '/legacy', 'target' => '/a_b/x']);
     Redirect::query()->create(['source' => '/other', 'target' => '/aXb/y']);

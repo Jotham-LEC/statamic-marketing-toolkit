@@ -9,7 +9,9 @@ use Statamic\Facades\URL;
 /**
  * Finds the rule for a path. The active rules are cached as one array (an
  * exact-match map and the wildcards, longest source first) and rebuilt when a
- * rule is saved or deleted, so a 404 costs a cache read, not a query.
+ * rule is saved or deleted, so a 404 costs a cache read, not a query. When
+ * matching ignores case, a second map holds the sources case-folded, and the
+ * wildcards ignore case too.
  */
 class Matcher
 {
@@ -36,7 +38,7 @@ class Matcher
     }
 
     /**
-     * @param  array{exact: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}  $rules
+     * @param  array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}  $rules
      * @return array{id: int, status: int, target: ?string}|null
      */
     private function matchIn(array $rules, string $path, string $query): ?array
@@ -44,7 +46,8 @@ class Matcher
         // Already decoded and without a query string: a `?` here was `%3F`, part of the path.
         $path = '/'.trim($path, '/');
 
-        if ($rule = $rules['exact'][$path] ?? null) {
+        // A source in the very case asked for wins over one that differs only in case.
+        if ($rule = $rules['exact'][$path] ?? $rules['folded'][Redirect::key($path)] ?? null) {
             return $this->resolved($rule, [], $query);
         }
 
@@ -60,39 +63,63 @@ class Matcher
     public static function flush(): void
     {
         Cache::forget(self::KEY);
+        Cache::forget(self::KEY.':any-case');
     }
 
     /**
-     * @return array{exact: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
+     * Cached apart for each `redirects.case_sensitive`, so changing it takes effect at once.
+     *
+     * @return array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
      */
     private function rules(): array
     {
-        return Cache::rememberForever(self::KEY, fn () => self::compile(Redirect::query()->where('active', true)->get(['id', 'source', 'target', 'status'])));
+        return Cache::rememberForever(Redirect::ignoresCase() ? self::KEY.':any-case' : self::KEY, fn () => self::compile(Redirect::query()->where('active', true)->get(['id', 'source', 'target', 'status'])));
     }
 
     /**
      * @param  Collection<int, Redirect>  $redirects
-     * @return array{exact: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
+     * @return array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
      */
     private static function compile(Collection $redirects): array
     {
         $rule = fn (Redirect $redirect) => ['id' => $redirect->id, 'status' => $redirect->status, 'target' => $redirect->target];
+        $ignoresCase = Redirect::ignoresCase();
 
         [$wildcards, $exact] = $redirects->partition(fn (Redirect $redirect) => $redirect->isWildcard());
 
         return [
             // Normalized again for sources saved before they were decoded on save.
             'exact' => $exact->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => $rule($redirect)])->all(),
+            // Of sources that differ only in case (saved before case was ignored), the oldest.
+            'folded' => $ignoresCase
+                ? $exact->sortByDesc('id')->mapWithKeys(fn (Redirect $redirect) => [Redirect::key(Redirect::normalize($redirect->source)) => $rule($redirect)])->all()
+                : [],
             // The most specific (longest) source wins when several match.
             'wildcards' => $wildcards
                 ->sortByDesc(fn (Redirect $redirect) => strlen($redirect->source))
                 ->map(fn (Redirect $redirect) => [
                     ...$rule($redirect),
-                    'pattern' => '#^'.str_replace('\*', '(.*)', preg_quote(Redirect::normalize($redirect->source), '#')).'$#',
+                    'pattern' => self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
                 ])
                 ->values()
                 ->all(),
         ];
+    }
+
+    /**
+     * A wildcard source as a regular expression. Ignoring case, it folds letters
+     * beyond A–Z too (`/CAFÉ/*` matches `/café/x`), unless the source isn't valid
+     * UTF-8. What the `*` matched keeps the visitor's case either way.
+     */
+    private static function pattern(string $source, bool $ignoresCase): string
+    {
+        $pattern = '#^'.str_replace('\*', '(.*)', preg_quote($source, '#')).'$#';
+
+        if (! $ignoresCase) {
+            return $pattern;
+        }
+
+        return $pattern.(mb_check_encoding($source, 'UTF-8') ? 'iu' : 'i');
     }
 
     /**

@@ -6,8 +6,9 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Redirects as CSV: `source,target,status,active`, one rule per row, with that
- * header. Import adds new sources and updates existing ones; a row that fails
- * the form's checks is skipped and reported by its line number.
+ * header. Import adds new sources and updates existing ones (in any letter
+ * case, when matching ignores it); a row that fails the form's checks is
+ * skipped and reported by its line number.
  */
 class Csv
 {
@@ -48,7 +49,7 @@ class Csv
                     'active' => filter_var(($cells[3] ?? '') === '' ? true : $cells[3], FILTER_VALIDATE_BOOLEAN),
                 ];
 
-                $existing = Redirect::query()->where('source', Redirect::normalize($row['source']))->first();
+                $existing = Redirect::forSource($row['source']);
                 $validator = Redirect::validator($row, $existing?->id);
 
                 if ($validator->fails()) {

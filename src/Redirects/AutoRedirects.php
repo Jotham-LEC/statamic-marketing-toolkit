@@ -60,10 +60,10 @@ class AutoRedirects
                     Redirect::pointsBack($redirect->source, $redirect->target) ? $redirect->delete() : $redirect->save();
                 });
 
-            Redirect::query()->updateOrCreate(
-                ['source' => $source],
-                ['target' => $target, 'status' => 301, 'active' => true, 'automatic' => true],
-            );
+            // The rule from the old address, in any letter case when matching ignores it.
+            (Redirect::forSource($source) ?? new Redirect)
+                ->fill(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true, 'automatic' => true])
+                ->save();
         });
 
         // Bulk deletes bypass the model events that clear the cache.
