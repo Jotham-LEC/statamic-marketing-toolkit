@@ -12,7 +12,7 @@ namespace JothamLec\MarketingToolkit\Support;
  */
 final class SchemaTypes
 {
-    /** LocalBusiness and its common subtypes (schema.org/LocalBusiness). */
+    /** LocalBusiness and its common subtypes (schema.org/LocalBusiness); stores go by their name. */
     private const array LOCAL_BUSINESSES = [
         'LocalBusiness', 'AnimalShelter', 'ArchiveOrganization', 'AutomotiveBusiness', 'ChildCare',
         'Dentist', 'DryCleaningOrLaundry', 'EmergencyService', 'EmploymentAgency', 'EntertainmentBusiness',
@@ -21,7 +21,7 @@ final class SchemaTypes
         'HomeAndConstructionBusiness', 'Electrician', 'Plumber', 'InternetCafe', 'LegalService', 'Attorney',
         'Notary', 'Library', 'LodgingBusiness', 'Hotel', 'BedAndBreakfast', 'MedicalBusiness', 'Physician',
         'ProfessionalService', 'RadioStation', 'RealEstateAgent', 'RecyclingCenter', 'SelfStorage',
-        'ShoppingCenter', 'SportsActivityLocation', 'HealthClub', 'Store', 'TelevisionStation',
+        'ShoppingCenter', 'SportsActivityLocation', 'HealthClub', 'TelevisionStation',
         'TouristInformationCenter', 'TravelAgency', 'AccountingService', 'AutoRepair', 'Florist',
     ];
 
