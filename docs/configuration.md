@@ -126,5 +126,5 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 
 | Command | |
 |---|---|
-| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint. |
+| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (site name, separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:report` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. |

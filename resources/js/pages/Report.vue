@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@statamic/cms/inertia';
-import { Badge, Card, Header, Listing } from '@statamic/cms/ui';
+import { Badge, Button, Card, Header, Listing } from '@statamic/cms/ui';
 import { computed, ref } from 'vue';
 import ReportProgress from '../components/ReportProgress.vue';
 import Score from '../components/Score.vue';
@@ -39,7 +39,7 @@ const ruleLabel = computed(() => props.rules.find((item) => item.handle === rule
                 <p>
                     {{ counts.scored }} pages scored, finished <When :value="report.finished_at" />.
                     <template v-if="counts.noindex"> {{ counts.noindex }} hidden from search engines (listed, not scored).</template>
-                    <template v-if="counts.errors"> <strong class="text-red-600">{{ counts.errors }} didn’t render</strong> and score 0.</template>
+                    <template v-if="counts.errors"> <strong class="text-(--theme-color-danger)">{{ counts.errors }} didn’t render</strong> and score 0.</template>
                 </p>
                 <p class="mt-2 text-gray-600 dark:text-gray-400">
                     Each check counts by how much it matters: 3 for what keeps a page out of search results, 2 for how it shows there, 1 for polish. A warning counts half.
@@ -67,7 +67,7 @@ const ruleLabel = computed(() => props.rules.find((item) => item.handle === rule
                     >
                         <td class="px-4 py-2">{{ item.label }}</td>
                         <td class="px-4 py-2 tabular-nums">{{ item.weight }}</td>
-                        <td class="px-4 py-2 tabular-nums" :class="{ 'font-semibold text-red-600': item.fail }">{{ item.fail }}</td>
+                        <td class="px-4 py-2 tabular-nums" :class="{ 'font-semibold text-(--theme-color-danger)': item.fail }">{{ item.fail }}</td>
                         <td class="px-4 py-2 tabular-nums" :class="{ 'text-amber-700': item.warn }">{{ item.warn }}</td>
                     </tr>
                 </tbody>
@@ -87,11 +87,11 @@ const ruleLabel = computed(() => props.rules.find((item) => item.handle === rule
                 <div class="flex items-center gap-2">
                     <a :href="row.url" target="_blank" rel="noopener" class="font-medium">{{ row.title }}</a>
                     <Badge v-if="row.noindex" size="sm" text="Hidden" />
-                    <Link v-if="row.edit_url" :href="row.edit_url" class="text-xs text-blue-600 underline dark:text-blue-400">Fix</Link>
+                    <Button v-if="row.edit_url" :href="row.edit_url" text="Fix" size="sm" />
                 </div>
                 <div class="font-mono text-xs text-gray-500">{{ row.path }}</div>
                 <ul v-if="row.issues.length" class="mt-1 space-y-0.5 text-xs">
-                    <li v-for="issue in row.issues" :key="issue.label" :class="issue.status === 'fail' ? 'text-red-700 dark:text-red-400' : 'text-amber-700 dark:text-amber-400'">
+                    <li v-for="issue in row.issues" :key="issue.label" :class="issue.status === 'fail' ? 'text-(--theme-color-danger)' : 'text-amber-700 dark:text-amber-400'">
                         <strong>{{ issue.label }}:</strong> {{ issue.message }}
                     </li>
                 </ul>

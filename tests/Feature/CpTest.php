@@ -50,14 +50,25 @@ test('Tools → SEO opens the overview and links to the brand global', function 
             ->component('seo::Overview', false)
             ->where('siteName', 'Acme')
             ->where('global.exists', true)
-            ->where('files.0', ['label' => 'Sitemap', 'url' => 'https://example.test/sitemap.xml']));
+            ->where('files.0', ['label' => 'Sitemap', 'url' => 'https://example.test/sitemap.xml'])
+            ->where('global.separator', ' · ')
+            ->where('report.latest', null)
+            ->where('redirects.active', 0)
+            ->where('notFound.paths', 0)
+            ->where('notFound.url', cp_route('seo.404s.index')));
+});
+
+test('the overview leaves out redirects for someone who cannot manage them', function () {
+    $this->actingAs(cpUser(['view seo']));
+
+    $this->get(cp_route('seo.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('redirects', null));
 });
 
 test('without the global the overview says so', function () {
     $this->actingAs(cpUser(super: true));
 
     $this->get(cp_route('seo.index'))
-        ->assertInertia(fn (AssertableInertia $page) => $page->where('global', ['exists' => false, 'url' => null]));
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('global.exists', false)->where('global.url', null));
 });
 
 test('SEO is hidden from people without "view seo"', function () {

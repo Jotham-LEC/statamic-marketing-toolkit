@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@statamic/cms/inertia';
-import { Button, Card, Header } from '@statamic/cms/ui';
+import { Badge, Button, Card, Header } from '@statamic/cms/ui';
 import { computed, getCurrentInstance, ref } from 'vue';
 import ReportProgress from '../components/ReportProgress.vue';
 import Score from '../components/Score.vue';
@@ -64,22 +64,15 @@ function finished(report) {
                 </tr>
             </thead>
             <tbody>
-                <!-- A finished report's whole row opens it; the link in the first cell is there for the keyboard. -->
-                <tr
-                    v-for="report in reports"
-                    :key="report.id"
-                    class="border-t border-gray-200 dark:border-gray-700"
-                    :class="{ 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800': report.status === 'done' }"
-                    @click="report.status === 'done' && router.visit(report.url)"
-                >
+                <tr v-for="report in reports" :key="report.id" class="border-t border-gray-200 dark:border-gray-700">
                     <td class="px-4 py-2">
-                        <Link v-if="report.status === 'done'" :href="report.url" class="text-blue-600 underline dark:text-blue-400" @click.stop>Report #{{ report.id }}</Link>
-                        <span v-else>Report #{{ report.id }}</span>
+                        <Link v-if="report.status === 'done'" :href="report.url" class="font-medium">SEO report #{{ report.id }}</Link>
+                        <span v-else>SEO report #{{ report.id }}</span>
                     </td>
                     <td class="px-4 py-2">
                         <Score v-if="report.status === 'done'" :value="report.score" />
-                        <span v-else-if="report.status === 'running'" class="text-gray-500">Running</span>
-                        <span v-else class="text-red-600" :title="report.error">Failed</span>
+                        <Badge v-else-if="report.status === 'running'" text="Running" />
+                        <Badge v-else color="red" text="Failed" :title="report.error" />
                     </td>
                     <td class="px-4 py-2 tabular-nums">{{ report.pages_total }}</td>
                     <td class="px-4 py-2"><When :value="report.finished_at" /></td>

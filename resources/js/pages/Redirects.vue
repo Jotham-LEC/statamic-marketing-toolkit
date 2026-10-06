@@ -72,7 +72,7 @@ async function importCsv(event) {
             <span class="font-mono text-sm">{{ row.target ?? '—' }}</span>
         </template>
         <template #cell-active="{ row }">
-            <span :class="row.active ? 'text-green-700 dark:text-green-400' : 'text-gray-500'">{{ row.active ? 'Yes' : 'No' }}</span>
+            <span :class="row.active ? 'text-(--theme-color-success)' : 'text-gray-500'">{{ row.active ? 'Yes' : 'No' }}</span>
         </template>
         <template #cell-last_hit_at="{ row }">
             <When :value="row.last_hit_at" />

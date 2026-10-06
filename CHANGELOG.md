@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 – 2026-10-06
+
+### Added
+- **Tools → SEO** is an overview: the latest report's score, recent 404s, redirects and the brand defaults, each with a button into its screen, and the files the site serves.
+- `seo:install` fills each empty "SEO & brand" field with what the site uses (site name, separator, the home page's description, the robots.txt rule), so editors see the defaults and can change them. It never overwrites a value; rerun it on a site installed before.
+
+### Changed
+- Reports list: back to opening a report from its name, now "SEO report #N"; the row no longer does.
+- The control panel screens use Statamic's own components and theme colours: scores and statuses are badges, the report's "Fix" is a button, and the reds and greens follow the theme's danger and success colours. No more blue links of the addon's own.
+- The title separator gets a space on each side however it is typed (`|` reads as ` | `), as the control panel can trim one.
+- humans.txt is listed on the overview only when it is filled in.
+
 ## 0.3.3 – 2026-10-06
 
 ### Changed

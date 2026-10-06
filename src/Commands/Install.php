@@ -4,9 +4,13 @@ namespace JothamLec\Seo\Commands;
 
 use Illuminate\Console\Command;
 use Statamic\Console\RunsInPlease;
+use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Site;
+use Statamic\Structures\Page;
 
 /**
  * `php please seo:install`: creates the "SEO & brand" global set and its
@@ -46,10 +50,52 @@ class Install extends Command
         if (! GlobalSet::findByHandle($handle)) {
             GlobalSet::make($handle)->title('SEO & brand')->save();
 
-            $this->components->info("Global set [{$handle}] created. Fill it in under Globals → SEO & brand.");
+            $this->components->info("Global set [{$handle}] created.");
+        }
+
+        $filled = $this->fillDefaults(GlobalSet::findByHandle($handle));
+
+        if ($filled !== []) {
+            $this->components->info('Defaults filled in: '.implode(', ', $filled).'. Change them under Globals → SEO & brand.');
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Fills the brand fields that are empty, and only those, with what the
+     * site uses when they are.
+     *
+     * @return list<string> the fields filled
+     */
+    private function fillDefaults(GlobalSetContract $set): array
+    {
+        $site = Site::default();
+        $variables = $set->in($site->handle()) ?? $set->makeLocalization($site->handle());
+        $fields = Blueprint::find('globals.'.$set->handle())?->fields()->all()->keys()->all() ?? [];
+
+        $home = Entry::findByUri('/', $site->handle());
+        $home = $home instanceof Page ? $home->entry() : $home;
+        $homeDescription = data_get($home?->get('seo'), 'description') ?: $home?->get('description');
+
+        $defaults = array_filter([
+            'site_name' => $site->name(),
+            'title_separator' => '·',
+            'default_description' => is_string($homeDescription) && $homeDescription !== '' ? $homeDescription : null,
+            'robots_disallow' => ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'],
+        ], fn ($value, $field) => $value !== null && in_array($field, $fields, true) && blank($variables->get($field)), ARRAY_FILTER_USE_BOTH);
+
+        if ($defaults === []) {
+            return [];
+        }
+
+        foreach ($defaults as $field => $value) {
+            $variables->set($field, $value);
+        }
+
+        $variables->save();
+
+        return array_keys($defaults);
     }
 
     /**
@@ -63,7 +109,7 @@ class Install extends Command
         return [
             'brand' => ['display' => 'Brand', 'sections' => [['fields' => [
                 $field('site_name', ['type' => 'text', 'display' => 'Site name', 'width' => 50, 'instructions' => 'After each page title, and in og:site_name.']),
-                $field('title_separator', ['type' => 'text', 'display' => 'Title separator', 'width' => 50, 'placeholder' => ' · ']),
+                $field('title_separator', ['type' => 'text', 'display' => 'Title separator', 'width' => 50, 'placeholder' => '·', 'instructions' => 'Between the page title and the site name, with a space on each side.']),
                 $field('default_description', ['type' => 'textarea', 'display' => 'Default description', 'character_limit' => 160, 'instructions' => 'For pages with no description and no first paragraph.']),
                 $field('default_image', $asset('Default share image', 'For pages without an image or a generated card. 1200×630.')),
                 $field('twitter_handle', ['type' => 'text', 'display' => 'X handle', 'width' => 50, 'prepend' => '@']),

@@ -28,8 +28,8 @@ const hint = computed(() => {
         :title="`${label}: ${length} characters, aim for ${limits[0]}–${limits[1]}`"
         :class="{
             'text-amber-700 dark:text-amber-400': state === 'short',
-            'text-red-600 dark:text-red-400': state === 'long',
-            'text-green-700 dark:text-green-400': state === 'good',
+            'text-(--theme-color-danger)': state === 'long',
+            'text-(--theme-color-success)': state === 'good',
         }"
     >
         {{ label }} {{ length }} ({{ hint }})

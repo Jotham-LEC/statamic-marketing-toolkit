@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
 
 <template>
     <div v-if="blueprint?.fqh" class="space-y-6">
-        <Description v-if="failed" class="text-red-600">The preview could not be worked out. Save the entry to see it.</Description>
+        <Description v-if="failed" class="text-(--theme-color-danger)">The preview could not be worked out. Save the entry to see it.</Description>
 
         <section>
             <div class="mb-2 flex items-center justify-between gap-4">

@@ -4,13 +4,17 @@ This guide is for the people who write and look after the site's pages. It expla
 
 **SEO** (search engine optimisation) is about how your pages show up in Google and other search engines, and how they look when someone shares a link on Facebook, LinkedIn, WhatsApp or X. Most of it happens on its own: if you leave the SEO fields empty, the site fills in sensible values from your page's title, description and text.
 
+## Tools → SEO
+
+The overview: the latest report's score, recent 404s, redirects, and the brand defaults, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
+
 ## SEO & brand
 
 **Globals → SEO & brand** holds what applies to the whole site. Fill it in once and come back when something changes.
 
 **Brand tab**
 - **Site name**: shown after each page's title in Google ("About us · Acme") and on share cards.
-- **Title separator**: what goes between the page title and the site name. Leave empty for " · ".
+- **Title separator**: what goes between the page title and the site name, with a space added on each side. Leave empty for "·".
 - **Default description**: used for pages that have no description and no text to borrow one from.
 - **Default share image**: shown when a page is shared and has no picture of its own. 1200 × 630 pixels works best.
 - **X handle**: your account on X (Twitter), without the @.

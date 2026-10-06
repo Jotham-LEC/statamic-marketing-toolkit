@@ -47,9 +47,15 @@ class Settings
         return $this->string('site_name') ?? (string) config('app.name');
     }
 
+    /**
+     * The separator with a space on each side, however it was typed: the
+     * control panel may trim a value, so `·` and ` · ` read the same.
+     */
     public function separator(): string
     {
-        return $this->string('title_separator') ?? ' · ';
+        $separator = trim((string) $this->string('title_separator'));
+
+        return ' '.($separator === '' ? '·' : $separator).' ';
     }
 
     private function variables(): ?Variables
