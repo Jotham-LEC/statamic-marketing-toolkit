@@ -34,7 +34,9 @@ class Raster
     {
         try {
             return $this->imagickAvailable() ? $this->imagick($bytes, $size, $background, $padding) : $this->gd($bytes, $size, $background, $padding);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            report($exception);
+
             return null;
         }
     }

@@ -47,7 +47,10 @@ final class Features
     {
         try {
             $saved = Addon::get(Edition::PACKAGE)?->settings()->get(self::SETTING);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            // Asked while booting: logged, but never in the way of it.
+            rescue(fn () => report($exception), report: false);
+
             return [];
         }
 

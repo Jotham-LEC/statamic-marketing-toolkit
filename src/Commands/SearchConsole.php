@@ -56,6 +56,7 @@ class SearchConsole extends Command
                 $count = $importer->import($handle);
                 $this->components->info("Imported {$count} pages{$on} from Search Console.");
             } catch (Throwable $exception) {
+                report($exception);
                 $this->components->error("Search Console said no{$on}: ".$exception->getMessage());
                 $result = self::FAILURE;
             }

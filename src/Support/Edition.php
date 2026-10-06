@@ -26,8 +26,11 @@ final class Edition
         return Blink::once('seo:edition', function () {
             try {
                 return Addon::get(self::PACKAGE)?->edition() === 'pro';
-            } catch (Throwable) {
-                return false; // An edition the addon doesn't have.
+            } catch (Throwable $exception) {
+                // An edition the addon doesn't have. Logged, but never in the way of booting.
+                rescue(fn () => report($exception), report: false);
+
+                return false;
             }
         });
     }
