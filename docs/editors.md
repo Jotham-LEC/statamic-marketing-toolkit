@@ -114,6 +114,7 @@ If you can't manage redirects, the question isn't asked and the redirect is adde
   - **To**: where to send visitors: `/new-page`, or a full address on another site. With a `*` in From, `$1` stands for whatever it matched: from `/blog/*` to `/articles/$1` sends `/blog/my-post` to `/articles/my-post`. A `#section` at the end is kept. A redirect that would send visitors back where they came from, straight away or through another redirect, isn't accepted.
   - **Type**: *301 Moved for good* (the usual one), *302 Moved for now* (temporary, e.g. during a sale), or *410 Gone* (removed for good; leave To empty).
   - **Active**: switch off to pause a redirect without deleting it.
+  - **Campaign link** *(Pro)*: for a short address you share in a campaign or print on a flyer, like `/go/linkedin`. Fill in the UTM tags (source, medium, campaign; content and term if you use them) and they're added to where it goes, so Google Analytics and each lead's source show the campaign. Choose *302*, so browsers don't remember it and every click is counted in the list.
   - **Site** (only with more than one site): the site whose address this is. Leave empty for every site. A site's own redirect wins over one for every site from the same address.
 - **Hits** and **Last used** show whether a redirect is still needed.
 - **Import CSV** and **Export CSV** *(Pro)*: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).

@@ -9,6 +9,7 @@ use Inertia\Response;
 use JothamLec\MarketingToolkit\Cp\Listing;
 use JothamLec\MarketingToolkit\Preview\Draft;
 use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
+use JothamLec\MarketingToolkit\Redirects\Campaign;
 use JothamLec\MarketingToolkit\Redirects\Csv;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Support\Edition;
@@ -225,7 +226,12 @@ class RedirectsController
      */
     private function validated(Request $request, ?int $ignoreId = null): array
     {
-        $values = $this->blueprint()->fields()->addValues($request->all())->process()->values()->only(['source', 'target', 'status', 'active', 'site'])->all();
+        $all = $this->blueprint()->fields()->addValues($request->all())->process()->values();
+        $values = $all->only(['source', 'target', 'status', 'active', 'site'])->all();
+        // Pro: a campaign link's UTM tags, kept as the target's query string.
+        $values['target'] = Edition::pro() && is_string($values['target'] ?? null) && $values['target'] !== ''
+            ? Campaign::withTags($values['target'], $all->only(Campaign::TAGS)->all())
+            : ($values['target'] ?? null);
         $values['status'] = (int) ($values['status'] ?? 301);
         $values['active'] = (bool) ($values['active'] ?? false);
         // Without a choice (or on a single site): every site.
@@ -237,6 +243,7 @@ class RedirectsController
     private function form(Redirect $redirect, string $title, string $submitUrl, string $method): Response
     {
         $fields = $this->blueprint()->fields()->addValues([
+            ...Campaign::tags((string) $redirect->target),
             'source' => $redirect->source,
             'target' => $redirect->target,
             'status' => (string) $redirect->status,
@@ -258,6 +265,17 @@ class RedirectsController
 
     private function blueprint(): BlueprintObject
     {
+        // Pro: a campaign link's UTM tags, added to the target when saved.
+        $campaign = Edition::pro() ? [[
+            'display' => __('seo::cp.redirect_form.campaign'),
+            'instructions' => __('seo::cp.redirect_form.campaign_instructions'),
+            'collapsible' => true,
+            'collapsed' => true,
+            'fields' => array_map(fn (string $tag) => ['handle' => $tag, 'field' => [
+                'type' => 'text', 'display' => $tag, 'width' => $tag === 'utm_campaign' ? 100 : 50,
+            ]], Campaign::TAGS),
+        ]] : [];
+
         return Blueprint::make('seo_redirect')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'source', 'field' => [
                 'type' => 'text', 'display' => __('seo::cp.redirect_form.source'),
@@ -281,6 +299,6 @@ class RedirectsController
                 'type' => 'select', 'display' => __('seo::cp.redirect_form.site'), 'options' => Sites::options(), 'clearable' => true,
                 'placeholder' => __('seo::cp.redirect_form.all_sites'), 'instructions' => __('seo::cp.redirect_form.site_instructions'),
             ]]] : []),
-        ]]]]]]);
+        ]], ...$campaign]]]]);
     }
 }

@@ -197,6 +197,8 @@ return [
     ],
 
     'redirect_form' => [
+        'campaign' => 'Campaign link (Pro)',
+        'campaign_instructions' => 'For a short address you share in a campaign, like /go/linkedin: these tags are added to where it goes, so Analytics and each lead’s source show the campaign. Use 302, so every click counts.',
         'source' => 'From',
         'source_instructions' => 'A path on this site, such as `/old-page`. A `*` matches anything, `/blog/*` for example.',
         'target' => 'To',

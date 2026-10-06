@@ -212,3 +212,12 @@ test('no lead source and no conversions: they are Pro', function () {
     expect(renderAt('/', '<s:seo:head />'))->not->toContain('mtConversion')->not->toContain('mt_source=')
         ->and(Form::find('contact')->submissions()->first()?->get('utm_source'))->toBeNull();
 });
+
+test('no campaign link fields: the UTM builder is Pro', function () {
+    $this->actingAs(cpUser(['manage seo redirects']));
+
+    $this->postJson(cp_route('seo.redirects.store'), ['source' => '/go/x', 'target' => '/offer', 'status' => '302', 'active' => true, 'utm_source' => 'linkedin'])->assertOk();
+
+    expect(Redirect::query()->sole()->target)->toBe('/offer');
+    $this->get(cp_route('seo.redirects.create'))->assertInertia(fn (AssertableInertia $page) => $page->missing('blueprint.tabs.0.sections.1'));
+});

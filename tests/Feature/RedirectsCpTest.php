@@ -239,3 +239,27 @@ test('the dialog does not ask about a term without a page of its own', function 
     $this->postJson(cp_route('seo.redirects.check'), ['reference' => $term->in('default')->reference(), 'values' => ['title' => 'Gardens', 'slug' => 'gardening']])
         ->assertExactJson(['changes' => false]);
 });
+
+test('a campaign link: UTM tags join the target\'s own query, show again when edited, and travel with the visitor', function () {
+    $this->actingAs(cpUser(['manage seo redirects']));
+
+    $this->postJson(cp_route('seo.redirects.store'), [
+        'source' => '/go/linkedin', 'target' => '/offer?ref=1#form', 'status' => '302', 'active' => true,
+        'utm_source' => 'linkedin', 'utm_medium' => 'paid social', 'utm_campaign' => 'autumn',
+    ])->assertOk();
+
+    $redirect = Redirect::query()->sole();
+    expect($redirect->target)->toBe('/offer?ref=1&utm_source=linkedin&utm_medium=paid%20social&utm_campaign=autumn#form');
+
+    $this->get(cp_route('seo.redirects.edit', $redirect))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('values.utm_source', 'linkedin')
+        ->where('values.utm_medium', 'paid social')
+        ->where('blueprint.tabs.0.sections.1.display', 'Campaign link (Pro)'));
+
+    // Emptied in the form: taken out of the target.
+    $this->patchJson(cp_route('seo.redirects.update', $redirect), ['source' => '/go/linkedin', 'target' => $redirect->target, 'status' => '302', 'active' => true, 'utm_source' => 'linkedin', 'utm_medium' => '', 'utm_campaign' => 'autumn'])->assertOk();
+    expect($redirect->fresh()->target)->toBe('/offer?ref=1&utm_source=linkedin&utm_campaign=autumn#form');
+
+    $this->get('https://example.test/go/linkedin')->assertStatus(302)->assertRedirect('https://example.test/offer?ref=1&utm_source=linkedin&utm_campaign=autumn#form');
+    expect($redirect->fresh()->hits)->toBe(1);
+});
