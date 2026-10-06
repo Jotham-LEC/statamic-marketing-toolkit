@@ -2,6 +2,8 @@
 
 namespace JothamLec\MarketingToolkit\Support;
 
+use Illuminate\Support\Str;
+
 class Text
 {
     /**
@@ -10,13 +12,13 @@ class Text
      */
     public static function plain(?string $html): string
     {
-        $text = html_entity_decode(strip_tags((string) $html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-
-        return trim((string) preg_replace('/[\s\x{00A0}]+/u', ' ', $text));
+        return Str::squish(html_entity_decode(strip_tags((string) $html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 
     /**
      * At most $length characters, cut at a word boundary with an ellipsis.
+     * Not Str::limit(): that counts display width, adds the ellipsis past
+     * $length, and leaves trailing punctuation before it.
      */
     public static function limit(string $text, int $length): string
     {
