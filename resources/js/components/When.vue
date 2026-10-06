@@ -1,16 +1,10 @@
 <script setup>
-import { computed } from 'vue';
+import { formatDate } from '../util.js';
 
-const props = defineProps({ value: { type: String, default: null } });
-
-const label = computed(() => {
-    if (!props.value) return '—';
-
-    return new Date(props.value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-});
+defineProps({ value: { type: String, default: null } });
 </script>
 
 <template>
-    <time v-if="value" :datetime="value" class="whitespace-nowrap text-sm">{{ label }}</time>
+    <time v-if="value" :datetime="value" class="whitespace-nowrap text-sm">{{ formatDate(value) }}</time>
     <span v-else class="text-gray-400">—</span>
 </template>

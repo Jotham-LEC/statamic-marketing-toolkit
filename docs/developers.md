@@ -90,7 +90,7 @@ The methods you're most likely to override:
 | `graph(Context)` | Every JSON-LD node. Usually you override one of the node methods instead. |
 | `publisherTypes()`, `profileEntity(Context)`, `authors(Context)`, `articleImages(Context)` | The publisher's schema.org types; who a ProfilePage is about; an Article's authors; its images in three shapes. |
 | `websiteNode()`, `publisherNode()`, `webPageNode(Context)`, `breadcrumbNode(Context)`, `articleNode(Context)`, `productNode(Context)`, `faqNode(Context)` | One node each; return `null` to leave it out. Products come from a collection's `product` config. |
-| `extraNodes(Context)` | Your own nodes (Event, Course…). Empty by default. |
+| `extraNodes(Context)` | Your own nodes (Event, Course…), worked out in code. Empty by default. Editors' hand-written JSON-LD, from a page's **Extra JSON-LD** field, comes from `customNodes(Context)`. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
 | `termHasEntries(Term)` | Whether a term has published entries, for the sitemap and the reports. Override for a taxonomy that isn't attached to the collection whose entries use it. |
@@ -167,7 +167,13 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 
 ## Several sites and languages
 
-Several sites are Pro. On a multi-site install, Free looks after the default site only: pages on every site keep their meta tags, but there is no hreflang, the sitemap, robots.txt and IndexNow cover the default site's domain, and Tools → SEO shows the default site.
+Several sites are Pro. On a multi-site install, Free looks after the default site only:
+
+- Pages on every site keep their meta tags and structured data, but there is no hreflang.
+- The sitemap lists the default site's pages alone (not its other languages, even under `/fr/` on the same domain).
+- The sitemap, robots.txt, llms.txt, ads.txt and icons are served on the default site's domain only: another site's domain answers 404 for them, and its pages print no icon links. IndexNow sends only the default site's domain.
+- Redirects apply on every site; a rule can't name one.
+- Tools → SEO shows the default site, with a card for what Pro adds.
 
 With Statamic Pro and more than one site, whether separate brands on their own domains or languages under `/fr/` or on their own domains, each site gets its own:
 
@@ -209,7 +215,7 @@ composer install && npm install
 npm run build      # Vue → resources/dist/build; commit the build, sites don't run npm
 vendor/bin/pest    # needs PHP's imagick extension for the share-card tests
 vendor/bin/pint
-vendor/bin/phpstan # Larastan, level 5; phpstan.neon says why each ignored error is ignored
+composer analyse   # Larastan, level 5, with the 1 GB it needs; phpstan.neon says why each ignored error is ignored
 ```
 
 Tests run as production with an `array` cache that serializes, and render pages through `tests/fixtures/views`. Statamic matches the site by its absolute URL, so request front-end pages as `https://example.test/…`.

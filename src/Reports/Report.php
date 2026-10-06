@@ -86,6 +86,32 @@ class Report extends Model
         }
     }
 
+    /**
+     * The latest finished report the control panel shows while $site is
+     * selected, for the overview and the dashboard widget.
+     */
+    public static function latestDone(string $site): ?self
+    {
+        return self::query()->shownOn($site)->where('status', self::DONE)->latest('id')->first();
+    }
+
+    /**
+     * The pages the score is of: those scored (not a noindex page), or every
+     * page in a report from before they were counted apart.
+     */
+    public function scoredPages(): int
+    {
+        return (int) ($this->summary['scored'] ?? $this->pages_total);
+    }
+
+    /**
+     * Whether the control panel shows this report while $site is selected (see scopeShownOn()).
+     */
+    public function isShownOn(string $site): bool
+    {
+        return ! Sites::multiple() || $this->site === null || $this->site === $site;
+    }
+
     public function settings(): ReportSettings
     {
         return new ReportSettings($this->settings);

@@ -1,16 +1,15 @@
 <script setup>
 import { Head } from '@statamic/cms/inertia';
-import { Button, Card, Description, Header, Heading } from '@statamic/cms/ui';
+import { Alert, Button, Card, Description, Header, Heading, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
 import ProCard from '../components/ProCard.vue';
 import Gauge from '../components/Gauge.vue';
 import When from '../components/When.vue';
 
 defineProps({
     siteName: { type: String, required: true },
-    edition: { type: String, required: true },
     upgradeUrl: { type: String, required: true },
     global: { type: Object, required: true },
-    // Pro's panels: null in the free edition, which shows a Pro card in their place.
+    // Pro's panels: null in the free edition, which shows what Pro adds instead.
     report: { type: Object, default: null },
     redirects: { type: Object, default: null },
     notFound: { type: Object, default: null },
@@ -36,7 +35,7 @@ defineProps({
             <Button v-if="tracking.url" :href="tracking.url" :text="__('seo::cp.tracking.edit')" />
         </Card>
 
-        <ProCard v-if="severalSites" :title="__('seo::cp.pro.sites.title')" :body="__('seo::cp.pro.sites.body')" :url="upgradeUrl" />
+        <Alert v-if="severalSites" variant="warning" icon="alert-warning-exclamation-mark" :text="__('seo::cp.pro.sites.free')" :live="false" />
 
         <div class="grid gap-6 md:grid-cols-2">
             <Card v-if="report" class="flex flex-col gap-3 p-4">
@@ -60,7 +59,6 @@ defineProps({
                     <Button v-if="report.settings_url" :href="report.settings_url" :text="__('seo::cp.overview.report.settings')" variant="ghost" />
                 </div>
             </Card>
-            <ProCard v-else :title="__('seo::cp.pro.reports.title')" :body="__('seo::cp.pro.reports.body')" :url="upgradeUrl" />
 
             <Card v-if="notFound" class="flex flex-col gap-3 p-4">
                 <Heading size="lg">{{ __('seo::cp.overview.not_found.title') }}</Heading>
@@ -76,7 +74,6 @@ defineProps({
                 </template>
                 <div class="mt-auto"><Button :href="notFound.url" :text="__('seo::cp.overview.not_found.all')" /></div>
             </Card>
-            <ProCard v-else :title="__('seo::cp.pro.not_found.title')" :body="__('seo::cp.pro.not_found.body')" :url="upgradeUrl" />
 
             <Card v-if="redirects" class="flex flex-col gap-3 p-4">
                 <Heading size="lg">{{ __('seo::cp.overview.redirects.title') }}</Heading>
@@ -112,24 +109,22 @@ defineProps({
                     {{ __('seo::cp.overview.search.summary', { clicks: search.clicks.toLocaleString(), impressions: search.impressions.toLocaleString(), from: search.from, to: search.to }) }}
                     {{ __('seo::cp.overview.search.updated') }} <When :value="search.fetched_at" />.
                 </Description>
-                <table v-if="search.top.length" class="w-full text-sm">
-                    <thead class="text-left text-gray-500">
-                        <tr>
-                            <th class="py-1 font-medium">{{ __('seo::cp.overview.search.page') }}</th>
-                            <th class="py-1 text-right font-medium">{{ __('seo::cp.overview.search.clicks') }}</th>
-                            <th class="py-1 text-right font-medium">{{ __('seo::cp.overview.search.impressions') }}</th>
-                            <th class="py-1 text-right font-medium">{{ __('seo::cp.overview.search.position') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="row in search.top" :key="row.path" class="border-t border-gray-200 dark:border-gray-700">
-                            <td class="truncate py-1 font-mono text-xs">{{ row.path }}</td>
-                            <td class="py-1 text-right tabular-nums">{{ row.clicks }}</td>
-                            <td class="py-1 text-right tabular-nums">{{ row.impressions }}</td>
-                            <td class="py-1 text-right tabular-nums">{{ row.position }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <Table v-if="search.top.length" class="overflow-x-auto">
+                    <TableColumns>
+                        <TableColumn>{{ __('seo::cp.overview.search.page') }}</TableColumn>
+                        <TableColumn>{{ __('seo::cp.overview.search.clicks') }}</TableColumn>
+                        <TableColumn>{{ __('seo::cp.overview.search.impressions') }}</TableColumn>
+                        <TableColumn>{{ __('seo::cp.overview.search.position') }}</TableColumn>
+                    </TableColumns>
+                    <TableRows>
+                        <TableRow v-for="row in search.top" :key="row.path">
+                            <TableCell><div class="max-w-48 truncate font-mono text-xs sm:max-w-md" :title="row.path">{{ row.path }}</div></TableCell>
+                            <TableCell class="tabular-nums">{{ row.clicks.toLocaleString() }}</TableCell>
+                            <TableCell class="tabular-nums">{{ row.impressions.toLocaleString() }}</TableCell>
+                            <TableCell class="tabular-nums">{{ row.position }}</TableCell>
+                        </TableRow>
+                    </TableRows>
+                </Table>
             </template>
         </Card>
 
@@ -141,7 +136,7 @@ defineProps({
             <Button :href="searchConsole.url" :text="__('seo::cp.overview.search.connect')" icon-append="arrow-right" />
         </Card>
 
-        <ProCard v-else :title="__('seo::cp.pro.search_console.title')" :body="__('seo::cp.pro.search_console.body')" :url="upgradeUrl" />
+        <ProCard v-if="!report" :url="upgradeUrl" :several-sites="severalSites" />
 
         <Card class="space-y-2 p-4">
             <Heading size="lg">{{ __('seo::cp.tracking.title') }}</Heading>

@@ -6,31 +6,35 @@ use Statamic\Facades\Addon;
 use Throwable;
 
 /**
- * Pro: the modules a site can switch off under Tools → SEO → Features, kept
- * in the addon settings (`features_off`). A module that's off is set off in
- * the config at boot, before the routes, listeners and middleware register,
- * so it costs nothing on a request. In Free every module runs, as
- * config/seo.php says.
+ * The modules, each switched on by one config key. Pro: a site can switch
+ * them off under Tools → SEO → Features, kept in the addon settings
+ * (`features_off`). Free: Pro's modules are off, and the rest run as
+ * config/seo.php says. A module that's off is set off in the config at boot,
+ * before the routes, listeners and middleware register, so it costs nothing
+ * on a request.
  */
 final class Features
 {
-    /** Module => what turning it off sets in the config. */
+    /** Module => the config key that switches it on. */
     public const array MODULES = [
-        'sitemap' => ['seo.sitemap.enabled' => false],
-        'robots_txt' => ['seo.robots_txt' => false],
-        'llms_txt' => ['seo.llms_txt' => false],
-        'ads_txt' => ['seo.ads_txt' => false],
-        'hreflang' => ['seo.hreflang.enabled' => false],
-        'indexnow' => ['seo.indexnow.enabled' => false],
-        'share_cards' => ['seo.og.enabled' => false],
-        'redirects' => ['seo.redirects.enabled' => false],
-        'automatic_redirects' => ['seo.redirects.automatic' => false],
-        'not_found' => ['seo.not_found.enabled' => false],
-        'reports' => ['seo.reports.enabled' => false],
-        'tracking' => ['seo.tracking.enabled' => false],
-        'leads' => ['seo.leads.enabled' => false],
-        'favicons' => ['seo.favicons.enabled' => false],
+        'sitemap' => 'seo.sitemap.enabled',
+        'robots_txt' => 'seo.robots_txt',
+        'llms_txt' => 'seo.llms_txt',
+        'ads_txt' => 'seo.ads_txt',
+        'hreflang' => 'seo.hreflang.enabled',
+        'indexnow' => 'seo.indexnow.enabled',
+        'share_cards' => 'seo.og.enabled',
+        'redirects' => 'seo.redirects.enabled',
+        'automatic_redirects' => 'seo.redirects.automatic',
+        'not_found' => 'seo.not_found.enabled',
+        'reports' => 'seo.reports.enabled',
+        'tracking' => 'seo.tracking.enabled',
+        'leads' => 'seo.leads.enabled',
+        'favicons' => 'seo.favicons.enabled',
     ];
+
+    /** The modules only Pro has. Their data stays in the database, ready for an upgrade. */
+    public const array PRO = ['share_cards', 'automatic_redirects', 'not_found', 'reports', 'leads'];
 
     public const string SETTING = 'features_off';
 
@@ -61,16 +65,18 @@ final class Features
         $off = self::off();
 
         return array_values(array_filter(array_keys(self::MODULES), fn (string $module) => ! in_array($module, $off, true)
-            && array_filter(array_keys(self::MODULES[$module]), fn (string $key) => ! config($key, true)) !== []));
+            && ! config(self::MODULES[$module], true)));
     }
 
     /**
-     * Sets the modules that are off, off in the config.
+     * Sets the modules that are off, off in the config: those switched off in
+     * Pro, Pro's own in Free. At every boot rather than in the merged config,
+     * which isn't merged once it is cached.
      */
     public static function apply(): void
     {
-        foreach (self::off() as $module) {
-            config(self::MODULES[$module]);
+        foreach (Edition::pro() ? self::off() : self::PRO as $module) {
+            config([self::MODULES[$module] => false]);
         }
     }
 

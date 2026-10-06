@@ -1,8 +1,10 @@
 <script setup>
 import { Head, Link } from '@statamic/cms/inertia';
+import { toast } from '@statamic/cms/api';
 import { Badge, Button, Header, Listing } from '@statamic/cms/ui';
-import { getCurrentInstance, ref } from 'vue';
+import { ref } from 'vue';
 import When from '../components/When.vue';
+import { useAxios } from '../util.js';
 
 const props = defineProps({
     listingUrl: { type: String, required: true },
@@ -14,7 +16,7 @@ const props = defineProps({
     upgradeUrl: { type: String, default: null },
 });
 
-const { $axios: axios, $toast: toast } = getCurrentInstance().appContext.config.globalProperties;
+const axios = useAxios();
 const file = ref(null);
 const importing = ref(false);
 const listingKey = ref(0);
@@ -55,7 +57,7 @@ async function importCsv(event) {
         </template>
         <Button
             v-else-if="upgradeUrl"
-            :text="__('seo::cp.redirects.import') + ' / ' + __('seo::cp.redirects.export')"
+            :text="__('seo::cp.redirects.csv_pro')"
             icon="padlock-locked"
             :href="upgradeUrl"
             target="_blank"

@@ -1,6 +1,6 @@
 <script setup>
 import { Head } from '@statamic/cms/inertia';
-import { Description, PublishForm } from '@statamic/cms/ui';
+import { PublishForm } from '@statamic/cms/ui';
 
 defineProps({
     blueprint: { type: Object, required: true },
@@ -23,7 +23,5 @@ defineProps({
             :submit-url="submitUrl"
             submit-method="post"
         />
-
-        <Description class="mt-4">{{ __('seo::cp.features.intro') }}</Description>
     </div>
 </template>

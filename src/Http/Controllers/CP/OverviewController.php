@@ -32,7 +32,6 @@ class OverviewController
     public function __invoke(SiteSeo $seo, Client $searchConsole): Response
     {
         $user = User::current();
-        abort_unless($user?->can('view seo'), 403);
 
         // Free works with the default site alone (several sites are Pro).
         $site = Sites::multiple() ? Site::selected()->handle() : Site::default()->handle();
@@ -50,7 +49,6 @@ class OverviewController
 
         return Inertia::render('seo::Overview', [
             'siteName' => $seo->settings()->siteName(),
-            'edition' => Edition::name(),
             'upgradeUrl' => Edition::marketplaceUrl(),
             'global' => [
                 'exists' => $variables !== null,
@@ -67,15 +65,11 @@ class OverviewController
             ] : null,
             'notFound' => $pro ? [
                 'paths' => MissingPath::query()->shownOn($site)->count(),
-                'recent' => MissingPath::query()->shownOn($site)->latest('last_seen_at')->limit(5)->get()
-                    ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])->all(),
+                'recent' => MissingPath::recent($site),
                 'url' => cp_route('seo.404s.index'),
             ] : null,
             'search' => $pro ? $this->search($searchConsole, $site) : null,
-            'searchConsole' => $pro ? [
-                'configured' => $searchConsole->configured($site),
-                'url' => cp_route('seo.search-console.index'),
-            ] : null,
+            'searchConsole' => $pro ? ['url' => cp_route('seo.search-console.index')] : null,
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($variables && $user->can('edit', $variables) ? $variables->editUrl() : null),
             // Free on a multi-site install: what Pro adds there.
@@ -117,12 +111,12 @@ class OverviewController
      */
     private function report(UserContract $user, ?AddonPackage $addon, string $site): array
     {
-        $latest = Report::query()->shownOn($site)->where('status', Report::DONE)->latest('id')->first();
+        $latest = Report::latestDone($site);
 
         return [
             'latest' => $latest === null ? null : [
                 'score' => (int) $latest->score,
-                'pages' => (int) ($latest->summary['scored'] ?? $latest->pages_total),
+                'pages' => $latest->scoredPages(),
                 'finished_at' => $latest->finished_at?->toIso8601String(),
                 'url' => cp_route('seo.reports.show', $latest),
                 // The checks most pages fail, beside the gauge.

@@ -1,9 +1,10 @@
 <script setup>
 import { Head, router } from '@statamic/cms/inertia';
-import { Badge, Button, Card, Description, Header, Heading } from '@statamic/cms/ui';
-import { getCurrentInstance, ref } from 'vue';
+import { Badge, Button, Card, ConfirmationModal, Description, Header, Heading } from '@statamic/cms/ui';
+import { ref } from 'vue';
 import SearchConsoleSetup from '../components/SearchConsoleSetup.vue';
 import When from '../components/When.vue';
+import { useRequests } from '../util.js';
 
 /*
  * Tools → SEO → Search Console: the steps to connect it, then where the
@@ -16,39 +17,19 @@ const props = defineProps({
     overviewUrl: { type: String, required: true },
 });
 
-const { $axios: axios, $toast: toast } = getCurrentInstance().appContext.config.globalProperties;
-const busy = ref(null);
+const { busy, send } = useRequests(__('seo::cp.search_console.setup.failed'));
 const result = ref(null);
+const confirming = ref(false);
 // Once connected and imported, the steps fold away behind a button.
 const showSetup = ref(props.setup.can_set_up && !(props.setup.configured && props.imported.fetched_at));
 
 async function importNow() {
-    busy.value = 'import';
-
-    try {
-        const { data } = await axios.post(props.setup.urls.import);
-        result.value = data;
-        if (data.ok) router.reload();
-    } catch (error) {
-        toast.error(error.response?.data?.message ?? __('seo::cp.search_console.setup.failed'));
-    } finally {
-        busy.value = null;
-    }
+    result.value = await send('import', (axios) => axios.post(props.setup.urls.import));
+    if (result.value?.ok) router.reload();
 }
 
 async function disconnect() {
-    if (!confirm(__('seo::cp.search_console.disconnect_confirm'))) return;
-
-    busy.value = 'disconnect';
-
-    try {
-        await axios.delete(props.setup.urls.forget_key);
-        router.reload();
-    } catch (error) {
-        toast.error(error.response?.data?.message ?? __('seo::cp.search_console.setup.failed'));
-    } finally {
-        busy.value = null;
-    }
+    if (await send('disconnect', (axios) => axios.delete(props.setup.urls.forget_key))) router.reload();
 }
 </script>
 
@@ -69,8 +50,15 @@ async function disconnect() {
                 </div>
                 <div v-if="setup.can_set_up" class="flex flex-wrap gap-2">
                     <Button v-if="setup.configured" :text="__('seo::cp.search_console.import')" variant="primary" :loading="busy === 'import'" @click="importNow" />
-                    <Button v-if="setup.email && setup.key_source === 'cp'" :text="__('seo::cp.search_console.disconnect')" variant="danger" :loading="busy === 'disconnect'" @click="disconnect" />
-                    <Button v-if="setup.configured && imported.fetched_at" variant="ghost" :text="showSetup ? __('seo::cp.search_console.setup.heading') + ' ▴' : __('seo::cp.search_console.setup.heading') + ' ▾'" @click="showSetup = !showSetup" />
+                    <Button v-if="setup.email && setup.key_source === 'cp'" :text="__('seo::cp.search_console.disconnect')" variant="danger" :loading="busy === 'disconnect'" @click="confirming = true" />
+                    <Button
+                        v-if="setup.configured && imported.fetched_at"
+                        variant="ghost"
+                        :text="__('seo::cp.search_console.setup.heading')"
+                        :icon-append="showSetup ? 'chevron-up' : 'chevron-down'"
+                        :aria-expanded="showSetup"
+                        @click="showSetup = !showSetup"
+                    />
                 </div>
             </div>
 
@@ -104,9 +92,18 @@ async function disconnect() {
                 </ul>
             </template>
 
-            <p v-if="result" :class="result.ok ? 'text-sm text-green-700 dark:text-green-400' : 'text-sm text-red-600 dark:text-red-400'">{{ result.message }}</p>
+            <p role="status" class="text-sm" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
         </Card>
 
         <SearchConsoleSetup v-if="showSetup" :setup="setup" />
     </div>
+
+    <ConfirmationModal
+        v-model:open="confirming"
+        :title="__('seo::cp.search_console.disconnect')"
+        :body-text="__('seo::cp.search_console.disconnect_confirm')"
+        :button-text="__('seo::cp.search_console.disconnect')"
+        danger
+        @confirm="disconnect"
+    />
 </template>

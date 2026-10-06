@@ -271,6 +271,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Leads (Pro)
+    |--------------------------------------------------------------------------
+    |
+    | Form submissions sent to your tools as leads, and where each lead came
+    | from saved with its submission, as set in the Tracking tab of SEO &
+    | brand. Off here (or under Features), neither happens.
+    |
+    */
+
+    'leads' => [
+        'enabled' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Favicons
     |--------------------------------------------------------------------------
     |

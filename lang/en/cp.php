@@ -28,6 +28,7 @@ return [
     'pro' => [
         'badge' => 'Pro',
         'get' => 'Get Marketing Toolkit Pro',
+        'title' => 'What Pro adds',
         'reports' => [
             'title' => 'Reports',
             'body' => 'Every page checked and scored out of 100: missing titles and descriptions, broken links, pages nothing links to, share images. On a schedule, or when you ask.',
@@ -42,7 +43,8 @@ return [
         ],
         'sites' => [
             'title' => 'Several sites and languages',
-            'body' => 'This install has several sites. The free edition looks after the default site: its sitemap, robots.txt and settings. Pro adds every other site, and hreflang links between languages so each visitor gets the page in their language.',
+            'body' => 'Every site’s sitemap, robots.txt and settings, and hreflang links between languages so each visitor gets the page in their language.',
+            'free' => 'This install has several sites. The free edition looks after the default site alone: the sitemap and robots.txt are on its domain only (the other sites’ domains answer 404 for them), with no hreflang links between languages.',
         ],
         'csv' => 'Import and export redirects as CSV with Marketing Toolkit Pro.',
     ],
@@ -146,7 +148,7 @@ return [
             'step_property_body' => 'as Search Console does: :domain for a domain, :prefix for an address prefix.',
             'save' => 'Save',
             'step_check' => 'Check it works',
-            'step_check_body' => ', then bring in the numbers.',
+            'step_check_body' => ', then bring in the numbers with Import now, above.',
             'check' => 'Check the connection',
             'schedule' => 'After that the numbers update daily at 04:30, when Laravel’s scheduler runs (:command every minute). Without it, come back and use Import now.',
             'failed' => 'That did not work.',
@@ -174,6 +176,7 @@ return [
         'title' => 'Redirects',
         'import' => 'Import CSV',
         'export' => 'Export CSV',
+        'csv_pro' => 'Import and export CSV (Pro)',
         'create' => 'Create redirect',
         'intro' => 'Used only when an address would otherwise be a 404, so a page that exists always wins. “Automatic” ones were added when content moved.',
         'automatic' => 'Automatic',
@@ -218,6 +221,7 @@ return [
         'used' => 'Used :count time.|Used :count times.',
         'used_last' => 'Used :count time, last :when.|Used :count times, last :when.',
         'automatic' => 'Added automatically when the content moved; saving here makes it a manual one.',
+        'back' => '← Redirects',
     ],
 
     'not_found' => [

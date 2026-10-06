@@ -12,7 +12,7 @@ use Statamic\Facades\Site;
 
 /**
  * Counts a 404 against its path (and its site, where there are several). Bots (by user agent) and scanner probes (by
- * path) are left out, and the table keeps at most `seo.not_found.max_rows`
+ * path) are left out, and the table keeps about `seo.not_found.max_rows`
  * paths, dropping one-off misses first, then the ones seen least recently.
  */
 class Recorder
@@ -91,9 +91,21 @@ class Recorder
         return mb_check_encoding($value, 'UTF-8') && ! preg_match('/[\x00-\x1F\x7F]/', $value);
     }
 
+    /**
+     * Counting the rows on every new path would cost a full count per 404, so
+     * only one new path in a tenth of the cap trims (a lottery, as Laravel
+     * sweeps sessions): the log runs over by about a tenth, and a
+     * small cap is kept exactly.
+     */
     private function trim(): void
     {
-        $excess = MissingPath::query()->count() - max(1, (int) config('seo.not_found.max_rows', 1000));
+        $max = max(1, (int) config('seo.not_found.max_rows', 1000));
+
+        if (random_int(1, max(1, intdiv($max, 10))) !== 1) {
+            return;
+        }
+
+        $excess = MissingPath::query()->count() - $max;
 
         if ($excess > 0) {
             // One-off misses go first (one hit, no page linking there: what a flood of

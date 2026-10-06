@@ -37,8 +37,6 @@ class SearchConsoleController
      */
     public function index(Client $client): Response
     {
-        abort_unless(User::current()?->can('view seo'), 403);
-
         $site = Site::selected()->handle();
         $stats = fn () => SearchStat::query()->shownOn($site);
 

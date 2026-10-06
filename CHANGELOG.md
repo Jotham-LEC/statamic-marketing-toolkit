@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.18.4 – 2026-10-06
+
+Fixes from an audit: access, speed, accessibility and a leaner control panel.
+
+### Security
+- A report from another site answers 404 on several sites, and only a user who may run reports moves a running report on.
+
+### Fixed
+- **Free on several sites no longer prints favicon links on the other sites' domains**, where the icon files answer 404.
+- Importing a large CSV of redirects reads the table once instead of once per row, and clears the cached rules once, after the rows are saved.
+- The report's checks can be chosen from the keyboard; tables scroll on small screens; the Search Console fields have labels; progress and results are announced to screen readers.
+- Escape or a click outside the "add a redirect?" question no longer means "don't add": it leaves the entry unsaved, with three explicit buttons.
+
+### Changed
+- The free overview shows one "What Pro adds" card, and on several sites a warning of what the free edition leaves out (also in the README and docs).
+- A user without the permission for an SEO screen is sent back with Statamic's usual message instead of a bare 403.
+- The 404 log trims itself now and then rather than on every new address, so it can run about a tenth over `max_rows`.
+- `seo.leads.enabled` is in `config/seo.php`; dates follow the user's control panel locale; the Features intro sits above the switches.
+
 ## 0.18.3 – 2026-10-06
 
 ### Fixed

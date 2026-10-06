@@ -54,7 +54,7 @@ test('its own screen offers the steps to whoever may change the addon\'s setting
 test('the overview links to that screen rather than holding the steps', function () {
     $this->actingAs(cpUser(super: true))->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('search', null)
-        ->where('searchConsole', ['configured' => false, 'url' => cp_route('seo.search-console.index')])
+        ->where('searchConsole', ['url' => cp_route('seo.search-console.index')])
         ->missing('searchSetup'));
 });
 

@@ -238,6 +238,16 @@ test('viewing reports needs "view seo"; running one needs "run seo reports"', fu
     $this->postJson(cp_route('seo.reports.run'))->assertForbidden();
 });
 
+test('without "run seo reports" the progress request reads a running report without moving it on', function () {
+    reportSettings(['chunk_size' => 1]);
+    entryIn('pages', 'a');
+    $report = app(Runner::class)->start();
+    $this->actingAs(cpUser(['view seo']));
+
+    $this->postJson(cp_route('seo.reports.progress', $report))->assertOk()->assertJson(['status' => 'running', 'pages_done' => 0]);
+    expect($report->fresh()->pages_done)->toBe(0);
+});
+
 test('the dashboard widget shows the latest finished report', function () {
     entryIn('pages', 'about');
     $report = fullReport();

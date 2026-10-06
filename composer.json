@@ -27,6 +27,9 @@
         "orchestra/testbench": "^10.8|^11.0",
         "pestphp/pest": "^4.0"
     },
+    "scripts": {
+        "analyse": "phpstan analyse --memory-limit=1G"
+    },
     "config": {
         "allow-plugins": {
             "pixelfear/composer-dist-plugin": true,

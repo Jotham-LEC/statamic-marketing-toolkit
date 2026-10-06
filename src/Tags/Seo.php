@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Tags;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
 
@@ -36,7 +37,8 @@ class Seo extends Tags
      */
     public function favicons(): string
     {
-        if (! config('seo.favicons.enabled', true)) {
+        // Free serves the icons on the default site's domain alone: no links to a 404 elsewhere.
+        if (! config('seo.favicons.enabled', true) || ! Sites::served()) {
             return '';
         }
 

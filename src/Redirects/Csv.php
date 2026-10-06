@@ -37,10 +37,14 @@ class Csv
      */
     public function import(string $contents): array
     {
-        $result = ['created' => 0, 'updated' => 0, 'errors' => []];
         $lines = preg_split('/\r\n|\n|\r/', ltrim($contents, "\u{FEFF}"));
 
-        DB::transaction(function () use ($lines, &$result) {
+        return Matcher::flushAfter(fn () => DB::transaction(function () use ($lines) {
+            $result = ['created' => 0, 'updated' => 0, 'errors' => []];
+            // Matching in any letter case means folding every stored source to find
+            // a row's rule: done once here, not for each row and again in its checks.
+            $folded = Redirect::ignoresCase() ? $this->folded() : null;
+
             foreach ($lines as $index => $line) {
                 $cells = array_map('trim', str_getcsv($line, escape: ''));
 
@@ -56,8 +60,17 @@ class Csv
                     'site' => Sites::multiple() ? (($cells[4] ?? '') ?: null) : null,
                 ];
 
-                $existing = Redirect::forSource($row['source'], site: $row['site']);
-                $validator = Redirect::validator($row, $existing?->id);
+                if ($folded === null) {
+                    $existing = Redirect::forSource($row['source'], site: $row['site']);
+                    $taken = null;
+                } else {
+                    $key = Redirect::key(Redirect::normalize($row['source']));
+                    $ids = $folded[$row['site'] ?? ''][$key] ?? [];
+                    $existing = $ids ? Redirect::query()->find($ids[0]) : null;
+                    $taken = count($ids) > 1;
+                }
+
+                $validator = Redirect::validator($row, $existing?->id, $taken);
 
                 if ($validator->fails()) {
                     $result['errors'][] = __('seo::validation.csv_line', ['line' => $index + 1, 'message' => $validator->errors()->first()]);
@@ -65,11 +78,36 @@ class Csv
                     continue;
                 }
 
-                $existing ? $existing->update($row) : Redirect::query()->create($row);
-                $result[$existing ? 'updated' : 'created']++;
-            }
-        });
+                if ($existing) {
+                    $existing->update($row);
+                    $result['updated']++;
+                } else {
+                    $created = Redirect::query()->create($row);
+                    $result['created']++;
 
-        return $result;
+                    if ($folded !== null) {
+                        $folded[$row['site'] ?? ''][$key][] = $created->id;
+                    }
+                }
+            }
+
+            return $result;
+        }));
+    }
+
+    /**
+     * The stored rules' ids by site ('' for every site) and case-folded source, oldest first.
+     *
+     * @return array<string, array<string, list<int>>>
+     */
+    private function folded(): array
+    {
+        $folded = [];
+
+        foreach (Redirect::query()->select(['id', 'site', 'source'])->orderBy('id')->cursor() as $redirect) {
+            $folded[$redirect->site ?? ''][Redirect::key(Redirect::normalize($redirect->source))][] = $redirect->id;
+        }
+
+        return $folded;
     }
 }

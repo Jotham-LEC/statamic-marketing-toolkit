@@ -41,11 +41,11 @@ class SeoWidget extends Widget
             return null;
         }
 
-        $report = Report::query()->shownOn(Site::selected()->handle())->where('status', Report::DONE)->latest('id')->first();
+        $report = Report::latestDone(Site::selected()->handle());
 
         return $report === null ? null : [
             'score' => (int) $report->score,
-            'pages' => (int) ($report->summary['scored'] ?? $report->pages_total),
+            'pages' => $report->scoredPages(),
             'created_at' => $report->finished_at?->toIso8601String() ?? $report->created_at->toIso8601String(),
             'url' => cp_route('seo.reports.show', $report),
         ];
@@ -60,8 +60,6 @@ class SeoWidget extends Widget
             return [];
         }
 
-        return MissingPath::query()->shownOn(Site::selected()->handle())->latest('last_seen_at')->limit((int) $this->config('limit', 5))->get()
-            ->map(fn (MissingPath $row) => ['path' => $row->path, 'hits' => $row->hits])
-            ->all();
+        return MissingPath::recent(Site::selected()->handle(), (int) $this->config('limit', 5));
     }
 }

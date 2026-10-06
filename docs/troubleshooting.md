@@ -46,7 +46,7 @@ That's `seo.robots.noindex_outside_production`: unless `APP_ENV=production`, eve
 
 - **With a queue worker** (`QUEUE_CONNECTION` other than `sync`), is the worker running? The CP queues one job per step.
 - **Without one**, the report advances while its screen is open, one step per progress request. Keep the tab open, or run `php please seo:report` in a terminal.
-- If a step times out, lower **Pages per step** (Tools → Addons → SEO → Running).
+- If a step times out, lower **Pages per step** (Tools → SEO → Report settings → Running).
 - A report that stops moving for 30 minutes is marked failed when the next one starts.
 
 ### A report flags links that work

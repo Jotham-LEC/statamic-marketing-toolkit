@@ -1,3 +1,4 @@
+import { components, conditions, config, hooks, inertia, stacks, toast } from '@statamic/cms/api';
 import { router } from '@statamic/cms/inertia';
 import RedirectConfirm from './components/RedirectConfirm.vue';
 import SeoPreviewFieldtype from './components/SeoPreviewFieldtype.vue';
@@ -10,10 +11,14 @@ import Report from './pages/Report.vue';
 import Reports from './pages/Reports.vue';
 import SearchConsole from './pages/SearchConsole.vue';
 import Redirects from './pages/Redirects.vue';
+import { useAxios } from './util.js';
 
 /**
  * The current Inertia page: the one the CP loaded with, then each one it
  * navigates to. (Inertia 2's router doesn't expose it outside components.)
+ * Relies on Statamic internals: the [data-page] element Inertia boots from,
+ * and the edit pages' `collection`/`taxonomy` and `reference` props, which
+ * referenceFor() reads. Check them after a Statamic update.
  */
 let page = (() => {
     const element = document.querySelector('[data-page]');
@@ -33,7 +38,7 @@ let page = (() => {
  * be told apart, so it isn't asked about; its save adds the redirect.
  */
 function referenceFor(payload) {
-    if (Statamic.$app.config.globalProperties.$stacks?.count() > 0) return null;
+    if (stacks.count() > 0) return null;
 
     const props = page?.props ?? {};
     const handle = payload?.collection ?? payload?.taxonomy;
@@ -48,11 +53,11 @@ function referenceFor(payload) {
  * without one (a save from code), it adds the redirect.
  */
 function confirmRedirect(payload) {
-    const axios = Statamic.$app.config.globalProperties.$axios;
+    const axios = useAxios();
     const reference = referenceFor(payload);
 
     // Automatic redirects are Pro: the free edition has nothing to ask.
-    if (!reference || !Statamic.$config.get('seo')?.pro) return Promise.resolve();
+    if (!reference || !config.get('seo')?.pro) return Promise.resolve();
 
     return axios
         .post(cp_url('seo/redirects/check'), { reference, values: payload.values })
@@ -60,7 +65,7 @@ function confirmRedirect(payload) {
             if (!data.changes) return;
 
             return new Promise((resolve, reject) => {
-                const modal = Statamic.$components.append('seo-redirect-confirm', { props: { from: data.from, to: data.to } });
+                const modal = components.append('seo-redirect-confirm', { props: { from: data.from, to: data.to } });
                 const answer = (create) => {
                     modal.destroy();
                     // A failed answer leaves the default: the redirect is added.
@@ -69,6 +74,7 @@ function confirmRedirect(payload) {
 
                 modal.on('add', () => answer(true));
                 modal.on('skip', () => answer(false));
+                // Closed, or "not yet": nothing is saved; the next save asks again.
                 modal.on('cancel', () => {
                     modal.destroy();
                     reject(__('seo::cp.confirm.not_saved'));
@@ -80,32 +86,32 @@ function confirmRedirect(payload) {
 }
 
 Statamic.booting(() => {
-    Statamic.$components.register('seo_preview-fieldtype', SeoPreviewFieldtype);
-    Statamic.$components.register('seo-widget', SeoWidget);
-    Statamic.$components.register('seo-redirect-confirm', RedirectConfirm);
-    Statamic.$inertia.register('seo::Overview', Overview);
-    Statamic.$inertia.register('seo::Redirects', Redirects);
-    Statamic.$inertia.register('seo::RedirectForm', RedirectForm);
-    Statamic.$inertia.register('seo::NotFound', NotFound);
-    Statamic.$inertia.register('seo::Reports', Reports);
-    Statamic.$inertia.register('seo::Report', Report);
-    Statamic.$inertia.register('seo::SearchConsole', SearchConsole);
-    Statamic.$inertia.register('seo::Features', Features);
+    components.register('seo_preview-fieldtype', SeoPreviewFieldtype);
+    components.register('seo-widget', SeoWidget);
+    components.register('seo-redirect-confirm', RedirectConfirm);
+    inertia.register('seo::Overview', Overview);
+    inertia.register('seo::Redirects', Redirects);
+    inertia.register('seo::RedirectForm', RedirectForm);
+    inertia.register('seo::NotFound', NotFound);
+    inertia.register('seo::Reports', Reports);
+    inertia.register('seo::Report', Report);
+    inertia.register('seo::SearchConsole', SearchConsole);
+    inertia.register('seo::Features', Features);
 
     router.on('navigate', (event) => {
         page = event.detail.page;
     });
 
     for (const type of ['entry', 'term']) {
-        Statamic.$hooks.on(`${type}.saving`, (resolve, reject, payload) => confirmRedirect(payload).then(resolve, reject));
+        hooks.on(`${type}.saving`, (resolve, reject, payload) => confirmRedirect(payload).then(resolve, reject));
     }
 
     // The Tracking tab's warning, as its fields change, and a toast when the brand global is saved.
-    Statamic.$conditions.add('seoTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
+    conditions.add('seoTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
 
-    Statamic.$hooks.on('global-set.saving', (resolve, reject, payload) => {
-        if (payload?.globalSet === Statamic.$config.get('seo')?.global && trackingOverlaps(payload.values)) {
-            setTimeout(() => Statamic.$toast.info(__('seo::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
+    hooks.on('global-set.saving', (resolve, reject, payload) => {
+        if (payload?.globalSet === config.get('seo')?.global && trackingOverlaps(payload.values)) {
+            setTimeout(() => toast.info(__('seo::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
         }
 
         resolve();
@@ -117,7 +123,7 @@ Statamic.booting(() => {
  * if GTM loads that tracker too, each visit counts twice.
  */
 function trackingOverlaps(values) {
-    const env = Statamic.$config.get('seo')?.trackingFromConfig ?? {};
+    const env = config.get('seo')?.trackingFromConfig ?? {};
     const set = (tracker, field) => Boolean(env[tracker] || String(values?.[field] ?? '').trim());
     const others = [
         ['ga4', 'ga4_id'],

@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Redirects;
 
+use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\Support\Sites;
@@ -19,6 +20,9 @@ use Statamic\Facades\URL;
 class Matcher
 {
     private const string KEY = 'seo:redirects';
+
+    /** Set while many rules are saved at once (an import), which flush once at the end. */
+    private static bool $deferred = false;
 
     /**
      * @param  ?string  $site  a site handle; null: the current site
@@ -70,9 +74,34 @@ class Matcher
 
     public static function flush(): void
     {
+        if (self::$deferred) {
+            return;
+        }
+
         foreach (Sites::handles() as $site) {
             Cache::forget(self::KEY.':'.$site);
             Cache::forget(self::KEY.':'.$site.':any-case');
+        }
+    }
+
+    /**
+     * Runs $callback, which saves many rules, and flushes once when it is done
+     * (after its transaction, so a request between can't cache the old rules).
+     *
+     * @template T
+     *
+     * @param  Closure(): T  $callback
+     * @return T
+     */
+    public static function flushAfter(Closure $callback): mixed
+    {
+        self::$deferred = true;
+
+        try {
+            return $callback();
+        } finally {
+            self::$deferred = false;
+            self::flush();
         }
     }
 

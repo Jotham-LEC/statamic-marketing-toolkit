@@ -1,11 +1,16 @@
 <?php
 
+use Illuminate\Cache\Events\ForgettingKey;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Schema;
 use JothamLec\MarketingToolkit\Redirects\Csv;
+use JothamLec\MarketingToolkit\Redirects\Matcher;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Facades\URL;
 
@@ -258,6 +263,41 @@ test('with case_sensitive off, a source differing only in case is the same one, 
     expect($result)->toBe(['created' => 0, 'updated' => 1, 'errors' => []])
         ->and(Redirect::query()->count())->toBe(2)
         ->and($existing->fresh()->target)->toBe('/company');
+});
+
+test('with case_sensitive off, a CSV import folds the stored sources once and clears the cached rules once', function () {
+    config(['seo.redirects.case_sensitive' => false]);
+    $about = rule('/about-us', '/about');
+    // Two rules differing only in case, kept from when matching heeded it.
+    rule('/Old', '/one');
+    rule('/OLD', '/two');
+    app(Matcher::class)->match('/x', site: 'default');
+
+    $scans = 0;
+    DB::listen(function ($query) use (&$scans) {
+        $scans += preg_match('/^select .* from "seo_redirects"( where "site" is null)? order by "id" asc$/', $query->sql);
+    });
+
+    $result = app(Csv::class)->import("source,target,status,active\n/ABOUT-US,/company,301,1\n/new,/a,301,1\n/NEW,/b,301,1\n/old,/three,301,1\n");
+
+    expect($scans)->toBe(1)
+        ->and($result['created'])->toBe(1)
+        ->and($result['updated'])->toBe(2)
+        ->and($result['errors'])->toBe(['Line 5: Another redirect already starts from this address.'])
+        ->and($about->fresh()->target)->toBe('/company')
+        ->and(Redirect::forSource('/new')->target)->toBe('/b')
+        ->and(Cache::has('seo:redirects:default:any-case'))->toBeFalse();
+});
+
+test('a CSV import clears the cached rules once, after its rows are saved', function () {
+    $forgotten = [];
+    Event::listen(ForgettingKey::class, function (ForgettingKey $event) use (&$forgotten) {
+        $forgotten[] = [$event->key, Redirect::query()->count()];
+    });
+
+    app(Csv::class)->import("/a,/b\n/c,/d\n/e,/f\n");
+
+    expect($forgotten)->toBe([['seo:redirects:default', 3], ['seo:redirects:default:any-case', 3]]);
 });
 
 test('with case_sensitive off, a chain of rules that comes back in another letter case is refused', function () {

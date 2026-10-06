@@ -26,6 +26,8 @@ The marketing fundamentals for a Statamic website, in one addon: SEO with a scor
 
 **Free** covers the fundamentals, and doesn't expire: every page's tags and structured data, a sitemap, robots.txt and llms.txt, redirects, favicons and your tracking tags.
 
+On a multi-site install, Free looks after the default site alone: every site's pages keep their meta tags, but there is no hreflang, the sitemap lists the default site's pages, and the sitemap, robots.txt, llms.txt, ads.txt and icons answer 404 on any other site's domain. Several sites and languages are Pro.
+
 **Pro** is for teams who market through their site:
 
 - **The score and the report**: every page checked and scored out of 100, on a schedule.

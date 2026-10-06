@@ -1,21 +1,21 @@
 <script setup>
 import { router } from '@statamic/cms/inertia';
-import { Badge, Button, Card, Description, Heading, Input } from '@statamic/cms/ui';
-import { computed, getCurrentInstance, ref } from 'vue';
+import { toast } from '@statamic/cms/api';
+import { Badge, Button, Card, Description, Heading, Input, Textarea } from '@statamic/cms/ui';
+import { computed, ref } from 'vue';
+import { useRequests } from '../util.js';
 
 /*
  * Connecting Google Search Console, step by step, on Tools → SEO → Search Console: a key from
  * Google Cloud, its email added as a user of the property, the property, a
- * check, and the first import. What .env sets is shown and can't be changed here.
+ * check; the import is the page's. What .env sets is shown and can't be changed here.
  */
 const props = defineProps({ setup: { type: Object, required: true } });
 
-const { $axios: axios, $toast: toast } = getCurrentInstance().appContext.config.globalProperties;
-
+const { busy, send } = useRequests(__('seo::cp.search_console.setup.failed'));
 const fileInput = ref(null);
 const pasted = ref('');
 const property = ref(props.setup.property ?? props.setup.suggested_property);
-const busy = ref(null);
 const result = ref(null);
 
 const keyFromEnv = computed(() => props.setup.key_source === 'env');
@@ -30,21 +30,6 @@ const usersUrl = computed(() =>
         : 'https://search.google.com/search-console',
 );
 
-async function send(action, request) {
-    busy.value = action;
-
-    try {
-        const { data } = await request();
-        return data;
-    } catch (error) {
-        const errors = error.response?.data?.errors;
-        toast.error(errors ? Object.values(errors).flat().join(' ') : (error.response?.data?.message ?? __('seo::cp.search_console.setup.failed')));
-        return null;
-    } finally {
-        busy.value = null;
-    }
-}
-
 async function uploadKey(event) {
     const chosen = event.target.files[0];
     event.target.value = '';
@@ -53,31 +38,26 @@ async function uploadKey(event) {
     const form = new FormData();
     form.append('file', chosen);
 
-    if (await send('key', () => axios.post(props.setup.urls.key, form))) router.reload();
+    if (await send('key', (axios) => axios.post(props.setup.urls.key, form))) router.reload();
 }
 
 async function pasteKey() {
-    if (await send('key', () => axios.post(props.setup.urls.key, { key: pasted.value }))) {
+    if (await send('key', (axios) => axios.post(props.setup.urls.key, { key: pasted.value }))) {
         pasted.value = '';
         router.reload();
     }
 }
 
 async function forgetKey() {
-    if (await send('forget', () => axios.delete(props.setup.urls.forget_key))) router.reload();
+    if (await send('forget', (axios) => axios.delete(props.setup.urls.forget_key))) router.reload();
 }
 
 async function saveProperty() {
-    if (await send('property', () => axios.post(props.setup.urls.property, { property: property.value }))) router.reload();
+    if (await send('property', (axios) => axios.post(props.setup.urls.property, { property: property.value }))) router.reload();
 }
 
 async function check() {
-    result.value = await send('check', () => axios.post(props.setup.urls.check));
-}
-
-async function importNow() {
-    result.value = await send('import', () => axios.post(props.setup.urls.import));
-    if (result.value?.ok) router.reload();
+    result.value = await send('check', (axios) => axios.post(props.setup.urls.check));
 }
 
 function copyEmail() {
@@ -128,10 +108,11 @@ function copyEmail() {
                 <div v-else class="space-y-2">
                     <input ref="fileInput" type="file" accept=".json,application/json" class="hidden" @change="uploadKey" />
                     <Button :text="__('seo::cp.search_console.setup.upload')" variant="primary" :loading="busy === 'key'" @click="fileInput.click()" />
-                    <details class="text-gray-600 dark:text-gray-400">
+                    <details class="space-y-2 text-gray-600 dark:text-gray-400">
                         <summary class="cursor-pointer">{{ __('seo::cp.search_console.setup.paste') }}</summary>
-                        <textarea v-model="pasted" rows="4" class="mt-2 w-full rounded border border-gray-300 p-2 font-mono text-xs dark:border-gray-700 dark:bg-gray-900" />
-                        <Button class="mt-1" size="sm" :text="__('seo::cp.search_console.setup.save_key')" :disabled="!pasted" :loading="busy === 'key'" @click="pasteKey" />
+                        <label for="seo-search-console-key" class="sr-only">{{ __('seo::cp.search_console.setup.paste') }}</label>
+                        <Textarea id="seo-search-console-key" v-model="pasted" class="font-mono text-xs" />
+                        <Button size="sm" :text="__('seo::cp.search_console.setup.save_key')" :disabled="!pasted" :loading="busy === 'key'" @click="pasteKey" />
                     </details>
                     <p class="text-gray-500">{{ __('seo::cp.search_console.setup.stored') }}</p>
                 </div>
@@ -162,18 +143,16 @@ function copyEmail() {
                     <span class="text-gray-500">{{ __('seo::cp.search_console.from_env') }}</span>
                 </div>
                 <div v-else class="flex max-w-lg gap-2">
-                    <Input v-model="property" class="font-mono" @keydown.enter.prevent="saveProperty" />
+                    <label for="seo-search-console-property" class="sr-only">{{ __('seo::cp.search_console.property') }}</label>
+                    <Input id="seo-search-console-property" v-model="property" class="font-mono" @keydown.enter.prevent="saveProperty" />
                     <Button :text="__('seo::cp.search_console.setup.save')" :loading="busy === 'property'" :disabled="!property || property === setup.property" @click="saveProperty" />
                 </div>
             </li>
 
             <li class="space-y-2">
                 <p><strong>{{ __('seo::cp.search_console.setup.step_check') }}</strong>{{ __('seo::cp.search_console.setup.step_check_body') }}</p>
-                <div class="flex flex-wrap gap-2">
-                    <Button :text="__('seo::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
-                    <Button :text="__('seo::cp.search_console.import')" variant="primary" :disabled="!setup.configured" :loading="busy === 'import'" @click="importNow" />
-                </div>
-                <p v-if="result" :class="result.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result.message }}</p>
+                <Button :text="__('seo::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
+                <p role="status" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
                 <p class="text-gray-500" v-html="__('seo::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />
             </li>
         </ol>

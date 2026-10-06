@@ -209,11 +209,11 @@ class Tracking
     }
 
     /**
-     * Pro: whether a form submission is sent to the tools as a lead.
+     * Pro: whether a form submission is sent to the tools as a lead. The free edition switches leads off at boot (Features::apply).
      */
     public function conversions(): bool
     {
-        return Edition::pro() && config('seo.leads.enabled', true) && $this->settings->bool('conversions', true);
+        return config('seo.leads.enabled', true) && $this->settings->bool('conversions', true);
     }
 
     /**
@@ -231,7 +231,7 @@ class Tracking
      */
     public function attribution(): bool
     {
-        return Edition::pro() && config('seo.leads.enabled', true) && $this->settings->bool('attribution');
+        return config('seo.leads.enabled', true) && $this->settings->bool('attribution');
     }
 
     /**

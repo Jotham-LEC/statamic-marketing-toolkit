@@ -162,15 +162,17 @@ class Redirect extends Model
     }
 
     /**
-     * Checks a redirect's fields, from the form or a CSV row.
+     * Checks a redirect's fields, from the form or a CSV row. $taken: whether
+     * another rule already starts from the source, when the caller knows it
+     * (an import, which has every source at hand); else it is looked up.
      *
      * @param  array<string, mixed>  $data
      */
-    public static function validator(array $data, ?int $ignoreId = null): ValidatorContract
+    public static function validator(array $data, ?int $ignoreId = null, ?bool $taken = null): ValidatorContract
     {
         $site = is_string($data['site'] ?? null) && $data['site'] !== '' ? $data['site'] : null;
 
-        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId), [
+        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId, $taken), [
             'source.required' => __('seo::validation.redirect.source_required'),
             'source.starts_with' => __('seo::validation.redirect.source_starts_with'),
             'source.not_regex' => __('seo::validation.redirect.source_query'),
@@ -186,15 +188,15 @@ class Redirect extends Model
     /**
      * @return array<string, mixed>
      */
-    private static function rules(string $source, ?string $site, ?int $ignoreId): array
+    private static function rules(string $source, ?string $site, ?int $ignoreId, ?bool $taken): array
     {
         return [
             'site' => ['nullable', 'string', Rule::in(Sites::handles())],
             'source' => [
                 // Control characters would go into the Location header (a line break starts a new header).
                 'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
-                function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId) {
-                    if (self::forSource((string) $value, $ignoreId, $site)) {
+                function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId, $taken) {
+                    if ($taken ?? self::forSource((string) $value, $ignoreId, $site)) {
                         $fail(__('seo::validation.redirect.source_taken'));
                     }
                 },

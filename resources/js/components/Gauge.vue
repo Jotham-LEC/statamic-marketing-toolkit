@@ -42,16 +42,17 @@ const segments = computed(() =>
 
 const clamped = computed(() => (props.value === null ? null : Math.max(0, Math.min(100, props.value))));
 const marker = computed(() => (clamped.value === null ? null : point(inner - 7, 180 - 1.8 * clamped.value)));
-const ticks = [0, 20, 40, 60, 80, 100].map((tick) => ({ tick, at: point(outer + 9, 180 - 1.8 * tick) }));
+const ticks = [0, 20, 40, 60, 80, 100].map((tick) => ({ tick, at: point(outer + 11, 180 - 1.8 * tick) }));
 const width = computed(() => ({ sm: 'w-28', md: 'w-44', lg: 'w-64' })[props.size] ?? 'w-44');
 </script>
 
 <template>
     <figure :class="width" class="inline-block text-center" role="meter" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="clamped ?? undefined" :aria-label="label ?? __('seo::cp.gauge.label')">
-        <svg viewBox="0 -6 200 112" class="w-full overflow-visible">
+        <!-- The meter carries the value; the drawing is only its picture. -->
+        <svg viewBox="0 -12 200 118" class="w-full overflow-visible" aria-hidden="true">
             <path v-for="(segment, index) in segments" :key="index" :d="segment.d" :fill="segment.color" :opacity="clamped === null ? 0.25 : 1" />
             <template v-if="size !== 'sm'">
-                <text v-for="{ tick, at } in ticks" :key="tick" :x="at[0]" :y="at[1]" font-size="8" text-anchor="middle" class="fill-gray-500">{{ tick }}</text>
+                <text v-for="{ tick, at } in ticks" :key="tick" :x="at[0]" :y="at[1]" font-size="11" text-anchor="middle" class="fill-gray-500">{{ tick }}</text>
             </template>
             <circle v-if="marker" :cx="marker[0]" :cy="marker[1]" r="4.5" class="fill-gray-900 dark:fill-white" />
             <text x="100" y="98" text-anchor="middle" font-size="40" font-weight="600" class="fill-gray-900 tabular-nums dark:fill-white">{{ clamped ?? '—' }}</text>

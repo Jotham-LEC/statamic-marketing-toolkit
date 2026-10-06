@@ -222,10 +222,11 @@ test('redirects need "manage seo redirects", the 404 log "view seo"', function (
 
     $this->actingAs(cpUser(['view seo']));
 
-    $this->get(cp_route('seo.redirects.index'))->assertForbidden();
+    // A screen sends them back with an error, as Statamic's own screens do.
+    $this->get(cp_route('seo.redirects.index'))->assertRedirect(cp_route('index'))->assertSessionHas('error');
     $this->getJson(cp_route('seo.redirects.listing'))->assertForbidden();
     $this->postJson(cp_route('seo.redirects.store'), ['source' => '/a', 'target' => '/b', 'status' => '301'])->assertForbidden();
-    $this->get(cp_route('seo.redirects.export'))->assertForbidden();
+    $this->getJson(cp_route('seo.redirects.export'))->assertForbidden();
     $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertForbidden();
     $this->get(cp_route('seo.404s.index'))->assertOk();
 });

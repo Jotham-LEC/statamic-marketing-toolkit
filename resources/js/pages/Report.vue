@@ -1,10 +1,11 @@
 <script setup>
 import { Head, Link, router } from '@statamic/cms/inertia';
-import { Badge, Button, Card, Header, Listing } from '@statamic/cms/ui';
+import { Badge, Button, Card, Header, Listing, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
 import { computed, ref } from 'vue';
 import ReportProgress from '../components/ReportProgress.vue';
 import Gauge from '../components/Gauge.vue';
 import Score from '../components/Score.vue';
+import { formatDate } from '../util.js';
 
 const props = defineProps({
     report: { type: Object, required: true },
@@ -18,9 +19,11 @@ const rule = ref(null);
 const url = computed(() => (rule.value ? `${props.listingUrl}?rule=${rule.value}` : props.listingUrl));
 const ruleLabel = computed(() => props.rules.find((item) => item.handle === rule.value)?.label);
 // As When shows it, but as text, so a translation can put it anywhere in the sentence.
-const finished = computed(() =>
-    props.report.finished_at ? new Date(props.report.finished_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—',
-);
+const finished = computed(() => (props.report.finished_at ? formatDate(props.report.finished_at) : '—'));
+
+function toggle(handle) {
+    rule.value = rule.value === handle ? null : handle;
+}
 </script>
 
 <template>
@@ -53,36 +56,37 @@ const finished = computed(() =>
             </Card>
         </div>
 
-        <Card class="mb-6 overflow-hidden">
-            <table class="w-full text-sm">
-                <thead class="text-left text-gray-600 dark:text-gray-400">
-                    <tr>
-                        <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.check') }}</th>
-                        <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.weight') }}</th>
-                        <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.failing') }}</th>
-                        <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.warnings') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr
+        <Card class="mb-6">
+            <Table class="overflow-x-auto">
+                <TableColumns>
+                    <TableColumn>{{ __('seo::reports.cp.check') }}</TableColumn>
+                    <TableColumn>{{ __('seo::reports.cp.weight') }}</TableColumn>
+                    <TableColumn>{{ __('seo::reports.cp.failing') }}</TableColumn>
+                    <TableColumn>{{ __('seo::reports.cp.warnings') }}</TableColumn>
+                </TableColumns>
+                <TableRows>
+                    <!-- The whole row filters; the button's click bubbles up to it, and is how the keyboard gets there. -->
+                    <TableRow
                         v-for="item in rules"
                         :key="item.handle"
-                        class="cursor-pointer border-t border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                        class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
                         :class="{ 'bg-blue-50 dark:bg-blue-950': rule === item.handle }"
-                        @click="rule = rule === item.handle ? null : item.handle"
+                        @click="toggle(item.handle)"
                     >
-                        <td class="px-4 py-2">{{ item.label }}</td>
-                        <td class="px-4 py-2 tabular-nums">{{ item.weight }}</td>
-                        <td class="px-4 py-2 tabular-nums" :class="{ 'font-semibold text-(--theme-color-danger)': item.fail }">{{ item.fail }}</td>
-                        <td class="px-4 py-2 tabular-nums" :class="{ 'text-amber-700': item.warn }">{{ item.warn }}</td>
-                    </tr>
-                </tbody>
-            </table>
+                        <TableCell>
+                            <button type="button" class="text-start" :aria-pressed="rule === item.handle">{{ item.label }}</button>
+                        </TableCell>
+                        <TableCell class="tabular-nums">{{ item.weight }}</TableCell>
+                        <TableCell class="tabular-nums" :class="{ 'font-semibold text-(--theme-color-danger)': item.fail }">{{ item.fail }}</TableCell>
+                        <TableCell class="tabular-nums" :class="{ 'text-amber-700 dark:text-amber-400': item.warn }">{{ item.warn }}</TableCell>
+                    </TableRow>
+                </TableRows>
+            </Table>
         </Card>
 
         <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
             <template v-if="rule">
-                {{ __('seo::reports.cp.flagged_by', { check: ruleLabel }) }} <button class="underline" @click="rule = null">{{ __('seo::reports.cp.show_all') }}</button>
+                {{ __('seo::reports.cp.flagged_by', { check: ruleLabel }) }} <button type="button" class="underline" @click="rule = null">{{ __('seo::reports.cp.show_all') }}</button>
             </template>
             <template v-else>{{ __('seo::reports.cp.all_pages') }}</template>
         </p>

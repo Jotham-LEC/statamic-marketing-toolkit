@@ -102,7 +102,7 @@ return [
         'weights' => 'Each check counts by how much it matters: 3 for what keeps a page out of search results, 2 for how it shows there, 1 for polish. A warning counts half.',
         'flagged_by' => 'Pages flagged by “:check”.',
         'show_all' => 'Show all pages',
-        'all_pages' => 'All pages, lowest score first. Click a check above to see only the pages it flagged.',
+        'all_pages' => 'All pages, lowest score first. Choose a check above to see only the pages it flagged.',
     ],
 
 ];

@@ -51,6 +51,19 @@ class MissingPath extends Model
         }
     }
 
+    /**
+     * The paths most recently missed that the control panel shows while $site
+     * is selected, for the overview and the dashboard widget.
+     *
+     * @return list<array{path: string, hits: int}>
+     */
+    public static function recent(string $site, int $limit = 5): array
+    {
+        return self::query()->shownOn($site)->latest('last_seen_at')->limit($limit)->get()
+            ->map(fn (self $row) => ['path' => $row->path, 'hits' => $row->hits])
+            ->all();
+    }
+
     protected function casts(): array
     {
         return [

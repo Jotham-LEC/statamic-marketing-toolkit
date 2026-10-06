@@ -46,8 +46,8 @@ test('lang/en has no key left unused', function () {
         ->flatMap(fn ($file) => array_keys(Arr::dot(['seo::'.$file->getFilenameWithoutExtension() => require $file->getPathname()])))
         ->all();
 
-    // Built from parts at run time: a rule's handle, a report check's message.
-    $dynamic = fn (string $key) => str_starts_with($key, 'seo::reports.') || str_starts_with($key, 'seo::cp.tracking.names.') || str_starts_with($key, 'seo::fields.attribution.') || str_starts_with($key, 'seo::cp.features.');
+    // Built from parts at run time: a rule's handle, a report check's message, a Pro feature.
+    $dynamic = fn (string $key) => str_starts_with($key, 'seo::reports.') || preg_match('/^seo::cp\.pro\.(sites|reports|not_found|search_console)\.(title|body)$/', $key) || str_starts_with($key, 'seo::cp.tracking.names.') || str_starts_with($key, 'seo::fields.attribution.') || str_starts_with($key, 'seo::cp.features.');
 
     expect(array_values(array_filter($defined, fn (string $key) => ! in_array($key, $used, true) && ! $dynamic($key))))->toBe([]);
 });

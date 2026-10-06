@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Support;
 
 use Statamic\Facades\Addon;
+use Statamic\Facades\Blink;
 use Throwable;
 
 /**
@@ -17,18 +18,18 @@ final class Edition
 {
     public const string PACKAGE = 'jotham-lec/statamic-marketing-toolkit';
 
+    /**
+     * Read once (Blink), though a request asks many times: it is set in config.
+     */
     public static function pro(): bool
     {
-        try {
-            return Addon::get(self::PACKAGE)?->edition() === 'pro';
-        } catch (Throwable) {
-            return false; // An edition the addon doesn't have.
-        }
-    }
-
-    public static function name(): string
-    {
-        return self::pro() ? 'pro' : 'free';
+        return Blink::once('seo:edition', function () {
+            try {
+                return Addon::get(self::PACKAGE)?->edition() === 'pro';
+            } catch (Throwable) {
+                return false; // An edition the addon doesn't have.
+            }
+        });
     }
 
     /**

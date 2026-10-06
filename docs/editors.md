@@ -142,7 +142,7 @@ With more than one site, the overview, the 404s, the reports and the dashboard c
 Click **Run report**. A bar shows the progress; a few hundred pages take under a minute. When it's done you see:
 
 - **The site's score**.
-- **The checks**, with how many pages fail each one or get a warning. Click a check to see only the pages it flagged.
+- **The checks**, with how many pages fail each one or get a warning. Choose a check to see only the pages it flagged.
 - **The pages**, lowest score first. Each one lists its problems and has a **Fix** link to its edit screen.
 
 What the checks look for:
@@ -165,7 +165,7 @@ What the checks look for:
 
 A **warning** counts half. Pages set to hide from search engines are listed but not scored.
 
-Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → Addons → SEO). Reports can also run on their own, daily or weekly.
+Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → SEO → Report settings). Reports can also run on their own, daily or weekly.
 
 ## Features *(Pro)*
 

@@ -39,7 +39,7 @@ Marketing Toolkit comes as **Free** and **Pro**. Pro is $39 per site. A licence 
 | Form submissions sent to your tools as leads, with where they came from | | ✓ |
 | Campaign links with UTM tags | | ✓ |
 | **Sites and languages** | | |
-| Several sites and languages, with hreflang | Default site only | ✓ |
+| Several sites and languages, with hreflang | Default site only: no hreflang, and the sitemap, robots.txt and icons on its domain alone ([details](developers.md#several-sites-and-languages)) | ✓ |
 | **For developers** | | |
 | Favicons and web app manifest from one image | ✓ | ✓ |
 | Any value overridden in code (`SiteSeo`, `Tracking`) | ✓ | ✓ |
@@ -143,7 +143,7 @@ The search and share preview needs no SEO permission, only access to the entry.
 
 ## 7. Schedule reports (optional, Pro)
 
-Reports can run daily or weekly (Tools → Addons → SEO → Running). That needs Laravel's scheduler, as for any scheduled task:
+Reports can run daily or weekly (Tools → SEO → Report settings → Running). That needs Laravel's scheduler, as for any scheduled task:
 
 ```
 * * * * * cd /path/to/site && php artisan schedule:run >> /dev/null 2>&1

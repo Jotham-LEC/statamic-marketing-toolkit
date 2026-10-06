@@ -11,7 +11,6 @@ use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\NotFound\Recorder;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
-use Statamic\Facades\User;
 
 /**
  * Tools → SEO → 404s: the missing paths visitors hit, most recent first,
@@ -22,8 +21,6 @@ class NotFoundController
 {
     public function index(): Response
     {
-        $this->authorize();
-
         return Inertia::render('seo::NotFound', [
             'listingUrl' => cp_route('seo.404s.listing'),
             'actionUrl' => cp_route('seo.actions.run'),
@@ -37,9 +34,9 @@ class NotFoundController
      */
     public function listing(Request $request): array
     {
-        $this->authorize();
-
         $sites = Sites::options();
+        // The same on every row: they depend on the kind of row and the user alone.
+        $actions = RecordActions::for(collect([new MissingPath]), ['type' => '404s']);
 
         return Listing::respond(
             MissingPath::query()->shownOn(Site::selected()->handle()),
@@ -61,14 +58,9 @@ class NotFoundController
                 'referrer' => Recorder::webAddress($row->referrer),
                 'first_seen_at' => $row->first_seen_at->toIso8601String(),
                 'last_seen_at' => $row->last_seen_at->toIso8601String(),
-                'actions' => RecordActions::for(collect([$row]), ['type' => '404s']),
+                'actions' => $actions,
             ],
             defaultOrder: 'desc',
         );
-    }
-
-    private function authorize(): void
-    {
-        abort_unless(User::current()?->can('view seo'), 403);
     }
 }

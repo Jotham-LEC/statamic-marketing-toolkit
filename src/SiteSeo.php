@@ -49,7 +49,8 @@ class SiteSeo
 
     public function __construct()
     {
-        $this->settings = new Settings;
+        // From the container, so a site or a test can bind its own.
+        $this->settings = app(Settings::class);
     }
 
     public function meta(Context $context): Meta
@@ -833,8 +834,9 @@ class SiteSeo
     }
 
     /**
-     * The entry's "Extra JSON-LD" field: an object or a list of objects.
-     * Anything that does not parse is ignored rather than breaking the page.
+     * Editors' nodes: the page's "Extra JSON-LD" field (SEO tab), an object or
+     * a list of objects. Anything that does not parse is ignored rather than
+     * breaking the page. Developers add theirs in extraNodes().
      *
      * @return list<array<string, mixed>>
      */
@@ -852,7 +854,9 @@ class SiteSeo
     }
 
     /**
-     * Project-specific nodes (Event, Course…). Empty by default.
+     * Developers' nodes: override to add the site's own types (Event,
+     * Course…) worked out in code. Empty by default; editors' hand-written
+     * JSON-LD comes from customNodes().
      *
      * @return list<array<string, mixed>>
      */
@@ -1094,13 +1098,7 @@ class SiteSeo
     protected function sitemapEntries(): Collection
     {
         $sites = $this->sitemapSites();
-
-        $collections = config('seo.sitemap.collections')
-            ?? \Statamic\Facades\Collection::all()
-                ->filter(fn ($collection) => collect($sites)->contains(fn (string $site) => $collection->route($site)))
-                ->map->handle()->all();
-
-        $collections = array_values(array_diff($collections, (array) config('seo.sitemap.exclude_collections')));
+        $collections = $this->sitemapCollections($sites)->map->handle()->all();
 
         if ($collections === []) {
             return collect();
@@ -1117,6 +1115,26 @@ class SiteSeo
             ->map(fn (Entry $entry) => $this->sitemapRow($entry))
             ->values()
             ->collect();
+    }
+
+    /**
+     * The collections the sitemap and llms.txt list on $sites: those with a
+     * route there, all of them or those `seo.sitemap.collections` names, less
+     * `seo.sitemap.exclude_collections`.
+     *
+     * @param  list<string>  $sites
+     * @return Collection<int, \Statamic\Contracts\Entries\Collection>
+     */
+    protected function sitemapCollections(array $sites): Collection
+    {
+        $only = config('seo.sitemap.collections');
+        $excluded = (array) config('seo.sitemap.exclude_collections');
+
+        return \Statamic\Facades\Collection::all()
+            ->filter(fn ($collection) => collect($sites)->contains(fn (string $site) => $collection->route($site))
+                && ($only === null || in_array($collection->handle(), (array) $only, true))
+                && ! in_array($collection->handle(), $excluded, true))
+            ->values();
     }
 
     /**
@@ -1217,11 +1235,7 @@ class SiteSeo
      */
     protected function llmsCollections(): Collection
     {
-        $handles = config('seo.sitemap.collections');
-        $excluded = (array) config('seo.sitemap.exclude_collections');
-
-        return \Statamic\Facades\Collection::all()
-            ->filter(fn ($collection) => $collection->route(Site::current()->handle()) && ($handles === null || in_array($collection->handle(), (array) $handles, true)) && ! in_array($collection->handle(), $excluded, true))
+        return $this->sitemapCollections([Site::current()->handle()])
             ->sortBy(fn ($collection) => $collection->title())
             ->values();
     }
@@ -1549,6 +1563,6 @@ class SiteSeo
      */
     public function absolute(string $url): string
     {
-        return preg_match('#^https?://#i', $url) ? $url : rtrim(Site::current()->absoluteUrl(), '/').'/'.ltrim($url, '/');
+        return preg_match('#^https?://#i', $url) ? $url : $this->home().ltrim($url, '/');
     }
 }

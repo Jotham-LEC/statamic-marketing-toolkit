@@ -4,7 +4,6 @@ namespace JothamLec\MarketingToolkit\Listeners;
 
 use Illuminate\Support\Facades\Cookie;
 use JothamLec\MarketingToolkit\Settings;
-use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Events\SubmissionCreated;
 
 /**
@@ -12,7 +11,8 @@ use Statamic\Events\SubmissionCreated;
  * cookie naming its form. The next page, or the page itself after an AJAX
  * submission, reads it in <s:seo:head />'s script and sends the lead to
  * each tracking tool. A cookie rather than the session, so it works on a
- * page served from the static cache.
+ * page served from the static cache. Not registered in Free or with leads
+ * off (ServiceProvider::leaveOutUnused()).
  */
 class CountConversion
 {
@@ -20,7 +20,7 @@ class CountConversion
 
     public function handle(SubmissionCreated $event): void
     {
-        if (! Edition::pro() || ! app(Settings::class)->bool('conversions', true)) {
+        if (! app(Settings::class)->bool('conversions', true)) {
             return;
         }
 

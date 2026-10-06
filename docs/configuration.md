@@ -3,7 +3,7 @@
 Two places, by who changes what:
 
 - **`config/seo.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=seo-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them.
-- **Tools → Addons → SEO** (Statamic's addon settings): report settings an editor may want to change.
+- **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit, Pro): report settings an editor may want to change.
 
 The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
 
@@ -108,7 +108,7 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 | `redirects.automatic` | `true` | Adds a 301 when published content moves (slug, date, place in a tree). Pro: always off in Free. |
 | `redirects.case_sensitive` | `true` | `false` matches a redirect's From in any letter case, accents and other alphabets included: `/ABOUT-US` and `/About-Us` as `/about-us`, `/CAFÉ` as `/café`. What a `*` matched keeps the visitor's case. Two redirects whose From differs only in case are then refused as the same address, and a CSV row updates the redirect with that From in any case. For a site moved off one whose addresses worked in any case (Wix, IIS). |
 | `not_found.enabled` | `true` | Logs 404s. Pro: always off in Free. |
-| `not_found.max_rows` | `1000` | Most paths kept. One-off misses (one hit, no page linking there) go first, then the least recently seen, so a flood of made-up addresses can't push out real broken links. |
+| `not_found.max_rows` | `1000` | Most paths kept, give or take a tenth: the log is trimmed now and then, not on every new path. One-off misses (one hit, no page linking there) go first, then the least recently seen, so a flood of made-up addresses can't push out real broken links. |
 | `not_found.ignore_user_agents` | bots, crawlers, curl, wget… | Not logged when the user agent contains one of these (any case). |
 | `not_found.ignore_paths` | `*.php`, `/wp-*`, `/.env*`, `/.git*`… | Not logged when the path matches one (`*` matches anything). Scanner probes, mostly. |
 
@@ -187,6 +187,7 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 | `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
 | `tracking.class` | | A subclass of `Tracking` to change how the tags are worked out. |
+| `leads.enabled` | | `true` (Pro). Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads-pro). |
 
 An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed. Consent Mode is set in the global only.
 

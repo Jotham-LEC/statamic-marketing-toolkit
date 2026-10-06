@@ -59,7 +59,12 @@ test('SEO is hidden from people without "view seo"', function () {
     $this->actingAs(cpUser());
 
     expect(toolsNav()->has('SEO'))->toBeFalse();
-    $this->get(cp_route('seo.index'))->assertForbidden();
+    $this->get(cp_route('seo.index'))->assertRedirect(cp_route('index'))->assertSessionHas('error');
+    $this->getJson(cp_route('seo.index'))->assertForbidden();
+
+    foreach (['seo.404s.index', 'seo.reports.index', 'seo.search-console.index'] as $route) {
+        $this->getJson(cp_route($route))->assertForbidden();
+    }
 });
 
 test('the dashboard widget shows its empty states until reports and 404s exist', function () {

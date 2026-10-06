@@ -30,7 +30,6 @@ uses(FreeEdition::class);
 
 test('the addon runs as the free edition unless a site sets Pro', function () {
     expect(Edition::pro())->toBeFalse()
-        ->and(Edition::name())->toBe('free')
         ->and(Addon::get(Edition::PACKAGE)->editions()->all())->toBe(['free', 'pro'])
         // Statamic CMS Pro is its own setting, and multi-site still needs it.
         ->and(config('statamic.editions.pro'))->toBeFalse();
@@ -76,7 +75,6 @@ test('the nav, permissions and overview show only what the free edition has', fu
         ->and($permissions)->toBe(['view seo', 'manage seo redirects']);
 
     $this->get(cp_route('seo.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-        ->where('edition', 'free')
         ->where('upgradeUrl', Edition::marketplaceUrl())
         ->where('report', null)
         ->where('notFound', null)
@@ -154,10 +152,12 @@ test('several languages: no hreflang, and the sitemap lists the default site alo
         ->assertDontSee('xhtml:link', false);
 });
 
-test('several sites: another site\'s domain has no sitemap or robots.txt, and IndexNow leaves it out', function () {
+test('several sites: another site\'s domain has no sitemap, robots.txt or icons, and IndexNow leaves it out', function () {
     multisite();
     Http::fake(['api.indexnow.org/*' => Http::response('', 200)]);
-    seoGlobal([]);
+    app(Favicons::class)->flush();
+    AssetContainer::find('assets')->disk()->put('icon.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    seoGlobal(['favicon' => 'icon.png']);
     entryIn('pages', 'about');
     Entry::make()->collection('pages')->locale('cothinking')->slug('team')->data(['title' => 'Team'])->save();
     app()->terminate();
@@ -165,6 +165,9 @@ test('several sites: another site\'s domain has no sitemap or robots.txt, and In
     $this->get('https://example.test/sitemap.xml')->assertOk()->assertSee('https://example.test/about', false);
     $this->get('https://cothink.test/sitemap.xml')->assertNotFound();
     $this->get('https://cothink.test/robots.txt')->assertNotFound();
+    $this->get('https://cothink.test/favicon.ico')->assertNotFound();
+    expect(renderAt('https://cothink.test/', '<s:seo:head />'))->not->toContain('site.webmanifest')
+        ->and(renderAt('https://example.test/', '<s:seo:head />'))->toContain('site.webmanifest');
 
     Http::assertSent(fn ($request) => $request['host'] === 'example.test');
     Http::assertNotSent(fn ($request) => $request['host'] === 'cothink.test');

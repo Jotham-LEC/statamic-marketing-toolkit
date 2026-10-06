@@ -122,8 +122,6 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->app->bind(Tracking::class, fn ($app) => $app->build(config('seo.tracking.class') ?: Tracking::class));
 
-        $this->app->bind(ReportSettings::class, fn () => new ReportSettings);
-
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
 
@@ -156,23 +154,15 @@ class ServiceProvider extends AddonServiceProvider
     }
 
     /**
-     * The free edition: no generated share images, automatic 301s, 404 log,
-     * reports, Search Console or dashboard widget. Forced off at every boot
-     * rather than in the merged config, which isn't merged once it is cached.
-     * The data Pro saved stays in the database, ready for an upgrade.
+     * The modules that are off (Features), off before anything registers. The
+     * free edition also has no Search Console, dashboard widget or
+     * redirect-from-404 action.
      */
     protected function bootEdition(): void
     {
-        if (Edition::pro()) {
-            // Tools → SEO → Features: the modules a site switched off, off before anything registers.
-            Features::apply();
-        } else {
-            config([
-                'seo.og.enabled' => false,
-                'seo.redirects.automatic' => false,
-                'seo.not_found.enabled' => false,
-            ]);
+        Features::apply();
 
+        if (! Edition::pro()) {
             $this->commands = array_values(array_diff($this->commands, self::PRO_ONLY));
             $this->widgets = array_values(array_diff($this->widgets, self::PRO_ONLY));
             $this->actions = array_values(array_diff($this->actions, self::PRO_ONLY));
@@ -191,8 +181,8 @@ class ServiceProvider extends AddonServiceProvider
             FlushSitemap::class => ! config('seo.sitemap.enabled') && ! config('seo.llms_txt'),
             SubmitToIndexNow::class => ! config('seo.indexnow.enabled'),
             RemakeFavicons::class => ! config('seo.favicons.enabled', true),
-            AttributeSubmission::class => ! Edition::pro() || ! config('seo.leads.enabled', true),
-            CountConversion::class => ! Edition::pro() || ! config('seo.leads.enabled', true),
+            AttributeSubmission::class => ! config('seo.leads.enabled', true),
+            CountConversion::class => ! config('seo.leads.enabled', true),
             RedirectChangedUris::class => ! config('seo.redirects.automatic'),
             HandleMissing::class => ! config('seo.redirects.enabled') && ! config('seo.not_found.enabled'),
         ]));
@@ -284,6 +274,9 @@ class ServiceProvider extends AddonServiceProvider
      * 15 to 25 ms there (Statamic parses each default value as Antlers), spent
      * only to learn that reports are off. The schedule is needed only by the
      * commands that run it, list it, or finish a background event of it.
+     * Overrides Statamic's AddonServiceProvider::bootSchedule(), an internal
+     * method: check it still exists, and still only calls schedule(), on a
+     * Statamic upgrade.
      */
     protected function bootSchedule()
     {

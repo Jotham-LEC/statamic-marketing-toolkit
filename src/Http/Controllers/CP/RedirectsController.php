@@ -32,8 +32,6 @@ class RedirectsController
 {
     public function index(): Response
     {
-        $this->authorize();
-
         return Inertia::render('seo::Redirects', [
             'listingUrl' => cp_route('seo.redirects.listing'),
             'actionUrl' => cp_route('seo.actions.run'),
@@ -50,9 +48,9 @@ class RedirectsController
      */
     public function listing(Request $request): array
     {
-        $this->authorize();
-
         $sites = Sites::options();
+        // The same on every row: they depend on the kind of row and the user alone.
+        $actions = RecordActions::for(collect([new Redirect]), ['type' => 'redirects']);
 
         return Listing::respond(
             Redirect::query(),
@@ -76,15 +74,13 @@ class RedirectsController
                 'hits' => $redirect->hits,
                 'last_hit_at' => $redirect->last_hit_at?->toIso8601String(),
                 'edit_url' => cp_route('seo.redirects.edit', $redirect),
-                'actions' => RecordActions::for(collect([$redirect]), ['type' => 'redirects']),
+                'actions' => $actions,
             ],
         );
     }
 
     public function create(Request $request): Response
     {
-        $this->authorize();
-
         return $this->form(
             new Redirect([
                 'source' => (string) $request->query('source', ''),
@@ -100,8 +96,6 @@ class RedirectsController
 
     public function store(Request $request): JsonResponse
     {
-        $this->authorize();
-
         $redirect = Redirect::query()->create($this->validated($request));
 
         return response()->json(['redirect' => cp_route('seo.redirects.edit', $redirect)]);
@@ -109,15 +103,11 @@ class RedirectsController
 
     public function edit(Redirect $redirect): Response
     {
-        $this->authorize();
-
         return $this->form($redirect, title: $redirect->source, submitUrl: cp_route('seo.redirects.update', $redirect), method: 'patch');
     }
 
     public function update(Request $request, Redirect $redirect): JsonResponse
     {
-        $this->authorize();
-
         // Edited by hand, it is no longer one the content made.
         $redirect->update([...$this->validated($request, $redirect->id), 'automatic' => false]);
 
@@ -126,8 +116,6 @@ class RedirectsController
 
     public function export(Csv $csv): StreamedResponse
     {
-        $this->authorize();
-
         return response()->streamDownload(function () use ($csv) {
             $out = fopen('php://output', 'w');
             $csv->export($out);
@@ -140,8 +128,6 @@ class RedirectsController
      */
     public function import(Request $request, Csv $csv): array
     {
-        $this->authorize();
-
         $request->validate(['file' => ['required', 'file', 'max:5120']]);
 
         return $csv->import((string) file_get_contents($request->file('file')->getRealPath()));
@@ -193,7 +179,6 @@ class RedirectsController
      */
     public function choice(Request $request, AutoRedirects $redirects): JsonResponse
     {
-        $this->authorize();
         $request->validate(['reference' => ['required', 'string'], 'create' => ['required', 'boolean']]);
 
         $content = $this->referenced($request->input('reference'));
@@ -202,11 +187,6 @@ class RedirectsController
         $redirects->remember((string) $content->id(), $request->boolean('create'));
 
         return response()->json(['saved' => true]);
-    }
-
-    private function authorize(): void
-    {
-        abort_unless(User::current()?->can('manage seo redirects'), 403);
     }
 
     /**

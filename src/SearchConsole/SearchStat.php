@@ -28,7 +28,7 @@ class SearchStat extends Model
 
     public $timestamps = false;
 
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
     /**
      * Rows of exactly this site; null: those of a single-site install.

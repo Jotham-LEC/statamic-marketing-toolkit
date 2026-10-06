@@ -332,6 +332,21 @@ describe('reports', function () {
         $this->get(cp_route('seo.reports.index'))
             ->assertInertia(fn (AssertableInertia $page) => $page->has('reports', 1));
     });
+
+    test('another site\'s report is not found while a site is selected, though one from before there were sites is', function () {
+        $other = Report::query()->create(['site' => 'default', 'settings' => [], 'status' => Report::RUNNING, 'pages_total' => 1]);
+        $older = Report::query()->create(['site' => null, 'settings' => [], 'status' => Report::DONE]);
+        $this->actingAs(cpUser(['view seo', 'run seo reports']));
+        session(['statamic.cp.selected-site' => 'cothinking']);
+
+        $this->get(cp_route('seo.reports.show', $other))->assertNotFound();
+        $this->getJson(cp_route('seo.reports.pages', $other))->assertNotFound();
+        $this->postJson(cp_route('seo.reports.progress', $other))->assertNotFound();
+        $this->get(cp_route('seo.reports.show', $older))->assertOk();
+
+        session(['statamic.cp.selected-site' => 'default']);
+        $this->get(cp_route('seo.reports.show', $other))->assertOk();
+    });
 });
 
 test('the 404 log keeps each site\'s misses apart, and a redirect made from one starts on its site', function () {

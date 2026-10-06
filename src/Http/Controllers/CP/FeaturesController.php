@@ -63,10 +63,11 @@ class FeaturesController
             'width' => 50,
             ...(in_array($module, $locked, true) ? ['visibility' => 'read_only'] : []),
         ]];
-        $section = fn (string $group, array $modules) => ['display' => __('seo::cp.features.groups.'.$group), 'fields' => array_map($toggle, $modules)];
+        $section = fn (string $group, array $modules, ?string $instructions = null) => ['display' => __('seo::cp.features.groups.'.$group), 'instructions' => $instructions, 'fields' => array_map($toggle, $modules)];
 
+        // The intro rides on the first section: PublishForm draws its own header, with no slot above the form.
         return Blueprint::make('seo_features')->setContents(['tabs' => ['main' => ['sections' => [
-            $section('search', ['sitemap', 'robots_txt', 'llms_txt', 'hreflang', 'indexnow', 'share_cards']),
+            $section('search', ['sitemap', 'robots_txt', 'llms_txt', 'hreflang', 'indexnow', 'share_cards'], __('seo::cp.features.intro')),
             $section('redirects', ['redirects', 'automatic_redirects', 'not_found', 'reports']),
             $section('marketing', ['tracking', 'leads', 'favicons', 'ads_txt']),
         ]]]]);
