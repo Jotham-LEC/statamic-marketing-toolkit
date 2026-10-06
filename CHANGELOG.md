@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1 – 2026-10-06
+
+### Fixed
+- A site's `config/seo.php` merges into the addon's at every depth. Laravel merges an addon's config one level deep, so a site that set only `og.templates` lost `og.enabled` (and its share cards), and one that set a single `robots` key lost the others. A list a site sets still replaces the default list.
+
 ## 0.5.0 – 2026-10-06
 
 Leaner, for fresh Statamic sites: Statamic's own settings first, and what only one site needs goes in that site's `SiteSeo` subclass.

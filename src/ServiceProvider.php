@@ -12,6 +12,7 @@ use JothamLec\Seo\Http\Middleware\HandleMissing;
 use JothamLec\Seo\Listeners\FlushSitemap;
 use JothamLec\Seo\Listeners\RedirectChangedUris;
 use JothamLec\Seo\Reports\ReportSettings;
+use JothamLec\Seo\Support\Config;
 use JothamLec\Seo\Tags\Seo;
 use JothamLec\Seo\Widgets\SeoWidget;
 use Statamic\Events\CollectionTreeSaved;
@@ -68,6 +69,21 @@ class ServiceProvider extends AddonServiceProvider
 
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
+    }
+
+    /**
+     * The site's config/seo.php over the addon's, merged at every depth
+     * (Support\Config) rather than Laravel's one level, so a site states only
+     * what it changes, even inside `og` or `robots`.
+     */
+    protected function mergeConfigFrom($path, $key)
+    {
+        if ($this->app->configurationIsCached()) {
+            return;
+        }
+
+        $config = $this->app->make('config');
+        $config->set($key, Config::merge(require $path, (array) $config->get($key, [])));
     }
 
     public function bootAddon(): void
