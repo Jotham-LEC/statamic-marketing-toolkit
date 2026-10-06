@@ -6,3 +6,4 @@
 /tests/__fixtures__/content
 composer.lock
 /resources/dist/hot
+/.agent-shell
