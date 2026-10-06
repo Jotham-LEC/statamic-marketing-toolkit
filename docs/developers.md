@@ -231,6 +231,12 @@ The suite runs on SQLite. To run it on Postgres, point it at an empty database: 
 
 Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\MarketingToolkit\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
 
+Database and data changes:
+
+- Migrations that have shipped stay as they are: never rename, move or edit one, since sites have already run it.
+- A new migration is named with the day it is written (`php artisan make:migration` does this), so it runs after the ones before it.
+- A change to sites' content or settings (globals, blueprints, addon settings), rather than to a table, is an update script (a subclass of Statamic's `UpdateScript`) in `src/UpdateScripts/`, which Statamic finds there and runs once on `composer update` (or `php please updates:run`).
+
 Release:
 
 1. Note the change in [CHANGELOG.md](../CHANGELOG.md).
