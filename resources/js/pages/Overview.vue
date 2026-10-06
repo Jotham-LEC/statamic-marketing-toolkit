@@ -17,6 +17,7 @@ defineProps({
     searchConsole: { type: Object, default: null },
     files: { type: Array, required: true },
     severalSites: { type: Boolean, default: false },
+    tracking: { type: Object, required: true },
 });
 </script>
 
@@ -25,6 +26,14 @@ defineProps({
 
     <div class="max-w-page mx-auto space-y-6">
         <Header :title="__('seo::cp.seo')" icon="search-magnifying-glass" />
+
+        <Card v-if="tracking.overlap.length" class="flex flex-wrap items-center justify-between gap-3 border-amber-400 p-4">
+            <div class="space-y-1">
+                <Heading size="lg">{{ __('seo::cp.tracking.overlap_title') }}</Heading>
+                <Description>{{ __('seo::cp.tracking.overlap', { tools: tracking.overlap.join(', ') }) }}</Description>
+            </div>
+            <Button v-if="tracking.url" :href="tracking.url" :text="__('seo::cp.tracking.edit')" />
+        </Card>
 
         <ProCard v-if="severalSites" :title="__('seo::cp.pro.sites.title')" :body="__('seo::cp.pro.sites.body')" :url="upgradeUrl" />
 
@@ -124,6 +133,21 @@ defineProps({
         </Card>
 
         <ProCard v-else :title="__('seo::cp.pro.search_console.title')" :body="__('seo::cp.pro.search_console.body')" :url="upgradeUrl" />
+
+        <Card class="space-y-2 p-4">
+            <Heading size="lg">{{ __('seo::cp.tracking.title') }}</Heading>
+            <Description v-if="!tracking.tools.length">{{ __('seo::cp.tracking.none') }}</Description>
+            <template v-else>
+                <ul class="space-y-1 text-sm">
+                    <li v-for="tool in tracking.tools" :key="tool.name">
+                        {{ tool.name }}: <span class="font-mono text-xs">{{ tool.id }}</span>
+                        <span v-if="tool.from_env" class="text-xs text-gray-500">({{ __('seo::cp.tracking.from_env') }})</span>
+                    </li>
+                </ul>
+                <Description>{{ __('seo::cp.tracking.live_only') }} <template v-if="tracking.consent">{{ __('seo::cp.tracking.consent') }}</template></Description>
+            </template>
+            <Button v-if="tracking.url" size="sm" :href="tracking.url" :text="__('seo::cp.tracking.edit')" />
+        </Card>
 
         <Card class="space-y-2 p-4">
             <Heading size="lg">{{ __('seo::cp.overview.files.title') }}</Heading>

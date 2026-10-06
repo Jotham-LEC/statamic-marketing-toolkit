@@ -89,6 +89,7 @@ Developers: start with [Getting started](docs/getting-started.md), then [For dev
 
 | Documentation | |
 |---|---|
+| [Tracking and Consent Mode](docs/tracking.md) | The tracking tags, Consent Mode, and how a cookie banner updates it. |
 | [Getting started](docs/getting-started.md) | Requirements, installing, the editions, the tag, permissions, and a checklist that it works. |
 | [A guide for editors](docs/editors.md) | For the people who write the pages: the fields, the preview, redirects, 404s and the link check. |
 | [Configuration](docs/configuration.md) | Every setting, permission and command. |

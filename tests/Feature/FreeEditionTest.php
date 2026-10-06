@@ -12,6 +12,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\ServiceProvider;
 use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Tests\FreeEdition;
+use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Actions\Action;
 use Statamic\Facades\Addon;
@@ -172,4 +173,14 @@ test('several sites: the overview is the default site\'s, with a Pro card for th
     $this->get(cp_route('seo.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
         ->where('severalSites', true)
         ->where('siteName', 'Acme'));
+});
+
+test('tracking tags and Consent Mode work; regions are Pro, so the defaults apply everywhere', function () {
+    seoGlobal(['gtm_id' => 'GTM-ABC1234', 'consent_mode' => true, 'consent_regions' => ['EEA']]);
+    $head = renderAt('/', '<s:seo:head />');
+
+    expect(app(Tracking::class)->consent()['regions'])->toBe([])
+        ->and($head)->toContain('gtm.js')
+        ->toContain("gtag('consent','default',{\"ad_storage\":\"denied\"")
+        ->not->toContain('"region"');
 });

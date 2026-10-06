@@ -38,3 +38,7 @@ A site without this line runs as Free. Since Co-SEO 0.17 that leaves out the rep
 
 - The control panel's scripts are published to `public/vendor/statamic-marketing-toolkit`. Their publish tag is now `marketing-toolkit`: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 - PHP classes moved from `JothamLec\Seo\…` to `JothamLec\MarketingToolkit\…`. Only a site that overrides `SiteSeo` (`'class'` in `config/seo.php`) or extends a share-card template needs to change its `use` lines.
+
+## 5. Use the new modules
+
+- **Tracking and Consent Mode**: run `php please seo:install --fields --tab=tracking`, swap `<s:seo:meta />` for `<s:seo:head />` at the top of the `<head>`, add `<s:seo:body />` right after `<body>`, then move the site's tracking IDs into the **Tracking** tab (or `.env`) and delete its own snippets, or each visit counts twice. See [tracking.md](tracking.md).

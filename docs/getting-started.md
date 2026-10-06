@@ -58,30 +58,33 @@ Already have your own `seo` group with `title`, `description` and `canonical`? T
 
 ## 3. Print the tags in your layout
 
-In the layout's `<head>`, remove your own `<title>`, description, canonical, Open Graph and JSON-LD tags, and add:
+In the layout, remove your own `<title>`, description, canonical, Open Graph and JSON-LD tags, and any Google Tag Manager, Google Analytics, PostHog, Meta Pixel or LinkedIn snippets. Then add one tag at the very top of the `<head>` and one right after `<body>`:
 
 ```blade
-<s:seo:meta />
+<head>
+    <s:seo:head />
+    …
+</head>
+<body>
+    <s:seo:body />
 ```
 
-or in Antlers:
+or in Antlers, `{{ seo:head }}` and `{{ seo:body }}`.
 
-```antlers
-{{ seo:meta }}
-```
+`seo:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `seo:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:seo:meta />` instead of `seo:head`, as before.
 
-Pages that aren't Statamic entries (a controller page, a 404 view) pass what they know:
+Pages that aren't Statamic entries (a controller page, a 404 view) pass what they know to either:
 
 ```blade
-<s:seo:meta title="Contact" description="Write to us." />
-<s:seo:meta :canonical="false" status="404" />
+<s:seo:head title="Contact" description="Write to us." />
+<s:seo:head :canonical="false" status="404" />
 ```
 
 All the parameters are in [developers.md](developers.md#the-tag).
 
 ## 4. Fill in "SEO & brand"
 
-In the control panel, open **Globals → SEO & brand**: separator, default description and share image, who publishes the site (organisation, local business or person), verification codes, robots.txt lines, humans.txt and the share-card colours. [editors.md](editors.md#seo--brand) explains each field.
+In the control panel, open **Globals → SEO & brand**: separator, default description and share image, who publishes the site (organisation, local business or person), tracking IDs and Consent Mode, verification codes, robots.txt lines, humans.txt and the share-card colours. [editors.md](editors.md#seo--brand) explains each field.
 
 ## 5. Add the dashboard widget (optional, Pro)
 

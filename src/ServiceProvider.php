@@ -24,6 +24,7 @@ use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\LegacySettings;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tags\Seo;
+use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Events\CollectionSaved;
 use Statamic\Events\CollectionTreeSaved;
@@ -103,6 +104,8 @@ class ServiceProvider extends AddonServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/seo.php', 'seo');
 
         $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class') ?: SiteSeo::class));
+
+        $this->app->bind(Tracking::class, fn ($app) => $app->build(config('seo.tracking.class') ?: Tracking::class));
 
         $this->app->bind(ReportSettings::class, fn () => new ReportSettings);
 
@@ -203,7 +206,12 @@ class ServiceProvider extends AddonServiceProvider
 
         Navigation::register();
 
-        Statamic::provideToScript(['seo' => ['pro' => Edition::pro()]]);
+        Statamic::provideToScript(['seo' => [
+            'pro' => Edition::pro(),
+            'global' => (string) config('seo.global'),
+            // Trackers set in .env, which the Tracking tab's warning counts as well.
+            'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
+        ]]);
     }
 
     /**

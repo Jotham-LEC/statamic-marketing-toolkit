@@ -97,4 +97,32 @@ Statamic.booting(() => {
     for (const type of ['entry', 'term']) {
         Statamic.$hooks.on(`${type}.saving`, (resolve, reject, payload) => confirmRedirect(payload).then(resolve, reject));
     }
+
+    // The Tracking tab's warning, as its fields change, and a toast when the brand global is saved.
+    Statamic.$conditions.add('seoTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
+
+    Statamic.$hooks.on('global-set.saving', (resolve, reject, payload) => {
+        if (payload?.globalSet === Statamic.$config.get('seo')?.global && trackingOverlaps(payload.values)) {
+            setTimeout(() => Statamic.$toast.info(__('seo::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
+        }
+
+        resolve();
+    });
 });
+
+/**
+ * Google Tag Manager and another tracker both set (in the form, or in .env):
+ * if GTM loads that tracker too, each visit counts twice.
+ */
+function trackingOverlaps(values) {
+    const env = Statamic.$config.get('seo')?.trackingFromConfig ?? {};
+    const set = (tracker, field) => Boolean(env[tracker] || String(values?.[field] ?? '').trim());
+    const others = [
+        ['ga4', 'ga4_id'],
+        ['posthog', 'posthog_key'],
+        ['meta', 'meta_pixel_id'],
+        ['linkedin', 'linkedin_partner_id'],
+    ];
+
+    return set('gtm', 'gtm_id') && others.some(([tracker, field]) => set(tracker, field));
+}

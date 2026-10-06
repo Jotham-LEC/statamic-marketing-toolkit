@@ -71,11 +71,19 @@ return [
         'tabs' => [
             'brand' => 'Brand',
             'publisher' => 'Publisher',
+            'tracking' => 'Tracking',
             'shop' => 'Shop',
             'share_cards' => 'Share cards',
             'crawlers' => 'Crawlers',
         ],
         'sections' => [
+            'tracking' => [
+                'instructions' => 'Paste each tool’s ID; leave the others empty. They load on the live site only, never while editing. An ID your developer set in .env wins over the one here.',
+            ],
+            'consent' => [
+                'display' => 'Consent Mode',
+                'instructions' => 'For a cookie banner you already have (Cookiebot, CookieYes, Iubenda…): what Google’s tags may do before a visitor answers. The banner then tells them the answer.',
+            ],
             'publisher' => [
                 'instructions' => 'Who is behind the site, for search engines (JSON-LD). Each value is printed only where its type accepts it.',
             ],
@@ -102,6 +110,47 @@ return [
         ],
 
         // Brand
+        'tracking_overlap' => [
+            'display' => 'Move these tags into Google Tag Manager',
+            'instructions' => 'Google Tag Manager is set, and so is at least one other tool here. If GTM loads that tool too, every visit counts twice. Add each tool as a tag in GTM, then clear its ID here.',
+        ],
+        'gtm_id' => [
+            'display' => 'Google Tag Manager',
+            'instructions' => 'With GTM, add every other tool as a tag there rather than here.',
+        ],
+        'ga4_id' => ['display' => 'Google Analytics 4 measurement ID'],
+        'posthog_key' => ['display' => 'PostHog project API key'],
+        'posthog_host' => [
+            'display' => 'PostHog host',
+            'instructions' => 'https://eu.i.posthog.com for an EU project; US unless set.',
+        ],
+        'meta_pixel_id' => ['display' => 'Meta Pixel ID'],
+        'linkedin_partner_id' => ['display' => 'LinkedIn Insight Tag partner ID'],
+        'consent_mode' => [
+            'display' => 'Use Consent Mode',
+            'instructions' => 'Off: the tags load as soon as the page does.',
+        ],
+        'consent_ad_storage' => ['display' => 'Advertising cookies (ad_storage)'],
+        'consent_analytics_storage' => ['display' => 'Analytics cookies (analytics_storage)'],
+        'consent_ad_user_data' => ['display' => 'Send data to Google for ads (ad_user_data)'],
+        'consent_ad_personalization' => ['display' => 'Personalised ads (ad_personalization)'],
+        'consent_value' => [
+            'options' => [
+                'denied' => 'Denied until they agree',
+                'granted' => 'Granted',
+            ],
+        ],
+        'consent_wait_for_update' => [
+            'display' => 'Wait for the banner',
+            'instructions' => 'How long Google’s tags wait for the banner’s answer before using these defaults.',
+        ],
+        'consent_regions' => [
+            'display' => 'Only in these regions (Pro)',
+            'instructions' => 'Country codes (FR, US-CA). The defaults above apply there; everywhere else, everything is granted. Empty: everywhere.',
+            'options' => [
+                'eea' => 'EEA, UK and Switzerland',
+            ],
+        ],
         'title_separator' => [
             'display' => 'Title separator',
             'instructions' => 'Between the page title and the site name, with a space on each side.',

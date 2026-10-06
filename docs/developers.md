@@ -100,7 +100,7 @@ Helpers available in a subclass: `settings()` (the brand global, with `string()`
 
 ## The tag
 
-`<s:seo:meta />` (Antlers: `{{ seo:meta }}`) prints every tag. It reads the entry or term from the view's `page`. Parameters:
+`<s:seo:head />` (Antlers: `{{ seo:head }}`) prints the Consent Mode defaults, the tracking tags and the meta tags; `<s:seo:meta />` prints the meta tags alone; `<s:seo:body />` prints the tracking tags' `<noscript>` fallbacks. They read the entry or term from the view's `page`. Parameters of `seo:head` and `seo:meta`:
 
 | Parameter | |
 |---|---|
@@ -111,6 +111,10 @@ Helpers available in a subclass: `settings()` (the brand global, with `string()`
 | `og_type` | og:type. |
 | `:noindex="true"` | Noindex this page. |
 | `status` | The response status; 4xx pages get noindex and no JSON-LD. |
+
+## Tracking from code
+
+`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `besideGtm()`, `head()` and `body()`. As with `SiteSeo`, extend it and name your class in `seo.tracking.class` to change one rule, e.g. `ids()` to read the IDs from somewhere else. See [tracking.md](tracking.md) for how the tags and Consent Mode behave.
 
 ## Add a share-card template
 

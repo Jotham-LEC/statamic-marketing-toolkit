@@ -221,6 +221,26 @@ return [
         'off' => 'The 404 log is turned off (:setting).',
     ],
 
+    // The tracking tags (src/Tracking), on the overview and in the Tracking tab's warning.
+    'tracking' => [
+        'title' => 'Tracking',
+        'names' => [
+            'gtm' => 'Google Tag Manager',
+            'ga4' => 'Google Analytics 4',
+            'posthog' => 'PostHog',
+            'meta' => 'Meta Pixel',
+            'linkedin' => 'LinkedIn Insight Tag',
+        ],
+        'none' => 'No tracking tags yet. Add Google Tag Manager, Google Analytics, PostHog, the Meta Pixel or LinkedIn in the Tracking tab of Brand & defaults.',
+        'live_only' => 'They load on the live site only.',
+        'from_env' => 'set in .env',
+        'consent' => 'Consent Mode is on.',
+        'overlap_title' => 'Move these tags into Google Tag Manager',
+        'overlap' => 'Google Tag Manager is set, and so are :tools. If GTM loads them too, every visit counts twice: add them as tags in GTM, then clear their IDs here.',
+        'overlap_toast' => 'Saved. Google Tag Manager is set, and so is another tracking tool: move it into GTM, or every visit may count twice.',
+        'edit' => 'Edit tracking',
+    ],
+
     // The dashboard widget.
     'widget' => [
         'latest_report' => 'Link check',

@@ -165,6 +165,23 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 `config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the link check, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
 
+## Tracking
+
+Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (and shows as "set in .env" on Tools → SEO). See [tracking.md](tracking.md).
+
+| Key | `.env` | |
+|---|---|---|
+| `tracking.gtm` | `SEO_GTM_ID` | Google Tag Manager container, `GTM-XXXXXXX`. |
+| `tracking.ga4` | `SEO_GA4_ID` | Google Analytics 4 measurement ID, `G-XXXXXXXXXX`. |
+| `tracking.posthog_key` | `SEO_POSTHOG_KEY` | PostHog project API key, `phc_…`. |
+| `tracking.posthog_host` | `SEO_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. |
+| `tracking.meta_pixel` | `SEO_META_PIXEL_ID` | Meta Pixel ID (digits). |
+| `tracking.linkedin` | `SEO_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
+| `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
+| `tracking.class` | | A subclass of `Tracking` to change how the tags are worked out. |
+
+An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed. Consent Mode is set in the global only.
+
 ## Link check (Pro)
 
 | Key | Default | |

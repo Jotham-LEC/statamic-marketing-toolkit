@@ -240,6 +240,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Tracking
+    |--------------------------------------------------------------------------
+    |
+    | Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the
+    | LinkedIn Insight Tag, printed by <s:seo:head /> and <s:seo:body />. Set
+    | them in the Tracking tab of the SEO & brand global, or here (.env),
+    | which wins. They print only in these environments, never in Live Preview.
+    |
+    */
+
+    'tracking' => [
+        'environments' => ['production'],
+        'gtm' => env('SEO_GTM_ID'),
+        'ga4' => env('SEO_GA4_ID'),
+        'posthog_key' => env('SEO_POSTHOG_KEY'),
+        'posthog_host' => env('SEO_POSTHOG_HOST'),
+        'meta_pixel' => env('SEO_META_PIXEL_ID'),
+        'linkedin' => env('SEO_LINKEDIN_PARTNER_ID'),
+        'class' => null,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Link check (Pro)
     |--------------------------------------------------------------------------
     |

@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Commands;
 
 use Illuminate\Console\Command;
+use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
@@ -225,6 +226,10 @@ class Install extends Command
     public static function tabs(string $container): array
     {
         $field = fn (string $handle, array $config) => ['handle' => $handle, 'field' => $config];
+        $consent = fn (string $display) => ['type' => 'button_group', 'display' => $display, 'width' => 50, 'default' => 'denied', 'if' => ['consent_mode' => 'true'], 'options' => [
+            'denied' => 'seo::fields.brand.consent_value.options.denied',
+            'granted' => 'seo::fields.brand.consent_value.options.granted',
+        ]];
         $asset = fn (string $display, string $instructions = '') => ['type' => 'assets', 'display' => $display, 'container' => $container, 'max_files' => 1, 'instructions' => $instructions];
 
         return [
@@ -270,6 +275,26 @@ class Install extends Command
                         $field('opens', ['type' => 'time', 'display' => 'seo::fields.brand.opens.display']),
                         $field('closes', ['type' => 'time', 'display' => 'seo::fields.brand.closes.display']),
                     ]]),
+                ]],
+            ]],
+            'tracking' => ['display' => 'seo::fields.brand.tabs.tracking', 'sections' => [
+                ['instructions' => 'seo::fields.brand.sections.tracking.instructions', 'fields' => [
+                    $field('tracking_overlap', ['type' => 'section', 'display' => 'seo::fields.brand.tracking_overlap.display', 'instructions' => 'seo::fields.brand.tracking_overlap.instructions', 'if' => 'seoTrackingOverlap']),
+                    $field('gtm_id', ['type' => 'text', 'display' => 'seo::fields.brand.gtm_id.display', 'width' => 50, 'placeholder' => 'GTM-XXXXXXX', 'instructions' => 'seo::fields.brand.gtm_id.instructions', 'validate' => ['nullable', 'regex:/^GTM-[A-Z0-9]{4,12}$/i']]),
+                    $field('ga4_id', ['type' => 'text', 'display' => 'seo::fields.brand.ga4_id.display', 'width' => 50, 'placeholder' => 'G-XXXXXXXXXX', 'validate' => ['nullable', 'regex:/^G-[A-Z0-9]{4,16}$/i']]),
+                    $field('posthog_key', ['type' => 'text', 'display' => 'seo::fields.brand.posthog_key.display', 'width' => 50, 'placeholder' => 'phc_…', 'validate' => ['nullable', 'regex:/^phc_[A-Za-z0-9]{16,64}$/']]),
+                    $field('posthog_host', ['type' => 'text', 'input_type' => 'url', 'display' => 'seo::fields.brand.posthog_host.display', 'width' => 50, 'placeholder' => 'https://us.i.posthog.com', 'instructions' => 'seo::fields.brand.posthog_host.instructions']),
+                    $field('meta_pixel_id', ['type' => 'text', 'display' => 'seo::fields.brand.meta_pixel_id.display', 'width' => 50, 'validate' => ['nullable', 'regex:/^\d{6,20}$/']]),
+                    $field('linkedin_partner_id', ['type' => 'text', 'display' => 'seo::fields.brand.linkedin_partner_id.display', 'width' => 50, 'validate' => ['nullable', 'regex:/^\d{3,12}$/']]),
+                ]],
+                ['display' => 'seo::fields.brand.sections.consent.display', 'instructions' => 'seo::fields.brand.sections.consent.instructions', 'fields' => [
+                    $field('consent_mode', ['type' => 'toggle', 'display' => 'seo::fields.brand.consent_mode.display', 'instructions' => 'seo::fields.brand.consent_mode.instructions']),
+                    $field('consent_ad_storage', $consent('seo::fields.brand.consent_ad_storage.display')),
+                    $field('consent_analytics_storage', $consent('seo::fields.brand.consent_analytics_storage.display')),
+                    $field('consent_ad_user_data', $consent('seo::fields.brand.consent_ad_user_data.display')),
+                    $field('consent_ad_personalization', $consent('seo::fields.brand.consent_ad_personalization.display')),
+                    $field('consent_wait_for_update', ['type' => 'integer', 'display' => 'seo::fields.brand.consent_wait_for_update.display', 'width' => 50, 'default' => 500, 'append' => 'ms', 'if' => ['consent_mode' => 'true'], 'instructions' => 'seo::fields.brand.consent_wait_for_update.instructions']),
+                    $field('consent_regions', ['type' => 'select', 'display' => 'seo::fields.brand.consent_regions.display', 'width' => 50, 'multiple' => true, 'taggable' => true, 'options' => [Tracking::EEA => 'seo::fields.brand.consent_regions.options.eea'], 'if' => ['consent_mode' => 'true'], 'instructions' => 'seo::fields.brand.consent_regions.instructions']),
                 ]],
             ]],
             'shop' => ['display' => 'seo::fields.brand.tabs.shop', 'sections' => [

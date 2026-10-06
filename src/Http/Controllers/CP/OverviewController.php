@@ -12,6 +12,7 @@ use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -72,6 +73,7 @@ class OverviewController
                 'url' => cp_route('seo.search-console.index'),
             ] : null,
             // On the site's own address, which can differ from the control panel's.
+            'tracking' => $this->tracking($variables && $user->can('edit', $variables) ? $variables->editUrl() : null),
             // Free on a multi-site install: what Pro adds there.
             'severalSites' => Sites::installed() && ! $pro,
             'files' => collect([
@@ -80,6 +82,28 @@ class OverviewController
                 __('seo::cp.overview.files.card') => config('seo.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
         ]);
+    }
+
+    /**
+     * The trackers set, each with where it comes from, and those loaded beside GTM.
+     *
+     * @return array<string, mixed>
+     */
+    private function tracking(?string $url): array
+    {
+        $tracking = app(Tracking::class);
+        $fromConfig = $tracking->fromConfig();
+
+        return [
+            'tools' => collect($tracking->ids())->filter()->map(fn (string $id, string $tracker) => [
+                'name' => __('seo::cp.tracking.names.'.$tracker),
+                'id' => $id,
+                'from_env' => $fromConfig[$tracker],
+            ])->values()->all(),
+            'consent' => $tracking->consent() !== null,
+            'overlap' => $tracking->besideGtm(),
+            'url' => $url,
+        ];
     }
 
     /**
