@@ -2,10 +2,12 @@
 
 namespace JothamLec\MarketingToolkit\Tests;
 
+use Composer\Autoload\ClassLoader;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use JothamLec\MarketingToolkit\ServiceProvider;
 use JothamLec\MarketingToolkit\Support\Edition;
+use ReflectionClass;
 use Statamic\Addons\Manifest;
 use Statamic\Facades\Stache;
 use Statamic\Testing\AddonTestCase;
@@ -31,7 +33,8 @@ abstract class TestCase extends AddonTestCase
         }
 
         // One per checkout, fresh after each composer install or update.
-        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.md5(realpath($skeleton).filemtime($skeleton.'/vendor/composer/installed.json')).'-'.$token;
+        $vendor = dirname((string) (new ReflectionClass(ClassLoader::class))->getFileName(), 2);
+        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.md5($vendor.filemtime($vendor.'/composer/installed.json')).'-'.$token;
 
         if (! is_dir($copy)) {
             $files = new Filesystem;
@@ -44,7 +47,7 @@ abstract class TestCase extends AddonTestCase
             foreach (['app/public', 'app/private', 'framework/cache', 'framework/sessions', 'framework/views', 'logs'] as $folder) {
                 $files->ensureDirectoryExists($copy.'/storage/'.$folder);
             }
-            $files->link(realpath($skeleton.'/vendor'), $copy.'/vendor');
+            $files->link($vendor, $copy.'/vendor');
         }
 
         return $copy;
