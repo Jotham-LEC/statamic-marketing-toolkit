@@ -3,6 +3,8 @@ import { Head, Link, router } from '@statamic/cms/inertia';
 import { Badge, Button, Card, Header, Listing } from '@statamic/cms/ui';
 import { computed, ref } from 'vue';
 import ReportProgress from '../components/ReportProgress.vue';
+import Gauge from '../components/Gauge.vue';
+import Score from '../components/Score.vue';
 
 const props = defineProps({
     report: { type: Object, required: true },
@@ -32,21 +34,31 @@ const finished = computed(() =>
     </Card>
 
     <template v-else>
-        <Card class="mb-6 p-4 text-sm">
-            <p>
-                {{ __n('seo::reports.cp.summary', counts.checked + counts.noindex + counts.errors, { count: counts.checked + counts.noindex + counts.errors, finished }) }}
-                <strong v-if="counts.with_issues" class="text-(--theme-color-danger)">{{ __n('seo::reports.cp.with_issues', counts.with_issues, { count: counts.with_issues }) }}</strong>
-                <template v-else>{{ __('seo::reports.cp.all_good') }}</template>
-                <template v-if="counts.noindex"> {{ __n('seo::reports.cp.noindex', counts.noindex, { count: counts.noindex }) }}</template>
-                <template v-if="counts.errors"> {{ __n('seo::reports.cp.not_rendered', counts.errors, { count: counts.errors }) }}</template>
-            </p>
-        </Card>
+        <div class="mb-6 grid gap-4 md:grid-cols-[auto_1fr]">
+            <Card class="flex flex-col items-center justify-center p-6">
+                <Gauge :value="report.score" size="lg" :label="__('seo::reports.cp.out_of')" />
+            </Card>
+            <Card class="p-4 text-sm">
+                <p>
+                    {{ __n('seo::reports.cp.scored', counts.scored, { count: counts.scored, finished }) }}
+                    <template v-if="counts.noindex"> {{ __n('seo::reports.cp.noindex', counts.noindex, { count: counts.noindex }) }}</template>
+                    <template v-if="counts.errors">
+                        <strong class="text-(--theme-color-danger)">{{ __n('seo::reports.cp.not_rendered', counts.errors, { count: counts.errors }) }}</strong>
+                        {{ __('seo::reports.cp.scores_zero') }}
+                    </template>
+                </p>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">
+                    {{ __('seo::reports.cp.weights') }}
+                </p>
+            </Card>
+        </div>
 
         <Card class="mb-6 overflow-hidden">
             <table class="w-full text-sm">
                 <thead class="text-left text-gray-600 dark:text-gray-400">
                     <tr>
                         <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.check') }}</th>
+                        <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.weight') }}</th>
                         <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.failing') }}</th>
                         <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.warnings') }}</th>
                     </tr>
@@ -60,6 +72,7 @@ const finished = computed(() =>
                         @click="rule = rule === item.handle ? null : item.handle"
                     >
                         <td class="px-4 py-2">{{ item.label }}</td>
+                        <td class="px-4 py-2 tabular-nums">{{ item.weight }}</td>
                         <td class="px-4 py-2 tabular-nums" :class="{ 'font-semibold text-(--theme-color-danger)': item.fail }">{{ item.fail }}</td>
                         <td class="px-4 py-2 tabular-nums" :class="{ 'text-amber-700': item.warn }">{{ item.warn }}</td>
                     </tr>
@@ -67,14 +80,17 @@ const finished = computed(() =>
             </table>
         </Card>
 
-        <p v-if="counts.with_issues" class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
             <template v-if="rule">
                 {{ __('seo::reports.cp.flagged_by', { check: ruleLabel }) }} <button class="underline" @click="rule = null">{{ __('seo::reports.cp.show_all') }}</button>
             </template>
             <template v-else>{{ __('seo::reports.cp.all_pages') }}</template>
         </p>
 
-        <Listing v-if="counts.with_issues" :key="url" :url="url" sort-column="title" sort-direction="asc" :allow-presets="false" :allow-bulk-actions="false" preferences-prefix="seo.report">
+        <Listing :key="url" :url="url" sort-column="score" sort-direction="asc" :allow-presets="false" :allow-bulk-actions="false" preferences-prefix="seo.report">
+            <template #cell-score="{ row }">
+                <Score :value="row.score" />
+            </template>
             <template #cell-title="{ row }">
                 <div class="flex items-center gap-2">
                     <a :href="row.url" target="_blank" rel="noopener" class="font-medium">{{ row.title }}</a>
@@ -87,6 +103,9 @@ const finished = computed(() =>
                         <strong>{{ issue.label }}:</strong> {{ issue.message }}
                     </li>
                 </ul>
+            </template>
+            <template #cell-in_sitemap="{ row }">
+                <span class="text-sm">{{ row.in_sitemap ? __('seo::reports.cp.yes') : __('seo::reports.cp.no') }}</span>
             </template>
         </Listing>
     </template>

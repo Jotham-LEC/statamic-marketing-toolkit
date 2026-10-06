@@ -2,6 +2,7 @@
 import { Head } from '@statamic/cms/inertia';
 import { Button, Card, Description, Header, Heading } from '@statamic/cms/ui';
 import ProCard from '../components/ProCard.vue';
+import Gauge from '../components/Gauge.vue';
 import When from '../components/When.vue';
 
 defineProps({
@@ -40,15 +41,23 @@ defineProps({
         <div class="grid gap-6 md:grid-cols-2">
             <Card v-if="report" class="flex flex-col gap-3 p-4">
                 <Heading size="lg">{{ __('seo::cp.overview.report.title') }}</Heading>
-                <Description v-if="report.latest">
-                    <template v-if="report.latest.issues">{{ __n('seo::cp.overview.report.pages', report.latest.issues, { count: report.latest.issues }) }}</template>
-                    <template v-else>{{ __('seo::cp.overview.report.all_good') }}</template>
-                    <When :value="report.latest.finished_at" />
-                </Description>
+                <div v-if="report.latest" class="flex flex-wrap items-center gap-6">
+                    <Gauge :value="report.latest.score" :label="__('seo::cp.gauge.label')" />
+                    <div class="min-w-48 flex-1 space-y-2">
+                        <Description>{{ __n('seo::cp.overview.report.pages', report.latest.pages, { count: report.latest.pages }) }} <When :value="report.latest.finished_at" /></Description>
+                        <ul v-if="report.latest.checks.length" class="space-y-1 text-sm">
+                            <li v-for="check in report.latest.checks" :key="check.label" class="flex justify-between gap-4 border-b border-dotted border-gray-300 pb-1 dark:border-gray-700">
+                                <span class="truncate">{{ check.label }}</span>
+                                <span class="shrink-0 tabular-nums font-semibold text-(--theme-color-danger)">{{ check.fail }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <Description v-else>{{ __('seo::cp.overview.report.none') }}</Description>
                 <div class="mt-auto flex flex-wrap gap-2">
                     <Button v-if="report.latest" :href="report.latest.url" :text="__('seo::cp.overview.report.open_latest')" />
                     <Button :href="report.url" :text="__('seo::cp.overview.report.all')" />
+                    <Button v-if="report.settings_url" :href="report.settings_url" :text="__('seo::cp.overview.report.settings')" variant="ghost" />
                 </div>
             </Card>
             <ProCard v-else :title="__('seo::cp.pro.reports.title')" :body="__('seo::cp.pro.reports.body')" :url="upgradeUrl" />

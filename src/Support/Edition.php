@@ -9,7 +9,7 @@ use Throwable;
  * The addon's edition: `free` (the default) or `pro`, as Statamic reads it
  * from `config/statamic/editions.php` (`'addons' => [PACKAGE => 'pro']`).
  * Pro adds several sites with hreflang, Consent Mode regions, leads and
- * their source, campaign links, Search Console, the link check, generated
+ * their source, campaign links, Search Console, reports, generated
  * share images, automatic 301s, the 404 log, CSV import and export of
  * redirects, the Features switches and the dashboard widget.
  */

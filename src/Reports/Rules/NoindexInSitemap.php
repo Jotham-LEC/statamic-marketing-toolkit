@@ -6,27 +6,32 @@ use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
-class OgImage extends Rule
+class NoindexInSitemap extends Rule
 {
     public static function handle(): string
     {
-        return 'og_image';
+        return 'noindex_in_sitemap';
     }
 
     public function label(): string
     {
-        return 'seo::reports.rules.og_image';
+        return 'seo::reports.rules.noindex_in_sitemap';
     }
 
     public function weight(): int
     {
-        return 1;
+        return 3;
+    }
+
+    public function appliesToNoindex(): bool
+    {
+        return true;
     }
 
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
-        return $page->ogImage === null
-            ? Result::fail('seo::reports.messages.og_image_missing')
+        return $page->noindex() && $page->inSitemap
+            ? Result::fail('seo::reports.messages.noindex_in_sitemap')
             : Result::pass();
     }
 }

@@ -1,6 +1,6 @@
 {
     "name": "jotham-lec/statamic-marketing-toolkit",
-    "description": "The marketing fundamentals for a Statamic website: SEO, tracking tags, Consent Mode, favicons and redirects, plus Search Console numbers, broken link checks and conversion events on Pro.",
+    "description": "The marketing fundamentals for a Statamic website: SEO, tracking tags, Consent Mode, favicons and redirects, plus Search Console numbers, site reports with a score and conversion events on Pro.",
     "type": "statamic-addon",
     "license": "proprietary",
     "autoload": {

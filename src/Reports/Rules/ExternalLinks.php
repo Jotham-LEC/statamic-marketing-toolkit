@@ -4,10 +4,11 @@ namespace JothamLec\MarketingToolkit\Reports\Rules;
 
 use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
+use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 /**
  * Links to other sites that lead nowhere (a 404, a 410, a domain that no
- * longer exists). `seo.reports.external_links` turns it off.
+ * longer exists). Off by default: checking means requests to those sites.
  */
 class ExternalLinks extends Rule
 {
@@ -21,15 +22,17 @@ class ExternalLinks extends Rule
         return 'seo::reports.rules.external_links';
     }
 
-    public function check(string $url, PageFacts $page): Result
+    public function weight(): int
     {
-        return $page->brokenExternalLinks === []
-            ? Result::pass()
-            : Result::fail('seo::reports.messages.external_links_broken', ['links' => $this->listed($page->brokenExternalLinks)]);
+        return 1;
     }
 
-    public function appliesToNoindex(): bool
+    public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
-        return true;
+        if ($page->brokenExternalLinks === []) {
+            return Result::pass();
+        }
+
+        return Result::fail('seo::reports.messages.external_links_broken', ['links' => $this->listed($page->brokenExternalLinks, 5, paths: false)]);
     }
 }

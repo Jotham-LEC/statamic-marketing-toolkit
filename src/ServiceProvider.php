@@ -215,6 +215,14 @@ class ServiceProvider extends AddonServiceProvider
         return Edition::pro() ? $classes : array_values(array_diff($classes, self::PRO_ONLY));
     }
 
+    /**
+     * The settings are the reports': Pro only.
+     */
+    protected function bootSettingsBlueprint()
+    {
+        return Edition::pro() ? parent::bootSettingsBlueprint() : $this;
+    }
+
     public function bootAddon(): void
     {
         $this->bootSeoNames();
@@ -297,6 +305,8 @@ class ServiceProvider extends AddonServiceProvider
         }
 
         $settings = app(ReportSettings::class);
+        // Off under Features (or in config/seo.php): reports run only by hand.
+        $schedules = config('seo.reports.enabled', true) ? $settings->get('schedule') : 'off';
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);
 
@@ -304,7 +314,7 @@ class ServiceProvider extends AddonServiceProvider
         foreach (Sites::multiple() ? Sites::handles() : [null] as $site) {
             $command = $site === null ? 'statamic:seo:report' : 'statamic:seo:report --site='.$site;
 
-            $event = match ($settings->get('schedule')) {
+            $event = match ($schedules) {
                 'daily' => $schedule->command($command)->dailyAt($time),
                 'weekly' => $schedule->command($command)->weeklyOn($day === false ? 1 : $day, $time),
                 default => null,

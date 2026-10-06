@@ -26,7 +26,7 @@ final class Features
         'redirects' => ['seo.redirects.enabled' => false],
         'automatic_redirects' => ['seo.redirects.automatic' => false],
         'not_found' => ['seo.not_found.enabled' => false],
-        'link_check' => ['seo.reports.schedule' => false],
+        'reports' => ['seo.reports.enabled' => false],
         'tracking' => ['seo.tracking.enabled' => false],
         'leads' => ['seo.leads.enabled' => false],
         'favicons' => ['seo.favicons.enabled' => false],

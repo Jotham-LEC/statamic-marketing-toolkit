@@ -3,12 +3,14 @@ import { Head, Link, router } from '@statamic/cms/inertia';
 import { Badge, Button, Card, Header } from '@statamic/cms/ui';
 import { computed, getCurrentInstance, ref } from 'vue';
 import ReportProgress from '../components/ReportProgress.vue';
+import Score from '../components/Score.vue';
 import When from '../components/When.vue';
 
 const props = defineProps({
     reports: { type: Array, required: true },
     canRun: { type: Boolean, required: true },
     runUrl: { type: String, required: true },
+    settingsUrl: { type: String, default: null },
 });
 
 const { $axios: axios, $toast: toast } = getCurrentInstance().appContext.config.globalProperties;
@@ -38,6 +40,7 @@ function finished(report) {
     <Head :title="__('seo::reports.cp.title')" />
 
     <Header :title="__('seo::reports.cp.title')" icon="charts-donut-graph">
+        <Button v-if="settingsUrl" :text="__('seo::reports.cp.settings')" :href="settingsUrl" />
         <Button v-if="canRun" :text="__('seo::reports.cp.run')" variant="primary" :loading="starting" :disabled="!!running" @click="run" />
     </Header>
 
@@ -54,7 +57,7 @@ function finished(report) {
             <thead class="text-left text-gray-600 dark:text-gray-400">
                 <tr>
                     <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.column_report') }}</th>
-                    <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.issues') }}</th>
+                    <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.score') }}</th>
                     <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.pages') }}</th>
                     <th class="px-4 py-2 font-medium">{{ __('seo::reports.cp.finished') }}</th>
                 </tr>
@@ -66,7 +69,7 @@ function finished(report) {
                         <span v-else>{{ __('seo::reports.cp.report', { id: report.id }) }}</span>
                     </td>
                     <td class="px-4 py-2">
-                        <span v-if="report.status === 'done'" class="tabular-nums" :class="{ 'font-semibold text-(--theme-color-danger)': report.with_issues }">{{ report.with_issues ?? '—' }}</span>
+                        <Score v-if="report.status === 'done'" :value="report.score" />
                         <Badge v-else-if="report.status === 'running'" :text="__('seo::reports.cp.running')" />
                         <Badge v-else color="red" :text="__('seo::reports.cp.failed')" :title="report.error" />
                     </td>

@@ -4,14 +4,17 @@ namespace JothamLec\MarketingToolkit\Reports\Rules;
 
 use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
+use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 /**
- * One check the link check runs on every page.
+ * One check a report runs on every page. Its weight is how much it counts
+ * towards the page's score: 3 for what keeps a page out of search results,
+ * 2 for what shapes how it shows, 1 for polish.
  */
 abstract class Rule
 {
     /**
-     * The key in a page's results.
+     * The key in the addon settings (`rule_{handle}`) and in a page's results.
      */
     abstract public static function handle(): string;
 
@@ -21,7 +24,9 @@ abstract class Rule
      */
     abstract public function label(): string;
 
-    abstract public function check(string $url, PageFacts $page): Result;
+    abstract public function weight(): int;
+
+    abstract public function check(string $url, PageFacts $page, SiteFacts $site): Result;
 
     /**
      * Whether the check applies to a page search engines are told to skip.
@@ -32,14 +37,27 @@ abstract class Rule
     }
 
     /**
-     * As a message parameter, the first few items, then "and N more",
-     * translated when the message is shown.
+     * The paths of some pages, for a message: the first few, then "and N more".
+     *
+     * @param  list<string>  $urls
+     */
+    protected function list(array $urls, int $show = 3): string
+    {
+        $list = $this->listed($urls, $show);
+
+        return is_array($list) ? Result::translate($list['message'], $list['params']) : $list;
+    }
+
+    /**
+     * As list(), as a message parameter, translated when the message is shown.
+     * Full addresses are shortened to their paths unless $paths is false.
      *
      * @param  list<string>  $items
      * @return string|array{message: string, params: array{list: string, count: int}}
      */
-    protected function listed(array $items, int $show = 5): string|array
+    protected function listed(array $items, int $show = 3, bool $paths = true): string|array
     {
+        $items = $paths ? array_map(fn ($url) => parse_url($url, PHP_URL_PATH) ?: '/', $items) : $items;
         $list = implode(', ', array_slice($items, 0, $show));
         $more = count($items) - $show;
 

@@ -286,19 +286,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Link check (Pro)
+    | Reports (Pro)
     |--------------------------------------------------------------------------
     |
-    | Opens every published page and lists broken links (on the site and to
-    | other sites) and pages with no description or share image. Runs on
-    | the Laravel scheduler: 'weekly' (Monday, 03:00), 'daily' or false.
+    | Which checks a report runs, their thresholds and its schedule are set
+    | under Tools → SEO → Report settings. Off here (or under Features), no
+    | report runs on the schedule; one can still run by hand.
     |
     */
 
     'reports' => [
-        'schedule' => 'weekly',
-        'external_links' => true,
-        'exclude_collections' => [],
+        'enabled' => true,
     ],
 
     /*

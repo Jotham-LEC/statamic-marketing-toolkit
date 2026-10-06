@@ -3,6 +3,7 @@
 Two places, by who changes what:
 
 - **`config/seo.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=seo-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them.
+- **Tools → Addons → SEO** (Statamic's addon settings): report settings an editor may want to change.
 
 The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
 
@@ -75,7 +76,7 @@ A set switched off in the control panel isn't on the page, so it counts for noth
 ],
 ```
 
-Terms are listed in the sitemap (and checked by the link check) when their taxonomy is in `sitemap.taxonomies` and they have published entries. Statamic counts only entries of the collections a taxonomy is attached to; when entries name their terms in a `terms` field of a taxonomy that isn't attached, override `termHasEntries()` in your `SiteSeo` subclass.
+Terms are listed in the sitemap (and checked by reports) when their taxonomy is in `sitemap.taxonomies` and they have published entries. Statamic counts only entries of the collections a taxonomy is attached to; when entries name their terms in a `terms` field of a taxonomy that isn't attached, override `termHasEntries()` in your `SiteSeo` subclass.
 
 ### Robots
 
@@ -93,7 +94,7 @@ Terms are listed in the sitemap (and checked by the link check) when their taxon
 | `sitemap.enabled` | `true` | Serves `/sitemap.xml`. |
 | `sitemap.collections` | `null` | `null`: every collection with a route. Or a list of handles. |
 | `sitemap.exclude_collections` | `[]` | Left out even when `collections` is `null`. |
-| `sitemap.taxonomies` | `[]` | Taxonomies whose terms are listed (only terms with published entries). The link check checks these terms too. |
+| `sitemap.taxonomies` | `[]` | Taxonomies whose terms are listed (only terms with published entries). Reports check these terms too. |
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
 | `robots_txt` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins. |
 
@@ -163,13 +164,13 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 ## Features (Pro)
 
-**Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, the weekly link check, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot, before anything registers: its routes answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted.
+**Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot, before anything registers: its routes answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted.
 
 Each switch sets the matching key below to off, whatever `config/seo.php` says. In Free, the screen isn't there and every module follows `config/seo.php`.
 
 ## Editions
 
-`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the link check, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
+`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the reports and their settings, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
 
 ## Tracking
 
@@ -206,23 +207,37 @@ A file of the same name in `public/` wins over either.
 
 From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg` (an SVG upload, as it is), `/apple-touch-icon.png` (180 px, on the icon background), `/icon-192.png`, `/icon-512.png` and `/site.webmanifest` (the site's name, short name and colours). They're made once per version of the image and colours, kept in `storage/app/marketing-toolkit/favicons`, made again when SEO & brand is saved, and served without a session or cookie. A file of the same name in `public/` wins, so delete old ones there. Drawing SVG needs PHP's Imagick; with GD alone an SVG gives `/favicon.svg` and the manifest, so upload a PNG on such hosts.
 
-## Link check (Pro)
+## Report settings (Pro)
 
-| Key | Default | |
+**Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit), saved as YAML in `resources/addons/marketing-toolkit.yaml` (or wherever your site stores addon settings). On a site where the production control panel is where content lives, keep that file out of deploys, or store addon settings in the database, so a deploy doesn't overwrite them.
+
+**Checks** tab:
+
+| Setting | Default | |
 |---|---|---|
-| `reports.schedule` | `'weekly'` | `'weekly'` (Monday, 03:00, app timezone), `'daily'` (03:00) or `false` (by hand only). Needs the scheduler. |
-| `reports.external_links` | `true` | Ask other sites whether the pages linked to still exist (each address once a day). `false` checks links within the site only. |
-| `reports.exclude_collections` | `[]` | Collections whose entries aren't checked. |
+| A switch per check | all on | A check that's off is left out of the reports and the scores. |
+| Title: at least / at most | 30 / 60 | Thresholds for the title check and the preview's title counter. |
+| Description: at least / at most | 50 / 160 | The same for descriptions. |
 
-The last 10 checks are kept. The Search Console property is kept in the addon settings (`resources/addons/marketing-toolkit.yaml`: `search_console_property`, and `search_console_properties` for the other sites), set on **Tools → SEO → Search Console**. `SEO_SEARCH_CONSOLE_PROPERTY` wins over them. On a site where the production control panel is where content lives, keep that file out of deploys, or store addon settings in the database.
+**Running** tab:
+
+| Setting | Default | |
+|---|---|---|
+| Leave out these collections | none | Their entries aren't checked. |
+| Most pages per report | 0 (all) | Stops after this many pages. |
+| Pages per step | 25 | Pages one step renders. Lower it if a step times out. |
+| Reports to keep | 10 | Older reports are deleted when a new one finishes. |
+| Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. `seo.reports.enabled` (or the Features switch) off stops the schedule. |
+
+The Search Console property is kept here too (`search_console_property`, and `search_console_properties` for the other sites), but set on **Tools → SEO → Search Console**. `SEO_SEARCH_CONSOLE_PROPERTY` wins over them.
 
 ## Permissions
 
 | Permission | |
 |---|---|
-| `view seo` | Tools → SEO; with Pro, the link check, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
+| `view seo` | Tools → SEO; with Pro, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
 | `manage seo redirects` | Create, edit and delete redirects; with Pro, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
-| `run seo reports` | Start a link check (Pro). |
+| `run seo reports` | Start a report (Pro). |
 
 ## Commands
 
@@ -231,4 +246,4 @@ The last 10 checks are kept. The Search Console property is kept in the addon se
 | `php please seo:install [--container=] [--fields] [--tab=shop]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has; `--tab` adds a whole tab it doesn't have (`shop`, `publisher`…). |
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:search-console [--site=]` (Pro) | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
-| `php please seo:report [--site=]` (Pro) | Runs a whole link check in the terminal and prints what to fix. Continues one that's already running. With several sites, one per site in turn, or only `--site`; the schedule runs one per site. |
+| `php please seo:report [--site=]` (Pro) | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |

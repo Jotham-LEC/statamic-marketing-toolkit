@@ -6,27 +6,29 @@ use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
-class OgImage extends Rule
+class TitleUnique extends Rule
 {
     public static function handle(): string
     {
-        return 'og_image';
+        return 'title_unique';
     }
 
     public function label(): string
     {
-        return 'seo::reports.rules.og_image';
+        return 'seo::reports.rules.title_unique';
     }
 
     public function weight(): int
     {
-        return 1;
+        return 2;
     }
 
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
-        return $page->ogImage === null
-            ? Result::fail('seo::reports.messages.og_image_missing')
-            : Result::pass();
+        $others = $site->sameTitle($url, $page->title);
+
+        return $others === []
+            ? Result::pass()
+            : Result::fail('seo::reports.messages.title_same', ['pages' => $this->listed($others)]);
     }
 }

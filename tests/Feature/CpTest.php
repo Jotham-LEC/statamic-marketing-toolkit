@@ -24,7 +24,7 @@ test('Tools → SEO opens the overview and links to the brand global', function 
 
     expect($seo)->not->toBeNull()
         ->and($seo->url())->toBe(cp_route('seo.index'))
-        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Link check', 'Redirects', '404s', 'Search Console', 'Brand & defaults', 'Features']);
+        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Reports', 'Redirects', '404s', 'Search Console', 'Brand & defaults', 'Report settings', 'Features']);
 
     $this->get(cp_route('seo.index'))
         ->assertOk()
@@ -91,9 +91,9 @@ test('the dashboard widget is left out for people without "view seo"', function 
 test('the addon finds itself under the package name in composer.json', function () {
     $name = json_decode((string) file_get_contents(__DIR__.'/../../composer.json'), true)['name'];
 
-    // Edition and the Search Console connection look the addon up by this name.
+    // Navigation, ReportsController and ReportSettings look the addon up by this name.
     expect($name)->toBe('jotham-lec/statamic-marketing-toolkit')
-        ->and(Addon::get($name))->not->toBeNull();
+        ->and(Addon::get($name)?->hasSettingsBlueprint())->toBeTrue();
 });
 
 test('the SEO names stay as they were under Co-SEO', function () {

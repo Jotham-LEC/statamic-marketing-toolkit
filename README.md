@@ -8,19 +8,21 @@ It is the only Statamic SEO addon that shows Google Search Console's clicks and 
 
 <!-- Screenshot: docs/images/search-console.png (Tools → SEO, Google Search panel) -->
 
-Connect Google Search Console once, step by step, from the control panel. Every day Marketing Toolkit brings in how often each page appeared in Google, how often it was clicked, and where it ranked. A page that ranks but never gets clicked, or one that has dropped, stands out.
+Connect Google Search Console once, step by step, from the control panel. Every day Marketing Toolkit brings in how often each page appeared in Google, how often it was clicked, and where it ranked. It sits next to your site's report, so a page that ranks but never gets clicked, or one that has dropped, stands out.
 
-## Find broken links before your visitors do
+## Fix what's broken
 
-<!-- Screenshot: docs/images/link-check.png (a link check's pages to fix) -->
+<!-- Screenshot: docs/images/report.png (a report with its score) -->
 
-Every week, Marketing Toolkit opens every page of your site and lists what to fix:
+A report reads every page the way a search engine does and gives the site a score out of 100. It lists what to fix, most important first:
 
-- links that lead nowhere, on your site or on others
-- pages with no description, so Google writes its own
-- pages with no share image, so links to them show no picture
+- missing or overlong titles and descriptions, and ones used on more than one page
+- broken links, inside the site and out
+- pages that no other page links to
+- images with no description, pages with no share image
+- pages hidden from Google that are still in the sitemap
 
-Each one links straight to the page's edit screen.
+Reports run when you ask, or every day or week. Each issue links straight to the page's edit screen.
 
 ## Share cards that look right everywhere
 
@@ -55,7 +57,8 @@ When a page is shared on LinkedIn, WhatsApp, Slack or X, it shows a picture. Mar
 | Instant indexing with Bing and others (IndexNow) | ✓ | ✓ |
 | Rules your developer can change in code | ✓ | ✓ |
 | Google Search Console numbers per page | | ✓ |
-| A weekly check for broken links, inside and out | | ✓ |
+| Site reports with a score, on a schedule | | ✓ |
+| Broken link checks, inside and out | | ✓ |
 | Share cards drawn for every page | | ✓ |
 | Redirects added automatically when a page moves | | ✓ |
 | The list of missing pages (404s) | | ✓ |
@@ -91,7 +94,7 @@ Developers: start with [Getting started](docs/getting-started.md), then [For dev
 |---|---|
 | [Tracking and Consent Mode](docs/tracking.md) | The tracking tags, Consent Mode, and how a cookie banner updates it. |
 | [Getting started](docs/getting-started.md) | Requirements, installing, the editions, the tag, permissions, and a checklist that it works. |
-| [A guide for editors](docs/editors.md) | For the people who write the pages: the fields, the preview, redirects, 404s and the link check. |
+| [A guide for editors](docs/editors.md) | For the people who write the pages: the fields, the preview, redirects, 404s and reports. |
 | [Configuration](docs/configuration.md) | Every setting, permission and command. |
 | [For developers](docs/developers.md) | How values are worked out, changing a rule in code, share-card templates, several sites. |
 | [Troubleshooting](docs/troubleshooting.md) | Problems people have hit, and their fixes. |

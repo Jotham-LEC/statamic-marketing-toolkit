@@ -23,7 +23,7 @@ final readonly class Context
 }
 ```
 
-`SiteSeo::meta($context)` collects everything into a readonly `Meta` object that `resources/views/meta.blade.php` prints. The same rules feed the sitemap, the share cards, the control panel preview and the link check, so a change in one place shows everywhere.
+`SiteSeo::meta($context)` collects everything into a readonly `Meta` object that `resources/views/meta.blade.php` prints. The same rules feed the sitemap, the share cards, the control panel preview and the reports, so a change in one place shows everywhere.
 
 ## What each value falls back to
 
@@ -93,7 +93,7 @@ The methods you're most likely to override:
 | `extraNodes(Context)` | Your own nodes (Event, Course…). Empty by default. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
-| `termHasEntries(Term)` | Whether a term has published entries, for the sitemap and the link check. Override for a taxonomy that isn't attached to the collection whose entries use it. |
+| `termHasEntries(Term)` | Whether a term has published entries, for the sitemap and the reports. Override for a taxonomy that isn't attached to the collection whose entries use it. |
 | `robotsTxt()` | robots.txt. |
 
 Helpers available in a subclass: `settings()` (the brand global, with `string()`, `list()`, `asset()`, `siteName()`), `contentConfig($context, $key, $default)` (the page's collection rules, or a term's taxonomy rules), `collectionConfig($context, $key, $default)` (an entry's collection only), and `absolute($url)`.
@@ -157,13 +157,13 @@ Register it and choose where it's used:
 
 Cards are cached per entry, last-modified time, template, version and text, and served from `/og.png` and `/og/{uri}.png` without cookies, so a CDN can cache them.
 
-## Redirects, 404s and the link check from code
+## Redirects, 404s and reports from code
 
 - **Redirects** are the Eloquent model `JothamLec\MarketingToolkit\Redirects\Redirect` (`site`, `source`, `target`, `status`, `active`, `automatic`, `hits`, `last_hit_at`). `site` is a site handle, or null for every site (always null on a single site). Saving or deleting one through the model clears the cached rules; after bulk queries, call `JothamLec\MarketingToolkit\Redirects\Matcher::flush()`.
 - **Automatic redirects** go through `JothamLec\MarketingToolkit\Redirects\AutoRedirects::create($from, $to, $site)`, which also collapses chains among that site's rules. Use it when you move content in code.
 - **The 404 log** is `JothamLec\MarketingToolkit\NotFound\MissingPath` (with `site`, as redirects).
-- **Link check**: `app(JothamLec\MarketingToolkit\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Its reports, like the 404 log, have a `site` column that is null on a single site.
-- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the brand global, `absolute()`, the sitemap read it) and puts back what was there.
+- **Reports**: `app(JothamLec\MarketingToolkit\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site.
+- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the brand global, `absolute()`, the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
 
 ## Several sites and languages
 
@@ -175,7 +175,7 @@ With Statamic Pro and more than one site, whether separate brands on their own d
 - **Sitemap and robots.txt** per domain: a sitemap lists every site on its domain, each URL with its other languages. **Share cards** (Pro) and the **IndexNow key** on the site's own domain; IndexNow gets one request per domain.
 - **hreflang**: a page's localizations link to each other; see [configuration.md](configuration.md#languages-hreflang).
 - **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** (Pro) on the site of the content that moved.
-- **404 log** and **link check** (Pro), one per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
+- **404 log** and **reports** (Pro), one report per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
 - **Search Console property** (Pro): one key, a property per site (set up from Tools → SEO → Search Console with the site selected, or a map in config).
 
 The SEO fields are `localizable`, so each language keeps its own values.
@@ -189,7 +189,7 @@ php artisan vendor:publish --tag=seo-translations   # lang/vendor/seo/en
 cp -r lang/vendor/seo/en lang/vendor/seo/fr
 ```
 
-The control panel uses the user's language preference; "Page N" uses each site's language. A link check shows its results in the reader's language: results are stored as keys and translated when shown.
+The control panel uses the user's language preference; "Page N" uses each site's language. A report shows its checks in the reader's language: results are stored as keys and translated when shown.
 
 ## How the pieces fit
 
@@ -200,7 +200,7 @@ The control panel uses the user's language preference; "Page N" uses each site's
 | Redirects, 404 log | `HandleMissing`, middleware in Statamic's `statamic.web` group (only acts on 404 responses, and keeps them out of Statamic's static cache, which would otherwise answer later visits without asking it). Redirect targets get a trailing slash when Statamic adds them (`URL::enforceTrailingSlashes()`) |
 | Automatic redirects | `Listeners/RedirectChangedUris` (entry, term and collection-tree events) |
 | Control panel | `routes/cp.php`, `Http/Controllers/CP`, Vue in `resources/js` (built with Vite to `resources/dist`) |
-| Link check | `Reports/` (Runner, Renderer, HtmlInspector, LinkChecker, ExternalLinkChecker, Rules), `Commands/Report.php` |
+| Reports | `Reports/` (Runner, Renderer, HtmlInspector, LinkChecker, Rules), `Commands/Report.php` |
 
 ## Working on the addon
 

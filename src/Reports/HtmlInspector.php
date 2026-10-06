@@ -5,11 +5,12 @@ namespace JothamLec\MarketingToolkit\Reports;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
+use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Facades\Site;
 
 /**
- * Reads a rendered page for the checks: title, description, robots, its
- * links, and the share image.
+ * Reads a rendered page for the checks: title, description, h1s, canonical,
+ * robots, images, links back into this site, the share image and JSON-LD.
  */
 class HtmlInspector
 {
@@ -24,31 +25,49 @@ class HtmlInspector
         libxml_use_internal_errors($previous);
         $xpath = new DOMXPath($document);
 
-        [$broken, $redirected, $external] = $this->links($xpath);
+        $images = $xpath->query('//body//img');
+        $imagesWithoutAlt = 0;
+
+        foreach ($images as $image) {
+            /** @var DOMElement $image */
+            if (! $image->hasAttribute('alt')) {
+                $imagesWithoutAlt++;
+            }
+        }
+
+        [$broken, $redirected, $internal, $external] = $this->links($xpath);
+        [$jsonLd, $jsonLdErrors] = $this->jsonLd($xpath);
 
         return new PageFacts(
             status: $status,
             title: $this->text($xpath, '//head/title'),
             description: $this->attribute($xpath, '//head/meta[@name="description"]', 'content'),
+            h1s: array_values(array_map(fn ($h1) => trim(preg_replace('/\s+/', ' ', $h1->textContent)), iterator_to_array($xpath->query('//body//h1')))),
+            canonical: $this->attribute($xpath, '//head/link[@rel="canonical"]', 'href'),
             robots: $this->attribute($xpath, '//head/meta[@name="robots"]', 'content'),
+            images: $images->length,
+            imagesWithoutAlt: $imagesWithoutAlt,
             brokenLinks: $broken,
             redirectedLinks: $redirected,
+            internalLinks: $internal,
             externalLinks: $external,
             ogImage: $this->attribute($xpath, '//head/meta[@property="og:image"]', 'content'),
+            jsonLd: $jsonLd,
+            jsonLdErrors: $jsonLdErrors,
         );
     }
 
     /**
-     * The page's links: broken and redirected paths on this site, and its
-     * links to other sites.
+     * The page's links: broken and redirected paths on this site, every path
+     * on this site it links to, and its links to other sites.
      *
-     * @return array{0: list<string>, 1: list<string>, 2: list<string>}
+     * @return array{0: list<string>, 1: list<string>, 2: list<string>, 3: list<string>}
      */
     private function links(DOMXPath $xpath): array
     {
         // The report's site: the Runner makes it the current one.
         $host = parse_url(Site::current()->absoluteUrl(), PHP_URL_HOST);
-        $broken = $redirected = $external = [];
+        $broken = $redirected = $internal = $external = [];
 
         foreach ($xpath->query('//body//a[@href]') as $link) {
             /** @var DOMElement $link */
@@ -77,6 +96,8 @@ class HtmlInspector
                 continue;
             }
 
+            $internal[] = Uris::normalizePath($path);
+
             match ($this->links->check($path)) {
                 'broken' => $broken[] = $path,
                 'redirect' => $redirected[] = $path,
@@ -84,7 +105,27 @@ class HtmlInspector
             };
         }
 
-        return array_map(fn (array $links) => array_values(array_unique($links)), [$broken, $redirected, $external]);
+        return array_map(fn (array $links) => array_values(array_unique($links)), [$broken, $redirected, $internal, $external]);
+    }
+
+    /**
+     * @return array{0: int, 1: list<string>}
+     */
+    private function jsonLd(DOMXPath $xpath): array
+    {
+        $count = 0;
+        $errors = [];
+
+        foreach ($xpath->query('//script[@type="application/ld+json"]') as $script) {
+            $count++;
+            json_decode($script->textContent, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                $errors[] = 'Block '.$count.': '.json_last_error_msg();
+            }
+        }
+
+        return [$count, $errors];
     }
 
     private function text(DOMXPath $xpath, string $query): ?string

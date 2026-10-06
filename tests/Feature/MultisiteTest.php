@@ -304,7 +304,8 @@ describe('reports', function () {
 
         expect($facts->brokenLinks)->toBe(['/only-here'])
             ->and($facts->redirectedLinks)->toBe(['/old-work'])
-            ->and($facts->externalLinks)->toBe(['https://example.test/only-here']);
+            ->and($facts->externalLinks)->toBe(['https://example.test/only-here'])
+            ->and($facts->internalLinks)->toBe(['/work', '/old-work', '/only-here']);
     });
 
     test('a report running on one site doesn\'t stop another site\'s from starting', function () {

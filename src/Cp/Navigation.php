@@ -31,6 +31,7 @@ class Navigation
     {
         $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
 
+        $addon = Addon::get(Edition::PACKAGE);
         $pro = Edition::pro();
 
         return array_values(array_filter([
@@ -39,7 +40,8 @@ class Navigation
             $pro ? $nav->item(__('seo::cp.nav.not_found'))->route('seo.404s.index')->can('view seo') : null,
             $pro ? $nav->item(__('seo::cp.nav.search_console'))->route('seo.search-console.index')->can('view seo') : null,
             $variables ? $nav->item(__('seo::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
-            $pro ? $nav->item(__('seo::cp.nav.features'))->route('seo.features.index')->can('editSettings', Addon::get(Edition::PACKAGE)) : null,
+            $pro && $addon?->hasSettingsBlueprint() ? $nav->item(__('seo::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon) : null,
+            $pro ? $nav->item(__('seo::cp.nav.features'))->route('seo.features.index')->can('editSettings', $addon) : null,
         ]));
     }
 }

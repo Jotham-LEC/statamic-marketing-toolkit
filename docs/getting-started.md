@@ -1,18 +1,18 @@
 # Getting started
 
-From nothing to a site with meta tags, a sitemap, share cards, redirects and a link check. Allow about twenty minutes.
+From nothing to a site with meta tags, a sitemap, share cards, redirects and reports. Allow about twenty minutes.
 
 ## What you need
 
 - **Statamic 6** (Core is enough) on **PHP 8.3+**. Several sites and languages need Statamic Pro, as Statamic itself does, and Marketing Toolkit Pro; see [Several sites and languages](developers.md#several-sites-and-languages).
 - **PHP's `imagick` extension** for the generated share cards (Marketing Toolkit Pro). Without it the cards (and their tests) fail; everything else works.
-- **A database** Laravel can migrate. Redirects, the 404 log and the link check live in tables, even on a flat-file site; SQLite is fine.
+- **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
 - **For Pro, a licence** for the live site, from the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit). Local and staging sites don't need one.
 
 ## The editions
 
-Marketing Toolkit comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, a weekly link check (`seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, several sites and languages with hreflang, and the dashboard widget.
+Marketing Toolkit comes as **Free** and **Pro**. Free is what a site gets after installing: meta tags, Open Graph and X cards, JSON-LD, the sitemap and robots.txt, the preview with its counters, redirects by hand (wildcards, 410s), IndexNow, and `SiteSeo` overrides. Pro adds Google Search Console, reports (on a schedule, with link checks and `seo:report`), generated share cards, automatic 301s, the 404 log, CSV import and export of redirects, several sites and languages with hreflang, and the dashboard widget.
 
 To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
 
@@ -22,7 +22,7 @@ To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.ph
 ],
 ```
 
-In Free, Pro's screens aren't there and Tools → SEO shows a card for each of them instead. The tables Pro fills (link checks, the 404 log, Search Console's numbers) stay in the database either way, so switching back and forth loses nothing.
+In Free, Pro's screens aren't there and Tools → SEO shows a card for each of them instead. The tables Pro fills (reports, the 404 log, Search Console's numbers) stay in the database either way, so switching back and forth loses nothing.
 
 ## 1. Install the package
 
@@ -96,7 +96,7 @@ In `config/statamic/cp.php`:
 ],
 ```
 
-It shows how many pages the latest link check found to fix, and the most recent 404s, to people with the `view seo` permission.
+It shows the latest report's score and the most recent 404s, to people with the `view seo` permission.
 
 ## 6. Give people access
 
@@ -104,15 +104,15 @@ Super users see everything. For other roles, tick the SEO permissions under **Us
 
 | Permission | Lets them |
 |---|---|
-| `view seo` | open Tools → SEO; with Pro, the link check, the 404 log, the Search Console screen and the widget |
+| `view seo` | open Tools → SEO; with Pro, the reports, the 404 log, the Search Console screen and the widget |
 | `manage seo redirects` | create, edit and delete redirects; with Pro, import and export them, and answer the "add a redirect?" question when saving |
-| `run seo reports` | start a link check (Pro) |
+| `run seo reports` | start a report (Pro) |
 
 The search and share preview needs no SEO permission, only access to the entry.
 
-## 7. The scheduler (Pro)
+## 7. Schedule reports (optional, Pro)
 
-The link check runs every week, and Search Console's numbers come in every day. Both need Laravel's scheduler, as for any scheduled task:
+Reports can run daily or weekly (Tools → Addons → SEO → Running). That needs Laravel's scheduler, as for any scheduled task:
 
 ```
 * * * * * cd /path/to/site && php artisan schedule:run >> /dev/null 2>&1
@@ -125,6 +125,6 @@ The link check runs every week, and Search Console's numbers come in every day. 
 - Edit an entry: the SEO tab shows the Google result and the share cards, and they change as you type.
 - With several languages: a translated page's source has a `<link rel="alternate" hreflang="…">` for each language, and the sitemap an `<xhtml:link>` for each.
 - With Pro: visit a page that doesn't exist, then **Tools → SEO → 404s**: the path is listed. (Visit it in a browser; `curl` counts as a bot and isn't logged.)
-- With Pro: **Tools → SEO → Link check → Check now.** A few hundred pages take under a minute.
+- With Pro: **Tools → SEO → Reports → Run report.** A few hundred pages take under a minute.
 
 If something doesn't, see [troubleshooting.md](troubleshooting.md).

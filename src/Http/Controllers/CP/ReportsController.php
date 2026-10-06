@@ -12,14 +12,16 @@ use JothamLec\MarketingToolkit\Reports\ReportPage;
 use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\Reports\RunReportStep;
+use JothamLec\MarketingToolkit\Support\Edition;
+use Statamic\Facades\Addon;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
 
 /**
- * Tools → SEO → Link check: the list, "Check now", one report's checks and
- * the pages with issues, and the progress endpoint a running report's screen polls. Without
+ * Tools → SEO → Reports: the list, "Run report", one report's checks and
+ * pages, and the progress endpoint a running report's screen polls. Without
  * a queue worker that endpoint also does the work, one step per request, so
  * a report finishes on the sync queue without any request timing out. On a
  * multi-site install the list and "Run report" are of the selected site.
@@ -34,10 +36,13 @@ class ReportsController
     {
         $this->authorize('view seo');
 
+        $addon = Addon::get(Edition::PACKAGE);
+
         return Inertia::render('seo::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
             'canRun' => (bool) User::current()?->can('run seo reports'),
             'runUrl' => cp_route('seo.reports.run'),
+            'settingsUrl' => $addon && User::current()?->can('editSettings', $addon) ? $addon->settingsUrl() : null,
         ]);
     }
 
@@ -77,18 +82,13 @@ class ReportsController
 
         $rules = collect($report->summary['rules'] ?? [])
             ->map(fn (array $rule, string $handle) => [...$rule, 'label' => __($rule['label']), 'handle' => $handle])
-            ->sortByDesc(fn (array $rule) => [$rule['fail'], $rule['warn']])
+            ->sortByDesc(fn (array $rule) => [$rule['fail'] * $rule['weight'], $rule['warn']])
             ->values()
             ->all();
 
         return Inertia::render('seo::Report', [
             'report' => $this->summary($report),
-            'counts' => [
-                'checked' => (int) ($report->summary['checked'] ?? 0),
-                'noindex' => (int) ($report->summary['noindex'] ?? 0),
-                'errors' => (int) ($report->summary['errors'] ?? 0),
-                'with_issues' => (int) ($report->summary['with_issues'] ?? 0),
-            ],
+            'counts' => array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors'])),
             'rules' => $rules,
             'listingUrl' => cp_route('seo.reports.pages', $report),
             'listUrl' => cp_route('seo.reports.index'),
@@ -105,8 +105,7 @@ class ReportsController
         $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('seo::reports.rules.render'))->all();
         /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
         $editUrls = [];
-        // Only the pages with something to fix.
-        $query = $report->pages()->getQuery()->whereNotNull('failing');
+        $query = $report->pages()->getQuery();
 
         // Only a known check's name gets into the LIKE pattern. Its `_` is a LIKE
         // wildcard, but no two checks' names differ only there.
@@ -117,7 +116,7 @@ class ReportsController
         return Listing::respond(
             $query,
             $request,
-            ['title' => __('seo::reports.cp.page')],
+            ['score' => __('seo::reports.cp.score'), 'title' => __('seo::reports.cp.page'), 'in_sitemap' => __('seo::reports.cp.in_sitemap')],
             ['title', 'url'],
             // Not an arrow function: it must see $editUrls once preload has filled it.
             function (ReportPage $page) use ($labels, &$editUrls) {
@@ -126,6 +125,8 @@ class ReportsController
                     'title' => $page->title ?: $page->url,
                     'url' => $page->url,
                     'path' => parse_url($page->url, PHP_URL_PATH) ?: '/',
+                    'score' => $page->score,
+                    'in_sitemap' => $page->in_sitemap,
                     'noindex' => $page->facts()->noindex(),
                     'issues' => collect($page->results ?? [])
                         ->reject(fn ($result) => $result['status'] === 'pass')
@@ -154,7 +155,7 @@ class ReportsController
         return [
             'id' => $report->id,
             'status' => $report->status,
-            'with_issues' => $report->summary['with_issues'] ?? null,
+            'score' => $report->score,
             'pages_total' => $report->pages_total,
             'pages_done' => $report->pages_done,
             'error' => $report->error === null ? null : __($report->error),

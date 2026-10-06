@@ -56,7 +56,7 @@ class FeaturesController
 
         return Blueprint::make('seo_features')->setContents(['tabs' => ['main' => ['sections' => [
             $section('search', ['sitemap', 'robots_txt', 'llms_txt', 'hreflang', 'indexnow', 'share_cards']),
-            $section('redirects', ['redirects', 'automatic_redirects', 'not_found', 'link_check']),
+            $section('redirects', ['redirects', 'automatic_redirects', 'not_found', 'reports']),
             $section('marketing', ['tracking', 'leads', 'favicons', 'ads_txt']),
         ]]]]);
     }

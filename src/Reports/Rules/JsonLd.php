@@ -6,27 +6,29 @@ use JothamLec\MarketingToolkit\Reports\PageFacts;
 use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
-class OgImage extends Rule
+class JsonLd extends Rule
 {
     public static function handle(): string
     {
-        return 'og_image';
+        return 'json_ld';
     }
 
     public function label(): string
     {
-        return 'seo::reports.rules.og_image';
+        return 'seo::reports.rules.json_ld';
     }
 
     public function weight(): int
     {
-        return 1;
+        return 2;
     }
 
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
-        return $page->ogImage === null
-            ? Result::fail('seo::reports.messages.og_image_missing')
-            : Result::pass();
+        return match (true) {
+            $page->jsonLdErrors !== [] => Result::fail('seo::reports.messages.json_ld_invalid', ['errors' => implode('; ', $page->jsonLdErrors)]),
+            $page->jsonLd === 0 => Result::warn('seo::reports.messages.json_ld_missing'),
+            default => Result::pass(),
+        };
     }
 }
