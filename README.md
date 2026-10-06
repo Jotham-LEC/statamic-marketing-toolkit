@@ -57,7 +57,7 @@ php please seo:install
 |---|---|
 | `<title>` | SEO title as typed → `{title}{separator}{site}` if it fits `seo.title.max`, else the title → site name on home. `· Page N` past page 1 |
 | description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 155 on a word |
-| share image | template `image` → SEO share image → `image_fields` → **generated card** → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
+| share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
 | canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
 | robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
 

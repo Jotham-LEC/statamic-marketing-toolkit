@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use JothamLec\Seo\Context;
 use JothamLec\Seo\SiteSeo;
+use Statamic\Facades\AssetContainer;
+use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalSet;
@@ -144,6 +146,81 @@ describe('json-ld', function () {
 
     test('an error page has no graph', function () {
         expect(metaFor(null, '/missing', status: 404)->graph)->toBe([]);
+    });
+});
+
+describe('fields in a Replicator\'s sets', function () {
+    beforeEach(function () {
+        config(['seo.og.enabled' => false]);
+        Blueprint::make('page')->setNamespace('collections.pages')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
+            ['handle' => 'title', 'field' => ['type' => 'text']],
+            ['handle' => 'sections', 'field' => ['type' => 'replicator', 'sets' => ['main' => ['display' => 'Main', 'sets' => [
+                'hero' => ['display' => 'Hero', 'fields' => [
+                    ['handle' => 'image', 'field' => ['type' => 'assets', 'container' => 'assets', 'max_files' => 1]],
+                    ['handle' => 'lead', 'field' => ['type' => 'textarea']],
+                ]],
+                'faq' => ['display' => 'Questions', 'fields' => [
+                    ['handle' => 'faqs', 'field' => ['type' => 'grid', 'fields' => [
+                        ['handle' => 'question', 'field' => ['type' => 'text']],
+                        ['handle' => 'answer', 'field' => ['type' => 'textarea']],
+                    ]]],
+                ]],
+            ]]]]],
+        ]]]]]])->save();
+        foreach (['hidden.png', 'shown.png', 'seo.png'] as $file) {
+            AssetContainer::find('assets')->disk()->put($file, file_get_contents(__DIR__.'/../fixtures/share.png'));
+        }
+    });
+
+    test('the share image is the first visible set\'s with one; a set switched off is passed over', function () {
+        config(['seo.collections.pages.image_fields' => ['sections.hero.image']]);
+        $sections = [
+            ['type' => 'hero', 'enabled' => false, 'image' => 'hidden.png'],
+            ['type' => 'faq', 'faqs' => []],
+            ['type' => 'hero', 'lead' => 'No photo here.'],
+            ['type' => 'hero', 'image' => 'shown.png'],
+        ];
+
+        expect(metaFor(entryIn('pages', 'builder', ['sections' => $sections]))->image['url'])->toContain('/shown.png')
+            ->and(metaFor(entryIn('pages', 'own', ['sections' => $sections, 'seo' => ['image' => 'assets::seo.png']]))->image['url'])->toContain('/seo.png');
+    });
+
+    test('`*` matches a set of any type', function () {
+        config(['seo.collections.pages.image_fields' => ['sections.*.image']]);
+
+        expect(metaFor(entryIn('pages', 'any', ['sections' => [['type' => 'faq'], ['type' => 'hero', 'image' => 'shown.png']]]))->image['url'])->toContain('/shown.png');
+    });
+
+    test('the FAQPage has the questions of every visible set, in the page\'s order', function () {
+        config(['seo.collections.pages.faq_field' => 'sections.faq.faqs']);
+        $entry = entryIn('pages', 'help', ['sections' => [
+            ['type' => 'faq', 'faqs' => [['question' => 'First?', 'answer' => 'Yes.']]],
+            ['type' => 'faq', 'enabled' => false, 'faqs' => [['question' => 'Hidden?', 'answer' => 'Yes.']]],
+            ['type' => 'hero', 'lead' => 'Between.'],
+            ['type' => 'faq', 'faqs' => [['question' => 'Last?', 'answer' => 'Also **yes**.']]],
+        ]]);
+
+        $faq = collect(metaFor($entry)->graph)->keyBy('@type')['FAQPage'];
+
+        expect(collect($faq['mainEntity'])->pluck('name')->all())->toBe(['First?', 'Last?'])
+            ->and($faq['mainEntity'][1]['acceptedAnswer']['text'])->toBe('<p>Also <strong>yes</strong>.</p>');
+    });
+
+    test('a description field in a set is read from the first visible set with one', function () {
+        config(['seo.collections.pages.description_fields' => ['sections.hero.lead']]);
+
+        expect(metaFor(entryIn('pages', 'described', ['sections' => [
+            ['type' => 'hero', 'enabled' => false, 'lead' => 'Hidden lead.'],
+            ['type' => 'hero', 'lead' => 'Shown lead.'],
+        ]]))->description)->toBe('Shown lead.');
+    });
+
+    test('no visible set, or none of that type, gives nothing', function () {
+        config(['seo.collections.pages' => ['image_fields' => ['sections.hero.image'], 'faq_field' => 'sections.faq.faqs']]);
+        $meta = metaFor(entryIn('pages', 'empty', ['sections' => [['type' => 'hero', 'enabled' => false, 'image' => 'hidden.png']]]));
+
+        expect($meta->image)->toBeNull()
+            ->and(collect($meta->graph)->pluck('@type')->all())->not->toContain('FAQPage');
     });
 });
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Fields in a page builder.** `description_fields`, `image_fields` and `faq_field` can name a field inside a Replicator's sets as `replicator.set.field`, e.g. `sections.hero.image`, with `*` for a set of any type. The description and share image come from the first visible set with one; the FAQPage has the questions of every visible set, in the page's order. Sets switched off are passed over. A plain field name means what it did.
+
 ## 0.15.0 – 2026-10-06
 
 Statamic Pro with several sites, each on its own domain. Single sites work as before. Run `php artisan migrate` after updating: see Upgrading.

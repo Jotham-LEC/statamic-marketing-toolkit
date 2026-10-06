@@ -48,6 +48,20 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
 ],
 ```
 
+#### Fields in a page builder
+
+`description_fields`, `image_fields` and `faq_field` can name a field inside a Replicator's sets as `replicator.set.field`: the Replicator's handle, the set's type (`*` for any) and the field in the set. Statamic handles have no dots, so a plain name means what it always did.
+
+```php
+'pages' => [
+    'description_fields' => ['sections.hero.lead'], // the first visible hero set with a lead
+    'image_fields' => ['sections.hero.image'],      // the first visible hero set with a photo
+    'faq_field' => 'sections.faq.faqs',             // the questions of every visible FAQ set, in the page's order
+],
+```
+
+A set switched off in the control panel isn't on the page, so it counts for nothing.
+
 ### Taxonomies
 
 `taxonomies` gives a taxonomy's term pages the same rules, by taxonomy handle: `og_type`, `page_schema`, `description_fields`, `image_fields` and `faq_field`. A term has none of its collections' rules.

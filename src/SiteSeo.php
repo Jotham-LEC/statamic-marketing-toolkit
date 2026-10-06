@@ -2,6 +2,7 @@
 
 namespace JothamLec\Seo;
 
+use ArrayAccess;
 use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -156,7 +157,8 @@ class SiteSeo
 
     /**
      * The page's own uploaded share image: its SEO image, else an image field
-     * the collection names.
+     * the collection names. A name with dots is a field in a Replicator's sets
+     * (`sections.hero.image`, `*` for any set): the first visible set with one.
      */
     public function shareAsset(Context $context): ?Asset
     {
@@ -790,18 +792,21 @@ class SiteSeo
     }
 
     /**
-     * FAQPage from a grid of question / answer rows (config `faq_field`).
-     * Answers are rendered from Markdown, as the page shows them.
+     * FAQPage from a grid of question / answer rows (config `faq_field`), or
+     * from that grid in each visible set of a Replicator (`sections.faq.faqs`),
+     * in the page's order. Answers are rendered from Markdown, as the page
+     * shows them.
      *
      * @return array<string, mixed>|null
      */
     public function faqNode(Context $context): ?array
     {
         $field = $this->contentConfig($context, 'faq_field');
-        $rows = $field ? $context->content()?->get($field) : null;
+        $content = $context->content();
+        $rows = $field && $content ? $this->rawValues($content, $field)->flatMap(fn ($rows) => is_array($rows) ? $rows : []) : collect();
 
-        $questions = collect(is_array($rows) ? $rows : [])
-            ->filter(fn ($row) => filled($row['question'] ?? null) && filled($row['answer'] ?? null))
+        $questions = $rows
+            ->filter(fn ($row) => is_array($row) && filled($row['question'] ?? null) && filled($row['answer'] ?? null))
             ->map(fn (array $row) => [
                 '@type' => 'Question',
                 'name' => Text::plain($row['question']),
@@ -1058,7 +1063,7 @@ class SiteSeo
         }
 
         foreach (['description', ...$this->contentConfig($context, 'description_fields', [])] as $field) {
-            if (filled($value = $content->get($field)) && is_string($value)) {
+            if ($value = $this->rawValues($content, $field)->first(fn ($value) => filled($value) && is_string($value))) {
                 return $value;
             }
         }
@@ -1099,10 +1104,65 @@ class SiteSeo
 
     protected function assetFrom(Entry|Term $content, string $field): ?Asset
     {
-        $value = $field === 'seo'
-            ? ($content->augmentedValue('seo')->value()['image'] ?? null)
-            : $content->augmentedValue($field)->value();
+        if ($set = $this->setPath($field)) {
+            return $this->visibleSets($content->augmentedValue($set['field'])->value(), $set['type'])
+                ->map(fn ($values) => $this->asAsset($values[$set['key']] ?? null))
+                ->first(fn ($asset) => $asset !== null);
+        }
 
+        return $this->asAsset($field === 'seo'
+            ? ($content->augmentedValue('seo')->value()['image'] ?? null)
+            : $content->augmentedValue($field)->value());
+    }
+
+    /**
+     * The stored value of a field, as a list: one value for a plain field, one
+     * per visible matching set for a path into a Replicator.
+     *
+     * @return Collection<int, mixed>
+     */
+    protected function rawValues(Entry|Term $content, string $field): Collection
+    {
+        if ($set = $this->setPath($field)) {
+            return $this->visibleSets($content->get($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
+        }
+
+        return collect([$content->get($field)]);
+    }
+
+    /**
+     * `sections.hero.image` → the Replicator field, the set type (`*` for any)
+     * and the field in the set. Statamic handles have no dots, so a plain name
+     * is never a path.
+     *
+     * @return array{field: string, type: string, key: string}|null
+     */
+    protected function setPath(string $field): ?array
+    {
+        $parts = explode('.', $field);
+
+        return count($parts) === 3 && ! in_array('', $parts, true) ? array_combine(['field', 'type', 'key'], $parts) : null;
+    }
+
+    /**
+     * A Replicator's sets of a type, in order, without those switched off.
+     * Takes the stored rows or the augmented ones (which have none switched off).
+     *
+     * @return Collection<int, mixed>
+     */
+    protected function visibleSets(mixed $sets, string $type): Collection
+    {
+        $sets = $sets instanceof Value ? $sets->value() : $sets;
+
+        return collect(is_iterable($sets) ? $sets : [])
+            ->filter(fn ($set) => (is_array($set) || $set instanceof ArrayAccess)
+                && ($set['enabled'] ?? true) !== false
+                && ($type === '*' || ($set['type'] ?? null) === $type))
+            ->values();
+    }
+
+    private function asAsset(mixed $value): ?Asset
+    {
         $value = $value instanceof Value ? $value->value() : $value;
         // A field that takes more than one file augments to a query, not a list.
         $value = $value instanceof Builder ? $value->get()->first() : $value;

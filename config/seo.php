@@ -65,6 +65,10 @@ return [
     |   ],
     |   'og_template' => 'default',        // a key of og.templates
     |
+    | description_fields, image_fields and faq_field can name a field in a
+    | Replicator's sets as 'replicator.set.field' ('sections.hero.image'; `*`
+    | for any set); sets switched off are passed over.
+    |
     */
 
     'collections' => [],
