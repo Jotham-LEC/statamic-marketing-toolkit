@@ -15,8 +15,16 @@
     },
     "require": {
         "php": "^8.3",
-        "statamic/cms": "^6.30",
-        "simonhamp/the-og": "^0.8"
+        "ext-curl": "*",
+        "ext-dom": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "simonhamp/the-og": "^0.8",
+        "statamic/cms": "^6.31"
+    },
+    "suggest": {
+        "ext-gd": "Draws favicons when Imagick isn't installed",
+        "ext-imagick": "Draws the share cards (Pro) and favicons"
     },
     "replace": {
         "jotham-lec/statamic-co-seo": "self.version"
@@ -54,7 +62,5 @@
                 "JothamLec\\MarketingToolkit\\ServiceProvider"
             ]
         }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    }
 }
