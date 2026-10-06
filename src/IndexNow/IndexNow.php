@@ -4,7 +4,6 @@ namespace JothamLec\Seo\IndexNow;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Statamic\Facades\Site;
 use Throwable;
 
 /**
@@ -12,7 +11,8 @@ use Throwable;
  * participating engines which addresses changed, so they recrawl them now
  * rather than on their next visit. Google does not take part. The addresses
  * a request changes are sent together once it has been answered, only in
- * production, and a failure is logged, never shown to the editor.
+ * production, one request per domain, and a failure is logged, never shown
+ * to the editor.
  */
 class IndexNow
 {
@@ -53,6 +53,10 @@ class IndexNow
         return array_keys($this->urls);
     }
 
+    /**
+     * Sends the queued addresses, one request per host: IndexNow takes one
+     * host per request, and each site's domain serves the key itself.
+     */
     public function flush(): void
     {
         $urls = $this->queued();
@@ -62,17 +66,19 @@ class IndexNow
             return;
         }
 
-        $home = rtrim(Site::default()->absoluteUrl(), '/');
+        $byHost = collect($urls)->groupBy(fn (string $url) => strtolower((string) parse_url($url, PHP_URL_SCHEME)).'://'.strtolower((string) parse_url($url, PHP_URL_HOST)));
 
-        try {
-            Http::timeout(5)->post(self::ENDPOINT, [
-                'host' => parse_url($home, PHP_URL_HOST),
-                'key' => $this->key(),
-                'keyLocation' => $home.'/'.$this->key().'.txt',
-                'urlList' => $urls,
-            ])->throw();
-        } catch (Throwable $exception) {
-            Log::warning('IndexNow could not be told about '.count($urls).' changed addresses: '.$exception->getMessage());
+        foreach ($byHost as $home => $list) {
+            try {
+                Http::timeout(5)->post(self::ENDPOINT, [
+                    'host' => parse_url($home, PHP_URL_HOST),
+                    'key' => $this->key(),
+                    'keyLocation' => $home.'/'.$this->key().'.txt',
+                    'urlList' => $list->values()->all(),
+                ])->throw();
+            } catch (Throwable $exception) {
+                Log::warning('IndexNow could not be told about '.count($list).' changed addresses on '.$home.': '.$exception->getMessage());
+            }
         }
     }
 }

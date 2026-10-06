@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Support\Facades\Http;
+use JothamLec\Seo\IndexNow\IndexNow;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Collection;
 use Statamic\Facades\GlobalSet;
@@ -68,4 +71,24 @@ test('each domain\'s sitemap lists that site\'s pages and terms only', function 
         ->not->toContain('cothink.test')
         // No published entry on this site uses the term.
         ->not->toContain('/topics/gardens');
+});
+
+test('IndexNow gets one request per domain, each with that domain\'s key file', function () {
+    Http::fake(['api.indexnow.org/*' => Http::response('', 200)]);
+    $key = app(IndexNow::class)->key();
+
+    entryIn('pages', 'about');
+    entryOn('cothinking', 'pages', 'hello');
+    entryOn('cothinking', 'pages', 'work');
+    app()->terminate();
+
+    Http::assertSentCount(2);
+    Http::assertSent(fn (HttpRequest $request) => $request['host'] === 'example.test'
+        && $request['keyLocation'] === "https://example.test/{$key}.txt"
+        && $request['urlList'] === ['https://example.test/about']);
+    Http::assertSent(fn (HttpRequest $request) => $request['host'] === 'cothink.test'
+        && $request['keyLocation'] === "https://cothink.test/{$key}.txt"
+        && $request['urlList'] === ['https://cothink.test/hello', 'https://cothink.test/work']);
+
+    expect($this->get("https://cothink.test/{$key}.txt")->assertOk()->getContent())->toBe($key);
 });
