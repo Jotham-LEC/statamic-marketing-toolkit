@@ -56,6 +56,20 @@ test('a site reads its own brand values, and what it leaves empty from its origi
     expect(metaFor(entryIn('pages', 'about'))->twitterSite)->toBe('@acme');
 });
 
+test('one process serves each site its own meta, whichever site it served first', function () {
+    seoGlobal(['title_separator' => '|', 'default_description' => 'Acme makes things.']);
+    seoGlobal(['title_separator' => '–', 'default_description' => 'CoThinking builds websites.'], 'cothinking');
+    entryIn('pages', 'about');
+    entryOn('cothinking', 'pages', 'about');
+
+    foreach ([['https://example.test', 'About | Acme', 'Acme makes things.'], ['https://cothink.test', 'About – CoThinking', 'CoThinking builds websites.'], ['https://example.test', 'About | Acme', 'Acme makes things.']] as [$home, $title, $description]) {
+        $this->get($home.'/about')->assertOk()
+            ->assertSee('<title>'.e($title).'</title>', false)
+            ->assertSee('<meta name="description" content="'.e($description).'">', false)
+            ->assertSee('<link rel="canonical" href="'.$home.'/about">', false);
+    }
+});
+
 test('each domain\'s sitemap lists that site\'s pages and terms only', function () {
     config(['seo.sitemap.taxonomies' => ['topics']]);
     Collection::make('services')->routes('services/{slug}')->sites(['cothinking'])->taxonomies(['topics'])->save();
