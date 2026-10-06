@@ -397,7 +397,7 @@ trait BuildsSchema
         $items = is_iterable($value) ? collect($value) : collect(array_filter([$value]));
 
         return $items
-            ->map(fn ($author) => match (true) {
+            ->map(fn ($author): ?array => match (true) {
                 $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->get('title'), 'url' => $author->absoluteUrl()],
                 $author instanceof User => ['@type' => 'Person', 'name' => (string) ($author->name() ?: $author->get('name')), 'url' => $author->get('url')],
                 default => null,

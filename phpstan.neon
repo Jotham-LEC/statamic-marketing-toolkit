@@ -26,10 +26,6 @@ parameters:
         -
             identifier: nullCoalesce.expr
             path: src/Reports/ReportSettings.php
-        # Follow from the above: what an undeclared Statamic method returns is unknown.
-        -
-            identifier: argument.unresolvableType
-            path: src/SiteSeo.php
         # Statamic's docblock: manipulate() returns a string only when given no item.
         -
             identifier: method.nonObject
