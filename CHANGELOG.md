@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+Statamic Pro with several sites, each on its own domain. Single sites work as before. Run `php artisan migrate` after updating: three tables get a `site` column.
+
+### Added
+- **Several sites** (Statamic Pro). `seo:install` creates SEO & brand on every site, each other site's origin the default; a site takes what it leaves empty from its origin. An existing set must be enabled on each site by hand; the command names those it is missing.
+- Redirects for one site or every site: a **Site** field on the form (shown only with more than one site), a Site column in the list and a `site` column in CSV. A site's own rule wins over one for every site from the same address; loops are looked for among the rules of each site a rule applies on.
+- Automatic 301s are made, repointed and removed among the moved content's own site's rules; a renamed term leaves one on each site whose address moved.
+- The 404 log keeps each site's misses apart, and **Create redirect** carries the row's site.
+- Reports are of one site: `php please seo:report` reports on each site in turn, or `--site=`; the schedule runs one per site; Run report in the control panel reports on the selected site. Links are checked against the report's own site's pages and redirects.
+- Tools → SEO, the 404s, the reports and the dashboard widget show the site selected in the control panel.
+- `JothamLec\Seo\Support\Sites::as($site, fn () => …)`: run code with another site as the current one.
+
+### Changed
+- The control panel preview, and the card it draws, are worked out on the content's own site (its brand values and domain), whichever domain the control panel is on. A generated card's URL is on the entry's own domain, and its label is the mount page as it is on the entry's site.
+- IndexNow gets one request per domain, each naming that domain's key file.
+- The longest redirect source, and the longest 404 path logged, is 736 characters (was 768): on MySQL the unique index on site and address must stay under 3072 bytes, and the migration shortens those columns there.
+
+### Fixed
+- The sitemap listed every site's terms, and a term counted as used by another site's entries; reports did the same.
+
 ## 0.13.1 – 2026-10-06
 
 No redirects for renamed terms that have no page.

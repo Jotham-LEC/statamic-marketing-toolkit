@@ -174,4 +174,4 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 | `php please seo:install [--container=] [--fields] [--tab=shop]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has; `--tab` adds a whole tab it doesn't have (`shop`, `publisher`…). |
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
 | `php please seo:search-console` | Imports the last period's numbers from Google Search Console. |
-| `php please seo:report` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. |
+| `php please seo:report [--site=]` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |

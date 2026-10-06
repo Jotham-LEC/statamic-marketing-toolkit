@@ -1,6 +1,6 @@
 # statamic-co-seo
 
-SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro.
+SEO for Statamic 6 sites: meta tags, Open Graph and X cards, JSON-LD, sitemap, robots.txt, **generated share images**, a live search-and-share preview in the control panel, redirects with automatic 301s, a 404 log, and SEO reports with scores. Statamic Core is enough; nothing here needs Pro. With Pro, it works across several sites, each on its own domain: see [Several sites](#several-sites).
 
 Private package (`jotham-lec/statamic-co-seo`). Built for fresh Statamic sites: Statamic's own defaults first, and anything one site needs goes in that site's `SiteSeo` subclass.
 
@@ -63,10 +63,22 @@ php please seo:install
 
 Empty fields count as unset.
 
+## Several sites
+
+With Statamic Pro and more than one site (each on its own domain, or sharing one), each site gets its own:
+
+- **Brand values**: `seo:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
+- **Sitemap, robots.txt, share cards and IndexNow key** on its own domain; IndexNow gets one request per domain.
+- **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** on the site of the content that moved.
+- **404 log** and **reports**, one report per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
+
+Search Console reads one property: on several sites it counts only the one configured.
+
 ## Not built yet
 
 - `/sitemap.xsl` (a readable sitemap in the browser).
-- Multi-site defaults and GraphQL fields: they need Statamic Pro, and none of the sites runs it.
+- GraphQL fields: they need Statamic Pro.
+- Search Console for more than one property.
 
 ## Develop
 

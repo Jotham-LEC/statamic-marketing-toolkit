@@ -4,7 +4,7 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## What you need
 
-- **Statamic 6** (Core is enough; nothing here needs Pro) on **PHP 8.3+**.
+- **Statamic 6** (Core is enough; nothing here needs Pro) on **PHP 8.3+**. With Pro it handles several sites too; see [Several sites](../README.md#several-sites).
 - **PHP's `imagick` extension** for the generated share cards. Without it the cards (and their tests) fail; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
@@ -33,7 +33,7 @@ php please seo:install                       # the "SEO & brand" global set
 php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to change the defaults
 ```
 
-`seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (`·` as the separator, the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing.
+`seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (`·` as the separator, the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing. With several sites it creates the set on each, the others taking what they leave empty from the default site; a set that already exists must be enabled on each site by hand (the command names the sites it is missing).
 
 The control panel's scripts and styles are published to `public/vendor/statamic-co-seo` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=seo --force`.
 

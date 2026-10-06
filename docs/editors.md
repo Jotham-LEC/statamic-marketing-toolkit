@@ -101,8 +101,9 @@ If you can't manage redirects, the question isn't asked and the redirect is adde
   - **To**: where to send visitors: `/new-page`, or a full address on another site. With a `*` in From, `$1` stands for whatever it matched: from `/blog/*` to `/articles/$1` sends `/blog/my-post` to `/articles/my-post`. A `#section` at the end is kept. A redirect that would send visitors back where they came from, straight away or through another redirect, isn't accepted.
   - **Type**: *301 Moved for good* (the usual one), *302 Moved for now* (temporary, e.g. during a sale), or *410 Gone* (removed for good; leave To empty).
   - **Active**: switch off to pause a redirect without deleting it.
+  - **Site** (only with more than one site): the site whose address this is. Leave empty for every site. A site's own redirect wins over one for every site from the same address.
 - **Hits** and **Last used** show whether a redirect is still needed.
-- **Import CSV** and **Export CSV**: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`.
+- **Import CSV** and **Export CSV**: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
 
 A redirect only applies when its address doesn't exist as a page. If you bring a page back at an old address, the page shows, not the redirect.
 
@@ -110,7 +111,9 @@ A redirect only applies when its address doesn't exist as a page. If you bring a
 
 A **404** is what visitors get when they ask for an address that doesn't exist. **Tools → SEO → 404s** lists the ones real visitors hit, most recent first, with how often and the last page that linked there. Bots and hacking attempts are left out.
 
-Use it to catch broken links. For a missing address that should lead somewhere, open the row's **⋯** menu and choose **Create redirect**: the form opens with the address filled in, and you only add where it should go.
+Use it to catch broken links. For a missing address that should lead somewhere, open the row's **⋯** menu and choose **Create redirect**: the form opens with the address (and, with more than one site, its site) filled in, and you only add where it should go.
+
+With more than one site, the overview, the 404s, the reports and the dashboard card are of the site chosen in the control panel's site menu; redirects list every site's, with a Site column.
 
 ## Reports
 
