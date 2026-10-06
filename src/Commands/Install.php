@@ -218,6 +218,8 @@ class Install extends Command
                 $field('yandex_verification', ['type' => 'text', 'display' => 'Yandex verification', 'width' => 50]),
                 $field('pinterest_verification', ['type' => 'text', 'display' => 'Pinterest verification', 'width' => 50]),
                 $field('robots_disallow', ['type' => 'list', 'display' => 'robots.txt Disallow', 'instructions' => 'Paths to keep crawlers out of. Empty: the control panel.']),
+                $field('allow_ai_training', ['type' => 'toggle', 'display' => 'Allow AI training', 'default' => true, 'width' => 50, 'instructions' => 'Off: GPTBot, ClaudeBot, Google-Extended, Applebot-Extended and CCBot are turned away in robots.txt. Google Search is unaffected.']),
+                $field('allow_ai_search', ['type' => 'toggle', 'display' => 'Allow AI search', 'default' => true, 'width' => 50, 'instructions' => 'Off: the crawlers behind ChatGPT search, Claude and Perplexity answers are turned away.']),
                 $field('robots_extra', ['type' => 'textarea', 'display' => 'robots.txt extra lines', 'instructions' => 'Added as typed, e.g. rules for AI crawlers.']),
             ]]]],
         ];

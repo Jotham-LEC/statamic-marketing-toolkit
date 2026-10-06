@@ -157,6 +157,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | IndexNow
+    |--------------------------------------------------------------------------
+    |
+    | Tells Bing, Yandex and the other IndexNow engines (not Google) which
+    | addresses changed when published content is saved or deleted, in
+    | production only. The key is served at /{key}.txt; left null, it is
+    | derived from APP_KEY.
+    |
+    */
+
+    'indexnow' => [
+        'enabled' => true,
+        'key' => env('SEO_INDEXNOW_KEY'),
+        'endpoint' => 'https://api.indexnow.org/indexnow',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Generated Open Graph images
     |--------------------------------------------------------------------------
     |

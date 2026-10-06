@@ -85,6 +85,20 @@ fields:
             display: 'Do not follow links'
             width: 33
         -
+          handle: nosnippet
+          field:
+            type: toggle
+            display: 'No snippet'
+            width: 33
+            instructions: 'Show no text from this page in results, nor in AI Overviews and AI Mode.'
+        -
+          handle: max_snippet
+          field:
+            type: integer
+            display: 'Snippet length'
+            width: 33
+            instructions: 'At most this many characters quoted. Empty: no limit.'
+        -
           handle: sitemap
           field:
             type: toggle

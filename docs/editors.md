@@ -26,6 +26,8 @@ The overview: the latest report's score, recent 404s, redirects, and the brand d
 **Crawlers tab**
 - **Verification** codes from Google Search Console, Bing, Yandex or Pinterest, when they ask you to prove you own the site.
 - **robots.txt Disallow**: parts of the site search engines shouldn't visit. Leave empty unless you're told otherwise.
+- **Allow AI training**: off turns away the crawlers that gather pages to train AI models (OpenAI's GPTBot, Anthropic's ClaudeBot, Google-Extended for Gemini, Applebot-Extended, and Common Crawl's CCBot, whose open dataset AI developers train on). Google Search is unaffected.
+- **Allow AI search**: off turns away the crawlers behind ChatGPT search, Claude and Perplexity answers, so the site isn't quoted there. Fetchers a person sends from those apps don't all read robots.txt.
 - **robots.txt extra lines**: extra rules, for example for AI crawlers.
 
 ## A page's SEO tab
@@ -64,6 +66,8 @@ All optional. Empty means "use the default".
 | **Canonical URL** | Only for a piece first published on another site: the original's address, so search engines credit it. | This page's own address. |
 | **Hide from search engines** | Keeps the page out of Google. | The page can be found. |
 | **Do not follow links** | Tells search engines not to follow the links on this page. | Links are followed. |
+| **No snippet** | Shows no text from this page in Google's results, nor in its AI Overviews and AI Mode. | Text is shown. |
+| **Snippet length** | At most this many characters are quoted. | No limit. |
 | **In sitemap** | Lists the page in the sitemap search engines read. | On. |
 | **Extra JSON-LD** | Structured data for search engines. Leave it to your developer. | Nothing extra. |
 

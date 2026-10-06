@@ -26,6 +26,16 @@ class Settings
     }
 
     /**
+     * A toggle, or $default while it was never saved.
+     */
+    public function bool(string $key, bool $default = false): bool
+    {
+        $value = $this->variables()?->get($key);
+
+        return $value === null ? $default : (bool) $value;
+    }
+
+    /**
      * @return list<string>
      */
     public function list(string $key): array

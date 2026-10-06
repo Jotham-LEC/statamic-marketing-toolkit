@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0 – 2026-10-06
+
+### Added
+- **Snippet controls per page**: "No snippet" (`nosnippet`) and "Snippet length" (`max-snippet`), the controls Google documents for its results and AI Overviews and AI Mode.
+- **AI crawlers in robots.txt**: two switches on SEO & brand → Crawlers. "Allow AI training" off turns away GPTBot, ClaudeBot, Google-Extended, Applebot-Extended and CCBot; "Allow AI search" off turns away OAI-SearchBot, Claude-SearchBot and PerplexityBot. Both on by default.
+- **IndexNow**: published content saved, gone live or deleted is sent to IndexNow (Bing, Yandex and others; not Google) after the response, in production only, with the key served at `/{key}.txt` (`seo.indexnow`).
+
+### Upgrading
+Run `php please seo:install --fields` for the two crawler switches. IndexNow is on by default; set `seo.indexnow.enabled` to `false` to keep it off.
+
 ## 0.6.0 – 2026-10-06
 
 Structured data checked against Google's current documentation (September 2026).

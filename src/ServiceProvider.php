@@ -9,8 +9,10 @@ use JothamLec\Seo\Commands\Report;
 use JothamLec\Seo\Cp\Navigation;
 use JothamLec\Seo\Fieldtypes\SeoPreview;
 use JothamLec\Seo\Http\Middleware\HandleMissing;
+use JothamLec\Seo\IndexNow\IndexNow;
 use JothamLec\Seo\Listeners\FlushSitemap;
 use JothamLec\Seo\Listeners\RedirectChangedUris;
+use JothamLec\Seo\Listeners\SubmitToIndexNow;
 use JothamLec\Seo\Reports\ReportSettings;
 use JothamLec\Seo\Support\Config;
 use JothamLec\Seo\Tags\Seo;
@@ -48,12 +50,12 @@ class ServiceProvider extends AddonServiceProvider
     ];
 
     protected $listen = [
-        EntrySaved::class => [FlushSitemap::class],
-        EntryDeleted::class => [FlushSitemap::class],
+        EntrySaved::class => [FlushSitemap::class, SubmitToIndexNow::class],
+        EntryDeleted::class => [FlushSitemap::class, SubmitToIndexNow::class],
         // A scheduled entry going live, or an expiring one going away (Statamic's scheduler).
-        EntryScheduleReached::class => [FlushSitemap::class],
-        TermSaved::class => [FlushSitemap::class],
-        TermDeleted::class => [FlushSitemap::class],
+        EntryScheduleReached::class => [FlushSitemap::class, SubmitToIndexNow::class],
+        TermSaved::class => [FlushSitemap::class, SubmitToIndexNow::class],
+        TermDeleted::class => [FlushSitemap::class, SubmitToIndexNow::class],
         CollectionTreeSaved::class => [FlushSitemap::class],
     ];
 
@@ -69,6 +71,9 @@ class ServiceProvider extends AddonServiceProvider
 
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
+
+        // One per request: it gathers the changed addresses until the response is out.
+        $this->app->singleton(IndexNow::class);
     }
 
     /**
@@ -88,6 +93,8 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon(): void
     {
+        $this->app->terminating(fn () => $this->app->make(IndexNow::class)->flush());
+
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         Permission::extend(fn () => Permission::group('seo', 'SEO', function () {

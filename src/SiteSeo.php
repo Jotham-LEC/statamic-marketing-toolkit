@@ -27,6 +27,16 @@ use WeakMap;
  */
 class SiteSeo
 {
+    /**
+     * Crawlers and robots.txt tokens for AI training: OpenAI, Anthropic,
+     * Google (Gemini; Search is unaffected), Apple, and Common Crawl, whose
+     * open dataset AI developers train on.
+     */
+    public const array AI_TRAINING_AGENTS = ['GPTBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended', 'CCBot'];
+
+    /** Crawlers that index pages for AI search answers (ChatGPT, Claude, Perplexity). */
+    public const array AI_SEARCH_AGENTS = ['OAI-SearchBot', 'Claude-SearchBot', 'PerplexityBot'];
+
     protected Settings $settings;
 
     /** @var WeakMap<Context, array<string, mixed>>|null values several rules ask for, per page */
@@ -223,7 +233,30 @@ class SiteSeo
         }
 
         // Not following links leaves the snippet and image previews as they were.
-        return $nofollow ? 'nofollow, '.config('seo.robots.default') : (string) config('seo.robots.default');
+        return implode(', ', array_filter([$nofollow ? 'nofollow' : null, $this->snippetRules($context)]));
+    }
+
+    /**
+     * The default rules, with the page's own snippet limit: `nosnippet` keeps
+     * its text out of results and of Google's AI Overviews and AI Mode; a
+     * maximum length caps what is quoted.
+     */
+    protected function snippetRules(Context $context): string
+    {
+        $seo = $context->seo();
+        $rules = (string) config('seo.robots.default');
+
+        if ($seo['nosnippet'] ?? false) {
+            return trim((string) preg_replace('/max-snippet:-?\d+/', 'nosnippet', $rules)) ?: 'nosnippet';
+        }
+
+        if (isset($seo['max_snippet']) && is_numeric($seo['max_snippet']) && (int) $seo['max_snippet'] >= 0) {
+            $limit = 'max-snippet:'.(int) $seo['max_snippet'];
+
+            return str_contains($rules, 'max-snippet:') ? (string) preg_replace('/max-snippet:-?\d+/', $limit, $rules) : trim("{$limit}, {$rules}", ', ');
+        }
+
+        return $rules;
     }
 
     /**
@@ -772,6 +805,10 @@ class SiteSeo
             $lines[] = 'Disallow: '.$path;
         }
 
+        foreach ($this->aiCrawlerRules() as $line) {
+            $lines[] = $line;
+        }
+
         if ($extra = $this->settings->string('robots_extra')) {
             $lines[] = '';
             $lines[] = trim($extra);
@@ -783,6 +820,28 @@ class SiteSeo
         }
 
         return implode("\n", $lines)."\n";
+    }
+
+    /**
+     * robots.txt groups for AI crawlers the brand global turns away: those
+     * that gather training data, and those that index for AI search answers.
+     * Fetchers a person sends (ChatGPT-User, Perplexity-User) don't all read
+     * robots.txt, so they aren't listed.
+     *
+     * @return list<string>
+     */
+    protected function aiCrawlerRules(): array
+    {
+        $agents = [
+            ...($this->settings->bool('allow_ai_training', true) ? [] : self::AI_TRAINING_AGENTS),
+            ...($this->settings->bool('allow_ai_search', true) ? [] : self::AI_SEARCH_AGENTS),
+        ];
+
+        if ($agents === []) {
+            return [];
+        }
+
+        return ['', ...array_map(fn (string $agent) => 'User-agent: '.$agent, $agents), 'Disallow: /'];
     }
 
     /*

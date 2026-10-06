@@ -76,6 +76,14 @@ The sitemap leaves out drafts, redirect entries, noindexed pages, pages whose ca
 | `not_found.ignore_paths` | `*.php`, `/wp-*`, `/.env*`, `/.git*`… | Not logged when the path matches one (`*` matches anything). Scanner probes, mostly. |
 
 
+### IndexNow
+
+| Key | Default | |
+|---|---|---|
+| `indexnow.enabled` | `true` | When published content is saved, goes live on schedule or is deleted, its address is sent to IndexNow (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
+| `indexnow.key` | `null` (`SEO_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
+| `indexnow.endpoint` | `https://api.indexnow.org/indexnow` | Shares the addresses with every participating engine. |
+
 ### Share cards and images
 
 | Key | Default | |

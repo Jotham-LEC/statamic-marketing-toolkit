@@ -4,6 +4,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Http;
 use JothamLec\Seo\Commands\Install;
 use JothamLec\Seo\Context;
 use JothamLec\Seo\Meta;
@@ -25,6 +26,8 @@ uses(TestCase::class)
         $this->app['env'] = 'production';
         // Statamic keeps this in a static flag; a test that turns it on must not leak.
         URL::enforceTrailingSlashes(false);
+        // Nothing leaves the test run: IndexNow is faked where it is tested.
+        Http::preventStrayRequests();
         // Production env makes Laravel's CSRF check live; the CP sends the token.
         $this->withoutMiddleware([PreventRequestForgery::class, VerifyCsrfToken::class]);
 

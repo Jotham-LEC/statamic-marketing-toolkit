@@ -4,9 +4,11 @@ use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use JothamLec\Seo\Http\Controllers\IndexNowKeyController;
 use JothamLec\Seo\Http\Controllers\OgImageController;
 use JothamLec\Seo\Http\Controllers\RobotsController;
 use JothamLec\Seo\Http\Controllers\SitemapController;
+use JothamLec\Seo\IndexNow\IndexNow;
 
 /*
  * Statamic registers these inside its front-end group, ahead of the catch-all.
@@ -31,6 +33,10 @@ Route::withoutMiddleware([
 
         if (config('seo.robots_txt') && ! file_exists(public_path('robots.txt'))) {
             Route::get('robots.txt', RobotsController::class)->name('robots');
+        }
+
+        if (config('seo.indexnow.enabled')) {
+            Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
         }
 
         if (config('seo.og.enabled')) {
