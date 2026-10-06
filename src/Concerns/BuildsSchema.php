@@ -13,7 +13,6 @@ use Statamic\Contracts\Query\Builder;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Markdown;
 use Statamic\Facades\Site;
-use Statamic\Fields\Value;
 use Statamic\Structures\Page;
 
 /**
@@ -475,7 +474,7 @@ trait BuildsSchema
      */
     protected function plainValue(mixed $value): mixed
     {
-        $value = $value instanceof Value ? $value->value() : $value;
+        $value = $this->unwrap($value);
 
         if (is_object($value) && method_exists($value, 'value')) {
             $value = $value->value();

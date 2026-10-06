@@ -109,7 +109,7 @@ trait InteractsWithContent
      */
     protected function html(mixed $value): ?string
     {
-        $value = $value instanceof Value ? $value->value() : $value;
+        $value = $this->unwrap($value);
 
         if (is_string($value)) {
             return $value;
@@ -174,13 +174,22 @@ trait InteractsWithContent
      */
     protected function visibleSets(mixed $sets, string $type): Collection
     {
-        $sets = $sets instanceof Value ? $sets->value() : $sets;
+        $sets = $this->unwrap($sets);
 
         return collect(is_iterable($sets) ? $sets : [])
             ->filter(fn ($set) => (is_array($set) || $set instanceof ArrayAccess)
                 && ($set['enabled'] ?? true) !== false
                 && ($type === '*' || ($set['type'] ?? null) === $type))
             ->values();
+    }
+
+    /**
+     * A field's value without its augmented Value wrapper, whichever of the two
+     * a caller (or a subclass) passes.
+     */
+    private function unwrap(mixed $value): mixed
+    {
+        return $value instanceof Value ? $value->value() : $value;
     }
 
     /**
