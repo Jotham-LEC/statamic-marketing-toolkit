@@ -41,10 +41,21 @@ On a multi-site install, Free looks after the default site alone: every site's p
 
 Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. A licence covers every release of one major version, and one bought during 0.x also covers 1.x; a new major version needs a new licence. Local and staging sites don't need one. Switch editions at any time; nothing you set up is lost. See [the editions](docs/getting-started.md#the-editions) for the full comparison.
 
+## Requirements
+
+- **PHP 8.3+** with the `curl`, `dom`, `mbstring` and `openssl` extensions (link checks, reading pages for reports, text, the Search Console key).
+- **Statamic 6.31+**. Core is enough; several sites and languages need Statamic Pro.
+- **`imagick`** for the generated share cards (Pro) and the favicons; without it, **`gd`** draws the favicons, from a PNG or JPEG but not an SVG.
+- **A database** Laravel can migrate, even on a flat-file site: redirects, the 404 log and reports live in tables. SQLite is fine.
+- **A cache store that serializes** (`file`, `redis`, `database`, `memcached`), not `array`.
+- **Laravel's scheduler** for scheduled reports and the daily Search Console import (Pro).
+- **A queue worker**, optionally, to run reports in the background (Pro); without one they run while their screen is open.
+- **Node** only to develop the addon; sites never run npm.
+
 ## Documentation
 
 [Getting started](docs/getting-started.md) · [For editors](docs/editors.md) · [Tracking and Consent Mode](docs/tracking.md) · [Configuration](docs/configuration.md) · [For developers](docs/developers.md) · [Troubleshooting](docs/troubleshooting.md) · [Upgrading from Co-SEO](docs/upgrading.md) · [Changelog](CHANGELOG.md)
 
 ## Licence and support
 
-Marketing Toolkit is a commercial addon by CoThinking. All rights reserved. Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).
+Marketing Toolkit is a commercial addon by CoThinking; see [the licence](LICENSE.md) for what it allows and the third-party software it uses. Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).

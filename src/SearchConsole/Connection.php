@@ -2,9 +2,10 @@
 
 namespace JothamLec\MarketingToolkit\SearchConsole;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
@@ -14,9 +15,10 @@ use Throwable;
  * How Search Console is set up, so Tools → SEO can walk someone through it:
  * the service account key and the property, from `.env` (which wins) or
  * from the control panel. A key uploaded there is kept in
- * storage/app/private, never in git; the property is an addon setting.
- * apply() hands an uploaded key to the `seo.search_console.credentials`
- * config key that Client reads.
+ * storage/app/private, encrypted with APP_KEY, never in git; the property is
+ * an addon setting. apply() hands an uploaded key's path to the
+ * `seo.search_console.credentials` config key, and readKey() turns that
+ * config value into the key's JSON.
  *
  * One key serves every site (a service account can be a user of several
  * properties). The property is per site: `seo.search_console.property` is a
@@ -113,10 +115,31 @@ class Connection
      */
     public function email(): ?string
     {
-        $value = (string) config('seo.search_console.credentials');
-        $json = $value !== '' && is_file($value) ? (string) file_get_contents($value) : $value;
+        return self::parseKey($this->readKey((string) config('seo.search_console.credentials')))['client_email'] ?? null;
+    }
 
-        return self::parseKey($json)['client_email'] ?? null;
+    /**
+     * The key's JSON from the `seo.search_console.credentials` value: the
+     * JSON itself, or a path to it. The file the control panel saved is
+     * encrypted; one saved before it was is read as it is.
+     */
+    public function readKey(string $value): string
+    {
+        if ($value === '' || ! is_file($value)) {
+            return $value;
+        }
+
+        $contents = (string) file_get_contents($value);
+
+        if ($value !== $this->keyPath()) {
+            return $contents;
+        }
+
+        try {
+            return Crypt::decryptString($contents);
+        } catch (DecryptException) {
+            return $contents;
+        }
     }
 
     /**
@@ -155,7 +178,7 @@ class Connection
     public function saveKey(string $json): void
     {
         File::ensureDirectoryExists(dirname($this->keyPath()), 0700);
-        File::put($this->keyPath(), $json);
+        File::put($this->keyPath(), Crypt::encryptString($json));
         chmod($this->keyPath(), 0600);
     }
 
@@ -173,8 +196,10 @@ class Connection
             $key = $site === Site::default()->handle() ? self::SETTING : self::SITES_SETTING;
             $value = $addon?->settings()->get($key);
             $value = $key === self::SITES_SETTING ? ((array) $value)[$site] ?? null : $value;
-        } catch (Throwable) {
-            return null; // Before Statamic has booted the addon.
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return null;
         }
 
         return filled($value) && is_scalar($value) ? trim((string) $value) : null;
@@ -216,7 +241,9 @@ class Connection
         } catch (RequestException $exception) {
             return ['ok' => false, 'message' => $this->explain($exception, $property)];
         } catch (Throwable $exception) {
-            return ['ok' => false, 'message' => $exception->getMessage()];
+            report($exception);
+
+            return ['ok' => false, 'message' => __('seo::cp.search_console.messages.unexpected')];
         }
 
         return ['ok' => true, 'message' => __('seo::cp.search_console.messages.connected', ['property' => $property])];

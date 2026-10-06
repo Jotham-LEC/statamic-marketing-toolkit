@@ -114,7 +114,14 @@ Helpers available in a subclass: `settings()` (the brand global, with `string()`
 
 ## Tracking from code
 
-`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `besideGtm()`, `head()` and `body()`. As with `SiteSeo`, extend it and name your class in `seo.tracking.class` to change one rule, e.g. `ids()` to read the IDs from somewhere else. See [tracking.md](tracking.md) for how the tags and Consent Mode behave.
+`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `besideGtm()`, `head()` and `body()`. To change one rule, e.g. `ids()` to read the IDs from somewhere else, extend it and bind your class in a service provider of your own:
+
+```php
+// app/Providers/AppServiceProvider.php, in register()
+$this->app->bind(\JothamLec\MarketingToolkit\Tracking\Tracking::class, \App\Tracking::class);
+```
+
+See [tracking.md](tracking.md) for how the tags and Consent Mode behave.
 
 ## Add a share-card template
 
@@ -223,6 +230,12 @@ Tests run as production with an `array` cache that serializes, and render pages 
 The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`; not in parallel, as the processes would share the database). GitHub Actions runs all of this on every push: PHP 8.3 on the oldest versions composer.json allows, PHP 8.4 on the newest, Postgres, and without Imagick.
 
 Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\MarketingToolkit\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
+
+Database and data changes:
+
+- Migrations that have shipped stay as they are: never rename, move or edit one, since sites have already run it.
+- A new migration is named with the day it is written (`php artisan make:migration` does this), so it runs after the ones before it.
+- A change to sites' content or settings (globals, blueprints, addon settings), rather than to a table, is an update script (a subclass of Statamic's `UpdateScript`) in `src/UpdateScripts/`, which Statamic finds there and runs once on `composer update` (or `php please updates:run`).
 
 Release:
 

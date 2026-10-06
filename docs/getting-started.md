@@ -4,8 +4,8 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## What you need
 
-- **Statamic 6** (Core is enough) on **PHP 8.3+**. Several sites and languages need Statamic Pro, as Statamic itself does, and Marketing Toolkit Pro; see [Several sites and languages](developers.md#several-sites-and-languages).
-- **PHP's `imagick` extension** for the generated share cards (Marketing Toolkit Pro). Without it the cards (and their tests) fail; everything else works.
+- **Statamic 6.31+** (Core is enough) on **PHP 8.3+**, with the PHP extensions in [the README's requirements](../README.md#requirements). Several sites and languages need Statamic Pro, as Statamic itself does, and Marketing Toolkit Pro; see [Several sites and languages](developers.md#several-sites-and-languages).
+- **PHP's `imagick` extension** for the generated share cards (Marketing Toolkit Pro). Without it the cards (and their tests) fail and favicons are drawn with `gd`, from a PNG or JPEG only; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
 - **For Pro, a licence** for the live site, from the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit). Local and staging sites don't need one.

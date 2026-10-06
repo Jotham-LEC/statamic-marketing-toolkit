@@ -22,6 +22,7 @@ function translationKeysUsed(): array
         ...File::allFiles($root.'/resources/views'),
         ...File::allFiles($root.'/resources/fieldsets'),
         ...File::allFiles($root.'/resources/blueprints'),
+        ...File::allFiles($root.'/resources/install'),
     ]);
 
     return $files->flatMap(function ($file) {

@@ -169,6 +169,7 @@ return [
             'no_property' => 'Search Console has no property :property. Check how it is named there: sc-domain:example.com for a domain, https://example.com/ for an address prefix.',
             'google_said' => 'Search Console said: :message',
             'error' => 'error :status',
+            'unexpected' => 'The check failed before Google answered; the site’s log (storage/logs) says why. If APP_KEY changed since the key was uploaded, upload it again.',
         ],
     ],
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
@@ -98,6 +99,32 @@ test('an uploaded key is kept privately and connects with a saved property', fun
     $this->deleteJson(cp_route('seo.search-console.key.forget'))->assertOk();
 
     expect(File::exists($path))->toBeFalse();
+});
+
+test('an uploaded key is encrypted on disk, and one saved before that still reads', function () {
+    $connection = new Connection;
+    $key = googleKey();
+    config(['seo.search_console.credentials' => $connection->keyPath()]);
+
+    $connection->saveKey($key);
+
+    expect(File::get($connection->keyPath()))->not->toContain('private_key')
+        ->and($connection->readKey($connection->keyPath()))->toBe($key)
+        ->and($connection->email())->toBe('seo@project.iam.gserviceaccount.com');
+
+    File::put($connection->keyPath(), $key);
+
+    expect($connection->readKey($connection->keyPath()))->toBe($key)
+        ->and($connection->email())->toBe('seo@project.iam.gserviceaccount.com');
+});
+
+test('a check that fails before Google answers is logged, and says where to look', function () {
+    config(['seo.search_console.credentials' => '{"not": "a key"}', 'seo.search_console.property' => 'sc-domain:example.test']);
+    Exceptions::fake();
+
+    expect((new Connection)->check(app(Client::class)))->toBe(['ok' => false, 'message' => __('seo::cp.search_console.messages.unexpected')]);
+
+    Exceptions::assertReported(RuntimeException::class);
 });
 
 test('what isn\'t a key or a property is refused, saying what to give instead', function () {
