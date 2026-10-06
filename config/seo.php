@@ -177,7 +177,6 @@ return [
     'indexnow' => [
         'enabled' => true,
         'key' => env('SEO_INDEXNOW_KEY'),
-        'endpoint' => 'https://api.indexnow.org/indexnow',
     ],
 
     /*
@@ -217,16 +216,7 @@ return [
             'default' => DefaultTemplate::class,
         ],
 
-        // Laravel cache store for drawn cards; null uses the default store.
-        'cache_store' => null,
-
         'max_age' => 60 * 60 * 24 * 30,
-    ],
-
-    // Uploaded share images are cropped to this size and served as JPEG.
-    'image' => [
-        'width' => 1200,
-        'height' => 630,
     ],
 
 ];

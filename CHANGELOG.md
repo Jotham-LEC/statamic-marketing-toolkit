@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+Removes five options no site uses; see Upgrading.
+
+### Removed
+- Config `og.cache_store`: share cards are cached in the default store.
+- Config `image.width` and `image.height`: uploaded share images are 1200×630. A site that needs another size overrides `imageWidth()` and `imageHeight()` in its `SiteSeo` subclass.
+- Config `indexnow.endpoint`: addresses go to `api.indexnow.org`, which shares them with every participating engine.
+- The `<s:seo:image_url />` tag.
+- The per-entry **og:type** field of the SEO fieldset. A collection sets it with `og_type`; a template can still pass `og_type` to the tag. A value saved on an entry is no longer read.
+
+### Upgrading
+Remove `og.cache_store`, `image` and `indexnow.endpoint` from a published `config/seo.php` (left in, they do nothing). A template that used `<s:seo:image_url />` reads the share image from `og:image` instead, or calls `app(JothamLec\Seo\SiteSeo::class)->image($context)`. Entries that set og:type themselves take their collection's.
+
 ### Security
 - The report check **Links to other sites** asked any address a page linked to, and followed redirects anywhere, so a link (or a redirect) to `localhost`, `169.254.169.254` or a private network made the server send requests into its own network. It now asks only public addresses, follows redirects itself (each checked the same way) and connects to the address it checked, so DNS can't answer differently in between.
 - Redirects: a From or To address with a line break or another control character is refused (it would go into the Location header), and so is a `$1` before the path of another site's address (`https://example.com$1` let a visitor's path pick the domain).

@@ -85,6 +85,16 @@ describe('open graph', function () {
             ->and($meta->modified)->not->toBeNull();
     });
 
+    test('og:type comes from the collection or the template, not from a value saved on the entry', function () {
+        config(['seo.collections.essays' => ['og_type' => 'article']]);
+
+        expect(metaFor(entryIn('essays', 'first', ['seo' => ['og_type' => 'profile']], '2026-01-02'))->ogType)->toBe('article')
+            ->and(metaFor(entryIn('pages', 'team', ['seo' => ['og_type' => 'profile']]))->ogType)->toBe('website')
+            ->and(metaFor(entryIn('pages', 'me'), '/me', ['og_type' => 'profile'])->ogType)->toBe('profile')
+            ->and(Statamic\Facades\Fieldset::find('seo::seo')->fields()->get('seo')->config()['fields'])
+            ->each(fn ($field) => $field->handle->not->toBe('og_type'));
+    });
+
     test('verification codes become meta tags', function () {
         GlobalSet::findByHandle('seo')->in('default')->set('google_verification', 'abc123')->save();
 

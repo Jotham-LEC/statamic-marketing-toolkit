@@ -16,6 +16,9 @@ use Throwable;
  */
 class IndexNow
 {
+    /** Shares the addresses with every participating engine. */
+    private const string ENDPOINT = 'https://api.indexnow.org/indexnow';
+
     /** @var array<string, true> */
     private array $urls = [];
 
@@ -62,7 +65,7 @@ class IndexNow
         $home = rtrim(Site::default()->absoluteUrl(), '/');
 
         try {
-            Http::timeout(5)->post((string) config('seo.indexnow.endpoint'), [
+            Http::timeout(5)->post(self::ENDPOINT, [
                 'host' => parse_url($home, PHP_URL_HOST),
                 'key' => $this->key(),
                 'keyLocation' => $home.'/'.$this->key().'.txt',

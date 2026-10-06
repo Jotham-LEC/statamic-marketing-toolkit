@@ -32,7 +32,7 @@ class Generator
             md5(serialize($card)),
         ]);
 
-        return Cache::store(config('seo.og.cache_store'))->remember(
+        return Cache::remember(
             $key,
             (int) config('seo.og.max_age'),
             fn () => $template->image($card)->toString(),

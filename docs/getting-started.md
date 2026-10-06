@@ -52,7 +52,7 @@ tabs:
             import: seo::seo
 ```
 
-This adds the **search and share preview** and one `seo` group: title, description, share image, card title and subtitle, og:type, canonical URL, noindex, nofollow, no snippet, snippet length, "in sitemap" and extra JSON-LD. Every field is optional; empty means "use the default". See [What each value falls back to](../README.md#what-each-value-falls-back-to).
+This adds the **search and share preview** and one `seo` group: title, description, share image, card title and subtitle, canonical URL, noindex, nofollow, no snippet, snippet length, "in sitemap" and extra JSON-LD. Every field is optional; empty means "use the default". See [What each value falls back to](../README.md#what-each-value-falls-back-to).
 
 Already have your own `seo` group with `title`, `description` and `canonical`? Those keys are read as they are, so swapping your fieldset for `seo::seo` keeps existing data.
 

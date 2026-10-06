@@ -24,15 +24,6 @@ class Seo extends Tags
         return view('seo::meta', ['meta' => $meta])->render();
     }
 
-    /**
-     * `<s:seo:image_url />`: the share image's URL alone, for templates that
-     * show it (a preview, a feed).
-     */
-    public function imageUrl(): ?string
-    {
-        return app(SiteSeo::class)->image($this->context())['url'] ?? null;
-    }
-
     private function context(): Context
     {
         $content = $this->params->get('entry') ?? $this->context->get('page');

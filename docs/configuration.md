@@ -88,7 +88,6 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 |---|---|---|
 | `indexnow.enabled` | `true` | When published content is saved, goes live on schedule or is deleted, its address is sent to IndexNow (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
 | `indexnow.key` | `null` (`SEO_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
-| `indexnow.endpoint` | `https://api.indexnow.org/indexnow` | Shares the addresses with every participating engine. |
 
 ### Google Search Console
 
@@ -113,9 +112,9 @@ Setting it up:
 |---|---|---|
 | `og.enabled` | `true` | Generated cards at `/og.png` (home) and `/og/{uri}.png`. |
 | `og.templates` | `['default' => DefaultTemplate::class]` | Card designs by key; see [developers.md](developers.md#add-a-share-card-template). |
-| `og.cache_store` | `null` | Laravel cache store for drawn cards; `null` uses the default. |
 | `og.max_age` | 30 days | `Cache-Control` max-age of the card images. |
-| `image.width`, `image.height` | `1200`, `630` | Uploaded share images are cropped to this and served as JPEG. |
+
+Uploaded share images are cropped to 1200×630 and served as JPEG; for another size, override `imageWidth()` and `imageHeight()` in your `SiteSeo` subclass.
 
 ## Addon settings: Tools → Addons → SEO
 

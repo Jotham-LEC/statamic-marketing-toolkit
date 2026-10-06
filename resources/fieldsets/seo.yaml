@@ -52,17 +52,6 @@ fields:
             width: 50
             instructions: 'Empty: the description.'
         -
-          handle: og_type
-          field:
-            type: select
-            display: 'og:type'
-            width: 50
-            options:
-              website: Website
-              article: Article
-              profile: Profile
-              product: Product
-        -
           handle: canonical
           field:
             type: text

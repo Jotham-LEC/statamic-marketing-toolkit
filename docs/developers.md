@@ -97,8 +97,6 @@ Helpers available in a subclass: `settings()` (the brand global, with `string()`
 | `:noindex="true"` | Noindex this page. |
 | `status` | The response status; 4xx pages get noindex and no JSON-LD. |
 
-`<s:seo:image_url />` prints only the share image's URL.
-
 ## Add a share-card template
 
 A template turns a `Card` (title, description, label, site name, picture, colours) into a [simonhamp/the-og](https://github.com/simonhamp/the-og) image:

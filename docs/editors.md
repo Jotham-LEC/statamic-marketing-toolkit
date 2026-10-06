@@ -64,7 +64,6 @@ All optional. Empty means "use the default".
 | **Description** | The text under the title in Google, and on share cards. | The page's own description, or its first paragraph. |
 | **Share image** | The picture when the page is shared. Cropped to 1200 × 630. | A share card is drawn for the page automatically (see below). |
 | **Card title** / **Card subtitle** | The words on the generated share card. | The title and the description. |
-| **og:type** | What kind of page this is for Facebook (website, article…). | Set by the developer per section. |
 | **Canonical URL** | Only for a piece first published on another site: the original's address, so search engines credit it. | This page's own address. |
 | **Hide from search engines** | Keeps the page out of Google. | The page can be found. |
 | **Do not follow links** | Tells search engines not to follow the links on this page. | Links are followed. |

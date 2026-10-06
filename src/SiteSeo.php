@@ -295,7 +295,6 @@ class SiteSeo
     public function ogType(Context $context): string
     {
         return $context->override('og_type')
-            ?? $context->seo()['og_type']
             ?? ($context->isHome() ? 'website' : $this->collectionConfig($context, 'og_type', 'website'));
     }
 
@@ -1136,14 +1135,18 @@ class SiteSeo
         return $values[$key];
     }
 
+    /**
+     * The share image's size, 1200×630 as Facebook, LinkedIn and X expect.
+     * Override both for another.
+     */
     protected function imageWidth(): int
     {
-        return (int) config('seo.image.width', 1200);
+        return 1200;
     }
 
     protected function imageHeight(): int
     {
-        return (int) config('seo.image.height', 630);
+        return 630;
     }
 
     protected function publisherId(): string
