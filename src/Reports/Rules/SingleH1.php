@@ -13,11 +13,6 @@ class SingleH1 extends Rule
         return 'single_h1';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.single_h1';
-    }
-
     public function weight(): int
     {
         return 2;

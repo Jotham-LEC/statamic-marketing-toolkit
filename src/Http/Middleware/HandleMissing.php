@@ -32,6 +32,8 @@ class HandleMissing
 
         // A stored copy would be served without coming through here: a redirect
         // added later would never apply, and the log would count one visit.
+        // Each module is asked here, not only at boot (leaveOutUnused): either
+        // may be off alone, and an Octane worker outlives a switch.
         if (config('seo.redirects.enabled') || config('seo.not_found.enabled')) {
             $response->headers->set('X-Statamic-Uncacheable', 'true');
         }

@@ -13,11 +13,6 @@ class TitleLength extends Rule
         return 'title_length';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.title_length';
-    }
-
     public function weight(): int
     {
         return 2;

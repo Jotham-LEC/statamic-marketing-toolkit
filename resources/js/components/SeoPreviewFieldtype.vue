@@ -1,5 +1,5 @@
 <script setup>
-import { Fieldtype } from '@statamic/cms';
+import { debounce, Fieldtype } from '@statamic/cms';
 import { Description, injectPublishContext, Skeleton } from '@statamic/cms/ui';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useAxios } from '../util.js';
@@ -17,8 +17,6 @@ const resolved = ref(null);
 const failed = ref(false);
 const card = ref(null);
 const cardLoading = ref(false);
-let metaTimer = null;
-let cardTimer = null;
 
 const seo = computed(() => values.value?.seo ?? {});
 const filled = (value) => typeof value === 'string' && value.trim() !== '';
@@ -54,34 +52,28 @@ function payload() {
     };
 }
 
-function fetchMeta() {
-    clearTimeout(metaTimer);
-    metaTimer = setTimeout(async () => {
-        try {
-            resolved.value = (await axios.post(props.meta.urls.meta, payload())).data;
-            failed.value = false;
-        } catch {
-            failed.value = true;
-        }
-    }, 600);
-}
+const fetchMeta = debounce(async () => {
+    try {
+        resolved.value = (await axios.post(props.meta.urls.meta, payload())).data;
+        failed.value = false;
+    } catch {
+        failed.value = true;
+    }
+}, 600);
 
-function fetchCard() {
-    clearTimeout(cardTimer);
-    cardTimer = setTimeout(async () => {
-        cardLoading.value = true;
+const fetchCard = debounce(async () => {
+    cardLoading.value = true;
 
-        try {
-            const response = await axios.post(props.meta.urls.card, payload(), { responseType: 'blob' });
-            if (card.value) URL.revokeObjectURL(card.value);
-            card.value = URL.createObjectURL(response.data);
-        } catch {
-            card.value = null;
-        } finally {
-            cardLoading.value = false;
-        }
-    }, 300);
-}
+    try {
+        const response = await axios.post(props.meta.urls.card, payload(), { responseType: 'blob' });
+        if (card.value) URL.revokeObjectURL(card.value);
+        card.value = URL.createObjectURL(response.data);
+    } catch {
+        card.value = null;
+    } finally {
+        cardLoading.value = false;
+    }
+}, 300);
 
 watch(values, fetchMeta, { deep: true, immediate: true });
 
@@ -94,8 +86,8 @@ const cardKey = computed(() =>
 watch(cardKey, (key) => key && props.meta.og && fetchCard());
 
 onBeforeUnmount(() => {
-    clearTimeout(metaTimer);
-    clearTimeout(cardTimer);
+    fetchMeta.cancel();
+    fetchCard.cancel();
     if (card.value) URL.revokeObjectURL(card.value);
 });
 </script>

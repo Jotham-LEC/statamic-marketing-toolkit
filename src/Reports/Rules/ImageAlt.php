@@ -13,11 +13,6 @@ class ImageAlt extends Rule
         return 'image_alt';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.image_alt';
-    }
-
     public function weight(): int
     {
         return 1;

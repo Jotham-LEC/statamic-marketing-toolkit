@@ -13,11 +13,6 @@ class JsonLd extends Rule
         return 'json_ld';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.json_ld';
-    }
-
     public function weight(): int
     {
         return 2;

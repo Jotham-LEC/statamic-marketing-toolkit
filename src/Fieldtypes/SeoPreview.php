@@ -11,8 +11,6 @@ use Statamic\Fields\Fieldtype;
  */
 class SeoPreview extends Fieldtype
 {
-    protected static $handle = 'seo_preview';
-
     protected static $title = 'seo::fields.seo.seo_preview.title';
 
     protected $categories = ['special'];

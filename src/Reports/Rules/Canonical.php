@@ -13,11 +13,6 @@ class Canonical extends Rule
         return 'canonical';
     }
 
-    public function label(): string
-    {
-        return 'seo::reports.rules.canonical';
-    }
-
     public function weight(): int
     {
         return 3;

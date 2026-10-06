@@ -70,7 +70,7 @@ class SitemapController
 
     private function perPage(): int
     {
-        return max(1, (int) config('seo.sitemap.per_page', 1000));
+        return max(1, (int) config('seo.sitemap.per_page'));
     }
 
     private function xml(string $body): Response

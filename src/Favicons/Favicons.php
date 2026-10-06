@@ -108,12 +108,11 @@ class Favicons
     }
 
     /**
-     * Forgets the icons made for a site (all sites: null), so the next
-     * request makes them again.
+     * Forgets the icons made for every site, so the next request makes them again.
      */
-    public function flush(?string $site = null): void
+    public function flush(): void
     {
-        File::deleteDirectory($site === null ? self::root() : self::root().'/'.$site);
+        File::deleteDirectory(self::root());
     }
 
     public static function root(): string

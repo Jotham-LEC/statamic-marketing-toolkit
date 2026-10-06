@@ -63,14 +63,6 @@ final readonly class Result
     }
 
     /**
-     * The message in the current language.
-     */
-    public function text(): string
-    {
-        return self::translate($this->message, $this->params);
-    }
-
-    /**
      * A stored message in the current language. A `count` parameter picks the
      * plural form, if the language has one for that message.
      *

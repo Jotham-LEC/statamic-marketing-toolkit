@@ -18,7 +18,7 @@ final class TitleSiteName
     public static function keep(): void
     {
         try {
-            $set = GlobalSet::findByHandle((string) config('seo.global', 'seo'));
+            $set = GlobalSet::findByHandle((string) config('seo.global'));
 
             foreach ($set?->localizations() ?? [] as $variables) {
                 $data = $variables->data();
