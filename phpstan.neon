@@ -30,3 +30,9 @@ parameters:
         -
             identifier: method.nonObject
             message: '#ImageManipulator\|string#'
+        # PHPStan 2.3 types filter_var() with FILTER_FLAG_GLOBAL_RANGE as always a string; for a private or reserved
+        # address it returns false, which is the SSRF check. (2.2 gets it right, hence reportUnmatched.)
+        -
+            identifier: booleanNot.alwaysFalse
+            path: src/Reports/ExternalLinkChecker.php
+            reportUnmatched: false
