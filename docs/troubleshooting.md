@@ -17,7 +17,7 @@ The built assets weren't published. Run `php artisan vendor:publish --tag=seo --
 
 ### A redirect doesn't apply
 
-Redirects only apply to addresses that would be a 404. If a page exists at the source address, the page wins. Also check that the redirect is **Active**, and that its source has no query string (`?…`): addresses are matched without one.
+Redirects only apply to addresses that would be a 404. If a page exists at the source address, the page wins. Also check that the redirect is **Active**, and that its source has no query string (`?…`): addresses are matched without one. With Statamic's static caching on, a 404 cached before this version keeps being served until the static cache is cleared (`php please static:clear`); 404s aren't cached any more.
 
 ### Nothing appears in the 404 log
 

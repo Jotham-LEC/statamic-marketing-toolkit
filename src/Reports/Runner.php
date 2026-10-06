@@ -256,7 +256,7 @@ class Runner
         $terms = collect((array) config('seo.sitemap.taxonomies'))
             ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->get())
             ->map(fn ($term) => $term->in($site))
-            ->filter(fn ($term) => $term?->url() && $term->queryEntries()->whereStatus('published')->count() > 0)
+            ->filter(fn ($term) => $term?->url() && $this->seo->termHasEntries($term))
             ->map(fn (TermContract $term) => $this->row($term))
             ->sortBy('url');
 

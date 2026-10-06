@@ -48,6 +48,22 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
 ],
 ```
 
+### Taxonomies
+
+`taxonomies` gives a taxonomy's term pages the same rules, by taxonomy handle: `og_type`, `page_schema`, `description_fields`, `image_fields` and `faq_field`. A term has none of its collections' rules.
+
+```php
+'taxonomies' => [
+    'topics' => [
+        'page_schema' => 'CollectionPage', // a listing of the topic's pages
+        'description_fields' => ['intro'],
+        'image_fields' => ['banner'],
+    ],
+],
+```
+
+Terms are listed in the sitemap (and checked by reports) when their taxonomy is in `sitemap.taxonomies` and they have published entries. Statamic counts only entries of the collections a taxonomy is attached to; when entries name their terms in a `terms` field of a taxonomy that isn't attached, override `termHasEntries()` in your `SiteSeo` subclass.
+
 ### Robots
 
 | Key | Default | |
@@ -68,7 +84,7 @@ The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand d
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
 | `robots_txt` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins. |
 
-The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `seo.sitemap` changes, and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
+The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `seo.sitemap` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
 ### Redirects and the 404 log
 

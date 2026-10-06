@@ -1,10 +1,13 @@
 <?php
 
+use Illuminate\Http\Request;
 use JothamLec\Seo\Context;
 use JothamLec\Seo\SiteSeo;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term;
 
 beforeEach(fn () => seoGlobal(['default_description' => 'The default.']));
 
@@ -202,4 +205,30 @@ test('one rules object asked about page after page gives each its own values', f
     $descriptions = array_map(fn ($entry) => $seo->description(Context::make($entry)), $entries);
 
     expect($descriptions)->toBe(['First.', 'Second.']);
+});
+
+describe('taxonomies', function () {
+    beforeEach(fn () => Taxonomy::make('topics')->save());
+
+    test('a term page follows its taxonomy\'s rules', function () {
+        config(['seo.taxonomies.topics' => ['page_schema' => 'CollectionPage', 'og_type' => 'article', 'description_fields' => ['intro']]]);
+        $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens', 'intro' => 'Everything that grows.']))->save();
+
+        $meta = app(SiteSeo::class)->meta(Context::make($term->in('default'), Request::create('https://example.test/topics/gardens')));
+
+        expect($meta->description)->toBe('Everything that grows.')
+            ->and($meta->ogType)->toBe('article')
+            ->and(collect($meta->graph)->pluck('@type'))->toContain('CollectionPage');
+    });
+
+    test('a term without rules of its own, or a collection\'s, keeps the defaults', function () {
+        config(['seo.collections.topics' => ['page_schema' => 'CollectionPage', 'description_fields' => ['intro']]]);
+        $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens', 'intro' => 'Everything that grows.']))->save();
+
+        $meta = app(SiteSeo::class)->meta(Context::make($term->in('default'), Request::create('https://example.test/topics/gardens')));
+
+        expect($meta->description)->toBe('The default.')
+            ->and($meta->ogType)->toBe('website')
+            ->and(collect($meta->graph)->pluck('@type'))->toContain('WebPage')->not->toContain('CollectionPage');
+    });
 });

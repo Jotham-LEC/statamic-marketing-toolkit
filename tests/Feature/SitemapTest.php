@@ -1,10 +1,16 @@
 <?php
 
+use Illuminate\Http\Request;
 use JothamLec\Seo\Reports\Runner;
 use JothamLec\Seo\SiteSeo;
+use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Events\EntryScheduleReached;
+use Statamic\Events\StacheCleared;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Taxonomy;
+use Statamic\Facades\Term;
+use Statamic\StaticCaching\Cacher;
 
 /**
  * @return list<string>
@@ -141,4 +147,52 @@ test('more entries than one read takes are all listed, once each', function () {
     expect($locs)->toHaveCount(501)->toBe(array_values(array_unique($locs)))
         ->and($report->pages()->distinct()->count('url'))->toBe(501)
         ->and($report->pages_total)->toBe(501);
+});
+
+test('a project decides which terms have entries, for the sitemap and the reports alike', function () {
+    // Statamic counts no entries for a taxonomy that isn't attached to their collection.
+    Taxonomy::make('topics')->save();
+    config(['seo.sitemap.taxonomies' => ['topics'], 'seo.class' => TermsWithEntries::class]);
+    tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
+    tap(Term::make()->taxonomy('topics')->slug('empty')->data(['title' => 'Empty']))->save();
+
+    $report = app(Runner::class)->start();
+
+    expect(sitemapLocs($this->get('https://example.test/sitemap.xml')->getContent()))->toBe(['https://example.test/topics/gardens'])
+        ->and($report->pages()->pluck('url')->all())->toBe(['https://example.test/topics/gardens']);
+});
+
+class TermsWithEntries extends SiteSeo
+{
+    public function termHasEntries(TermContract $term): bool
+    {
+        return $term->slug() === 'gardens';
+    }
+}
+
+test('clearing the Stache, as a deploy does, refreshes the cached sitemap', function () {
+    entryIn('pages', 'about');
+    $this->get('https://example.test/sitemap.xml');
+    Entry::make()->collection('pages')->slug('quiet')->data(['title' => 'Quiet'])->saveQuietly();
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->not->toContain('/quiet');
+
+    StacheCleared::dispatch();
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->toContain('https://example.test/quiet');
+});
+
+test('the sitemap and robots.txt are never kept by Statamic\'s static cache, which would miss the addon\'s refreshes', function () {
+    config(['statamic.static_caching.strategy' => 'half']);
+    entryIn('pages', 'about');
+
+    foreach (['/about', '/sitemap.xml', '/robots.txt'] as $path) {
+        $this->get('https://example.test'.$path)->assertOk();
+    }
+
+    $cached = fn (string $path) => app(Cacher::class)->hasCachedPage(Request::create('https://example.test'.$path));
+
+    expect($cached('/about'))->toBeTrue()
+        ->and($cached('/sitemap.xml'))->toBeFalse()
+        ->and($cached('/robots.txt'))->toBeFalse();
 });

@@ -162,7 +162,7 @@ class SiteSeo
     {
         $content = $context->content();
 
-        foreach ($content ? ['seo', ...$this->collectionConfig($context, 'image_fields', [])] : [] as $field) {
+        foreach ($content ? ['seo', ...$this->contentConfig($context, 'image_fields', [])] : [] as $field) {
             if ($asset = $this->assetFrom($content, $field)) {
                 return $asset;
             }
@@ -295,7 +295,7 @@ class SiteSeo
     public function ogType(Context $context): string
     {
         return $context->override('og_type')
-            ?? ($context->isHome() ? 'website' : $this->collectionConfig($context, 'og_type', 'website'));
+            ?? ($context->isHome() ? 'website' : $this->contentConfig($context, 'og_type', 'website'));
     }
 
     public function published(Context $context): ?string
@@ -562,7 +562,7 @@ class SiteSeo
             return null;
         }
 
-        $type = $context->isHome() ? 'WebPage' : $this->collectionConfig($context, 'page_schema', 'WebPage');
+        $type = $context->isHome() ? 'WebPage' : $this->contentConfig($context, 'page_schema', 'WebPage');
         $image = $this->image($context);
 
         return array_filter([
@@ -796,7 +796,7 @@ class SiteSeo
      */
     public function faqNode(Context $context): ?array
     {
-        $field = $this->collectionConfig($context, 'faq_field');
+        $field = $this->contentConfig($context, 'faq_field');
         $rows = $field ? $context->content()?->get($field) : null;
 
         $questions = collect(is_array($rows) ? $rows : [])
@@ -917,13 +917,24 @@ class SiteSeo
     }
 
     /**
+     * Whether a term has published entries, so its page is worth listing and
+     * checking. Statamic counts only entries of the collections the taxonomy
+     * is attached to; override for one that isn't attached (the entries name
+     * their terms in a `terms` field), or to count only some entries.
+     */
+    public function termHasEntries(Term $term): bool
+    {
+        return $term->queryEntries()->whereStatus('published')->count() > 0;
+    }
+
+    /**
      * @return Collection<int, array{loc: string, lastmod: ?string}>
      */
     protected function sitemapTerms(): Collection
     {
         return collect((array) config('seo.sitemap.taxonomies'))
             ->flatMap(fn (string $taxonomy) => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->get())
-            ->filter(fn (Term $term) => $this->inSitemap($term) && $term->queryEntries()->whereStatus('published')->count() > 0)
+            ->filter(fn (Term $term) => $this->inSitemap($term) && $this->termHasEntries($term))
             ->map(fn (Term $term) => ['loc' => $term->absoluteUrl(), 'lastmod' => $term->lastModified()?->toAtomString()])
             ->values();
     }
@@ -999,7 +1010,22 @@ class SiteSeo
     }
 
     /**
-     * A key of this page's collection settings (config `seo.collections`).
+     * A key of this page's rules: its collection's (config `seo.collections`),
+     * or for a term, its taxonomy's (`seo.taxonomies`).
+     */
+    public function contentConfig(Context $context, string $key, mixed $default = null): mixed
+    {
+        if ($context->entry) {
+            return $this->collectionConfig($context, $key, $default);
+        }
+
+        $handle = $context->term?->taxonomyHandle();
+
+        return $handle ? config("seo.taxonomies.{$handle}.{$key}", $default) : $default;
+    }
+
+    /**
+     * A key of this entry's collection settings (config `seo.collections`).
      */
     public function collectionConfig(Context $context, string $key, mixed $default = null): mixed
     {
@@ -1028,7 +1054,7 @@ class SiteSeo
             return null;
         }
 
-        foreach (['description', ...$this->collectionConfig($context, 'description_fields', [])] as $field) {
+        foreach (['description', ...$this->contentConfig($context, 'description_fields', [])] as $field) {
             if (filled($value = $content->get($field)) && is_string($value)) {
                 return $value;
             }
@@ -1075,6 +1101,8 @@ class SiteSeo
             : $content->augmentedValue($field)->value();
 
         $value = $value instanceof Value ? $value->value() : $value;
+        // A field that takes more than one file augments to a query, not a list.
+        $value = $value instanceof Builder ? $value->get()->first() : $value;
         $value = is_iterable($value) && ! $value instanceof Asset ? collect($value)->first() : $value;
 
         // Without a blueprint field to augment through, a stored "container::path" id still resolves.

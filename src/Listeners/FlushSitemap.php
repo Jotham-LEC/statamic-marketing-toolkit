@@ -9,7 +9,8 @@ use Statamic\Facades\Site;
 /**
  * Any saved or deleted entry or term, a moved page, an entry whose scheduled
  * date arrives, or a collection or taxonomy given a new route can change
- * which URLs the sitemap lists or their dates.
+ * which URLs the sitemap lists or their dates; so can a deploy, which
+ * clears the Stache.
  */
 class FlushSitemap
 {

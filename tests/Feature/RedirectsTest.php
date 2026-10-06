@@ -185,3 +185,12 @@ test('a redirect goes to the site\'s own address, whatever Host header the reque
         ->assertRedirect('https://example.test/new');
     $this->get('https://evil.test/old')->assertRedirect('https://example.test/new');
 });
+
+test('a missing address is never kept by Statamic\'s static cache, so a redirect added later applies', function () {
+    config(['statamic.static_caching.strategy' => 'half']);
+
+    $this->get('https://example.test/old')->assertNotFound();
+    rule('/old', '/new');
+
+    $this->get('https://example.test/old')->assertRedirect('https://example.test/new');
+});

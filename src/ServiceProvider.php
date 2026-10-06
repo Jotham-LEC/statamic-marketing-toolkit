@@ -27,6 +27,7 @@ use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
 use Statamic\Events\TaxonomySaved;
+use Statamic\Events\StacheCleared;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
@@ -67,6 +68,8 @@ class ServiceProvider extends AddonServiceProvider
         CollectionSaved::class => [FlushSitemap::class],
         TaxonomySaved::class => [FlushSitemap::class],
     ];
+        // A deploy clears the Stache; the rules may have changed with the code.
+        StacheCleared::class => [FlushSitemap::class],
 
     protected $subscribe = [RedirectChangedUris::class];
 

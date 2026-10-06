@@ -7,6 +7,7 @@ use JothamLec\Seo\Og\Template;
 use SimonHamp\TheOg\Image;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\GlobalSet;
 
 beforeEach(fn () => seoGlobal(['og_background' => '#282828', 'og_text' => '#fbf1c7', 'og_accent' => '#fad03a']));
 
@@ -104,3 +105,29 @@ class QuietTemplate extends Template
         return (new Image)->title($card->title);
     }
 }
+
+test('a field that takes several photos gives its first as the share image', function () {
+    Blueprint::make('page')->setNamespace('collections.pages')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
+        ['handle' => 'title', 'field' => ['type' => 'text']],
+        ['handle' => 'photos', 'field' => ['type' => 'assets', 'container' => 'assets']],
+    ]]]]]])->save();
+    config(['seo.collections.pages.image_fields' => ['photos']]);
+    $disk = AssetContainer::find('assets')->disk();
+    $disk->put('first.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    $disk->put('second.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+
+    expect(metaFor(entryIn('pages', 'gallery', ['photos' => ['first.png', 'second.png']]))->image['url'])
+        ->toStartWith('https://example.test/img/')
+        ->toContain('/first.png');
+});
+
+test('a brand image field that takes several files gives its first', function () {
+    config(['seo.og.enabled' => false]);
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => [
+        ['handle' => 'default_image', 'field' => ['type' => 'assets', 'container' => 'assets']],
+    ]]]]]])->save();
+    AssetContainer::find('assets')->disk()->put('brand.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    GlobalSet::findByHandle('seo')->in('default')->data(['default_image' => ['brand.png']])->save();
+
+    expect(metaFor(entryIn('pages', 'plain'))->image['url'])->toContain('/brand.png');
+});

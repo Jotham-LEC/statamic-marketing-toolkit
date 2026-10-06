@@ -4,6 +4,7 @@ namespace JothamLec\Seo;
 
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Globals\Variables;
+use Statamic\Contracts\Query\Builder;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
@@ -65,6 +66,8 @@ class Settings
     public function asset(string $key): ?Asset
     {
         $value = $this->variables()?->augmentedValue($key)?->value();
+        // A field that takes more than one file augments to a query, not a list.
+        $value = $value instanceof Builder ? $value->get()->first() : $value;
         $value = is_iterable($value) ? collect($value)->first() : $value;
 
         return $value instanceof Asset ? $value : null;

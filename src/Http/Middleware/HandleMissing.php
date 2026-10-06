@@ -30,6 +30,12 @@ class HandleMissing
             return $response;
         }
 
+        // A stored copy would be served without coming through here: a redirect
+        // added later would never apply, and the log would count one visit.
+        if (config('seo.redirects.enabled') || config('seo.not_found.enabled')) {
+            $response->headers->set('X-Statamic-Uncacheable', 'true');
+        }
+
         $path = $this->recorder->path($request);
         $rule = config('seo.redirects.enabled') ? $this->matcher->match($path, (string) $request->getQueryString()) : null;
 

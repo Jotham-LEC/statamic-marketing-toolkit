@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Rules per taxonomy**: `seo.taxonomies`, like `collections`, gives term pages an `og_type`, `page_schema`, `description_fields`, `image_fields` and `faq_field`. `contentConfig()` reads a page's rules from its collection or its taxonomy.
+- `SiteSeo::termHasEntries()`: one place, used by the sitemap and the reports, that decides whether a term has published entries. Override it for a taxonomy that isn't attached to the collection whose entries use it (Statamic counts none there).
+
+### Fixed
+- An image field that takes more than one file (a gallery) in `image_fields`, or a brand image field set to take several, is read: its first image is the share image. It was skipped, so the page got the generated card, and products had no picture.
+- With Statamic's static caching (half measure), a 404 was cached and then answered without the addon: a redirect added for that address later never applied, and the 404 log counted one visit. 404 responses are now marked uncacheable whenever redirects or the 404 log are on.
+- The sitemap is rebuilt when the Stache is cleared, as a deploy does, so rules changed in code show at once.
+
 ## 0.11.0 – 2026-10-06
 
 Security and correctness fixes from a review, and five options no site used are gone; see Upgrading. Sites on `^0.10` change their constraint to `^0.11`.

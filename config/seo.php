@@ -71,6 +71,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Taxonomies
+    |--------------------------------------------------------------------------
+    |
+    | The same rules for a taxonomy's term pages, by taxonomy handle: og_type,
+    | page_schema (CollectionPage suits a listing), description_fields,
+    | image_fields and faq_field.
+    |
+    */
+
+    'taxonomies' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Robots
     |--------------------------------------------------------------------------
     */

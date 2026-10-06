@@ -79,9 +79,10 @@ The methods you're most likely to override:
 | `extraNodes(Context)` | Your own nodes (Event, Course…). Empty by default. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
+| `termHasEntries(Term)` | Whether a term has published entries, for the sitemap and the reports. Override for a taxonomy that isn't attached to the collection whose entries use it. |
 | `robotsTxt()` | robots.txt. |
 
-Helpers available in a subclass: `settings()` (the brand global, with `string()`, `list()`, `asset()`, `siteName()`), `collectionConfig($context, $key, $default)`, and `absolute($url)`.
+Helpers available in a subclass: `settings()` (the brand global, with `string()`, `list()`, `asset()`, `siteName()`), `contentConfig($context, $key, $default)` (the page's collection rules, or a term's taxonomy rules), `collectionConfig($context, $key, $default)` (an entry's collection only), and `absolute($url)`.
 
 ## The tag
 
@@ -151,7 +152,7 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 |---|---|
 | Meta tags, JSON-LD | `SiteSeo`, `Meta`, `Tags/Seo.php`, `resources/views/meta.blade.php` |
 | Sitemap, robots.txt, share cards | `routes/web.php` (no session, no cookies), `Http/Controllers` |
-| Redirects, 404 log | `HandleMissing`, middleware in Statamic's `statamic.web` group (only acts on 404 responses). Redirect targets get a trailing slash when Statamic adds them (`URL::enforceTrailingSlashes()`) |
+| Redirects, 404 log | `HandleMissing`, middleware in Statamic's `statamic.web` group (only acts on 404 responses, and keeps them out of Statamic's static cache, which would otherwise answer later visits without asking it). Redirect targets get a trailing slash when Statamic adds them (`URL::enforceTrailingSlashes()`) |
 | Automatic redirects | `Listeners/RedirectChangedUris` (entry, term and collection-tree events) |
 | Control panel | `routes/cp.php`, `Http/Controllers/CP`, Vue in `resources/js` (built with Vite to `resources/dist`) |
 | Reports | `Reports/` (Runner, Renderer, HtmlInspector, LinkChecker, Rules), `Commands/Report.php` |
