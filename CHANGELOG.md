@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.11.0 – 2026-10-06
 
-Removes five options no site uses; see Upgrading.
+Security and correctness fixes from a review, and five options no site used are gone; see Upgrading. Sites on `^0.10` change their constraint to `^0.11`.
 
 ### Removed
 - Config `og.cache_store`: share cards are cached in the default store.
