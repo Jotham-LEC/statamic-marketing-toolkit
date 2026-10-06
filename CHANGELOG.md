@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 – 2026-10-06
+
+### Changed
+- Tools → SEO → Reports: a finished report's whole row opens it, and its first cell reads "Report #N" as a link. Only the small "#N" was clickable.
+
 ## 0.3.1 – 2026-10-06
 
 ### Fixed

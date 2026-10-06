@@ -64,10 +64,17 @@ function finished(report) {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="report in reports" :key="report.id" class="border-t border-gray-200 dark:border-gray-700">
+                <!-- A finished report's whole row opens it; the link in the first cell is there for the keyboard. -->
+                <tr
+                    v-for="report in reports"
+                    :key="report.id"
+                    class="border-t border-gray-200 dark:border-gray-700"
+                    :class="{ 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800': report.status === 'done' }"
+                    @click="report.status === 'done' && router.visit(report.url)"
+                >
                     <td class="px-4 py-2">
-                        <Link v-if="report.status === 'done'" :href="report.url">#{{ report.id }}</Link>
-                        <span v-else>#{{ report.id }}</span>
+                        <Link v-if="report.status === 'done'" :href="report.url" class="text-blue-600 underline dark:text-blue-400" @click.stop>Report #{{ report.id }}</Link>
+                        <span v-else>Report #{{ report.id }}</span>
                     </td>
                     <td class="px-4 py-2">
                         <Score v-if="report.status === 'done'" :value="report.score" />
