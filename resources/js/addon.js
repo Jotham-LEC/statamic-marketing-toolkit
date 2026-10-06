@@ -66,18 +66,24 @@ function confirmRedirect(payload) {
 
             return new Promise((resolve, reject) => {
                 const modal = components.append('seo-redirect-confirm', { props: { from: data.from, to: data.to } });
-                const answer = (create) => {
+                // The first answer counts: a double click doesn't answer twice.
+                let settled = false;
+                const settle = () => {
+                    if (settled) return false;
+                    settled = true;
                     modal.destroy();
+                    return true;
+                };
+                const answer = (create) => {
                     // A failed answer leaves the default: the redirect is added.
-                    axios.post(cp_url('seo/redirects/choice'), { reference, create }).then(resolve, resolve);
+                    if (settle()) axios.post(cp_url('seo/redirects/choice'), { reference, create }).then(resolve, resolve);
                 };
 
                 modal.on('add', () => answer(true));
                 modal.on('skip', () => answer(false));
                 // Closed, or "not yet": nothing is saved; the next save asks again.
                 modal.on('cancel', () => {
-                    modal.destroy();
-                    reject(__('seo::cp.confirm.not_saved'));
+                    if (settle()) reject(__('seo::cp.confirm.not_saved'));
                 });
             });
         })
