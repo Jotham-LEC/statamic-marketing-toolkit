@@ -81,7 +81,7 @@ trait BuildsMeta
 
         $full = $title.$this->settings->separator().$site;
 
-        return (mb_strlen($full.$suffix) <= (int) config('seo.title.max', 60) ? $full : $title).$suffix;
+        return (mb_strlen($full.$suffix) <= (int) config('seo.title.max') ? $full : $title).$suffix;
     }
 
     public function ogTitle(Context $context): string
@@ -98,7 +98,7 @@ trait BuildsMeta
                 ?? $this->contentDescription($context)
                 ?? $this->settings->string('default_description');
 
-            return $text === null ? null : Text::limit(Text::plain($text), (int) config('seo.description.length', 155));
+            return $text === null ? null : Text::limit(Text::plain($text), (int) config('seo.description.length'));
         });
     }
 

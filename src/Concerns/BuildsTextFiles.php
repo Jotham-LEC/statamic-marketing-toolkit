@@ -113,7 +113,7 @@ trait BuildsTextFiles
 
         $lines = ['User-agent: *'];
 
-        $disallow = $this->settings->list('robots_disallow') ?: ['/'.trim((string) config('statamic.cp.route', 'cp'), '/').'/'];
+        $disallow = $this->settings->list('robots_disallow') ?: ['/'.trim((string) config('statamic.cp.route'), '/').'/'];
 
         foreach ($disallow as $path) {
             $lines[] = 'Disallow: '.$path;

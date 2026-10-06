@@ -61,7 +61,7 @@ trait ResolvesAlternates
      */
     public function contentAlternates(Entry|Term $content): array
     {
-        if (! config('seo.hreflang.enabled', true) || ! Sites::multiple()) {
+        if (! config('seo.hreflang.enabled') || ! Sites::multiple()) {
             return [];
         }
 
