@@ -15,7 +15,10 @@ use Statamic\Fields\Blueprint as BlueprintObject;
 
 /**
  * Tools → SEO → Features (Pro): a switch per module, for whoever may change
- * the addon's settings. What's off is off from the next request.
+ * the addon's settings. What's off is off from the next request, or, in a
+ * process that boots once (Octane, a queue worker), once it restarts:
+ * Features::apply() runs at boot, before the routes and listeners register,
+ * and can't take back what registered, so it isn't run again here.
  */
 class FeaturesController
 {
