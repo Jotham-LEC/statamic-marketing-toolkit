@@ -2,6 +2,8 @@
 
 namespace JothamLec\Seo;
 
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Support\Facades\Queue;
 use JothamLec\Seo\Actions\CreateRedirect;
 use JothamLec\Seo\Actions\DeleteSeoRecords;
 use JothamLec\Seo\Commands\Install;
@@ -101,6 +103,14 @@ class ServiceProvider extends AddonServiceProvider
     public function bootAddon(): void
     {
         $this->app->terminating(fn () => $this->app->make(IndexNow::class)->flush());
+
+        // A queue worker doesn't terminate between jobs: send what each job changed once it is done.
+        // (A sync job is part of the request or command that ran it, which terminates as usual.)
+        Queue::after(function (JobProcessed $event) {
+            if ($event->connectionName !== 'sync') {
+                $this->app->make(IndexNow::class)->flush();
+            }
+        });
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 

@@ -14,6 +14,7 @@
 - The sitemap leaves out a page whose canonical names another page of the same site, as Google asks (it already left out pages canonical to another site).
 - The sitemap follows a collection or taxonomy saved with a new route, and a deploy that changes `seo.sitemap`, instead of waiting for the next content save.
 - `/sitemap_{n}.xml` with a number too big for PHP answered 500; it is a 404.
+- IndexNow from a queue worker: what a job changed is sent when the job is done, not when the worker stops (which could be days later).
 - Reports no longer stop on a page title longer than 255 characters (MySQL in strict mode and Postgres refused it); the stored title is cut to fit.
 
 ## 0.10.0 – 2026-10-06

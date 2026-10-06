@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Http;
 use JothamLec\Seo\IndexNow\IndexNow;
 use Statamic\Facades\Entry;
@@ -65,6 +67,15 @@ describe('IndexNow', function () {
             && $request['key'] === $key
             && $request['keyLocation'] === "https://example.test/{$key}.txt"
             && $request['urlList'] === ['https://example.test/about', 'https://example.test/contact']);
+    });
+
+    test('a queue worker sends what each job changed once the job is done, not when the worker stops', function () {
+        entryIn('pages', 'about');
+
+        event(new JobProcessed('redis', Mockery::mock(Job::class)));
+
+        Http::assertSent(fn (HttpRequest $request) => $request['urlList'] === ['https://example.test/about']);
+        expect(app(IndexNow::class)->queued())->toBe([]);
     });
 
     test('serves its key, and stays quiet outside production or when turned off', function () {
