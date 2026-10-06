@@ -20,8 +20,9 @@ const result = ref(null);
 
 const keyFromEnv = computed(() => props.setup.key_source === 'env');
 const propertyFromEnv = computed(() => props.setup.property_source === 'env');
-const link = (href, text) => `<a href="${href}" target="_blank" rel="noopener" class="underline">${text}</a>`;
-const code = (text) => `<span class="font-mono text-xs">${text}</span>`;
+const escape = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const link = (href, text) => `<a href="${escape(href)}" target="_blank" rel="noopener" class="underline">${escape(text)}</a>`;
+const code = (text) => `<span class="font-mono text-xs">${escape(text)}</span>`;
 
 const usersUrl = computed(() =>
     props.setup.property

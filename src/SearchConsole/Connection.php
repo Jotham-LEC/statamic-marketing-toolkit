@@ -145,6 +145,7 @@ class Connection
         return is_array($key)
             && ($key['type'] ?? 'service_account') === 'service_account'
             && is_string($key['client_email'] ?? null)
+            && filter_var($key['client_email'], FILTER_VALIDATE_EMAIL) !== false
             && is_string($key['private_key'] ?? null)
             && openssl_pkey_get_private($key['private_key']) !== false
             ? $key

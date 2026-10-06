@@ -105,6 +105,11 @@ test('what isn\'t a key or a property is refused, saying what to give instead', 
 
     $this->postJson(cp_route('seo.search-console.key'), ['key' => '{"client_email": "x@y.z"}'])
         ->assertUnprocessable()->assertJsonValidationErrors(['key' => 'service account key']);
+
+    $markup = json_decode(googleKey(), true);
+    $markup['client_email'] = '<img src=x onerror=alert(1)>';
+    $this->postJson(cp_route('seo.search-console.key'), ['key' => json_encode($markup)])
+        ->assertUnprocessable()->assertJsonValidationErrors(['key' => 'service account key']);
     $this->postJson(cp_route('seo.search-console.property'), ['property' => 'example.test'])
         ->assertUnprocessable()->assertJsonValidationErrors(['property' => 'sc-domain:example.com']);
 
