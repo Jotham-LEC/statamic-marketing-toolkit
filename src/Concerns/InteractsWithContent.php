@@ -7,12 +7,11 @@ use Illuminate\Support\Collection;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Assets;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Entries\Entry;
-use Statamic\Contracts\Query\Builder;
 use Statamic\Contracts\Taxonomies\Term;
-use Statamic\Facades\Asset as Assets;
 use Statamic\Facades\Image;
 use Statamic\Facades\Markdown;
 use Statamic\Facades\Site;
@@ -129,11 +128,11 @@ trait InteractsWithContent
     {
         if ($set = $this->setPath($field)) {
             return $this->visibleSets($content->augmentedValue($set['field'])->value(), $set['type'])
-                ->map(fn ($values) => $this->asAsset($values[$set['key']] ?? null))
+                ->map(fn ($values) => Assets::from($values[$set['key']] ?? null))
                 ->first(fn ($asset) => $asset !== null);
         }
 
-        return $this->asAsset($field === 'seo'
+        return Assets::from($field === 'seo'
             ? ($content->augmentedValue('seo')->value()['image'] ?? null)
             : $content->augmentedValue($field)->value());
     }
@@ -182,21 +181,6 @@ trait InteractsWithContent
                 && ($set['enabled'] ?? true) !== false
                 && ($type === '*' || ($set['type'] ?? null) === $type))
             ->values();
-    }
-
-    private function asAsset(mixed $value): ?Asset
-    {
-        $value = $value instanceof Value ? $value->value() : $value;
-        // A field that takes more than one file augments to a query, not a list.
-        $value = $value instanceof Builder ? $value->get()->first() : $value;
-        $value = is_iterable($value) && ! $value instanceof Asset ? collect($value)->first() : $value;
-
-        // Without a blueprint field to augment through, a stored "container::path" id still resolves.
-        if (is_string($value)) {
-            $value = Assets::find($value);
-        }
-
-        return $value instanceof Asset ? $value : null;
     }
 
     /**
