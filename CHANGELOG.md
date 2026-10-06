@@ -32,6 +32,7 @@ Remove `og.cache_store`, `image` and `indexnow.endpoint` from a published `confi
 - Redirects send visitors to the site's own address (Statamic's site URL), not to whatever Host header the request carried, so a forged Host can't turn a redirect into one to another domain (or poison a cache with it).
 - Redirects: a rule that would come back to its own address through a chain of other rules (`/a` → `/b` → `/c` → `/a`, up to ten steps, wildcards included) is refused; only a rule leading straight back was caught.
 - Search Console: a site with more than 25,000 pages in the period got only the first 25,000 (one answer's worth); the rest are now read in turns.
+- The 404 log, when full, drops one-off misses first (one hit, no referrer), so a flood of made-up addresses no longer pushes out the broken links that recur or that a page links to.
 - IndexNow from a queue worker: what a job changed is sent when the job is done, not when the worker stops (which could be days later).
 - Reports no longer stop on a page title longer than 255 characters (MySQL in strict mode and Postgres refused it); the stored title is cut to fit.
 

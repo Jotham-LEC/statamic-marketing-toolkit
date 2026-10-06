@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 /**
  * Counts a 404 against its path. Bots (by user agent) and scanner probes (by
  * path) are left out, and the table keeps at most `seo.not_found.max_rows`
- * paths, dropping the ones seen least recently.
+ * paths, dropping one-off misses first, then the ones seen least recently.
  */
 class Recorder
 {
@@ -92,7 +92,14 @@ class Recorder
         $excess = MissingPath::query()->count() - max(1, (int) config('seo.not_found.max_rows', 1000));
 
         if ($excess > 0) {
-            $stale = MissingPath::query()->orderBy('last_seen_at')->orderBy('id')->limit($excess)->pluck('id');
+            // One-off misses go first (one hit, no page linking there: what a flood of
+            // made-up addresses looks like), so they can't push out the broken links.
+            $stale = MissingPath::query()
+                ->orderByRaw('case when hits > 1 or referrer is not null then 1 else 0 end')
+                ->orderBy('last_seen_at')
+                ->orderBy('id')
+                ->limit($excess)
+                ->pluck('id');
             MissingPath::query()->whereIn('id', $stale)->delete();
         }
     }

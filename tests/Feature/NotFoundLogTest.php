@@ -47,6 +47,22 @@ test('the log keeps the most recently seen paths up to its cap', function () {
     expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/b', '/c', '/d']);
 });
 
+test('a flood of made-up addresses pushes out one-off misses, not links that recur or that a page points to', function () {
+    config(['seo.not_found.max_rows' => 3]);
+    $browser = ['User-Agent' => 'Mozilla/5.0'];
+
+    $this->get('/linked', [...$browser, 'Referer' => 'https://example.test/news']);
+    $this->get('/popular', $browser);
+    $this->get('/popular', $browser);
+
+    foreach (range(1, 5) as $i) {
+        $this->travel(1)->minutes();
+        $this->get("/random-{$i}", $browser);
+    }
+
+    expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/linked', '/popular', '/random-5']);
+});
+
 test('logging can be turned off', function () {
     config(['seo.not_found.enabled' => false]);
 

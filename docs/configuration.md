@@ -77,7 +77,7 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 | `redirects.enabled` | `true` | Applies the rules under Tools → SEO → Redirects. |
 | `redirects.automatic` | `true` | Adds a 301 when published content moves (slug, date, place in a tree). |
 | `not_found.enabled` | `true` | Logs 404s. |
-| `not_found.max_rows` | `1000` | Most paths kept; the least recently seen go first. |
+| `not_found.max_rows` | `1000` | Most paths kept. One-off misses (one hit, no page linking there) go first, then the least recently seen, so a flood of made-up addresses can't push out real broken links. |
 | `not_found.ignore_user_agents` | bots, crawlers, curl, wget… | Not logged when the user agent contains one of these (any case). |
 | `not_found.ignore_paths` | `*.php`, `/wp-*`, `/.env*`, `/.git*`… | Not logged when the path matches one (`*` matches anything). Scanner probes, mostly. |
 
