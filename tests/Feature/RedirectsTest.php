@@ -1,7 +1,10 @@
 <?php
 
 use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Exceptions;
+use Illuminate\Support\Facades\Schema;
 use JothamLec\MarketingToolkit\Redirects\Csv;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Facades\URL;
@@ -269,4 +272,19 @@ test('with case_sensitive off, a chain of rules that comes back in another lette
         ->and($validator('/f', '/C')->errors()->first('target'))->toBe('The redirects from that address lead back here after 3 steps, so visitors would go round in a loop.')
         // A capitalised old address sent to its page is how this option is used, not a loop.
         ->and($validator('/About', '/about')->fails())->toBeFalse();
+});
+
+/**
+ * Between `composer require` (or an upgrade that adds a table) and `migrate`,
+ * the tables are missing. A missing page there answered 500: a site's first
+ * deploy of the addon turned one /favicon.ico 404 into a 500 that way.
+ */
+test('a missing address still answers 404 when the tables are missing, and the error is reported', function () {
+    Exceptions::fake();
+    Schema::drop('seo_redirects');
+    Schema::drop('seo_404s');
+
+    $this->get('/nowhere')->assertNotFound();
+
+    Exceptions::assertReported(QueryException::class);
 });
