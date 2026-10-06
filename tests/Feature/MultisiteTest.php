@@ -506,6 +506,27 @@ describe('Search Console', function () {
         expect(SearchStat::query()->count())->toBe(3);
     });
 
+    test('sites on one domain, one under another\'s path, each keep their own pages of a shared property', function () {
+        multilang();
+        config(['seo.search_console.property' => 'https://www.example.test/']);
+        $row = fn (string $url, int $clicks) => ['keys' => [$url], 'clicks' => $clicks, 'impressions' => 10, 'ctr' => 0.1, 'position' => 2.0];
+        Http::fake(['www.googleapis.com/webmasters/v3/sites/https%3A%2F%2Fwww.example.test%2F/searchAnalytics/query' => Http::response(['rows' => [
+            $row('https://www.example.test/', 1),
+            $row('https://example.test/about', 2),
+            $row('http://example.test/fr', 3),
+            $row('https://example.test/fr/a-propos', 4),
+            $row('https://example.test/uk/about', 5),
+            $row('https://example.test/fresh', 6),
+            $row('https://de.example.test/uber', 7),
+        ]])]);
+
+        $this->artisan('statamic:seo:search-console')->assertSuccessful();
+
+        expect(SearchStat::query()->orderBy('clicks')->get(['site', 'clicks'])->map(fn ($stat) => [$stat->site, $stat->clicks])->all())->toBe([
+            ['default', 1], ['default', 2], ['fr', 3], ['fr', 4], ['uk', 5], ['default', 6], ['de', 7],
+        ]);
+    });
+
     test('the control panel sets up the selected site\'s property; the default site\'s stays where it was', function () {
         $this->actingAs(cpUser(super: true));
         session(['statamic.cp.selected-site' => 'cothinking']);
