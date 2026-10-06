@@ -2,24 +2,29 @@
 
 ## Unreleased
 
-Statamic Pro with several sites, each on its own domain. Single sites work as before. Run `php artisan migrate` after updating: three tables get a `site` column.
+Statamic Pro with several sites, each on its own domain. Single sites work as before. Run `php artisan migrate` after updating: see Upgrading.
 
+### Upgrading
+- **Migrations**: four new ones add a nullable `site` column to `seo_redirects`, `seo_404s`, `seo_reports` and `seo_search_stats` (null: every site, or a row from before; nothing to backfill), and make redirects unique per site and address (`site, source`) and the 404 log per site and path (`site, path`) instead of by address alone. `php artisan migrate` runs them; they are safe on SQLite.
+- **MySQL and MariaDB**: the migrations shorten `seo_redirects.source` and `seo_404s.path` to 736 characters, so the unique index on site and address stays under MySQL's 3072 bytes. On every database the longest redirect source accepted, and the longest 404 path logged, is now 736 (was 768). A longer value already stored would make the MySQL migration fail; shorten or delete it first.
+- **Moving a site to several sites**: enable **Globals → SEO & brand** on each new site, with the default site as its origin (`seo:install` does it only for a set it creates, and names the sites an existing set is missing). Existing redirects, 404s, reports and Search Console numbers have no site: redirects then apply on every site, and the rest is shown on every site. Give each other site its Search Console property (Tools → SEO with that site selected, or a map in `seo.search_console.property`).
 ### Added
 - **Several sites** (Statamic Pro). `seo:install` creates SEO & brand on every site, each other site's origin the default; a site takes what it leaves empty from its origin. An existing set must be enabled on each site by hand; the command names those it is missing.
-- Redirects for one site or every site: a **Site** field on the form (shown only with more than one site), a Site column in the list and a `site` column in CSV. A site's own rule wins over one for every site from the same address; loops are looked for among the rules of each site a rule applies on.
+- Redirects for one site or every site: a **Site** field on the form (shown only with more than one site), a Site column in the list and a `site` column in CSV. A site's own rule wins over one for every site from the same address; loops are looked for among the rules of each site a rule applies on. With `redirects.case_sensitive` off, the same address in another case is taken per site too (on the form, in CSV, in loop checks), and a site's own rule in another case wins over one for every site in the very case asked.
 - Automatic 301s are made, repointed and removed among the moved content's own site's rules; a renamed term leaves one on each site whose address moved.
 - The 404 log keeps each site's misses apart, and **Create redirect** carries the row's site.
 - Reports are of one site: `php please seo:report` reports on each site in turn, or `--site=`; the schedule runs one per site; Run report in the control panel reports on the selected site. Links are checked against the report's own site's pages and redirects.
 - Tools → SEO, the 404s, the reports and the dashboard widget show the site selected in the control panel.
+- **Search Console per site**: one key for every site, a property per site. `seo.search_console.property` (`SEO_SEARCH_CONSOLE_PROPERTY`) is a string for every site, or a map of site handle => property; set up from Tools → SEO, it is the selected site's (the default site's in the setting it had, the others' in `search_console_properties`). `php please seo:search-console` imports each site that has one, or `--site=`; each site keeps only its own domain's pages, and the overview shows the selected site's.
 - `JothamLec\Seo\Support\Sites::as($site, fn () => …)`: run code with another site as the current one.
 
 ### Changed
 - The control panel preview, and the card it draws, are worked out on the content's own site (its brand values and domain), whichever domain the control panel is on. A generated card's URL is on the entry's own domain, and its label is the mount page as it is on the entry's site.
 - IndexNow gets one request per domain, each naming that domain's key file.
-- The longest redirect source, and the longest 404 path logged, is 736 characters (was 768): on MySQL the unique index on site and address must stay under 3072 bytes, and the migration shortens those columns there.
+- The longest redirect source, and the longest 404 path logged, is 736 characters (was 768); see Upgrading.
 
 ### Fixed
-- The sitemap listed every site's terms, and a term counted as used by another site's entries; reports did the same.
+- The sitemap listed every site's terms, and a term counted as used by another site's entries; reports did the same. `SiteSeo::termHasEntries()` counts the current site's entries.
 
 ## 0.13.1 – 2026-10-06
 

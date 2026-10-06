@@ -115,7 +115,7 @@ Clicks, impressions, click-through rate and average position per page, imported 
 | Key | Default | |
 |---|---|---|
 | `search_console.credentials` | `SEO_SEARCH_CONSOLE_CREDENTIALS` | A service account's JSON key, or the path to the file. |
-| `search_console.property` | `SEO_SEARCH_CONSOLE_PROPERTY` | The property as Search Console names it: `sc-domain:example.com` for a domain property, `https://example.com/` for a URL prefix. |
+| `search_console.property` | `SEO_SEARCH_CONSOLE_PROPERTY` | The property as Search Console names it: `sc-domain:example.com` for a domain property, `https://example.com/` for a URL prefix. With several sites, a string is every site's; in `config/seo.php` it can be a map, `['default' => 'sc-domain:example.com', 'shop' => 'sc-domain:shop.example']`. |
 | `search_console.days` | `28` | The period imported, ending today (Pacific time, as Search Console counts). |
 
 Setting it up:
@@ -157,7 +157,7 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 | Reports to keep | 10 | Older reports are deleted when a new one finishes. |
 | Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. |
 
-**Search Console** tab: the **Property**, as set from Tools → SEO. `SEO_SEARCH_CONSOLE_PROPERTY` wins over it.
+**Search Console** tab: the **Property**, as set from Tools → SEO, and with several sites the other sites' properties by handle. `SEO_SEARCH_CONSOLE_PROPERTY` wins over them.
 
 ## Permissions
 
@@ -173,5 +173,5 @@ Saved as YAML in `resources/addons/seo.yaml` (or wherever your site stores addon
 |---|---|
 | `php please seo:install [--container=] [--fields] [--tab=shop]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has; `--tab` adds a whole tab it doesn't have (`shop`, `publisher`…). |
 | `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
-| `php please seo:search-console` | Imports the last period's numbers from Google Search Console. |
+| `php please seo:search-console [--site=]` | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
 | `php please seo:report [--site=]` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |

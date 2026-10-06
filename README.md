@@ -65,20 +65,18 @@ Empty fields count as unset.
 
 ## Several sites
 
-With Statamic Pro and more than one site (each on its own domain, or sharing one), each site gets its own:
+With Statamic Pro and more than one site, each on its own domain, each site gets its own:
 
 - **Brand values**: `seo:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
 - **Sitemap, robots.txt, share cards and IndexNow key** on its own domain; IndexNow gets one request per domain.
 - **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** on the site of the content that moved.
 - **404 log** and **reports**, one report per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
-
-Search Console reads one property: on several sites it counts only the one configured.
+- **Search Console property**: one key, a property per site (set up from Tools → SEO with the site selected, or a map in config).
 
 ## Not built yet
 
 - `/sitemap.xsl` (a readable sitemap in the browser).
 - GraphQL fields: they need Statamic Pro.
-- Search Console for more than one property.
 
 ## Develop
 

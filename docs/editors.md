@@ -8,7 +8,7 @@ This guide is for the people who write and look after the site's pages. It expla
 
 The overview: the latest report's score, recent 404s, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
 
-**Connecting Google Search Console** is a one-time task for whoever looks after the site's settings: Tools → SEO lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix.
+**Connecting Google Search Console** is a one-time task for whoever looks after the site's settings: Tools → SEO lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
 
 ## SEO & brand
 
