@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
+use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\YAML;
@@ -74,6 +75,20 @@ test('--tab adds a whole tab a site asks for', function () {
 
     expect(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('currency', 'shipping_rates', 'return_category')
         ->not->toContain('publisher_type');
+});
+
+test('the blueprint read from YAML is the one the command used to build in PHP', function () {
+    $sorted = function (array $value) use (&$sorted): array {
+        ksort($value);
+
+        return array_map(fn ($item) => is_array($item) ? $sorted($item) : $item, $value);
+    };
+    $snapshot = json_decode(file_get_contents(__DIR__.'/../fixtures/install-tabs.json'), true);
+    $tabs = Install::tabs('assets');
+    $regions = collect($tabs['tracking']['sections'][1]['fields'])->firstWhere('handle', 'consent_regions');
+
+    expect($sorted($tabs))->toBe($sorted($snapshot))
+        ->and($regions['field']['options'])->toHaveKey(Tracking::EEA);
 });
 
 test('every label and help the blueprints name is in lang/en/fields.php', function () {
