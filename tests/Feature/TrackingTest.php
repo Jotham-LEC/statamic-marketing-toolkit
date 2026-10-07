@@ -127,6 +127,8 @@ test('Consent Mode holds back Meta, LinkedIn and PostHog until the banner says y
     expect($head)->toContain('w.mtConsent=function')
         ->toContain("fbq('consent','revoke');mtConsent(")
         ->toContain('"opt_out_capturing_by_default":true,"persistence":"memory"')
+        // Banners send the update on every page: opt in once, without an $opt_in event each time.
+        ->toContain("if(!posthog.has_opted_in_capturing()){posthog.set_config({persistence:'localStorage+cookie'});posthog.opt_in_capturing({captureEventName:false});}")
         ->toContain("mtConsent(function(s){if(s.ad_storage==='granted')load();});")
         ->and(strpos($head, 'w.mtConsent=function'))->toBeLessThan(strpos($head, 'fbevents.js'))
         ->and(trackingBody())->not->toContain('facebook.com/tr')->not->toContain('px.ads.linkedin.com');
