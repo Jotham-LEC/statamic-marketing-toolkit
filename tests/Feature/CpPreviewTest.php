@@ -7,6 +7,7 @@ use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
+use Statamic\Fields\Field;
 
 beforeEach(function () {
     seoGlobal([]);
@@ -156,4 +157,10 @@ test('a blueprint that is not an entry or term has no preview', function () {
 
     previewOf('globals.seo', [])->assertStatus(422);
     previewOf('collections.pages.nope', [])->assertStatus(422);
+});
+
+test('the SEO tab\'s headings arrive translated, since the control panel\'s script doesn\'t load field labels', function () {
+    $field = (new Field('sharing', ['type' => 'mt_heading', 'display' => 'marketing-toolkit::fields.seo.sharing.display']));
+
+    expect($field->fieldtype()->preload())->toBe(['display' => 'Sharing']);
 });

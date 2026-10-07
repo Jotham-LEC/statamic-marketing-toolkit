@@ -9,6 +9,9 @@ Signed-in editors get a toolbar on the live site, showing what the addon knows a
 - **Three user preferences** under Preferences → Marketing Toolkit: hide the toolbar on every device, put it in the bottom-right corner, and change or clear its shortcut.
 - **It costs visitors nothing, and pages stay safe to cache.** `<s:mt:body />` ends with a script of about 300 bytes, the same for everyone, which loads the toolbar (about 6 kB gzipped) only when the `mt_toolbar` cookie says a control panel user is signed in. Everything personal comes from an uncached endpoint, `/!/marketing-toolkit/toolbar`, that checks the session. A layout without `mt:body` adds `<s:mt:toolbar />` before `</body>`. See [configuration.md](docs/configuration.md#toolbar).
 
+### Fixed
+- **The SEO tab's Sharing and Advanced headings show their names**, not the translation keys `marketing-toolkit::fields.seo.sharing.display` and `…advanced.display`, which they showed since 0.21.0.
+
 ### Upgrading
 - **The toolbar is on after the update.** To switch it off for everyone, turn off **Front-end toolbar** under Marketing → Settings → Features (`composer update` adds the switch to the tab), or set `'toolbar' => ['enabled' => false]` in `config/marketing-toolkit.php`.
 - **Run `php artisan migrate`**: it adds an index to the report pages table for the toolbar's lookup.

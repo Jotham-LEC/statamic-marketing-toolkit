@@ -20,6 +20,18 @@ class Heading extends Fieldtype
 
     protected $selectable = false;
 
+    /**
+     * The label, translated: the field's config holds the translation key as
+     * the blueprint has it, and the control panel's script doesn't load the
+     * addon's field labels.
+     *
+     * @return array{display: string}
+     */
+    public function preload()
+    {
+        return ['display' => (string) __((string) $this->config('display'))];
+    }
+
     public function process($data)
     {
         return null;
