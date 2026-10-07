@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -154,4 +155,82 @@ test('the migration renames the tables, the keys stored in reports, and moves an
         ->and(storage_path('app/private/seo'))->not->toBeDirectory();
 
     File::deleteDirectory(storage_path('app/private/marketing-toolkit'));
+});
+
+/**
+ * The addon's migrations, in order, but the settings carry-over (which isn't
+ * about tables).
+ *
+ * @return list<string>
+ */
+function tableMigrations(): array
+{
+    return array_values(array_filter(glob(__DIR__.'/../../database/migrations/*.php'), fn (string $file) => ! str_contains($file, 'carry_over')));
+}
+
+test('rolling back the site of redirects and 404s refuses, before dropping anything, while two sites share an address', function () {
+    (require __DIR__.'/../../database/migrations/2026_10_10_000001_rename_seo_tables_to_mt.php')->down();
+    DB::table('seo_redirects')->insert([['site' => 'default', 'source' => '/old', 'target' => '/a'], ['site' => 'fr', 'source' => '/old', 'target' => '/b']]);
+    DB::table('seo_404s')->insert([['site' => 'default', 'path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()], ['site' => 'fr', 'path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()]]);
+    $redirects = require __DIR__.'/../../database/migrations/2026_10_07_000001_add_site_to_seo_redirects_table.php';
+    $notFound = require __DIR__.'/../../database/migrations/2026_10_07_000003_add_site_to_seo_404s_table.php';
+
+    expect(fn () => $redirects->down())->toThrow(RuntimeException::class, 'share a source across sites')
+        ->and(fn () => $notFound->down())->toThrow(RuntimeException::class, 'share a path across sites')
+        ->and(DB::table('seo_redirects')->pluck('site')->all())->toBe(['default', 'fr'])
+        ->and(DB::table('seo_404s')->pluck('site')->all())->toBe(['default', 'fr']);
+
+    DB::table('seo_redirects')->where('site', 'fr')->delete();
+    $redirects->down();
+    expect(Schema::hasColumn('seo_redirects', 'site'))->toBeFalse();
+
+    $redirects->up();
+    (require __DIR__.'/../../database/migrations/2026_10_10_000001_rename_seo_tables_to_mt.php')->up();
+});
+
+test('where another package has a seo_ table, the addon makes its own as mt_ and leaves the other alone, both ways', function () {
+    foreach (array_reverse(tableMigrations()) as $file) {
+        (require $file)->down();
+    }
+
+    foreach (['seo_redirects', 'seo_reports'] as $other) {
+        Schema::create($other, fn (Blueprint $table) => $table->string('theirs'));
+        DB::table($other)->insert(['theirs' => 'kept']);
+    }
+
+    foreach (tableMigrations() as $file) {
+        (require $file)->up();
+    }
+
+    expect(Schema::getColumnListing('seo_redirects'))->toBe(['theirs'])
+        ->and(Schema::getColumnListing('seo_reports'))->toBe(['theirs'])
+        ->and(Schema::hasColumns('mt_redirects', ['site', 'source']))->toBeTrue()
+        ->and(Schema::hasColumns('mt_reports', ['site', 'status']))->toBeTrue()
+        ->and(Schema::hasColumns('mt_404s', ['site', 'path']))->toBeTrue()
+        ->and(Schema::hasTable('seo_404s'))->toBeFalse();
+
+    // The addon's tables work: a report and its page, a redirect.
+    $report = DB::table('mt_reports')->insertGetId(['settings' => '[]']);
+    DB::table('mt_report_pages')->insert(['report_id' => $report, 'url' => '/', 'content_type' => 'entry', 'content_id' => 'home']);
+    DB::table('mt_redirects')->insert(['source' => '/old', 'target' => '/new']);
+
+    DB::table('mt_report_pages')->delete();
+    DB::table('mt_reports')->delete();
+    DB::table('mt_redirects')->delete();
+
+    foreach (array_reverse(tableMigrations()) as $file) {
+        (require $file)->down();
+    }
+
+    expect(DB::table('seo_redirects')->pluck('theirs')->all())->toBe(['kept'])
+        ->and(DB::table('seo_reports')->pluck('theirs')->all())->toBe(['kept'])
+        ->and(Schema::hasTable('mt_redirects'))->toBeFalse()
+        ->and(Schema::hasTable('mt_reports'))->toBeFalse();
+
+    Schema::drop('seo_redirects');
+    Schema::drop('seo_reports');
+
+    foreach (tableMigrations() as $file) {
+        (require $file)->up();
+    }
 });

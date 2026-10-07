@@ -2,9 +2,12 @@
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Sleep;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
@@ -102,6 +105,23 @@ test('a report runs in steps of the chunk size', function () {
         ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
 });
 
+test('a step of slow pages stops after five minutes and leaves the rest of its chunk to the next', function () {
+    reportSettings(['chunk_size' => 5]);
+    foreach (['a', 'b', 'c', 'd', 'e'] as $slug) {
+        entryIn('pages', $slug);
+    }
+    Carbon::setTestNow('2026-10-07 12:00:00');
+    // Each page takes three minutes to render.
+    View::composer('default', fn () => Carbon::setTestNow(now()->addMinutes(3)));
+
+    $runner = app(Runner::class);
+    $report = $runner->start();
+
+    expect($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'running', 'pages_done' => 2])
+        ->and($runner->step($report)->pages_done)->toBe(4)
+        ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
+});
+
 test('turned-off checks, left-out collections and the page limit', function () {
     reportSettings(['rule_og_image' => false, 'excluded_collections' => ['essays'], 'max_pages' => 2]);
     entryIn('essays', 'left-out', date: '2026-01-01');
@@ -132,6 +152,21 @@ test('a page that fails to render scores zero and says why', function () {
     expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0'))
         ->toMatchArray(['label' => 'Page renders', 'status' => 'fail'])
         ->and($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0.message'))->not->toStartWith('marketing-toolkit::');
+});
+
+test('a page that throws shows the exception’s class, not its text, which goes to the log', function () {
+    View::composer('form', fn () => throw new RuntimeException('SQLSTATE[HY000] secret-db.internal password=hunter2'));
+    entryIn('pages', 'contact', ['template' => 'form']);
+    Log::spy();
+
+    $report = fullReport();
+
+    $this->actingAs(cpUser(super: true));
+    $message = $this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0.message');
+
+    expect($message)->toBe('The page couldn’t be rendered (RuntimeException). The full error is in the site’s log.')
+        ->and(json_encode(reportPage($report, '/contact')->only(['facts', 'results'])))->not->toContain('secret-db');
+    Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains((string) $message, 'secret-db'));
 });
 
 test('only the newest reports are kept', function () {
@@ -342,10 +377,73 @@ test('only one step of a report runs at a time, and a second click doesn\'t queu
 
     (new RunReportStep($report['id']))->handle(app(Runner::class));
     Queue::assertPushed(RunReportStep::class, 2);
+    Queue::assertPushed(RunReportStep::class, fn (RunReportStep $job) => $job->delay === 30);
     expect(Report::query()->find($report['id'])->pages_done)->toBe(0);
 
     $other->release();
     expect(app(Runner::class)->step(Report::query()->find($report['id']))->pages_done)->toBe(1);
+});
+
+test('running a report to the end waits while another process holds the step, rather than asking again at once', function () {
+    entryIn('pages', 'about');
+    $runner = app(Runner::class);
+    $report = $runner->start();
+    $other = Cache::lock('mt:reports:step:'.$report->id, 600);
+    $other->get();
+    Sleep::fake();
+    $waits = 0;
+    Sleep::whenFakingSleep(function () use (&$waits, $other) {
+        if (++$waits === 3) {
+            $other->release();
+        }
+    });
+
+    expect($runner->runToEnd($report)->status)->toBe(Report::DONE);
+    Sleep::assertSleptTimes(3);
+});
+
+test('a queued step that fails for good marks the report failed, with no error text', function () {
+    entryIn('pages', 'about');
+    $report = app(Runner::class)->start();
+
+    (new RunReportStep($report->id))->failed(new RuntimeException('SQLSTATE[HY000] secret-db.internal'));
+
+    expect($report->refresh()->only(['status', 'error']))->toBe(['status' => Report::FAILED, 'error' => 'marketing-toolkit::reports.messages.failed'])
+        ->and($report->finished_at)->not->toBeNull();
+
+    // A report that finished meanwhile is left as it is.
+    $done = fullReport();
+    (new RunReportStep($done->id))->failed(null);
+    expect($done->refresh()->status)->toBe(Report::DONE);
+
+    $this->actingAs(cpUser(super: true));
+    expect($this->postJson(cp_route('mt.reports.progress', $report))->json('error'))
+        ->toBe('The report stopped because of an error. The full error is in the site’s log.');
+});
+
+test('a report on a queue worker that stood still with no step running is queued again, once', function () {
+    config(['queue.default' => 'database', 'queue.connections.database.driver' => 'database']);
+    Queue::fake();
+    entryIn('pages', 'about');
+    $runner = app(Runner::class);
+    $report = $runner->start();
+
+    // Still moving: left alone.
+    expect($runner->resumeIfStalled($report))->toBeFalse();
+
+    // A step is running (its lock is held): left alone.
+    $report->forceFill(['updated_at' => now()->subMinutes(20)])->saveQuietly();
+    $step = Cache::lock('mt:reports:step:'.$report->id, 600);
+    $step->get();
+    expect($runner->resumeIfStalled($report))->toBeFalse();
+    $step->release();
+
+    expect($runner->resumeIfStalled($report))->toBeTrue()
+        ->and($runner->resumeIfStalled($report))->toBeFalse();
+    Queue::assertPushed(RunReportStep::class, 1);
+
+    (new RunReportStep($report->id))->handle($runner);
+    expect($report->refresh()->status)->toBe(Report::DONE);
 });
 
 function reportOnAboutAndATerm(): array

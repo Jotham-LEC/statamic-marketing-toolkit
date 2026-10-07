@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Sleep;
 use JothamLec\MarketingToolkit\Reports\Rules\BrokenLinks;
 use JothamLec\MarketingToolkit\Reports\Rules\Canonical;
 use JothamLec\MarketingToolkit\Reports\Rules\DescriptionLength;
@@ -47,6 +48,20 @@ class Runner
 
     /** A running report that hasn't moved for this long is taken to have died. */
     private const int STALE_MINUTES = 30;
+
+    /**
+     * A step takes no new page after this many seconds, leaving the rest of
+     * its chunk to the next, so slow pages (or slow sites they link to) can't
+     * run it past a queue worker's timeout (RunReportStep::$timeout).
+     */
+    private const int STEP_SECONDS = 300;
+
+    /**
+     * A report on a queue worker that hasn't moved for this long has lost its
+     * step (a worker killed outright), and resumeIfStalled() queues one. Past
+     * the step's timeout, so a step still running has been stopped by then.
+     */
+    private const int RESUME_MINUTES = 15;
 
     public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo, private ExternalLinkChecker $externalLinks) {}
 
@@ -115,8 +130,13 @@ class Runner
     private function stepInSite(Report $report): Report
     {
         $pages = $report->pages()->where('checked', false)->orderBy('id')->limit(max(1, $report->settings()->int('chunk_size')))->get();
+        $until = now()->addSeconds(self::STEP_SECONDS);
 
-        foreach ($pages as $page) {
+        foreach ($pages as $index => $page) {
+            if ($index > 0 && now()->gte($until)) {
+                break;
+            }
+
             $content = $this->content($page);
 
             if ($content === null) {
@@ -125,7 +145,7 @@ class Runner
                 $rendered = $this->renderer->render($content);
                 $facts = $rendered['status'] === 200 && $rendered['error'] === null
                     ? $this->inspector->inspect($rendered['html'])
-                    : new PageFacts(status: $rendered['status'], error: $rendered['error']);
+                    : new PageFacts(status: $rendered['status'], error: $rendered['error'], exception: $rendered['exception'] ?? null);
             }
 
             $broken = $report->settings()->ruleEnabled(ExternalLinks::handle()) && $facts->externalLinks !== []
@@ -147,14 +167,60 @@ class Runner
     }
 
     /**
-     * Every remaining step, for the command line and the scheduler.
+     * Marks a running report failed, as a step that failed for good leaves
+     * it. The message is generic: the error itself is in the log.
+     */
+    public function fail(Report $report): void
+    {
+        Report::query()->whereKey($report->id)->where('status', Report::RUNNING)
+            ->update(['status' => Report::FAILED, 'error' => 'marketing-toolkit::reports.messages.failed', 'finished_at' => now(), 'updated_at' => now()]);
+    }
+
+    /**
+     * Queues the next step of a report on a queue worker that has stood
+     * still for RESUME_MINUTES with no step running, as when a worker was
+     * killed mid-step and so queued nothing. For the progress request: the
+     * control panel polls it while the report is open. Once per
+     * RESUME_MINUTES, however many are polling.
+     */
+    public function resumeIfStalled(Report $report): bool
+    {
+        if (! $report->isRunning() || ! RunReportStep::usesWorker() || $report->updated_at->gt(now()->subMinutes(self::RESUME_MINUTES))) {
+            return false;
+        }
+
+        $step = Cache::lock('mt:reports:step:'.$report->id, 1);
+
+        if (! $step->get()) {
+            return false;
+        }
+
+        $step->release();
+
+        if (! Cache::add('mt:reports:resume:'.$report->id, true, now()->addMinutes(self::RESUME_MINUTES))) {
+            return false;
+        }
+
+        RunReportStep::dispatch($report->id);
+
+        return true;
+    }
+
+    /**
+     * Every remaining step, for the command line and the scheduler. While
+     * another process holds the step, it waits a moment before asking again.
      *
      * @param  (callable(Report): void)|null  $progress
      */
     public function runToEnd(Report $report, ?callable $progress = null): Report
     {
         while ($report->isRunning()) {
+            $done = $report->pages_done;
             $report = $this->step($report);
+
+            if ($report->isRunning() && $report->pages_done === $done) {
+                Sleep::for(250)->milliseconds();
+            }
 
             if ($progress) {
                 $progress($report);
@@ -207,7 +273,11 @@ class Runner
 
             if (! $facts->rendered()) {
                 $counts['errors']++;
-                $result = $facts->error !== null ? Result::fail($facts->error) : Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]);
+                $result = match (true) {
+                    $facts->error === null => Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]),
+                    $facts->exception !== null => Result::fail($facts->error, ['exception' => $facts->exception]),
+                    default => Result::fail($facts->error),
+                };
                 $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
                 $scores[] = 0;
 

@@ -16,6 +16,7 @@ final readonly class PageFacts
      * @param  list<string>  $brokenExternalLinks  those that lead nowhere (when checked)
      * @param  list<string>  $jsonLdErrors
      * @param  bool  $inSitemap  whether the sitemap lists the page (not read from the HTML)
+     * @param  ?string  $exception  the class of what a page that didn't render threw
      */
     public function __construct(
         public int $status = 200,
@@ -36,6 +37,7 @@ final readonly class PageFacts
         public int $jsonLd = 0,
         public array $jsonLdErrors = [],
         public bool $inSitemap = false,
+        public ?string $exception = null,
     ) {}
 
     public function rendered(): bool

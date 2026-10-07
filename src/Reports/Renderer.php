@@ -22,7 +22,12 @@ use Throwable;
 class Renderer
 {
     /**
-     * @return array{status: int, html: string, error: ?string}
+     * A page that throws is stored with a generic message and the exception's
+     * class, not its text: the report is shown to anyone who may view reports,
+     * and a query exception's text holds SQL and connection details. The full
+     * error goes to the log.
+     *
+     * @return array{status: int, html: string, error: ?string, exception?: string}
      */
     public function render(Entry|Term $content): array
     {
@@ -48,7 +53,7 @@ class Renderer
         } catch (Throwable $e) {
             report($e);
 
-            return ['status' => 500, 'html' => '', 'error' => class_basename($e).': '.$e->getMessage()];
+            return ['status' => 500, 'html' => '', 'error' => 'marketing-toolkit::reports.messages.render_failed', 'exception' => class_basename($e)];
         } finally {
             app()->instance('request', $previous);
             $cascade->withRequest($previous);

@@ -121,7 +121,8 @@ class Connection
     /**
      * The key's JSON from the `marketing-toolkit.search_console.credentials` value: the
      * JSON itself, or a path to it. The file the control panel saved is
-     * encrypted; one saved before it was is read as it is.
+     * encrypted; one saved before it was is read as it is, and encrypted
+     * then, so it doesn't stay in plain text on disk.
      */
     public function readKey(string $value): string
     {
@@ -138,6 +139,12 @@ class Connection
         try {
             return Crypt::decryptString($contents);
         } catch (DecryptException) {
+            // Only a key: what doesn't decrypt may be one encrypted with an earlier APP_KEY.
+            // A storage folder that can't be written to still reads the key.
+            if (self::parseKey($contents) !== null) {
+                rescue(fn () => $this->saveKey($contents));
+            }
+
             return $contents;
         }
     }
