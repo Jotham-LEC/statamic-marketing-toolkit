@@ -15,7 +15,7 @@ On `composer update` (on your machine), the `MoveToMarketingSettings` update scr
 
 Until the script has run, the addon reads those values from Brand as before, so nothing stops working in between. Once a value is saved in Marketing settings, that one is used, even if an older copy is still in Brand.
 
-The script runs again whenever Brand still holds values of the moved fields, so it is safe to run more than once, and it never replaces a value that is already in Marketing settings.
+The script runs when you update from 0.20 or earlier. It is safe to run again (`php please updates:run 0.20.0 --package=jotham-lec/statamic-marketing-toolkit`): it moves only values still in Brand, and never replaces a value that is already in Marketing settings. Once you're on 0.21, a field you put back in Brand yourself stays there.
 
 ### What to commit and check
 
@@ -36,19 +36,21 @@ Up to 0.19 most of the addon's names were `seo`. They are now `marketing-toolkit
 On `composer update` (on your machine), Statamic runs the addon's update scripts. They rename, in the site's own files:
 
 - `import: seo::seo` in blueprints and fieldsets → `marketing-toolkit::seo`, and the `seo::` labels in the SEO & brand blueprint (now Brand) and the forms' lead source fields → `marketing-toolkit::`.
-- `<s:seo:head />`, `{{ seo:head }}` and the other tags in `resources/views` → `<s:mt:head />`, `{{ mt:head }}`.
+- The addon's four tags in `resources/views`, in Antlers and Blade: `seo:head`, `seo:body`, `seo:meta` and `seo:favicons` → `mt:head` and so on (`<s:seo:head />`, `{{ seo:head }}`, `Statamic::tag('seo:head')`). Nothing else that starts with `seo:` is touched: the Brand global is still `seo`, so `{{ seo:site_name }}` and `{{ seo:logo }}` stay as they are. A site with a `seo` tag of its own keeps its templates as they are, and the command says so.
 - The widget in `config/statamic/cp.php`: `'type' => 'seo'` → `'type' => 'mt'`.
-- `config/seo.php` → `config/marketing-toolkit.php`, as it was: its old keys keep working.
-- `lang/vendor/seo` → `lang/vendor/marketing-toolkit`.
+- `config/seo.php` → `config/marketing-toolkit.php`, as it was: its old keys keep working. Only the addon's own (it names `JothamLec\…` classes): another package's `config/seo.php` stays.
+- `lang/vendor/seo` → `lang/vendor/marketing-toolkit`, when it holds the addon's translations.
 - The permissions of each role: `view seo`, `manage seo redirects`, `run seo reports` → `view marketing toolkit`, `manage marketing toolkit redirects`, `run marketing toolkit reports`.
 
 The command lists what it changed. **Commit it**, then deploy.
+
+This runs once: when you update from 0.19 or earlier, or later on a site that still has one of the old names it renames (as when Co-SEO was swapped for this package without `updates:run`). Each of those is gone once it has run, so later updates leave your files alone, including anything you changed back by hand.
 
 On `php artisan migrate` (on the server, as every deploy runs it), the tables `seo_*` become `mt_*`, the reports kept are rewritten to the new translation keys, and a Search Console key uploaded in the control panel moves to `storage/app/private/marketing-toolkit`.
 
 ### What to check by hand
 
-- **Anything that names the old ones in code**: a template that builds the tag another way (`Statamic::tag('seo:head')`), `route('seo.…')` (now `mt.…`), `__('seo::…')` (now `marketing-toolkit::…`), a query on `seo_redirects` (now `mt_redirects`), a scheduler or deploy script that runs `php please seo:…` (now `mt:…`).
+- **Anything that names the old ones in code**: a template that builds the tag's name (`Statamic::tag('seo:'.$tag)`), `route('seo.…')` (now `mt.…`), `__('seo::…')` (now `marketing-toolkit::…`), a query on `seo_redirects` (now `mt_redirects`), a scheduler or deploy script that runs `php please seo:…` (now `mt:…`).
 - **`.env`**: the names are now `MT_GTM_ID`, `MT_SEARCH_CONSOLE_CREDENTIALS` and so on. The `SEO_…` names are still read until 1.0, so nothing stops working; rename them on each server when convenient.
 - **Roles kept in the database** (Statamic's Eloquent driver for users): the update script renames the permissions in the database it runs against. For production's, run it there too: `php please updates:run 0.19.0 --package=jotham-lec/statamic-marketing-toolkit`.
 - **Bookmarks**: the control panel's screens moved from `/cp/seo/…` to `/cp/marketing-toolkit/…`.
@@ -63,11 +65,11 @@ Co-SEO is now **Marketing Toolkit**: a site changes its Composer package, and th
 ```bash
 composer remove jotham-lec/statamic-co-seo --no-update
 composer require jotham-lec/statamic-marketing-toolkit
-php please updates:run 0.19.0 --package=jotham-lec/statamic-marketing-toolkit
+php please updates:run 0.17.0 --package=jotham-lec/statamic-marketing-toolkit
 php artisan migrate
 ```
 
-The new package replaces the old one, so Composer won't install both. `jotham-lec/statamic-co-seo` has been removed from Packagist. Statamic runs a package's update scripts only when it updates that package, not when it's installed under a new name, hence `updates:run`. Then follow [From 0.19](#from-019-the-seo-names) for what to check.
+The new package replaces the old one, so Composer won't install both. `jotham-lec/statamic-co-seo` has been removed from Packagist. Statamic runs a package's update scripts only when it updates that package, not when it's installed under a new name, hence `updates:run`, from 0.17.0, the last Co-SEO version. If you skipped it, the renaming happens on your next `composer update` instead, as long as the site still has an old name (an `import: seo::seo` in a blueprint, say); run `php please mt:install` for any Brand fields that are missing. Then follow [From 0.19](#from-019-the-seo-names) for what to check.
 
 `php artisan migrate` also copies the addon settings (the Search Console property) to the new name, from `resources/addons/seo.yaml` to `resources/addons/marketing-toolkit.yaml`, or, with Statamic's Eloquent driver, from the `addon_settings` row of `jotham-lec/statamic-co-seo`. Commit the new file if you keep it in git.
 

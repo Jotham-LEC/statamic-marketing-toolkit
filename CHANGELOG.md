@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.21.4 – 2026-10-07
+
+### Fixed
+- **Updates no longer rewrite your templates.** `RenameFromSeo` ran on every update and turned every `{{ seo:` and `<s:seo:` in `resources/views` into `mt:`, including the Brand global's values (`{{ seo:site_name }}` became `{{ mt:site_name }}`, which shows nothing) and a `seo` tag of the site's own. Undoing it didn't help: the next update did it again. It now runs only when updating from 0.19 or earlier, or on a site that still has one of the old names it renames (an `import: seo::seo`, the addon's `config/seo.php`, a role's old permission). It renames only the addon's four old tags (`seo:head`, `seo:body`, `seo:meta`, `seo:favicons`, in Antlers and Blade), and leaves the templates alone on a site with a `seo` tag of its own. Another package's `config/seo.php` or `lang/vendor/seo` is no longer moved. If an update renamed your own `seo:` values, change them back once: they stay that way now.
+- **A field you removed from Brand or Marketing settings stays removed.** `AddNewBrandFields` added back every addon field the blueprints lacked, on every update. It now adds only the fields the versions you're updating across brought (from 0.19 or earlier, every missing field, as before).
+- **A field you put back in Brand after 0.21 stays there.** `MoveToMarketingSettings` now runs only when updating from 0.20 or earlier, or with `updates:run 0.20.0`.
+
+### Upgrading
+- Coming from Co-SEO, run `php please updates:run 0.17.0 --package=jotham-lec/statamic-marketing-toolkit` (it was `0.19.0`), so the update scripts for 0.18 run too: see [upgrading.md](docs/upgrading.md#from-co-seo).
+
 ## 0.21.3 – 2026-10-07
 
 ### Fixed

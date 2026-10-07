@@ -90,6 +90,45 @@ test('after an update, the new fields are added without running anything', funct
         ->and($fields->get('favicon')->get('container'))->toBe('assets');
 });
 
+test('a field the site removed stays removed through later updates', function () {
+    $this->artisan('statamic:mt:install')->assertSuccessful();
+    // The developer removes a field from each, and 0.21's Features switch for leads is missing, as on a 0.20 site.
+    $remove = function (string $handle, string ...$fields) {
+        $blueprint = Blueprint::find("globals.{$handle}");
+        $contents = $blueprint->contents();
+        foreach ($contents['tabs'] as $tab => $config) {
+            foreach ($config['sections'] as $index => $section) {
+                $contents['tabs'][$tab]['sections'][$index]['fields'] = array_values(array_filter($section['fields'], fn (array $field) => ! in_array($field['handle'], $fields, true)));
+            }
+        }
+        $blueprint->setContents($contents)->save();
+    };
+    $remove('seo', 'twitter_handle');
+    $remove('marketing', 'linkedin_partner_id', 'feature_leads');
+    $script = new AddNewBrandFields(Package::NAME);
+
+    // Nothing came in 0.21.4, so a patch update doesn't run at all.
+    expect($script->shouldUpdate('0.21.4.0', '0.21.3.0'))->toBeFalse()
+        ->and($script->shouldUpdate('0.21.4', '0.21.0'))->toBeFalse()
+        ->and($script->shouldUpdate('0.21.4.0', 'dev-main'))->toBeFalse();
+
+    // From 0.20, only what 0.21 brought comes back: the Features switches, not the site's removals.
+    expect($script->shouldUpdate('0.21.4.0', '0.20.0.0'))->toBeTrue();
+    $script->update();
+    $script->update();
+
+    expect(Blueprint::find('globals.seo')->fields()->all()->keys())->not->toContain('twitter_handle')
+        ->and(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('feature_leads')->not->toContain('linkedin_partner_id');
+});
+
+test('every field mt:install writes is in 0.20 or listed by the version that brought it', function () {
+    $fields = collect(['seo', 'marketing'])->flatMap(fn (string $file) => collect(Install::tabs('assets', $file))
+        ->flatMap(fn (array $tab) => $tab['sections'])->flatMap(fn (array $section) => $section['fields'])->pluck('handle'));
+    $before = file(__DIR__.'/../fixtures/fields-0.20.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+    expect($fields->diff($before)->diff(collect(AddNewBrandFields::FIELDS)->flatten())->values()->all())->toBe([]);
+});
+
 test('a rerun with nothing to add says so', function () {
     $this->artisan('statamic:mt:install')->assertSuccessful();
 
@@ -213,6 +252,19 @@ test('an update moves tracking, consent, leads and crawlers from SEO & brand to 
 
     // Read from their new place, as before.
     expect(app(Settings::class)->string('gtm_id'))->toBe('GTM-ABC123');
+});
+
+test('after 0.21, a field the site puts back in Brand stays there', function () {
+    seoGlobal(['gtm_id' => 'GTM-ABC123']);
+    $brand = Blueprint::find('globals.seo');
+    $tabs = $brand->contents()['tabs'] ?? [];
+    $tabs['brand']['sections'][0]['fields'][] = ['handle' => 'gtm_id', 'field' => ['type' => 'text']];
+    $brand->setContents(['tabs' => $tabs])->save();
+    $script = new MoveToMarketingSettings(Package::NAME);
+
+    expect($script->shouldUpdate('0.21.4.0', '0.21.3.0'))->toBeFalse()
+        ->and($script->shouldUpdate('0.21.4.0', 'dev-main'))->toBeFalse()
+        ->and($script->shouldUpdate('0.21.4.0', '0.20.0.0'))->toBeTrue();
 });
 
 test('a site set up before the move reads its tracking from SEO & brand until it updates', function () {

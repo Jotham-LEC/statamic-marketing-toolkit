@@ -31,7 +31,11 @@ The suite runs on SQLite. To run it on Postgres, point it at an empty database: 
 
 - Migrations that have shipped stay as they are: never rename, move or edit one, since sites have already run it.
 - A new migration's date is later than the last one's, so it runs after them (`php artisan make:migration` uses today's date, which is usually enough).
-- A migration changes tables only. A change to sites' content or settings (globals, blueprints, addon settings) is an update script: a subclass of Statamic's `UpdateScript` in `src/UpdateScripts/`, which Statamic finds there and runs once on `composer update` (or `php please updates:run`), on the developer's machine, so the change is committed with the update. `shouldUpdate()` uses `isUpdatingTo('x.y.z')` for a one-off change.
+- A migration changes tables only. A change to sites' content or settings (globals, blueprints, addon settings) is an update script: a subclass of Statamic's `UpdateScript` in `src/UpdateScripts/`, which Statamic finds there and runs on `composer update` (or `php please updates:run`), on the developer's machine, so the change is committed with the update. Statamic asks every script's `shouldUpdate()` on every update of the addon, so:
+  - `shouldUpdate()` is true only for a site that still needs the change: from the version it is updating from (`isUpdatingTo('x.y.z')`, or `Support\Version::before($oldVersion, 'x.y.z')`), or from something only the old version left behind, which `update()` removes. Never `return true`: a change the developer undoes would be made again on each update.
+  - `update()` changes only what the addon itself wrote (its tags, its namespaces, its fields), never what merely looks like it: the Brand global is `seo` too, and another package may publish a `config/seo.php`.
+  - Its tests show that a site's own look-alike is left alone, and that a second run, or the next update, changes nothing.
+  - A field added to `resources/install` is listed in `AddNewBrandFields::FIELDS` under the version that brings it; a test fails until it is.
 - The one exception is `carry_over_co_seo_settings`, a migration because Statamic doesn't run update scripts for a package that changed its name.
 
 ## Release

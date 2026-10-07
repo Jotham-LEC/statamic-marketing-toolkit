@@ -242,12 +242,14 @@ class Install extends Command
     /**
      * Adds to an existing blueprint the fields it lacks, each in its tab and
      * section as a fresh install has them. A tab the site removed stays
-     * removed: only tabs the blueprint still has receive fields. Also run by
-     * the AddNewBrandFields update script after each update.
+     * removed: only tabs the blueprint still has receive fields. The
+     * AddNewBrandFields update script passes the fields the new version
+     * brings, as `$only`, so a field the site removed stays removed.
      *
+     * @param  list<string>|null  $only  the fields that may be added (all of them when null)
      * @return list<string> the fields added
      */
-    public static function addMissingFields(BlueprintContents $blueprint, string $container, string $file = 'seo'): array
+    public static function addMissingFields(BlueprintContents $blueprint, string $container, string $file = 'seo', ?array $only = null): array
     {
         $contents = $blueprint->contents();
         $existing = $blueprint->fields()->all()->keys()->all();
@@ -260,7 +262,7 @@ class Install extends Command
 
             foreach ($config['sections'] as $index => $section) {
                 foreach ($section['fields'] as $field) {
-                    if (in_array($field['handle'], $existing, true)) {
+                    if (in_array($field['handle'], $existing, true) || ($only !== null && ! in_array($field['handle'], $only, true))) {
                         continue;
                     }
 

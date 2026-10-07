@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Listeners\SaveFeatures;
+use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
@@ -16,15 +17,21 @@ use Statamic\UpdateScripts\UpdateScript;
  * settings on the sites Brand is on, moves each localization's values of
  * those fields across, takes the fields out of Brand's blueprint (a field the
  * site added itself stays where it is), and renames "SEO & brand" to "Brand".
- * Statamic runs it on `composer update`; commit the files it changes. It
- * also runs while Brand still holds values of those fields, as on a site
- * whose globals are in the database and whose blueprints were moved where
- * the update ran first (`php please updates:run 0.20.0 --package=jotham-lec/statamic-marketing-toolkit` on that server).
+ * Statamic runs it on `composer update` from before 0.21; commit the files
+ * it changes. Updating from 0.21 or later it doesn't run, so a field the
+ * site puts back in Brand stays there. It still runs, with `php please
+ * updates:run 0.20.0 --package=jotham-lec/statamic-marketing-toolkit`, while
+ * Brand holds values of those fields, as on a server whose globals are in
+ * the database and whose blueprints were moved where the update ran first.
  */
 class MoveToMarketingSettings extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {
+        if (! Version::before((string) $oldVersion, '0.21.0')) {
+            return false;
+        }
+
         $blueprint = Blueprint::find('globals.'.config('marketing-toolkit.global'));
         $moved = self::moved();
 

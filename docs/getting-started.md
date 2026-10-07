@@ -133,4 +133,4 @@ composer update jotham-lec/statamic-marketing-toolkit
 php artisan migrate
 ```
 
-Statamic runs the addon's update scripts on `composer update` (or `php please updates:run`): they add the fields a new version brings to Brand and Marketing settings, and make any change it needs to your settings. Commit the files they change (the blueprint in `resources/blueprints/globals`, the global set in `content/globals`). The control panel's scripts are republished at the same time. [CHANGELOG.md](../CHANGELOG.md) says what each version needs beyond that, under **Upgrading**.
+Statamic runs the addon's update scripts on `composer update` (or `php please updates:run`): they add the fields a new version brings to Brand and Marketing settings (a field you removed stays removed), and make any change it needs to your settings. Each runs only for the update that needs it. Commit the files they change (the blueprint in `resources/blueprints/globals`, the global set in `content/globals`). The control panel's scripts are republished at the same time. [CHANGELOG.md](../CHANGELOG.md) says what each version needs beyond that, under **Upgrading**.
