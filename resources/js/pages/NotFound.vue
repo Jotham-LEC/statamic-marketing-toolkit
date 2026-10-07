@@ -44,7 +44,7 @@ defineProps({
         </template>
         <template #cell-referrer="{ row }">
             <a v-if="row.referrer" :href="row.referrer" target="_blank" rel="noopener noreferrer" class="block max-w-xs truncate text-sm">{{ row.referrer }}</a>
-            <span v-else class="text-gray-400">—</span>
+            <span v-else class="text-gray-500 dark:text-gray-400">—</span>
         </template>
     </Listing>
 </template>

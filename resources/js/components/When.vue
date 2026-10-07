@@ -6,5 +6,5 @@ defineProps({ value: { type: String, default: null } });
 
 <template>
     <time v-if="value" :datetime="value" class="whitespace-nowrap text-sm">{{ formatDate(value) }}</time>
-    <span v-else class="text-gray-400">—</span>
+    <span v-else class="text-gray-500 dark:text-gray-400">—</span>
 </template>
