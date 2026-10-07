@@ -47,7 +47,8 @@ test('the Marketing section, between Fields and Tools, opens the overview and li
             ->where('report.latest', null)
             ->where('redirects.active', 0)
             ->where('notFound.paths', 0)
-            ->where('notFound.url', cp_route('mt.404s.index')));
+            ->where('notFound.url', cp_route('mt.404s.index'))
+            ->where('tracking.url', GlobalSet::findByHandle('marketing')->in('default')->editUrl()));
 });
 
 test('the overview says when share cards are on but can\'t be drawn', function () {

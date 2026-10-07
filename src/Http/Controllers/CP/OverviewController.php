@@ -31,30 +31,38 @@ use Statamic\Facades\User;
  */
 class OverviewController
 {
-    public function __invoke(SiteSeo $seo, Client $searchConsole): Response
+    public function __construct(
+        private SiteSeo $seo,
+        private Client $searchConsole,
+        private Tracking $tracking,
+        private Generator $cards,
+        private Favicons $favicons,
+    ) {}
+
+    public function __invoke(): Response
     {
         $user = User::current();
 
         $site = Sites::multiple() ? Site::selected()->handle() : Site::default()->handle();
 
         // The selected site's brand values and addresses, not the control panel's domain's.
-        return Sites::as($site, fn () => $this->render($seo, $searchConsole, $user, $site));
+        return Sites::as($site, fn () => $this->render($user, $site));
     }
 
-    private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
+    private function render(UserContract $user, string $site): Response
     {
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
         // The set the Tracking tab is in: Marketing settings, or Brand on a site that hasn't moved it yet.
-        $tracking = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($site) ?? $variables;
+        $trackingSet = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($site) ?? $variables;
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
         return Inertia::render('marketing-toolkit::Overview', [
-            'siteName' => $seo->settings()->siteName(),
+            'siteName' => $this->seo->settings()->siteName(),
             'global' => [
                 'exists' => $variables !== null,
                 'url' => $variables && $user->can('edit', $variables) ? $variables->editUrl() : null,
-                'separator' => $seo->settings()->titleSiteName() ? $seo->settings()->separator() : null,
-                'description' => $seo->settings()->string('default_description'),
+                'separator' => $this->seo->settings()->titleSiteName() ? $this->seo->settings()->separator() : null,
+                'description' => $this->seo->settings()->string('default_description'),
             ],
             'report' => $this->report($user, $site),
             'redirects' => $user->can(Permissions::REDIRECTS) ? [
@@ -67,22 +75,22 @@ class OverviewController
                 'recent' => MissingPath::recent($site),
                 'url' => cp_route('mt.404s.index'),
             ],
-            'search' => $this->search($searchConsole, $site),
+            'search' => $this->search($site),
             'searchConsole' => ['url' => cp_route('mt.search-console.index')],
             // On the site's own address, which can differ from the control panel's.
-            'tracking' => $this->tracking($tracking && $user->can('edit', $tracking) ? $tracking->editUrl() : null),
+            'tracking' => $this->tracking($trackingSet && $user->can('edit', $trackingSet) ? $trackingSet->editUrl() : null),
             // On, but nothing to draw them with (Og\Generator::available()): said, so a missing card isn't a mystery.
-            'cardsUnavailable' => Features::on('share_cards') && ! app(Generator::class)->available(),
+            'cardsUnavailable' => Features::on('share_cards') && ! $this->cards->available(),
             // From the domain's root, where the web server and the addon's routes serve them, also for a site under a folder.
             'files' => collect([
                 __('marketing-toolkit::cp.overview.files.sitemap') => Features::on('sitemap') ? '/sitemap.xml' : null,
                 __('marketing-toolkit::cp.overview.files.robots') => Features::on('robots_txt') ? '/robots.txt' : null,
                 __('marketing-toolkit::cp.overview.files.llms') => Features::on('llms_txt') ? '/llms.txt' : null,
-                __('marketing-toolkit::cp.overview.files.favicon') => Features::on('favicons') && app(Favicons::class)->version() ? '/site.webmanifest' : null,
-                __('marketing-toolkit::cp.overview.files.card') => Features::on('share_cards') && app(Generator::class)->available() ? '/og.png' : null,
+                __('marketing-toolkit::cp.overview.files.favicon') => Features::on('favicons') && $this->favicons->version() ? '/site.webmanifest' : null,
+                __('marketing-toolkit::cp.overview.files.card') => Features::on('share_cards') && $this->cards->available() ? '/og.png' : null,
             ])->filter()->map(fn ($path, $label) => [
                 'label' => $label,
-                'url' => $seo->absolute($path),
+                'url' => $this->seo->absolute($path),
                 // The web server answers with this file instead of the addon's.
                 'public' => file_exists(public_path(ltrim($path, '/'))),
             ])->values(),
@@ -96,24 +104,23 @@ class OverviewController
      */
     private function tracking(?string $url): array
     {
-        $tracking = app(Tracking::class);
         // From .env when the config holds it; an ID a Tracking subclass returns comes from code.
         $fromEnv = fn (string $tracker, string $id) => strcasecmp(trim((string) config('marketing-toolkit.tracking.'.Tracking::FIELDS[$tracker])), $id) === 0;
 
         return [
-            'tools' => collect($tracking->ids())->filter()->map(fn (string $id, string $tracker) => [
+            'tools' => collect($this->tracking->ids())->filter()->map(fn (string $id, string $tracker) => [
                 'name' => __('marketing-toolkit::cp.tracking.names.'.$tracker),
                 'id' => $id,
                 'from_env' => $fromEnv($tracker, $id),
             ])->values()->all(),
             // Set, but not an ID, so never printed: where to fix it.
-            'invalid' => collect($tracking->invalid())->map(fn (string $value, string $tracker) => __('marketing-toolkit::cp.tracking.invalid', [
+            'invalid' => collect($this->tracking->invalid())->map(fn (string $value, string $tracker) => __('marketing-toolkit::cp.tracking.invalid', [
                 'name' => __('marketing-toolkit::cp.tracking.names.'.$tracker),
                 'value' => $value,
                 'where' => $fromEnv($tracker, $value) ? 'MT_'.strtoupper(Tracking::FIELDS[$tracker]) : __('marketing-toolkit::cp.tracking.where_global'),
             ]))->values()->all(),
-            'consent' => $tracking->consent() !== null,
-            'overlap' => $tracking->besideGtm(),
+            'consent' => $this->tracking->consent() !== null,
+            'overlap' => $this->tracking->besideGtm(),
             'url' => $url,
         ];
     }
@@ -152,9 +159,9 @@ class OverviewController
      *
      * @return array<string, mixed>|null
      */
-    private function search(Client $client, string $site): ?array
+    private function search(string $site): ?array
     {
-        if (! $client->configured($site)) {
+        if (! $this->searchConsole->configured($site)) {
             return null;
         }
 

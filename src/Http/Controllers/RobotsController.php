@@ -13,10 +13,10 @@ use Statamic\Exceptions\NotFoundHttpException;
  */
 class RobotsController
 {
-    public function __invoke(): Response
+    public function __invoke(SiteSeo $seo): Response
     {
         throw_unless(Features::on('robots_txt'), NotFoundHttpException::class);
 
-        return new Response(app(SiteSeo::class)->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        return new Response($seo->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }
 }

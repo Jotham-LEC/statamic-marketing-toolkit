@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -21,9 +22,9 @@ class SitemapController
 {
     public const string CACHE_KEY = 'mt:sitemap';
 
-    public function index(): Response
+    public function index(Request $request, SiteSeo $seo): Response
     {
-        $urls = $this->urls();
+        $urls = $this->urls($request, $seo);
         $perPage = $this->perPage();
 
         if ($urls->count() <= $perPage) {
@@ -33,16 +34,16 @@ class SitemapController
         $pages = range(1, (int) ceil($urls->count() / $perPage));
 
         return $this->xml(view('marketing-toolkit::sitemap-index', [
-            'pages' => array_map(fn (int $page) => app(SiteSeo::class)->absolute(route('mt.sitemap.page', ['page' => $page], false)), $pages),
+            'pages' => array_map(fn (int $page) => $seo->absolute(route('mt.sitemap.page', ['page' => $page], false)), $pages),
         ])->render());
     }
 
-    public function page(string $page): Response
+    public function page(Request $request, SiteSeo $seo, string $page): Response
     {
         // Taken as text: a number too big for an int would fail the type, a 500 rather than a 404.
         throw_if(strlen($page) > 9 || (int) $page < 1, NotFoundHttpException::class);
 
-        $chunk = $this->urls()->forPage((int) $page, $this->perPage());
+        $chunk = $this->urls($request, $seo)->forPage((int) $page, $this->perPage());
 
         throw_if($chunk->isEmpty(), NotFoundHttpException::class);
 
@@ -52,14 +53,14 @@ class SitemapController
     /**
      * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */
-    private function urls(): Collection
+    private function urls(Request $request, SiteSeo $seo): Collection
     {
         throw_unless(Features::on('sitemap'), NotFoundHttpException::class);
 
-        $build = fn () => app(SiteSeo::class)->sitemapUrls();
+        $build = fn () => $seo->sitemapUrls();
 
         // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
-        return Sites::trustsHost(request()) ? Cache::rememberForever(self::cacheKey(Site::current()->handle()), $build) : $build();
+        return Sites::trustsHost($request) ? Cache::rememberForever(self::cacheKey(Site::current()->handle()), $build) : $build();
     }
 
     /**
