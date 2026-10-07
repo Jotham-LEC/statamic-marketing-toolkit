@@ -24,7 +24,7 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
 3. Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and LinkedIn, for each that has an ID.
 4. The meta tags (`<s:mt:meta />`).
 
-`mt:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels when Consent Mode is off. Without JavaScript nobody can answer a banner, so with Consent Mode on those pixels are left out.
+`mt:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels, when Consent Mode is off. Without JavaScript nobody can answer a banner and no Consent Mode defaults are set, so with Consent Mode on all three are left out.
 
 Nothing prints outside production (`marketing-toolkit.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it.
 
@@ -95,9 +95,11 @@ Without an update, the defaults stay: Google's tags send cookieless pings, and t
 
 These three don't read Google's Consent Mode. When they load directly (not through GTM) with Consent Mode on, a small script, the **consent bridge**, watches the dataLayer for the defaults and each update, and:
 
-- **Meta Pixel** starts with `fbq('consent', 'revoke')` and gets `grant` once `ad_storage` is granted.
+- **Meta Pixel** isn't loaded until `ad_storage` is granted; it then gets `fbq('consent', 'grant')`, and `revoke` if the visitor changes their mind.
 - **LinkedIn Insight Tag**, which has no consent setting, isn't loaded until `ad_storage` is granted.
-- **PostHog** starts opted out, keeping nothing in cookies, and opts in once `analytics_storage` is granted.
+- **PostHog** isn't loaded until `analytics_storage` is granted; it then opts in and keeps its cookie, and opts out if the visitor changes their mind.
+
+Until then their scripts aren't downloaded, so the visitor's browser doesn't reach Meta, LinkedIn or PostHog at all. What the page sends them in the meantime (the page view, a lead) waits on the page, and goes once the visitor accepts there.
 
 With regions, the page can't know where the visitor is, so the bridge waits for the banner's update everywhere. Most banners send one on every page, also where they don't show (they grant everything there). If yours doesn't, these three tools stay off outside the regions. GTM's consent checks don't have this problem: one more reason to load them through GTM.
 
@@ -138,5 +140,5 @@ With Consent Mode on, the cookie is written only once `analytics_storage` is gra
 On the live site, open the browser's developer tools:
 
 - **Console**: `dataLayer` lists the `consent` `default` command first, then the banner's `update` once you answer.
-- **Network**: before you answer, `fbevents.js` may load but Meta sends nothing, `insight.min.js` doesn't load, and PostHog sends nothing; after you accept, they do.
+- **Network**: before you answer, `fbevents.js`, `insight.min.js` and PostHog's `array.js` don't load; after you accept, they do.
 - Google's **Tag Assistant** (tagassistant.google.com) shows the consent state of each hit.

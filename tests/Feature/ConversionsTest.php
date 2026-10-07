@@ -57,6 +57,19 @@ test('a submission keeps where the lead first came from, and leaves a conversion
     ]);
 });
 
+test('the conversion cookie is host-only on path /, whatever the session cookie uses, so the script can clear it', function () {
+    // What the cookie jar takes from config('session') when it boots.
+    app('cookie')->setDefaultPathAndDomain('/app', '.example.test');
+    contactForm();
+
+    $cookie = $this->post('https://example.test/!/forms/contact', ['email' => 'a@example.test'])->getCookie(CountConversion::COOKIE, decrypt: false);
+
+    expect($cookie->getDomain())->toBeNull()
+        ->and($cookie->getPath())->toBe('/')
+        ->and($cookie->isHttpOnly())->toBeFalse()
+        ->and($cookie->getSameSite())->toBe('lax');
+});
+
 test('a submission that fails validation leaves no conversion cookie', function () {
     contactForm();
 

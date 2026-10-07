@@ -220,6 +220,8 @@ class Tracking
                 'opt_out_capturing_by_default' => $bridge ?: null,
                 'persistence' => $bridge ? 'memory' : null,
             ]),
+            // Where PostHog's snippet loads its library from, for the bridge to load it once analytics is granted.
+            'posthogScript' => str_replace('.i.posthog.com', '-assets.i.posthog.com', $host).'/static/array.js',
             'conversions' => $this->conversions() && array_filter($ids) !== [],
             'linkedinConversion' => $this->linkedinConversion(),
             'attribution' => $attribution,

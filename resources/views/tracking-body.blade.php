@@ -1,5 +1,5 @@
 {{-- Rendered by <s:mt:body />, right after <body>: what the tags fall back to without JavaScript. --}}
-@if ($ids['gtm'])
+@if ($ids['gtm'] && ! $consent)
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $ids['gtm'] }}" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 @endif
 @if ($ids['meta'] && ! $consent)
