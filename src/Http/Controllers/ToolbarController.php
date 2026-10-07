@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Response as BaseResponse;
  * answers is cached anywhere. Besides reading, it can clear this one page's
  * static cache, for whoever may use the cache utility.
  */
-class ToolbarController
+final class ToolbarController
 {
     public function show(Request $request): JsonResponse
     {

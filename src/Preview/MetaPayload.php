@@ -15,7 +15,7 @@ use Statamic\Facades\Site;
  * (the form as it stands) and the front-end toolbar (the page as saved).
  * Run it on the content's site (Sites::as()).
  */
-class MetaPayload
+final class MetaPayload
 {
     public function __construct(private SiteSeo $seo) {}
 

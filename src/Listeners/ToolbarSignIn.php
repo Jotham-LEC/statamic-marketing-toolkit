@@ -12,7 +12,7 @@ use Statamic\Facades\User;
  * toolbar's marker cookie for a user who gets the toolbar. Only on Statamic's
  * own guards. Not registered with the toolbar off (ServiceProvider::leaveOutUnused()).
  */
-class ToolbarSignIn
+final class ToolbarSignIn
 {
     public function handle(Login $event): void
     {

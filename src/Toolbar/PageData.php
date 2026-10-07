@@ -15,6 +15,8 @@ use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Uris;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
@@ -36,7 +38,7 @@ use Statamic\Structures\Page;
  * shows them with the site selected. Sentences come ready, in the user's
  * language; the script only fills in what the browser knows (consent).
  */
-class PageData
+final class PageData
 {
     /** Checks about what the page's HTML holds (links, headings, images, markup): fixed in the content, so they lead to the report. */
     public const array REPORT_RULES = ['broken_links', 'external_links', 'image_alt', 'json_ld', 'orphan_pages', 'single_h1'];
@@ -64,7 +66,7 @@ class PageData
      */
     public function toArray(): array
     {
-        $view = $this->user->can('view marketing toolkit');
+        $view = $this->user->can(Permissions::VIEW);
         $report = $view && $this->content ? $this->report() : null;
 
         return [
@@ -196,7 +198,7 @@ class PageData
             'messages' => $this->reportMessages($report, $row),
             'issues' => $report && $row ? $this->issues($report, $row) : [],
             'report_url' => $report ? $this->cp(cp_route('mt.reports.show', $report)) : $this->cp(cp_route('mt.reports.index')),
-            'run_url' => $this->user->can('run marketing toolkit reports') ? $this->cp(cp_route('mt.reports.index')) : null,
+            'run_url' => $this->user->can(Permissions::REPORTS) ? $this->cp(cp_route('mt.reports.index')) : null,
             'search' => $this->search(),
         ];
     }
@@ -302,7 +304,7 @@ class PageData
             $facts[] = __('marketing-toolkit::toolbar.preview.canonical', ['url' => $meta['canonical']]);
         }
 
-        if (config('marketing-toolkit.sitemap.enabled')) {
+        if (Features::on('sitemap')) {
             $facts[] = $seo->inSitemap($content) ? __('marketing-toolkit::toolbar.preview.in_sitemap') : __('marketing-toolkit::toolbar.preview.not_in_sitemap');
         }
 
@@ -332,8 +334,8 @@ class PageData
      */
     private function redirects(): ?array
     {
-        $manage = config('marketing-toolkit.redirects.enabled') && $this->user->can('manage marketing toolkit redirects');
-        $view = config('marketing-toolkit.not_found.enabled') && $this->user->can('view marketing toolkit');
+        $manage = Features::on('redirects') && $this->user->can(Permissions::REDIRECTS);
+        $view = Features::on('not_found') && $this->user->can(Permissions::VIEW);
 
         if (! $manage && ! $view) {
             return null;
@@ -433,7 +435,7 @@ class PageData
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($this->site->handle());
 
         $messages = [match (true) {
-            ! config('marketing-toolkit.tracking.enabled') => __('marketing-toolkit::toolbar.tracking.off'),
+            ! Features::on('tracking') => __('marketing-toolkit::toolbar.tracking.off'),
             $ids === [] => __('marketing-toolkit::toolbar.tracking.none_set'),
             ! app()->environment((array) config('marketing-toolkit.tracking.environments')) => __('marketing-toolkit::toolbar.tracking.not_production'),
             default => __('marketing-toolkit::toolbar.tracking.printing', ['tools' => $names(array_keys($ids))]),

@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Toolbar;
 use Composer\InstalledVersions;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Vite;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Contracts\Auth\User;
 use Symfony\Component\HttpFoundation\Cookie as CookieObject;
@@ -24,7 +25,7 @@ final class Toolbar
 
     public static function enabled(): bool
     {
-        return (bool) config('marketing-toolkit.toolbar.enabled');
+        return Features::on('toolbar');
     }
 
     /**

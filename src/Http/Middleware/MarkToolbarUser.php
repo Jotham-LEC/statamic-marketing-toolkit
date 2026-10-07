@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
  * the addon had a toolbar, and "remember me" sign-ins, which skip the
  * sign-in form. Checked after the request, so saving the preference counts at once.
  */
-class MarkToolbarUser
+final class MarkToolbarUser
 {
     public function handle(Request $request, Closure $next): Response
     {

@@ -5,8 +5,8 @@ namespace JothamLec\MarketingToolkit\Tags;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Toolbar\Toolbar;
 use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Toolbar\Toolbar;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
 

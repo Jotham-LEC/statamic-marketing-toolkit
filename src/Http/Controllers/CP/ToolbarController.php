@@ -13,7 +13,7 @@ use Statamic\Facades\User;
  * it shows that site's report, redirects and settings. Statamic's own
  * select-site route only returns to where the user came from.
  */
-class ToolbarController
+final class ToolbarController
 {
     public function go(Request $request): RedirectResponse
     {

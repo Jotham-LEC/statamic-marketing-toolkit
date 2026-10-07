@@ -9,7 +9,7 @@ use JothamLec\MarketingToolkit\Toolbar\Toolbar;
 /**
  * Signing out removes the toolbar's marker cookie, so the next page loads nothing.
  */
-class ToolbarSignOut
+final class ToolbarSignOut
 {
     public function handle(Logout $event): void
     {
