@@ -20,6 +20,7 @@ return [
         'loop_steps' => 'The redirects from that address lead back here after :steps steps, so visitors would go round in a loop.',
         'status' => 'Choose 301, 302, or 410.',
         'site' => 'Choose one of the sites, or none for every site.',
+        'site_required' => 'Choose one of your sites. Only someone who may work on every site can add a redirect for every site.',
     ],
 
     // A CSV row that fails those checks.

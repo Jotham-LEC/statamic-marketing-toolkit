@@ -18,6 +18,7 @@ use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Site;
 use Statamic\Facades\User;
 use Statamic\Fields\Blueprint as BlueprintObject;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -81,7 +82,8 @@ class RedirectsController
         return $this->form(
             new Redirect([
                 'source' => (string) $request->query('source', ''),
-                'site' => Sites::scope($request->query('site') === null ? null : (string) $request->query('site')),
+                // Without one, for every site; for someone who can't work on every site, the selected one if theirs.
+                'site' => Sites::scope($request->query('site') === null ? self::defaultSite() : (string) $request->query('site')),
             ]),
             title: __('marketing-toolkit::cp.redirects.create'),
             submitUrl: cp_route('mt.redirects.store'),
@@ -219,6 +221,21 @@ class RedirectsController
         return Redirect::validator($values, $ignoreId, sites: Sites::accessible())->validate();
     }
 
+    /**
+     * The site a new rule is for when the form names none: every site (null),
+     * unless the user may not work on every site.
+     */
+    private static function defaultSite(): ?string
+    {
+        if (Sites::accessesAll()) {
+            return null;
+        }
+
+        $selected = Site::selected()->handle();
+
+        return in_array($selected, Sites::accessible(), true) ? $selected : (Sites::accessible()[0] ?? null);
+    }
+
     private function form(Redirect $redirect, string $title, string $submitUrl, string $method): Response
     {
         $fields = $this->blueprint()->fields()->addValues([
@@ -272,8 +289,9 @@ class RedirectsController
             ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('marketing-toolkit::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
             // Only where there is more than one site to choose from.
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
-                'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => true,
-                'placeholder' => __('marketing-toolkit::cp.redirect_form.all_sites'),
+                // Every site (none chosen) only for someone who may work on every site.
+                'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => Sites::accessesAll(),
+                'placeholder' => Sites::accessesAll() ? __('marketing-toolkit::cp.redirect_form.all_sites') : null,
             ]]] : []),
         ]], ...$campaign]]]]);
     }
