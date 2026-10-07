@@ -53,6 +53,46 @@ final class Sites
     }
 
     /**
+     * Whether the signed-in user may work on every site (a super user, or one
+     * with `access {site} site` for each), and so on rules for every site.
+     */
+    public static function accessesAll(): bool
+    {
+        return array_diff(self::handles(), self::accessible()) === [];
+    }
+
+    /**
+     * The folder a site lives in on its domain, as the paths Laravel reads from
+     * a request start with it: `/fr` for a site at example.com/fr/, '' for one
+     * at the root of its domain (or of the folder the app is installed in).
+     */
+    public static function folder(?string $site): string
+    {
+        $url = $site !== null ? Site::get($site)?->absoluteUrl() : null;
+        $path = rtrim((string) parse_url((string) $url, PHP_URL_PATH), '/');
+        $base = rtrim(request()->getBasePath(), '/');
+
+        return $base !== '' && str_starts_with($path.'/', $base.'/') ? substr($path, strlen($base)) : $path;
+    }
+
+    /**
+     * A path as requested (`/fr/a-propos`), within $site (`/a-propos`), as
+     * Statamic's uri() and the addon's redirects and 404 log write it; null
+     * when it doesn't start with the site's folder.
+     */
+    public static function within(string $path, ?string $site): ?string
+    {
+        $folder = self::folder($site);
+        $path = '/'.ltrim($path, '/');
+
+        if ($folder === '') {
+            return $path;
+        }
+
+        return $path === $folder || str_starts_with($path, $folder.'/') ? '/'.ltrim(substr($path, strlen($folder)), '/') : null;
+    }
+
+    /**
      * Site handle => name, for a select.
      *
      * @return array<string, string>

@@ -33,9 +33,11 @@ class Recorder
         }
 
         $path = $this->path($request);
+        $ignore = (array) config('marketing-toolkit.not_found.ignore_paths');
 
         // Postgres refuses text that isn't UTF-8, and a probe is all such a path can be.
-        return self::isText($path) && ! Str::is((array) config('marketing-toolkit.not_found.ignore_paths'), $path);
+        // A probe is known by the path within the site (`/fr/.env` is `/.env` there) or as requested.
+        return self::isText($path) && ! Str::is($ignore, $path) && ! Str::is($ignore, '/'.trim($request->decodedPath(), '/'));
     }
 
     public function record(Request $request): void
@@ -72,9 +74,17 @@ class Recorder
         $this->trim();
     }
 
+    /**
+     * The path missed, within the current site (without its folder), as
+     * redirects take their sources: a row's "Create redirect" makes a rule
+     * that matches it. Rows logged before kept the folder (`/fr/old`); the
+     * matcher still takes a source like that.
+     */
     public function path(Request $request): string
     {
-        return '/'.trim($request->decodedPath(), '/');
+        $path = '/'.trim($request->decodedPath(), '/');
+
+        return '/'.trim(Sites::within($path, Site::current()->handle()) ?? $path, '/');
     }
 
     /**

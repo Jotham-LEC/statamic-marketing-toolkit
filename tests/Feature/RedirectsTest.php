@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Schema;
 use JothamLec\MarketingToolkit\Redirects\Csv;
 use JothamLec\MarketingToolkit\Redirects\Matcher;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use Statamic\Facades\Site;
 use Statamic\Facades\URL;
 
 function rule(string $source, ?string $target, int $status = 301, bool $active = true): Redirect
@@ -193,6 +194,26 @@ test('a redirect goes to the site\'s own address, whatever Host header the reque
     $this->get('https://example.test/old', ['Host' => 'evil.test'])
         ->assertRedirect('https://example.test/new');
     $this->get('https://evil.test/old')->assertRedirect('https://example.test/new');
+});
+
+test('on a site whose URL is relative, a redirect goes to a path alone, not to the request\'s Host header', function () {
+    Site::setSites(['default' => ['name' => 'Acme', 'url' => '/', 'locale' => 'en_US']]);
+    Redirect::query()->create(['source' => '/old', 'target' => '/new']);
+    Redirect::query()->create(['source' => '/away', 'target' => 'https://elsewhere.test/page']);
+
+    expect($this->get('https://evil.test/old')->assertStatus(301)->headers->get('Location'))->toBe('/new')
+        ->and($this->get('https://evil.test/away')->headers->get('Location'))->toBe('https://elsewhere.test/page');
+});
+
+test('on sites in folders with relative URLs, the path keeps the site\'s folder', function () {
+    config(['statamic.editions.pro' => true, 'statamic.system.multisite' => true]);
+    Site::setSites([
+        'default' => ['name' => 'Acme', 'url' => '/', 'locale' => 'en_US'],
+        'fr' => ['name' => 'Acme', 'url' => '/fr/', 'locale' => 'fr_FR'],
+    ]);
+    Redirect::query()->create(['site' => 'fr', 'source' => '/old', 'target' => '/new']);
+
+    expect($this->get('https://evil.test/fr/old')->assertStatus(301)->headers->get('Location'))->toBe('/fr/new');
 });
 
 test('a missing address is never kept by Statamic\'s static cache, so a redirect added later applies', function () {

@@ -16,6 +16,12 @@ use Statamic\Facades\URL;
  * cache read, not a query. A site's own rule wins over one for every site
  * from the same address. When matching ignores case, a second map holds the
  * sources case-folded, and the wildcards ignore case too.
+ *
+ * Sources are paths within the site, as Statamic's uri() and the automatic
+ * redirects write them: on a site at example.com/fr/, `/a-propos` is
+ * example.com/fr/a-propos. A path is asked for as requested (`/fr/a-propos`),
+ * and is matched without the site's folder first, then as it is, so a rule
+ * typed with the folder (as one had to before) keeps working.
  */
 class Matcher
 {
@@ -25,12 +31,15 @@ class Matcher
     private static bool $deferred = false;
 
     /**
+     * @param  string  $path  as requested, from the domain's root (with the site's folder)
      * @param  ?string  $site  a site handle; null: the current site
      * @return array{id: int, status: int, target: ?string}|null
      */
     public function match(string $path, string $query = '', ?string $site = null): ?array
     {
-        return $this->matchIn($this->rules($site ?? Site::current()->handle()), $path, $query);
+        $site ??= Site::current()->handle();
+
+        return $this->matchIn($this->rules($site), self::paths($path, $site), $query);
     }
 
     /**
@@ -42,30 +51,49 @@ class Matcher
      */
     public function matchAmong(iterable $redirects, string $path, ?string $site = null): ?array
     {
-        return $this->matchIn(self::compile(collect($redirects), $site), $path, '');
+        return $this->matchIn(self::compile(collect($redirects), $site), self::paths($path, $site), '');
     }
 
     /**
+     * The forms of a requested path rules are matched against: within the site
+     * (without its folder), then as requested. Already decoded and without a
+     * query string: a `?` here was `%3F`, part of the path.
+     *
+     * @return list<string>
+     */
+    private static function paths(string $path, ?string $site): array
+    {
+        $path = '/'.trim($path, '/');
+        $within = Sites::within($path, $site);
+
+        return array_values(array_unique(array_filter([$within === null ? null : '/'.trim($within, '/'), $path])));
+    }
+
+    /**
+     * An exact source wins over a wildcard, whichever form of the path it matches.
+     *
      * @param  array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}  $rules
+     * @param  list<string>  $paths
      * @return array{id: int, status: int, target: ?string}|null
      */
-    private function matchIn(array $rules, string $path, string $query): ?array
+    private function matchIn(array $rules, array $paths, string $query): ?array
     {
-        // Already decoded and without a query string: a `?` here was `%3F`, part of the path.
-        $path = '/'.trim($path, '/');
+        foreach ($paths as $path) {
+            // A source in the very case asked for wins over one that differs only in case,
+            // unless only the one in another case is the site's own.
+            $exact = $rules['exact'][$path] ?? null;
+            $folded = $rules['folded'][Redirect::key($path)] ?? null;
 
-        // A source in the very case asked for wins over one that differs only in case,
-        // unless only the one in another case is the site's own.
-        $exact = $rules['exact'][$path] ?? null;
-        $folded = $rules['folded'][Redirect::key($path)] ?? null;
-
-        if ($rule = ($folded && $folded['own'] && ! ($exact['own'] ?? 0) ? $folded : null) ?? $exact ?? $folded) {
-            return $this->resolved($rule, [], $query);
+            if ($rule = ($folded && $folded['own'] && ! ($exact['own'] ?? 0) ? $folded : null) ?? $exact ?? $folded) {
+                return $this->resolved($rule, [], $query);
+            }
         }
 
         foreach ($rules['wildcards'] as $rule) {
-            if (preg_match($rule['pattern'], $path, $captures)) {
-                return $this->resolved($rule, array_slice($captures, 1), $query);
+            foreach ($paths as $path) {
+                if (preg_match($rule['pattern'], $path, $captures)) {
+                    return $this->resolved($rule, array_slice($captures, 1), $query);
+                }
             }
         }
 
