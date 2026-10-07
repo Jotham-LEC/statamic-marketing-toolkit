@@ -192,6 +192,24 @@ On a site in several languages, each translation of a page has its own SEO field
 
 When a page has no share image, the site draws one: the page title and description on your brand colours. You see it in the preview. To change the words, fill in **Card title** and **Card subtitle**. To use a photo instead, upload a **Share image**.
 
+## The front-end toolbar
+
+![The toolbar along the bottom of a page, with its SEO score panel open](images/toolbar.png)
+
+While you're signed in to the control panel, the live site shows a small button in the bottom-left corner with the page's SEO score. Visitors never see it. Click it, or press **Alt+Shift+M**, to open the toolbar along the bottom of the page:
+
+- **Edit entry** (or **Edit term**) opens the page in the control panel, and **SEO** opens it on its SEO tab.
+- **Score**: the page's score from the latest report and the checks it fails, worst first. Each check links to where you fix it. A page saved since the report says so, and a page the report hasn't seen yet has no score. With Search Console connected, it ends with the page's clicks, impressions and position over the last 28 days.
+- **Preview**: the page's Google result and share card, as the SEO tab shows them, and whether it is in the sitemap, hidden from search engines, or pointing at another address.
+- **Redirects**: the redirects that send visitors to this page, and one from its address that never applies because the page exists. On a missing page the button turns red and says **Missing page**; the panel says how often the 404 log has seen the address, with **Add a redirect**.
+- **Tracking**: which tags load on this page, or why none do, Consent Mode, and what your own browser has agreed to.
+- **Sites**: the page on the other sites, with its status, and links to view and edit each one.
+- **More**: Marketing → Overview, the control panel, **Refresh this page's cache** (on a site with static caching, for whoever may use the cache utility), and **Hide the toolbar**.
+
+Each panel shows only what your role may see in the control panel. The toolbar remembers whether you left it open, and closes with Escape. It never shows in Live Preview.
+
+Under **Preferences → Marketing Toolkit** in the control panel (your avatar, top right), you can hide the toolbar on every device, move it to the bottom-right corner, or change its keyboard shortcut. Clear the shortcut to have none. A developer can switch it off for everyone under [Features](#features).
+
 ## When a page's address changes
 
 A page's address (its URL) changes when you change its slug, when its date changes on a dated page such as a news article, or when you move it to another place in a page tree. Old links to it, from Google, other sites or your own emails, would then lead nowhere. So the site adds a **redirect**: anyone visiting the old address is sent to the new one.

@@ -170,7 +170,7 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 ## Features
 
-The **Features** tab of **Marketing → Settings** has a switch per module, on the default site and for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is copied to the addon settings (`features_off`) when the tab is saved and set off in the config at boot: its addresses answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted. Its routes stay registered, so cached routes (`php artisan route:cache`, `optimize`) follow a switch without being cached again.
+The **Features** tab of **Marketing → Settings** has a switch per module, on the default site and for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons, ads.txt and the front-end toolbar. What's off is copied to the addon settings (`features_off`) when the tab is saved and set off in the config at boot: its addresses answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted. Its routes stay registered, so cached routes (`php artisan route:cache`, `optimize`) follow a switch without being cached again.
 
 Since the switches apply at boot, a process that boots once and serves many requests or jobs (Laravel Octane, a queue worker, Horizon) picks up a change when it restarts: run `php artisan octane:reload` or `php artisan queue:restart` after switching a module on or off. A PHP-FPM site picks it up from the next request.
 
@@ -193,6 +193,18 @@ Each ID can be set in the **Tracking** tab of Marketing settings (Marketing → 
 | `leads.enabled` | | `true`. Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads). |
 
 An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed; Marketing → Overview says which one, and where it is set. Consent Mode is set in the global only (the Consent tab of Marketing settings).
+
+## Toolbar
+
+| Key | Default | |
+|---|---|---|
+| `toolbar.enabled` | `true` | The front-end toolbar for signed-in control panel users. Off (here or under Features): no script on the page, no cookie, and its endpoint answers 404. |
+
+`<s:mt:body />` ends with a script of about 300 bytes, the same for every visitor, so a page stays safe to cache under every static caching strategy. It loads the toolbar (`/vendor/statamic-marketing-toolkit/build/toolbar.js`, about 6 kB gzipped) only when the `mt_toolbar` cookie is there and the page isn't in a frame; visitors download nothing else and make no request. A layout without `mt:body` adds `<s:mt:toolbar />` before `</body>`. The script isn't printed in Live Preview or by `ssg:generate`.
+
+The cookie is set when someone who may access the control panel signs in, and on their control panel requests, and removed when they sign out or hide the toolbar. It holds `1` and nothing else: the toolbar then asks `/!/marketing-toolkit/toolbar` about the page, which checks the session and each permission. It is set on the session's domain (`SESSION_DOMAIN`) for the session's lifetime. If the control panel is on another domain than the site (`admin.example.com` and `www.example.com`), set `SESSION_DOMAIN=.example.com` so one sign-in covers both; on unrelated domains, sign in on each.
+
+Each user can hide the toolbar, move it to the bottom-right corner, or change or clear its shortcut (`Alt+Shift+M`) under **Preferences → Marketing Toolkit**. A super user can set defaults for a role or for everyone there too. The toolbar sets `--mt-toolbar-height` on `<html>` (`40px` while it is open, else `0px`) for a site that wants to make room for it.
 
 ## llms.txt and ads.txt
 
@@ -243,6 +255,8 @@ The Search Console property is kept here too (`search_console_property`, and `se
 | `manage marketing toolkit redirects` | Create, edit and delete redirects, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
 | `run marketing toolkit reports` | Start a report. |
 
+The front-end toolbar shows for anyone with `access cp`, and each of its panels asks the permission above that its screen asks; **Refresh this page's cache** asks Statamic's `access cache utility`.
+
 ## Commands
 
 | Command | |
@@ -265,3 +279,5 @@ The addon sends nothing to its author: no licence check, no usage numbers, no up
 | A visitor opens a page, with a tracking ID set, in the environments in `tracking.environments` (production unless changed), never in Live Preview | The visitor's browser | Google Tag Manager and Google Analytics (`googletagmanager.com`), the Meta Pixel (`connect.facebook.net`, `facebook.com`), LinkedIn (`snap.licdn.com`, `px.ads.linkedin.com`), PostHog (your `tracking.posthog_host`) | Whatever each tool's own script collects, and with leads on, a lead event when a form is sent. How each behaves before consent: [tracking.md](tracking.md#meta-linkedin-and-posthog-without-gtm). |
 
 Reports render pages and check internal links inside the application, without a request over the network.
+
+The front-end toolbar talks only to the site itself. Its `mt_toolbar` cookie, set for signed-in control panel users only, holds `1`, so it carries nothing about the user; the toolbar's open or closed state is kept in the browser's `localStorage` and never sent.

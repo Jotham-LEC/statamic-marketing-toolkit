@@ -15,6 +15,7 @@ Built for teams where marketing has ownership over SEO & Analytics, so that desi
 - **Sensible Defaults**: Every page gets its tags, a sitemap, robots.txt, and llms.txt without anyone filling in a field.
 - **Redirects & 404s**: Anyone can add redirects, wildcards and 410s included. Moving a page adds one for you, and missing pages are logged. Bulk import from a CSV.
 - **SEO Score**: Every page is checked and scored out of 100. Each problem links straight to the entry that fixes it.
+- **Front-end Toolbar**: Signed in, every page of the live site shows its score, failing checks, search preview, redirects and tracking, with a link to fix each.
 - **Tracking Tags**: Paste your GTM, GA4, PostHog, Meta Pixel, or LinkedIn ID. Tags load on the live site only.
 - **Integrations**: Search Console numbers per page, form submissions sent on as leads with their source, and UTM campaign links.
 - **Consent Mode v2**: Works with the cookie banner you already have, with defaults per region.

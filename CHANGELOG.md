@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.22.0 – 2026-10-07
+
+Signed-in editors get a toolbar on the live site, showing what the addon knows about the page in front of them and where to fix it.
+
+### Added
+- **A front-end toolbar for anyone who may use the control panel.** A button in the bottom-left corner shows the page's SEO score; it opens a bar with **Edit entry** and **SEO** (the edit screen on the tab that holds the SEO fields), and panels for the page's score and failing checks, its Google result and share card, redirects to it and its 404s, the tracking tags and Consent Mode, the page on other sites, and **Refresh this page's cache**. Each panel follows the permission its control panel screen asks. It works by keyboard (Escape, and **Alt+Shift+M** to open and close it), at 320 px as a bottom sheet, and in the user's control panel theme. It never shows in Live Preview or a frame. See [editors.md](docs/editors.md#the-front-end-toolbar).
+- **Three user preferences** under Preferences → Marketing Toolkit: hide the toolbar on every device, put it in the bottom-right corner, and change or clear its shortcut.
+- **It costs visitors nothing, and pages stay safe to cache.** `<s:mt:body />` ends with a script of about 300 bytes, the same for everyone, which loads the toolbar (about 6 kB gzipped) only when the `mt_toolbar` cookie says a control panel user is signed in. Everything personal comes from an uncached endpoint, `/!/marketing-toolkit/toolbar`, that checks the session. A layout without `mt:body` adds `<s:mt:toolbar />` before `</body>`. See [configuration.md](docs/configuration.md#toolbar).
+
+### Upgrading
+- **The toolbar is on after the update.** To switch it off for everyone, turn off **Front-end toolbar** under Marketing → Settings → Features (`composer update` adds the switch to the tab), or set `'toolbar' => ['enabled' => false]` in `config/marketing-toolkit.php`.
+- **Run `php artisan migrate`**: it adds an index to the report pages table for the toolbar's lookup.
+- **If the toolbar doesn't appear** while you're signed in, publish the addon's assets again, `php artisan vendor:publish --tag=marketing-toolkit --force`, so `public/vendor/statamic-marketing-toolkit/build/toolbar.js` is there, then reload a control panel page once to get the cookie.
+- **A control panel on another domain than the site** needs `SESSION_DOMAIN` set to their shared parent (`.example.com`) for the toolbar to see the sign-in.
+
 ## 0.21.4 – 2026-10-07
 
 ### Fixed

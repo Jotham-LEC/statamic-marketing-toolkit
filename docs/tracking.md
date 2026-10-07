@@ -26,7 +26,11 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
 
 `mt:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels when Consent Mode is off. Without JavaScript nobody can answer a banner, so with Consent Mode on those pixels are left out.
 
-Nothing prints outside production (`marketing-toolkit.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it.
+`mt:body` also ends with the front-end toolbar's small script, the same for every visitor ([configuration.md](configuration.md#toolbar)).
+
+Nothing prints outside production (`marketing-toolkit.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it, the toolbar's included.
+
+A nonce is new on every response, but full static caching stores one response and serves it to everyone, so the stored nonce no longer matches the policy header and the browser blocks those scripts. The same is true of the half-measure cache unless the policy header is cached with the page. With a nonce-based policy, either leave pages that need the scripts out of full static caching, or allow the scripts another way: by their hashes (`'sha256-…'`, stable while their IDs don't change), or with `'strict-dynamic'` and a nonce the web server adds when it serves the file.
 
 A site that prints its own meta tags (a Laravel layout that doesn't use `<s:mt:meta />`) takes the tags alone, so the page doesn't get two sets of meta tags. Put any Consent Mode defaults of your own before them:
 
