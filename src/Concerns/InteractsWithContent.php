@@ -9,6 +9,8 @@ use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Assets;
 use JothamLec\MarketingToolkit\Support\Text;
+use Statamic\Auth\Protect\Protection;
+use Statamic\Auth\Protect\Protectors\NullProtector;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
@@ -66,6 +68,21 @@ trait InteractsWithContent
         $handle = $context->entry?->collectionHandle();
 
         return $handle ? config("marketing-toolkit.collections.{$handle}.{$key}", $default) : $default;
+    }
+
+    /**
+     * Whether Statamic keeps this content behind a protection scheme (a
+     * password, a login, an IP list): its `protect` value, else the
+     * site-wide `statamic.protect.default`, read as Statamic reads them, so
+     * a scheme that doesn't exist counts too (Statamic denies it). Protected
+     * content stays out of the sitemap, llms.txt and IndexNow, and has no
+     * share card: its title and text aren't public.
+     *
+     * @api
+     */
+    public function isProtected(Entry|Term $content): bool
+    {
+        return ! (app(Protection::class)->setData($content)->driver() instanceof NullProtector);
     }
 
     protected function contentTitle(Context $context): ?string

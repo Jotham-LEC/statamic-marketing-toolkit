@@ -66,6 +66,7 @@ trait BuildsSitemap
             && ! ($content instanceof Entry && $content->isRedirect())
             && ! ($seo['noindex'] ?? false)
             && ($seo['sitemap'] ?? true) !== false
+            && ! $this->isProtected($content)
             && (blank($canonical) || rtrim((string) $canonical, '/') === rtrim((string) $content->absoluteUrl(), '/'));
     }
 

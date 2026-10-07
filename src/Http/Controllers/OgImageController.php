@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Entry;
@@ -24,7 +25,8 @@ class OgImageController
         throw_unless(config('marketing-toolkit.og.enabled'), NotFoundHttpException::class);
 
         $entry = $this->entry($request, trim((string) $path, '/'));
-        throw_unless($entry?->status() === 'published', NotFoundHttpException::class);
+        // A protected page's card would show its title and text to anyone.
+        throw_unless($entry?->status() === 'published' && ! app(SiteSeo::class)->isProtected($entry), NotFoundHttpException::class);
 
         return new Response($generator->png($entry), 200, [
             'Content-Type' => 'image/png',

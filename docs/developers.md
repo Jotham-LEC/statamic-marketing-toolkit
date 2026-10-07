@@ -97,6 +97,7 @@ The methods you're most likely to override:
 | `extraNodes(Context)` | Your own nodes (Event, Course…), worked out in code. Empty by default. Editors' hand-written JSON-LD, from a page's **Extra JSON-LD** field, comes from `customNodes(Context)`. |
 | `additionalSitemapUrls()` | URLs that aren't entries or terms, as `[['loc' => …, 'lastmod' => …]]`. |
 | `inSitemap(Entry\|Term)` | Whether a content item is listed. |
+| `isProtected(Entry\|Term)` | Whether Statamic protects a content item (its `protect` value, else `statamic.protect.default`). Protected content stays out of the sitemap, llms.txt and IndexNow, and has no generated share card. |
 | `termHasEntries(Term)` | Whether a term has published entries, for the sitemap and the reports. Override for a taxonomy that isn't attached to the collection whose entries use it. |
 | `robotsTxt()` | robots.txt. |
 | `llmsPerCollection()` | How many pages llms.txt lists per collection, the most recently changed first. 100 by default. |

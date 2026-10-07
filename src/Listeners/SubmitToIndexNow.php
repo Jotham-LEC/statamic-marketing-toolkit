@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Listeners;
 
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Events\EntryDeleted;
 use Statamic\Events\EntrySaved;
 use Statamic\Events\EntryScheduleReached;
@@ -12,7 +13,7 @@ use Statamic\Events\TermSaved;
 /**
  * Queues the address of published content that was saved, went live on
  * schedule, or was deleted (so engines see it gone) for IndexNow. Drafts
- * are never sent.
+ * and protected pages (SiteSeo::isProtected()) are never sent.
  */
 class SubmitToIndexNow
 {
@@ -22,8 +23,8 @@ class SubmitToIndexNow
     {
         $content = $event instanceof TermSaved || $event instanceof TermDeleted ? $event->term : $event->entry;
 
-        // Deleted too only if it was live: a draft's address was never public.
-        if (! method_exists($content, 'status') || $content->status() === 'published') {
+        // Deleted too only if it was live: a draft's address was never public, nor a protected page's.
+        if ((! method_exists($content, 'status') || $content->status() === 'published') && ! app(SiteSeo::class)->isProtected($content)) {
             $this->indexNow->queue($content->absoluteUrl());
         }
     }

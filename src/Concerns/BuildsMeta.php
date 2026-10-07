@@ -158,7 +158,8 @@ trait BuildsMeta
     }
 
     /**
-     * The URL of the entry's generated card, or null when cards are off. The
+     * The URL of the entry's generated card, or null when cards are off or
+     * the entry is protected (its card would show what it protects). The
      * `v` parameter changes with each edit, so link previews refetch it.
      *
      * On the root of the entry's domain, which serves the card routes, with
@@ -168,7 +169,7 @@ trait BuildsMeta
      */
     public function generatedImageUrl(Entry $entry): ?string
     {
-        if (! config('marketing-toolkit.og.enabled') || $entry->status() !== 'published' || ! $entry->url()) {
+        if (! config('marketing-toolkit.og.enabled') || $entry->status() !== 'published' || ! $entry->url() || $this->isProtected($entry)) {
             return null;
         }
 
