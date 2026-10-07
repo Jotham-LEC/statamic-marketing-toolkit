@@ -441,3 +441,10 @@ test('"Hide the toolbar" sets the user\'s preference and removes the cookie', fu
         ->and(toolbarCookie($response)?->getExpiresTime())->toBeLessThan(time());
     toolbarFor('/about')->assertUnauthorized();
 });
+
+test('the guard loads the built script, which ships with the addon and is published with its other assets', function () {
+    preg_match('#"\\\\/vendor\\\\/statamic-marketing-toolkit\\\\/build\\\\/(toolbar\.js)\?v=#', renderAt('/', '<s:mt:toolbar />'), $match);
+
+    expect($match[1] ?? null)->toBe('toolbar.js')
+        ->and(__DIR__.'/../../resources/dist/build/toolbar.js')->toBeFile();
+});

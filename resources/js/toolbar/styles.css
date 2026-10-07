@@ -1,0 +1,578 @@
+/*
+ * The toolbar's styles, inside its Shadow DOM: nothing here reaches the
+ * site, and the site's styles don't reach in (`all: initial` on the host).
+ * No variables on :root. Light by default, dark with the control panel's
+ * dark theme, or the system's when the user's theme follows it.
+ */
+:host {
+    all: initial;
+    position: fixed;
+    z-index: 2147483647;
+}
+
+.mt,
+.notice {
+    --bg: #f3f4f6;
+    --surface: #fff;
+    --text: #111827;
+    --muted: #4b5563;
+    --border: #d1d5db;
+    --accent: #4338ca;
+    --link: #3730a3;
+    --good-bg: #dcfce7;
+    --good: #14532d;
+    --fair-bg: #fef3c7;
+    --fair: #78350f;
+    --poor-bg: #fee2e2;
+    --poor: #7f1d1d;
+    --shadow: 0 1px 3px rgb(0 0 0 / 0.12), 0 4px 12px rgb(0 0 0 / 0.08);
+    --edge: calc(16px + env(safe-area-inset-bottom, 0px));
+    font: 13px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: var(--text);
+    box-sizing: border-box;
+}
+
+.mt[data-theme='dark'] {
+    --bg: #1f2937;
+    --surface: #111827;
+    --text: #f3f4f6;
+    --muted: #d1d5db;
+    --border: #4b5563;
+    --accent: #a5b4fc;
+    --link: #c7d2fe;
+    --good-bg: #14532d;
+    --good: #dcfce7;
+    --fair-bg: #78350f;
+    --fair: #fef3c7;
+    --poor-bg: #7f1d1d;
+    --poor: #fee2e2;
+}
+
+@media (prefers-color-scheme: dark) {
+    .mt[data-theme='auto'] {
+        --bg: #1f2937;
+        --surface: #111827;
+        --text: #f3f4f6;
+        --muted: #d1d5db;
+        --border: #4b5563;
+        --accent: #a5b4fc;
+        --link: #c7d2fe;
+        --good-bg: #14532d;
+        --good: #dcfce7;
+        --fair-bg: #78350f;
+        --fair: #fef3c7;
+        --poor-bg: #7f1d1d;
+        --poor: #fee2e2;
+    }
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: inherit;
+}
+
+.sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* The bar, collapsed: the toggle alone, in its corner. */
+.mt {
+    position: fixed;
+    bottom: var(--edge);
+    left: 16px;
+    display: flex;
+    align-items: stretch;
+}
+
+.mt[data-position='bottom-right'] {
+    left: auto;
+    right: 16px;
+    flex-direction: row-reverse;
+}
+
+button,
+a {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+button {
+    background: none;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+:focus {
+    outline: none;
+}
+
+/* 2 px in the accent, with a ring of the surface around it, so it shows on the bar and on the page. */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px var(--surface);
+}
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    min-width: 40px;
+    padding: 0 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.toggle svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.toggle.missing {
+    border-color: var(--poor);
+}
+
+.closing {
+    display: none;
+}
+
+.badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    background: var(--bg);
+}
+
+.badge.good {
+    background: var(--good-bg);
+    color: var(--good);
+}
+
+.badge.fair {
+    background: var(--fair-bg);
+    color: var(--fair);
+}
+
+.badge.poor {
+    background: var(--poor-bg);
+    color: var(--poor);
+}
+
+.badge.big {
+    font-size: 20px;
+    padding: 2px 12px;
+}
+
+.tray {
+    display: none;
+}
+
+/* Open: the bar runs along the bottom, 40 px high; panels open upwards. */
+.mt.expanded {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+}
+
+.mt.expanded .toggle {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.mt.expanded .tray {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+
+.items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 0 6px;
+    list-style: none;
+}
+
+.mt[data-position='bottom-right'] .items {
+    margin-left: auto;
+}
+
+.items a,
+.items button {
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+}
+
+.items a:hover,
+.items button:hover,
+.items button[aria-expanded='true'] {
+    background: var(--surface);
+}
+
+.items button[aria-expanded='true'] {
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.panel {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 8px;
+    margin-bottom: 8px;
+    width: min(420px, calc(100vw - 16px));
+    max-height: min(70vh, 640px);
+    overflow: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.mt[data-position='bottom-right'] .panel {
+    left: auto;
+    right: 8px;
+}
+
+.panel.open {
+    display: block;
+}
+
+.panel header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px 0;
+}
+
+h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+h3 {
+    margin: 12px 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.close {
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 6px;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--muted);
+}
+
+.close:hover {
+    background: var(--bg);
+}
+
+.body {
+    padding: 4px 12px 12px;
+}
+
+p {
+    margin: 8px 0;
+    overflow-wrap: anywhere;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.score {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+ul.issues,
+ul.rows,
+ul.menu {
+    margin: 8px 0;
+    padding: 0;
+    list-style: none;
+}
+
+.issues li {
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+}
+
+.issues .status {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--fair-bg);
+    color: var(--fair);
+}
+
+.issues .fail .status {
+    background: var(--poor-bg);
+    color: var(--poor);
+}
+
+.issues .message {
+    display: block;
+    color: var(--muted);
+    overflow-wrap: anywhere;
+}
+
+.rows li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+    overflow-wrap: anywhere;
+}
+
+.links {
+    display: flex;
+    gap: 12px;
+}
+
+.menu li + li {
+    border-top: 1px solid var(--border);
+}
+
+.menu a,
+.menu button {
+    display: block;
+    width: 100%;
+    padding: 8px 0;
+    text-align: start;
+    color: var(--link);
+}
+
+.menu button:disabled {
+    opacity: 0.6;
+    cursor: progress;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+
+.button {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--surface);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.google,
+.card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.google {
+    padding: 10px 12px;
+    font-family: arial, sans-serif;
+}
+
+.google p {
+    margin: 0;
+}
+
+.google .site {
+    color: var(--text);
+}
+
+.google .crumbs {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.google .title {
+    margin-top: 2px;
+    font-size: 18px;
+    color: var(--link);
+}
+
+.card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1200 / 630;
+    object-fit: cover;
+    background: var(--bg);
+}
+
+.card .noimage {
+    margin: 0;
+    padding: 24px 12px;
+    text-align: center;
+    color: var(--muted);
+    background: var(--bg);
+}
+
+.card div {
+    padding: 8px 12px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+}
+
+.card p {
+    margin: 0;
+}
+
+.card .host {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.card .title {
+    font-weight: 600;
+}
+
+.notice {
+    position: fixed;
+    bottom: var(--edge);
+    left: 16px;
+    max-width: min(360px, calc(100vw - 32px));
+    margin: 0;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.notice:empty {
+    display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .panel.open {
+        animation: rise 0.12s ease-out;
+    }
+
+    @keyframes rise {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+    }
+}
+
+/* Below 640 px: one round button; open, a bottom sheet with every panel in it. */
+@media (max-width: 639.98px) {
+    .toggle {
+        min-width: 44px;
+        min-height: 44px;
+        border-radius: 22px;
+    }
+
+    .mt.expanded {
+        flex-direction: column;
+        max-height: 80vh;
+        overflow: auto;
+        border-radius: 12px 12px 0 0;
+        box-shadow: var(--shadow);
+    }
+
+    .mt.expanded .toggle {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        justify-content: flex-end;
+        width: 100%;
+        min-height: 48px;
+        padding: 0 16px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .mt.expanded .closing {
+        display: inline;
+        margin-inline-start: auto;
+        font-weight: 600;
+        color: var(--link);
+    }
+
+    .mt.expanded .tray {
+        display: block;
+    }
+
+    .items {
+        padding: 8px 12px;
+    }
+
+    .items a {
+        min-height: 44px;
+    }
+
+    .items .tab {
+        display: none;
+    }
+
+    .panel,
+    .panel.open {
+        display: block;
+        position: static;
+        width: auto;
+        max-height: none;
+        margin: 0 12px 12px;
+        animation: none;
+    }
+
+    .panel .close {
+        display: none;
+    }
+
+    .menu a,
+    .menu button {
+        min-height: 44px;
+    }
+}

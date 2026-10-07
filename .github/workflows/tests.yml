@@ -84,4 +84,11 @@ jobs:
       # there. (Not a byte-for-byte comparison: the bundle embeds the export
       # list of whichever Statamic is installed, so it changes with Statamic.)
       - run: npm ci && npx vite build --outDir /tmp/build
+      # The front-end toolbar: it compiles, the committed copy is there, and it stays within its budget.
+      - run: npx vite build --config vite.toolbar.config.js --outDir /tmp/build-toolbar
+      - run: test -f resources/dist/build/toolbar.js
+      - run: |
+          size=$(gzip -9c /tmp/build-toolbar/toolbar.js | wc -c)
+          echo "toolbar.js: $size bytes gzipped"
+          test "$size" -le 15360
       - run: php -r 'foreach (json_decode(file_get_contents("resources/dist/build/manifest.json"), true) as $e) { foreach ([$e["file"], ...($e["css"] ?? [])] as $f) { if (! is_file("resources/dist/build/$f")) { fwrite(STDERR, "missing $f\n"); exit(1); } } }'
