@@ -58,6 +58,26 @@ test('the Reports screen has a Settings tab that saves the report settings, keep
         ->and($settings->get('features_off'))->toBe(['llms_txt']);
 });
 
+test('saving the Settings tab leaves the settings set on other screens, however stale its copy of them', function () {
+    $addon = Addon::get(Package::NAME);
+    $addon->settings()->set('features_off', ['llms_txt'])->set('search_console_property', 'sc-domain:old.test')->save();
+    $this->actingAs(cpUser(super: true));
+
+    $values = $this->get(cp_route('mt.reports.index'))->viewData('page')['props']['settings']['values'];
+
+    // Meanwhile, in another tab, a feature is switched off and the property changed.
+    Addon::get(Package::NAME)->settings()->set('features_off', ['llms_txt', 'sitemap'])->set('search_console_property', 'sc-domain:new.test')->save();
+
+    $this->postJson(cp_route('mt.reports.settings'), [...$values, 'keep_reports' => 3])->assertOk();
+    // A form that leaves them out doesn't empty them either.
+    $this->postJson(cp_route('mt.reports.settings'), collect($values)->except(['features_off', 'search_console_property', 'search_console_properties'])->all())->assertOk();
+
+    $settings = Addon::get(Package::NAME)->settings();
+    expect($settings->get('features_off'))->toBe(['llms_txt', 'sitemap'])
+        ->and($settings->get('search_console_property'))->toBe('sc-domain:new.test')
+        ->and($settings->raw()['keep_reports'])->toBe(10);
+});
+
 test('the Settings tab is only for those who may change the addon settings', function () {
     $this->actingAs(cpUser(['view marketing toolkit', 'run marketing toolkit reports']));
 

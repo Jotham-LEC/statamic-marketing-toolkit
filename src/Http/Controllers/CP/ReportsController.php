@@ -19,6 +19,7 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
+use Statamic\Fields\Field;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -56,7 +57,9 @@ class ReportsController
 
     /**
      * Saves the Settings tab. Only its own fields are set: the addon's
-     * settings also keep the Features switches and the Search Console setup.
+     * settings also keep the Features switches and the Search Console setup,
+     * hidden fields in the blueprint that their own screens change, so a
+     * stale copy of them in this form must not overwrite them.
      */
     public function saveSettings(Request $request): JsonResponse
     {
@@ -68,7 +71,9 @@ class ReportsController
 
         $settings = $addon->settings();
 
-        foreach ($fields->process()->values()->all() as $key => $value) {
+        $own = $fields->all()->reject(fn (Field $field) => $field->visibility() === 'hidden')->keys()->all();
+
+        foreach ($fields->process()->values()->only($own)->all() as $key => $value) {
             $settings->set($key, $value);
         }
 
