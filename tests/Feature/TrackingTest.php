@@ -143,6 +143,12 @@ test('Consent Mode holds back Meta, LinkedIn and PostHog until the banner says y
         ->and(trackingBody())->not->toContain('facebook.com/tr')->not->toContain('px.ads.linkedin.com');
 });
 
+test('Consent Mode drops GTM\'s noscript iframe too: without JavaScript there are no consent defaults', function () {
+    seoGlobal(['gtm_id' => 'GTM-ABC1234', 'consent_mode' => true]);
+
+    expect(trackingBody())->not->toContain('googletagmanager.com/ns.html');
+});
+
 test('regions (Pro): granted everywhere, the defaults in those regions, and the bridge waits for the banner', function () {
     seoGlobal(['consent_mode' => true, 'consent_regions' => ['EEA', 'us-ca', 'nonsense!'], 'meta_pixel_id' => '123456789012']);
     $consent = app(Tracking::class)->consent();

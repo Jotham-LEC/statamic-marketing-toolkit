@@ -24,7 +24,7 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
 3. Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and LinkedIn, for each that has an ID.
 4. The meta tags (`<s:mt:meta />`).
 
-`mt:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels when Consent Mode is off. Without JavaScript nobody can answer a banner, so with Consent Mode on those pixels are left out.
+`mt:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels, when Consent Mode is off. Without JavaScript nobody can answer a banner and no Consent Mode defaults are set, so with Consent Mode on all three are left out.
 
 Nothing prints outside production (`marketing-toolkit.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it.
 
