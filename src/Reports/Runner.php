@@ -337,7 +337,9 @@ class Runner
 
     /**
      * Published entries and terms with an address, in the order they're
-     * checked, as the rows of the report's pages. Entries are read in chunks
+     * checked, as the rows of the report's pages. Protected pages are left
+     * out, as from the sitemap: they aren't public, and rendering one only
+     * answers with the way to sign in. Entries are read in chunks
      * and kept as rows, so a big site's entries needn't all be in memory.
      *
      * @return Collection<int, array{url: string, content_type: string, content_id: string, title: string}>
@@ -348,7 +350,7 @@ class Runner
         $excluded = $settings->excludedCollections();
 
         $entries = Entry::query()->where('site', $site)->whereStatus('published')->orderBy('id')->lazy(500)
-            ->filter(fn (EntryContract $entry) => ! in_array($entry->collectionHandle(), $excluded, true) && $entry->url() && ! $entry->isRedirect())
+            ->filter(fn (EntryContract $entry) => ! in_array($entry->collectionHandle(), $excluded, true) && $entry->url() && ! $entry->isRedirect() && ! $this->seo->isProtected($entry))
             ->map(fn (EntryContract $entry) => $this->row($entry))
             ->collect()
             ->sortBy('url');
@@ -356,7 +358,7 @@ class Runner
         $terms = collect((array) config('marketing-toolkit.sitemap.taxonomies'))
             ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
             ->map(fn ($term) => $term->in($site))
-            ->filter(fn ($term) => $term?->url() && $this->seo->termHasEntries($term))
+            ->filter(fn ($term) => $term?->url() && $this->seo->termHasEntries($term) && ! $this->seo->isProtected($term))
             ->map(fn (TermContract $term) => $this->row($term))
             ->sortBy('url');
 

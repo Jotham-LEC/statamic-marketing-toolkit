@@ -1,6 +1,7 @@
 <?php
 
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\SiteSeo;
 
 beforeEach(function () {
@@ -37,4 +38,14 @@ test('site-wide protection keeps every page out; a scheme that doesn\'t exist co
 
     expect($seo->isProtected($about))->toBeTrue();
     $this->get('https://example.test/sitemap.xml')->assertDontSee('/about');
+});
+
+test('a protected page is left out of reports, rather than counted as a page that fails to render', function () {
+    entryIn('pages', 'about');
+    entryIn('pages', 'members', ['protect' => 'logged_in']);
+    $runner = app(Runner::class);
+
+    $report = $runner->runToEnd($runner->start());
+
+    expect($report->pages()->pluck('url')->all())->toContain('https://example.test/about')->not->toContain('https://example.test/members');
 });
