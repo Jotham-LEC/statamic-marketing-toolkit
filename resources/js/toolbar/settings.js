@@ -4,6 +4,7 @@
  * whether it was left open. Nothing of them reaches the server.
  */
 const KEY = 'mt-toolbar';
+export const POSITIONS = ['bottom-left', 'bottom-right', 'top-left', 'top-right'];
 const DEFAULTS = { position: 'bottom-left', shortcut: 'Alt+Shift+M', hidden: false, open: false };
 
 /** A key combination: one or more modifiers, then a letter or a digit. */
@@ -19,7 +20,7 @@ export function settings() {
     const merged = { ...DEFAULTS, ...saved };
 
     return {
-        position: merged.position === 'bottom-right' ? 'bottom-right' : 'bottom-left',
+        position: POSITIONS.includes(merged.position) ? merged.position : DEFAULTS.position,
         // null: no shortcut. Anything that isn't a combination is the default.
         shortcut: merged.shortcut === null ? null : COMBINATION.test(merged.shortcut) ? merged.shortcut : DEFAULTS.shortcut,
         hidden: merged.hidden === true && merged.shortcut !== null,

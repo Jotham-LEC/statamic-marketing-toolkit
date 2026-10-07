@@ -1,5 +1,5 @@
 import { fill, h, link } from '../dom.js';
-import { combinationOf, settings } from '../settings.js';
+import { POSITIONS, combinationOf, settings } from '../settings.js';
 
 /**
  * Links into the control panel, "Refresh this page's cache", and the
@@ -30,7 +30,7 @@ export default function more(data, t, actions) {
     };
 
     // Corner: two buttons, the current one pressed.
-    const corners = ['bottom-left', 'bottom-right'].map((position) =>
+    const corners = POSITIONS.map((position) =>
         h(
             'button',
             {
@@ -42,17 +42,20 @@ export default function more(data, t, actions) {
                     actions.position(position);
                 },
             },
-            position === 'bottom-left' ? t.bottom_left : t.bottom_right,
+            t[position.replace('-', '_')],
         ),
     );
 
     // Shortcut: what it is, Change (press the new keys), Turn off.
     const said = h('p', { class: 'muted' });
-    const hide = h('button', { type: 'button', onclick: () => actions.hide() }, t.hide);
+    const hide = h('button', { type: 'button', class: 'choice', onclick: () => actions.hide() }, t.hide);
+    const hideExplained = h('p', { class: 'muted' });
     const hideNote = h('p', { class: 'muted' }, t.hide_needs_shortcut);
 
     const show = (shortcut) => {
         said.textContent = shortcut ? fill(t.shortcut_is, { keys: shortcut }) : t.no_shortcut;
+        hideExplained.textContent = shortcut ? fill(t.hide_explained, { keys: shortcut }) : '';
+        hideExplained.hidden = !shortcut;
         hide.hidden = !shortcut;
         hideNote.hidden = Boolean(shortcut);
     };
@@ -100,6 +103,15 @@ export default function more(data, t, actions) {
 
     show(current.shortcut);
 
+    const panel = h(
+        'div',
+        { id: 'mt-settings', class: 'settings', hidden: true },
+        h('p', { class: 'muted' }, t.settings_note),
+        h('fieldset', { class: 'setting' }, h('legend', {}, t.corner), h('div', { class: 'choices' }, corners)),
+        h('fieldset', { class: 'setting' }, h('legend', {}, t.shortcut), said, h('div', { class: 'choices' }, change, off)),
+        h('div', { class: 'setting' }, hideExplained, h('div', { class: 'choices' }, hide), hideNote),
+    );
+
     return [
         h(
             'ul',
@@ -110,11 +122,22 @@ export default function more(data, t, actions) {
                 : null,
         ),
         status,
-        h('h3', {}, t.toolbar_settings),
-        h('p', { class: 'muted' }, t.settings_note),
-        h('fieldset', { class: 'setting' }, h('legend', {}, t.corner), h('div', { class: 'choices' }, corners)),
-        h('fieldset', { class: 'setting' }, h('legend', {}, t.shortcut), said, h('div', { class: 'choices' }, change, off)),
-        h('ul', { class: 'menu' }, h('li', {}, hide)),
-        hideNote,
+        // The settings, folded away until asked for.
+        h(
+            'button',
+            {
+                type: 'button',
+                class: 'disclosure',
+                'aria-expanded': 'false',
+                'aria-controls': 'mt-settings',
+                onclick: (event) => {
+                    const open = event.currentTarget.getAttribute('aria-expanded') !== 'true';
+                    event.currentTarget.setAttribute('aria-expanded', String(open));
+                    panel.hidden = !open;
+                },
+            },
+            t.toolbar_settings,
+        ),
+        panel,
     ];
 }

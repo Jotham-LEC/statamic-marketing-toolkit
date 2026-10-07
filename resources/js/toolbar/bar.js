@@ -26,11 +26,13 @@ function paint(nav, theme) {
 }
 
 /**
- * The bar: a toggle in its corner and, once open, the bar along the bottom
- * with an icon for each item (its name as a tooltip and to screen readers)
- * and a button per panel. Panels are disclosures, one open at a time,
- * opening upwards. Below 640 px the open bar is a bottom sheet with every
- * panel in it, its items named in full.
+ * The bar: a toggle in its corner (the mark and the score) and, once open, a
+ * bar as wide as its items beside it, each an icon (its name as a tooltip
+ * and to screen readers): the edit links, a button per panel, and Minimise.
+ * Open, the score itself opens the SEO panel. Panels are disclosures, one
+ * open at a time, opening away from the corner (any of the four). Below
+ * 640 px the open bar is a bottom sheet with every panel in it, its items
+ * named in full.
  *
  * Pending (`data.pending`), it is drawn from the last page's items, disabled,
  * while this page's details load: the bar stays where it was between pages.
@@ -57,7 +59,6 @@ export function bar(root, data, hooks) {
         },
         hide: () => {
             save({ hidden: true, open: false });
-            document.documentElement.style.setProperty('--mt-toolbar-height', '0px');
             hooks.hidden();
         },
     };
@@ -76,7 +77,7 @@ export function bar(root, data, hooks) {
         icon('mark'),
         badge,
         h('span', { class: 'sr' }, t.open, score != null ? '. ' + t.score.replace(':score', score) : ''),
-        h('span', { class: 'closing', 'aria-hidden': 'true' }, t.close_panel),
+        h('span', { class: 'closing', 'aria-hidden': 'true' }, t.minimise),
     );
 
     const open = (name) => {
@@ -101,7 +102,8 @@ export function bar(root, data, hooks) {
     for (const name of panels) {
         const id = 'mt-panel-' + name;
 
-        buttons[name] = item('button', name, t.panels[name], pending ? { type: 'button', disabled: true } : { type: 'button', 'aria-expanded': 'false', 'aria-controls': id, onclick: () => open(name) });
+        // The score badge opens the SEO panel: no button of its own.
+        buttons[name] = name === 'seo' ? toggle : item('button', name, t.panels[name], pending ? { type: 'button', disabled: true } : { type: 'button', 'aria-expanded': 'false', 'aria-controls': id, onclick: () => open(name) });
 
         if (!pending) {
             sections[name] = h(
@@ -125,8 +127,10 @@ export function bar(root, data, hooks) {
             'ul',
             { class: 'items' },
             links.map(([name, label, url]) => h('li', { class: 'link' }, pending ? item('button', name, label, { type: 'button', disabled: true }) : item('a', name, label, { href: safe(url) }))),
-            panels.map((name) => h('li', { class: 'tab' }, buttons[name])),
+            panels.filter((name) => name !== 'seo').map((name) => h('li', { class: 'tab' }, buttons[name])),
         ),
+        // Minimise: the bar folds back to its corner button, which stays on every page (Hide, in More, takes that away too).
+        h('button', { type: 'button', class: 'minimise', 'aria-label': t.close, 'data-tip': t.minimise, onclick: () => expand(false) }, icon('minimise')),
         h('div', { class: 'panels' }, panels.filter((name) => sections[name]).map((name) => sections[name])),
     );
 
@@ -135,22 +139,32 @@ export function bar(root, data, hooks) {
 
     const narrow = matchMedia('(max-width: 639.98px)');
 
+    // Open, the toggle is the SEO panel's button (on a wide screen, where there is one).
+    const scoreButton = () => Boolean(sections.seo) && !narrow.matches;
+
     const expand = (expanded, focus = true) => {
+        if (!expanded) open(null);
+
         nav.classList.toggle('expanded', expanded);
-        toggle.setAttribute('aria-expanded', String(expanded));
-        toggle.querySelector('.sr').firstChild.textContent = expanded ? t.close : t.open;
-        document.documentElement.style.setProperty('--mt-toolbar-height', expanded && !narrow.matches ? '40px' : '0px');
+        const score = expanded && scoreButton();
+        toggle.setAttribute('aria-controls', score ? 'mt-panel-seo' : 'mt-tray');
+        toggle.setAttribute('aria-expanded', String(score ? current === 'seo' : expanded));
+        toggle.querySelector('.sr').firstChild.textContent = score ? t.panels.seo : expanded ? t.close : t.open;
+        score ? toggle.setAttribute('data-tip', t.panels.seo) : toggle.removeAttribute('data-tip');
         save({ open: expanded });
 
         if (!expanded) {
-            open(null);
             if (focus) toggle.focus();
         } else if (!pending && page.missing && panels.includes('redirects') && !current && !narrow.matches) {
             open('redirects');
         }
     };
 
-    toggle.addEventListener('click', () => expand(!nav.classList.contains('expanded')));
+    toggle.addEventListener('click', () => {
+        if (!nav.classList.contains('expanded')) expand(true);
+        else if (scoreButton()) open('seo');
+        else expand(false);
+    });
 
     // Escape closes the open panel, back to its button; then the bar.
     nav.addEventListener('keydown', (event) => {

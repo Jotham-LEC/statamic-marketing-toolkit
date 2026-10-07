@@ -85,19 +85,25 @@
     white-space: nowrap;
 }
 
-/* The bar, collapsed: the toggle alone, in its corner. */
+/* The bar in its corner (bottom left unless moved): collapsed, the toggle alone. */
 .mt {
     position: fixed;
     bottom: var(--edge);
     left: 16px;
     display: flex;
-    align-items: stretch;
+    align-items: center;
+    max-width: calc(100vw - 32px);
 }
 
-.mt[data-position='bottom-right'] {
+.mt[data-position$='right'] {
     left: auto;
     right: 16px;
     flex-direction: row-reverse;
+}
+
+.mt[data-position^='top'] {
+    bottom: auto;
+    top: calc(16px + env(safe-area-inset-top, 0px));
 }
 
 button,
@@ -185,27 +191,61 @@ a {
     display: none;
 }
 
-/* Open: the bar runs along the bottom, 40 px high; panels open upwards. */
+/* Open: one bar as wide as its items, the toggle at the corner's end, Minimise at the other. */
 .mt.expanded {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    gap: 2px;
+    padding: 3px;
     background: var(--bg);
-    border-top: 1px solid var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
 }
 
 .mt.expanded .toggle {
+    min-height: 34px;
     border: 0;
-    border-radius: 0;
     box-shadow: none;
     background: transparent;
 }
 
+.mt.expanded .toggle:hover,
+.mt.expanded .toggle[aria-expanded='true'] {
+    background: var(--surface);
+}
+
 .mt.expanded .tray {
     display: flex;
-    flex: 1;
+    align-items: center;
     min-width: 0;
+}
+
+.mt[data-position$='right'] .tray {
+    flex-direction: row-reverse;
+}
+
+.minimise {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 6px;
+    color: var(--muted);
+}
+
+.minimise:hover {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.minimise svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .items {
@@ -214,20 +254,22 @@ a {
     align-items: center;
     gap: 2px;
     margin: 0;
-    padding: 0 6px;
+    padding: 0 2px;
     list-style: none;
 }
 
-.mt[data-position='bottom-right'] .items {
-    margin-left: auto;
+.mt[data-position$='right'] .items {
+    flex-direction: row-reverse;
 }
 
 .items a,
 .items button {
     display: flex;
     align-items: center;
+    justify-content: center;
+    min-width: 32px;
     min-height: 32px;
-    padding: 0 10px;
+    padding: 0 8px;
     border-radius: 6px;
     text-decoration: none;
     color: var(--text);
@@ -282,6 +324,12 @@ a {
     visibility: visible;
 }
 
+/* Below the item when the bar is at the top. */
+.mt[data-position^='top'] [data-tip]::after {
+    bottom: auto;
+    top: calc(100% + 8px);
+}
+
 /* Not over the panel the item has opened. */
 [data-tip][aria-expanded='true']::after {
     display: none;
@@ -297,12 +345,15 @@ a {
     box-shadow: inset 0 -2px 0 var(--accent);
 }
 
+.mt.expanded .toggle[aria-expanded='true'] {
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
 .panel {
     display: none;
     position: absolute;
-    bottom: 100%;
-    left: 8px;
-    margin-bottom: 8px;
+    bottom: calc(100% + 8px);
+    left: 0;
     width: min(420px, calc(100vw - 16px));
     max-height: min(70vh, 640px);
     overflow: auto;
@@ -312,9 +363,15 @@ a {
     box-shadow: var(--shadow);
 }
 
-.mt[data-position='bottom-right'] .panel {
+.mt[data-position$='right'] .panel {
     left: auto;
-    right: 8px;
+    right: 0;
+}
+
+/* At the top, panels open downwards. */
+.mt[data-position^='top'] .panel {
+    bottom: auto;
+    top: calc(100% + 8px);
 }
 
 .panel.open {
@@ -572,8 +629,18 @@ ul.menu {
         border-radius: 22px;
     }
 
+    /* The sheet sits at the bottom, whatever the corner. */
     .mt.expanded {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-width: none;
         flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 0 0 env(safe-area-inset-bottom, 0px);
+        border-width: 1px 0 0;
         max-height: 80vh;
         overflow: auto;
         border-radius: 12px 12px 0 0;
@@ -601,6 +668,15 @@ ul.menu {
 
     .mt.expanded .tray {
         display: block;
+    }
+
+    .minimise {
+        display: none;
+    }
+
+    .items,
+    .mt[data-position$='right'] .items {
+        flex-direction: row;
     }
 
     .items {
@@ -690,4 +766,31 @@ ul.menu {
     .choice {
         min-height: 44px;
     }
+}
+
+/* More → Toolbar settings: folded away until opened. */
+.disclosure {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 32px;
+    margin-top: 8px;
+    padding: 0;
+    border-top: 1px solid var(--border);
+    font-weight: 600;
+    text-align: start;
+}
+
+.disclosure::before {
+    content: '▸';
+    color: var(--muted);
+}
+
+.disclosure[aria-expanded='true']::before {
+    content: '▾';
+}
+
+.settings[hidden] {
+    display: none;
 }

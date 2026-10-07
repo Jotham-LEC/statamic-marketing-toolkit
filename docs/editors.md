@@ -196,10 +196,10 @@ When a page has no share image, the site draws one: the page title and descripti
 
 ![The toolbar along the bottom of a page, with its SEO score panel open on two failing checks and three warnings](images/toolbar.png)
 
-While you're signed in to the control panel, the live site shows a small button in the bottom-left corner with the page's SEO score. Visitors never see it. Click it, or press **Alt+Shift+M**, to open the toolbar along the bottom of the page. Its items are icons: point at one, or reach it with Tab, to see its name.
+While you're signed in to the control panel, the live site shows a small button in the bottom-left corner with the page's SEO score. Visitors never see it. Click it, or press **Alt+Shift+M**, to open the toolbar beside it. Its items are icons: point at one, or reach it with Tab, to see its name. With the toolbar open, the score itself opens the **SEO score** panel, and the chevron at the bar's far end (**Minimise**) folds it back to the button.
 
 - **Edit entry** (or **Edit term**) opens the page in the control panel, and **SEO** opens it on its SEO tab.
-- **Score**: the page's score from the latest report and the checks it fails, worst first. Each check links to where you fix it. A page saved since the report says so, and a page the report hasn't seen yet has no score. With Search Console connected, it ends with the page's clicks, impressions and position over the last 28 days.
+- **SEO score** (the score badge): the page's score from the latest report and the checks it fails, worst first. Each check links to where you fix it. A page saved since the report says so, and a page the report hasn't seen yet has no score. With Search Console connected, it ends with the page's clicks, impressions and position over the last 28 days.
 - **Preview**: the page's Google result and share card, as the SEO tab shows them, and whether it is in the sitemap, hidden from search engines, or pointing at another address.
 - **Redirects**: the redirects that send visitors to this page, and one from its address that never applies because the page exists. On a missing page the button turns red and says **Missing page**; the panel says how often the 404 log has seen the address, with **Add a redirect**.
 - **Tracking**: which tags load on this page, or why none do, Consent Mode, and what your own browser has agreed to.
@@ -208,7 +208,7 @@ While you're signed in to the control panel, the live site shows a small button 
 
 Each panel shows only what your role may see in the control panel. The toolbar takes the colours of your control panel theme, remembers whether you left it open, and closes with Escape. Between pages it stays where it was while the new page's details load. It never shows in Live Preview.
 
-The toolbar's settings are at the bottom of **More**, and are kept in your browser: its **Corner** (bottom left or bottom right), its **Shortcut** (**Change**, then press the new keys, or **Turn off**), and **Hide the toolbar**. A hidden toolbar comes back with its shortcut, so hiding needs one. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
+The toolbar's settings fold out from **Toolbar settings** at the bottom of **More**, and are kept in your browser: its **Corner** (bottom left unless you choose bottom right, top left or top right), its **Shortcut** (**Change**, then press the new keys, or **Turn off**), and **Hide the toolbar**. Minimise keeps the button in its corner; hiding takes the button away too, on every page in this browser, until you press the shortcut, so hiding needs one. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
 
 ## When a page's address changes
 
