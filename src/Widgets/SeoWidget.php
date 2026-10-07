@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Widgets;
 use Illuminate\Support\Facades\Schema;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Reports\Report;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
 use Statamic\Widgets\VueComponent;
@@ -21,7 +22,7 @@ class SeoWidget extends Widget
 
     public function component(): ?VueComponent
     {
-        if (! User::current()?->can('view marketing toolkit')) {
+        if (! User::current()?->can(Permissions::VIEW)) {
             return null;
         }
 

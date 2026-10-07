@@ -13,6 +13,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Package;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Contracts\Auth\User as UserContract;
@@ -55,7 +56,7 @@ class OverviewController
                 'description' => $seo->settings()->string('default_description'),
             ],
             'report' => $this->report($user, $site),
-            'redirects' => $user->can('manage marketing toolkit redirects') ? [
+            'redirects' => $user->can(Permissions::REDIRECTS) ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
                 'url' => cp_route('mt.redirects.index'),

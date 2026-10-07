@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Actions;
 
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use Statamic\Actions\Action;
 
 /**
@@ -29,7 +30,7 @@ class CreateRedirect extends Action
 
     public function authorize($user, $item)
     {
-        return $user->can('manage marketing toolkit redirects');
+        return $user->can(Permissions::REDIRECTS);
     }
 
     public function redirect($items, $values)

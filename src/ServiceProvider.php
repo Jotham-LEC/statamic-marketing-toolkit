@@ -23,6 +23,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\Support\Config;
 use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Toolbar\Toolbar;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
@@ -198,9 +199,9 @@ class ServiceProvider extends AddonServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         Permission::extend(fn () => Permission::group('marketing-toolkit', __('marketing-toolkit::cp.permissions.group'), function () {
-            Permission::register('view marketing toolkit')->label(__('marketing-toolkit::cp.permissions.view'));
-            Permission::register('manage marketing toolkit redirects')->label(__('marketing-toolkit::cp.permissions.redirects'));
-            Permission::register('run marketing toolkit reports')->label(__('marketing-toolkit::cp.permissions.reports'));
+            Permission::register(Permissions::VIEW)->label(__('marketing-toolkit::cp.permissions.view'));
+            Permission::register(Permissions::REDIRECTS)->label(__('marketing-toolkit::cp.permissions.redirects'));
+            Permission::register(Permissions::REPORTS)->label(__('marketing-toolkit::cp.permissions.reports'));
         }));
 
         Navigation::register();

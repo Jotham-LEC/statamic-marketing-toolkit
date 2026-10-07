@@ -9,14 +9,15 @@ use JothamLec\MarketingToolkit\Http\Controllers\CP\RedirectsController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\ReportsController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\SearchConsoleController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\ToolbarController;
+use JothamLec\MarketingToolkit\Support\Permissions;
 
 // Permissions are checked here (Statamic's permissions answer Laravel's Gate);
 // a controller checks only what a route can't say, such as editing the addon's settings.
 Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
-    Route::get('/', OverviewController::class)->middleware('can:view marketing toolkit')->name('index');
+    Route::get('/', OverviewController::class)->middleware('can:'.Permissions::VIEW)->name('index');
     Route::post('preview', [PreviewController::class, 'meta'])->name('preview.meta');
 
-    Route::middleware('can:manage marketing toolkit redirects')->group(function () {
+    Route::middleware('can:'.Permissions::REDIRECTS)->group(function () {
         Route::get('redirects', [RedirectsController::class, 'index'])->name('redirects.index');
         Route::get('redirects/listing', [RedirectsController::class, 'listing'])->name('redirects.listing');
         Route::get('redirects/create', [RedirectsController::class, 'create'])->name('redirects.create');
@@ -36,12 +37,12 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
     // Asked on every save of an entry or term: answers "no change" without the permission.
     Route::post('redirects/check', [RedirectsController::class, 'check'])->name('redirects.check');
 
-    Route::middleware('can:view marketing toolkit')->group(function () {
+    Route::middleware('can:'.Permissions::VIEW)->group(function () {
         Route::get('404s', [NotFoundController::class, 'index'])->name('404s.index');
         Route::get('404s/listing', [NotFoundController::class, 'listing'])->name('404s.listing');
 
         Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
-        Route::post('reports', [ReportsController::class, 'run'])->middleware('can:run marketing toolkit reports')->name('reports.run');
+        Route::post('reports', [ReportsController::class, 'run'])->middleware('can:'.Permissions::REPORTS)->name('reports.run');
         Route::get('reports/{report}', [ReportsController::class, 'show'])->whereNumber('report')->name('reports.show');
         Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
         Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');

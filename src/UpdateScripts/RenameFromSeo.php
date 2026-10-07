@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use Illuminate\Support\Facades\File;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\Role;
 use Statamic\UpdateScripts\UpdateScript;
@@ -27,9 +28,9 @@ use Symfony\Component\Finder\SplFileInfo;
 class RenameFromSeo extends UpdateScript
 {
     public const array PERMISSIONS = [
-        'view seo' => 'view marketing toolkit',
-        'manage seo redirects' => 'manage marketing toolkit redirects',
-        'run seo reports' => 'run marketing toolkit reports',
+        'view seo' => Permissions::VIEW,
+        'manage seo redirects' => Permissions::REDIRECTS,
+        'run seo reports' => Permissions::REPORTS,
     ];
 
     /** The tags the addon gave as `seo:` up to 0.19. */

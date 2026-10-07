@@ -14,6 +14,7 @@ use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\Reports\RunReportStep;
 use JothamLec\MarketingToolkit\Support\Package;
+use JothamLec\MarketingToolkit\Support\Permissions;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
@@ -43,7 +44,7 @@ class ReportsController
 
         return Inertia::render('marketing-toolkit::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
-            'canRun' => (bool) User::current()?->can('run marketing toolkit reports'),
+            'canRun' => (bool) User::current()?->can(Permissions::REPORTS),
             'runUrl' => cp_route('mt.reports.run'),
             // The Settings tab, for whoever may change the addon's settings.
             'settings' => $fields ? [
@@ -146,7 +147,7 @@ class ReportsController
 
         // Without a worker, whoever may run reports moves it on; with one, a step
         // whose worker died is queued again once the report has stood still.
-        if ($report->isRunning() && User::current()?->can('run marketing toolkit reports')) {
+        if ($report->isRunning() && User::current()?->can(Permissions::REPORTS)) {
             RunReportStep::usesWorker() ? $runner->resumeIfStalled($report) : $report = $runner->step($report);
         }
 
@@ -243,7 +244,7 @@ class ReportsController
             'progress_url' => cp_route('mt.reports.progress', $report),
             // Whether watching it moves it on: false for a running report on the
             // sync queue watched by someone who may not run reports (see progress()).
-            'advancing' => $report->isRunning() && (RunReportStep::usesWorker() || (bool) User::current()?->can('run marketing toolkit reports')),
+            'advancing' => $report->isRunning() && (RunReportStep::usesWorker() || (bool) User::current()?->can(Permissions::REPORTS)),
         ];
     }
 
