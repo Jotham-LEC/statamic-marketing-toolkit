@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.20.0 – 2026-10-07
 
 From a developer-experience audit: one set of names, a fresh install that works the first time, cached routes that follow the Features switches, a faster `<head>`, and one way to do each thing.
 
