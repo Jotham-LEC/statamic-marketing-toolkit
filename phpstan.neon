@@ -11,7 +11,7 @@ parameters:
         -
             identifier: method.notFound
             message: '#Statamic\\(Contracts|CP)\\#'
-        # Larastan doesn't know views in an addon's namespace (seo::meta).
+        # Larastan doesn't know views in an addon's namespace (marketing-toolkit::meta).
         -
             identifier: argument.type
             message: '#expects view-string\|null#'

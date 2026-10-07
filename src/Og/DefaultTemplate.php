@@ -8,7 +8,7 @@ use SimonHamp\TheOg\Layout\Layouts\Standard;
 use SimonHamp\TheOg\Theme;
 
 /**
- * the-og's Standard layout in the colours from the SEO global set: the
+ * the-og's Standard layout in the colours from Brand's Share cards tab: the
  * section up top, the title, the description, the site name along the
  * bottom, and the picture (logo or portrait) when one is set.
  */

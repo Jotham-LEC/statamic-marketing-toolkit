@@ -83,7 +83,7 @@ tabs:
           -
             handle: keep_reports
             field: { type: integer, display: 'marketing-toolkit::fields.settings.keep_reports.display', default: 10, width: 50, validate: ['required', 'integer', 'min:1'] }
-          # Set on Tools → SEO → Search Console. Hidden here, and still submitted,
+          # Set on Marketing → Search Console. Hidden here, and still submitted,
           # so saving these settings keeps them.
           -
             handle: search_console_property

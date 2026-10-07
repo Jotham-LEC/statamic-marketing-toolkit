@@ -68,7 +68,7 @@ or in Antlers, `{{ mt:head }}` and `{{ mt:body }}`.
 
 `<meta charset>` must come first: browsers look for it in the first 1024 bytes, and the tracking scripts alone can take several thousand.
 
-`mt:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `mt:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:mt:meta />` instead of `mt:head`, as before.
+`mt:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `mt:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:mt:meta />` instead of `mt:head`.
 
 Pages that aren't Statamic entries (a controller page, a 404 view) pass what they know to either:
 
