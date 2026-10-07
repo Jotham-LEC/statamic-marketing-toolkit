@@ -377,10 +377,55 @@ test('only one step of a report runs at a time, and a second click doesn\'t queu
 
     (new RunReportStep($report['id']))->handle(app(Runner::class));
     Queue::assertPushed(RunReportStep::class, 2);
+    Queue::assertPushed(RunReportStep::class, fn (RunReportStep $job) => $job->delay === 30);
     expect(Report::query()->find($report['id'])->pages_done)->toBe(0);
 
     $other->release();
     expect(app(Runner::class)->step(Report::query()->find($report['id']))->pages_done)->toBe(1);
+});
+
+test('a queued step that fails for good marks the report failed, with no error text', function () {
+    entryIn('pages', 'about');
+    $report = app(Runner::class)->start();
+
+    (new RunReportStep($report->id))->failed(new RuntimeException('SQLSTATE[HY000] secret-db.internal'));
+
+    expect($report->refresh()->only(['status', 'error']))->toBe(['status' => Report::FAILED, 'error' => 'marketing-toolkit::reports.messages.failed'])
+        ->and($report->finished_at)->not->toBeNull();
+
+    // A report that finished meanwhile is left as it is.
+    $done = fullReport();
+    (new RunReportStep($done->id))->failed(null);
+    expect($done->refresh()->status)->toBe(Report::DONE);
+
+    $this->actingAs(cpUser(super: true));
+    expect($this->postJson(cp_route('mt.reports.progress', $report))->json('error'))
+        ->toBe('The report stopped because of an error. The full error is in the site’s log.');
+});
+
+test('a report on a queue worker that stood still with no step running is queued again, once', function () {
+    config(['queue.default' => 'database', 'queue.connections.database.driver' => 'database']);
+    Queue::fake();
+    entryIn('pages', 'about');
+    $runner = app(Runner::class);
+    $report = $runner->start();
+
+    // Still moving: left alone.
+    expect($runner->resumeIfStalled($report))->toBeFalse();
+
+    // A step is running (its lock is held): left alone.
+    $report->forceFill(['updated_at' => now()->subMinutes(20)])->saveQuietly();
+    $step = Cache::lock('mt:reports:step:'.$report->id, 600);
+    $step->get();
+    expect($runner->resumeIfStalled($report))->toBeFalse();
+    $step->release();
+
+    expect($runner->resumeIfStalled($report))->toBeTrue()
+        ->and($runner->resumeIfStalled($report))->toBeFalse();
+    Queue::assertPushed(RunReportStep::class, 1);
+
+    (new RunReportStep($report->id))->handle($runner);
+    expect($report->refresh()->status)->toBe(Report::DONE);
 });
 
 function reportOnAboutAndATerm(): array
