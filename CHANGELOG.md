@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.21.5 – 2026-10-07
+
+A security and bug review of the whole addon: fixes for multi-site installs with a site under a folder (`/fr/`), translations, consent, leads, reports and the control panel. See [upgrading.md](docs/upgrading.md#from-0214-redirects-on-multi-site-installs) for the two changes to redirects on multi-site installs.
+
+### Security
+- **The sitemap and llms.txt can't be filled with another domain's addresses.** On a site with a relative URL (`url: '/'`), a request naming another `Host` right after a save could have the cached sitemap and llms.txt list that domain. They are now cached only for a host the install names (an absolute site URL's, else `APP_URL`'s).
+- **Redirects on a site with a relative URL send visitors to a path**, not to whatever domain the request's `Host` header named.
+- **Protected pages stay private.** Pages behind Statamic's protection (their own `protect` value, or `statamic.protect.default`) are left out of the sitemap, llms.txt and IndexNow, and get no generated share card.
+- **Redirects for every site on a multi-site install** can only be seen, added, changed, imported or deleted by someone who may work on every site, since they apply on all of them.
+- **The SEO preview respects site access.** An editor who can't work on a site no longer sees that site's values when previewing a new entry or term, or a saved term.
+- **Redirect and 404 rows run only the addon's own actions**, even if another addon registers an action under the same handle.
+- **The external link check can't reach a private address through NAT64 or a proxy.** An IPv6 address that maps to a private IPv4 one is no longer asked, and a queue worker's `HTTP_PROXY`/`HTTPS_PROXY` is never used for these requests.
+- **A page that fails to render no longer shows its error in the report.** The report says it couldn't be rendered and names the exception's class; the full error, which could hold database details, is only in the site's log.
+- **Redirects with several `*`** no longer tie up a request for seconds when someone asks for a long made-up address, and they match long addresses that could fail before.
+
+### Fixed
+- **Translations follow their origin.** A localized page that keeps its origin's values gets the origin's title, description and SEO settings (noindex, sitemap, canonical, card text) instead of the site name and no description, and is left out of the sitemap when its origin is noindexed.
+- **Sites under a folder (`/fr/`)**: renaming or moving a page there redirects its old address (the automatic redirect was stored, but the old address still answered 404); rules typed with the folder keep working, and their target no longer gets the folder twice; 404s are logged without the folder, so **Create redirect** makes a redirect that applies; images and the publisher logo no longer point at `/fr/fr/…`; breadcrumbs list the page's ancestors; generated share cards load (now at `/og/fr/….png`, mirroring the page's path; cards on sites at a domain's root keep their URLs); a report no longer counts links to the site's own pages as broken; and the overview links to the sitemap and the other files at the domain's root.
+- **A lead is sent once, not on every page for five minutes.** On a site with `SESSION_DOMAIN` or a session path other than `/`, the page's script couldn't delete the `mt_conversion` cookie, so each page view sent `generate_lead`, the Meta Lead and the LinkedIn conversion again until it expired. The cookie now belongs to the site's own host, on path `/`.
+- **The cookie banner's consent update always reaches Google Analytics and Tag Manager.** If the consent step for Meta, PostHog or LinkedIn failed (in a sandboxed iframe, say), Google's tags never got the update. They now get it first, and a step that fails is skipped.
+- **PostHog no longer records an `$opt_in` event on every page.** Banners send their consent update on every page; PostHog now opts in once, without the event.
+- **Hosts without Imagick** use the default share image instead of pointing at a generated card that can't be drawn.
+- **Switching hreflang (or changing `x_default`) shows in the sitemap at once**, and saving Brand updates llms.txt at once, without waiting for a content save.
+- **Reports on a queue worker no longer stall.** Each page's links get 30 seconds, and any still waiting are left unchecked rather than counted as broken; a step stops taking new pages after five minutes; checking a link no longer downloads the whole page. A report whose queued step fails is marked failed instead of showing "running" for half an hour, and one whose worker died is picked up again once it has stood still for 15 minutes and someone who may run reports is watching.
+- **A report's progress that can't be loaded stops and offers Try again**, instead of retrying silently. Someone who may only watch a report, with no queue worker, is told why it isn't moving.
+- **A failed report says why**, on its own screen and in the list, instead of "scored undefined pages".
+- **`php please mt:report` waits while another process is running a step of the same report**, instead of querying the database in a tight loop.
+- **A failed Search Console import says so.** It showed "connected" whenever the key could still read the property, with nothing imported.
+- **A Search Console key uploaded before keys were encrypted is now encrypted** the next time it is read.
+- **Saving the Reports settings keeps the Search Console property and the Features switches.** A Settings tab opened earlier no longer puts back old values or empties them.
+- **The SEO tab's Sharing and Advanced headings show their names** instead of translation keys (broken since 0.21.0).
+- **The SEO preview always shows the latest answer**, never an older one that arrived late, and says when the share card couldn't be drawn.
+- **A CSV import of redirects that fails validation shows what was wrong.**
+- **A "Don't add" redirect answer that doesn't reach the server is reported** before the save adds the redirect, and the Tag Manager overlap warning appears only after a save that worked.
+- **"Copy the email address" says when the browser didn't copy it.**
+- **The overview uses the control panel's language** for the list of tracking tools, the Search Console dates and the average position.
+- **Long Search Console addresses and file URLs wrap on small screens, and grey text is readable in dark mode.**
+- **The 404 log keeps long-standing broken links** when it is flooded with made-up addresses that are each asked for twice.
+- **The addon installs on a site where another package already has a `seo_redirects` (or other `seo_*`) table**, and leaves that table alone. Rolling back the per-site redirects or 404s migration refuses while two sites share an address, instead of losing every rule's site.
+
+### Changed
+- **With Consent Mode on, PostHog and the Meta Pixel load only after the visitor accepts**, as LinkedIn already did. Before, their scripts downloaded straight away and only held back tracking, so PostHog and Meta saw the visitor's IP before the banner was answered. A page view or lead sent before the answer still goes if the visitor accepts on that page.
+- **With Consent Mode on, Google Tag Manager's `<noscript>` iframe is left out**, like the Meta and LinkedIn `<noscript>` pixels: without JavaScript there are no Consent Mode defaults and no banner to answer.
+- **A redirect for every site now also applies inside each site's folder** on a multi-site install (`/old` → `/new` sends `example.com/fr/old` to `example.com/fr/new`).
+- The README says what the addon sends to other services, and `LICENSE` is a plain MIT licence GitHub recognises.
+
 ## 0.21.4 – 2026-10-07
 
 ### Fixed

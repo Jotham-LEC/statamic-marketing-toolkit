@@ -1,5 +1,12 @@
 # Upgrading
 
+## From 0.21.4: redirects on multi-site installs
+
+Nothing to run. Two changes to check on a multi-site install:
+
+- **Sites under a folder of their domain** (French under `/fr/`): redirects are paths within the site, so `/a-propos` means `example.com/fr/a-propos`, as the automatic redirects have always stored them. Redirects you typed with the folder (`/fr/old`) still apply, and a target that starts with the folder no longer gets it twice. A redirect for every site now also applies inside each folder site (`/old` → `/new` sends `example.com/fr/old` to `example.com/fr/new`), so check those. New 404s on such a site are logged without the folder, so a path already logged as `/fr/x` may appear again as `/x`; the old row ages out of the log.
+- **Redirects for every site and site permissions**: people who can't work on every site no longer see redirects for every site, and can't create them. Give such a redirect a site, or leave it to a super user or a role with access to every site.
+
 ## From 0.20: Brand and Marketing settings
 
 The "SEO & brand" global set is now two sets. **Brand** keeps its handle (`seo`, `marketing-toolkit.global`) and the Brand, Publisher, Shop and Share cards tabs. The new **Marketing settings** set (`marketing`, `marketing-toolkit.settings_global`) takes the Tracking, Consent, Leads and Crawlers tabs. In the control panel both sit in the new **Marketing** section of the sidebar, which replaces Tools → SEO: Brand as **Brand**, and Marketing settings as **Settings**. The report settings have moved from Tools → Addons to the **Settings** tab of **Marketing → Reports**.
