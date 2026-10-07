@@ -121,6 +121,24 @@ test('a field the site removed stays removed through later updates', function ()
         ->and(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('feature_leads')->not->toContain('linkedin_partner_id');
 });
 
+test('updating to 0.22 adds the Front-end toolbar switch to the Features tab, and nothing else', function () {
+    $this->artisan('statamic:mt:install')->assertSuccessful();
+    $blueprint = Blueprint::find('globals.marketing');
+    $contents = $blueprint->contents();
+    foreach ($contents['tabs'] as $tab => $config) {
+        foreach ($config['sections'] as $index => $section) {
+            $contents['tabs'][$tab]['sections'][$index]['fields'] = array_values(array_filter($section['fields'], fn (array $field) => ! in_array($field['handle'], ['feature_toolbar', 'gtm_id'], true)));
+        }
+    }
+    $blueprint->setContents($contents)->save();
+    $script = new AddNewBrandFields(Package::NAME);
+
+    expect($script->shouldUpdate('0.22.0.0', '0.21.4.0'))->toBeTrue();
+    $script->update();
+
+    expect(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('feature_toolbar')->not->toContain('gtm_id');
+});
+
 test('every field mt:install writes is in 0.20 or listed by the version that brought it', function () {
     $fields = collect(['seo', 'marketing'])->flatMap(fn (string $file) => collect(Install::tabs('assets', $file))
         ->flatMap(fn (array $tab) => $tab['sections'])->flatMap(fn (array $section) => $section['fields'])->pluck('handle'));

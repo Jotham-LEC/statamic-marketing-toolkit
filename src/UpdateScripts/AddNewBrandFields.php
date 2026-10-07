@@ -29,6 +29,7 @@ class AddNewBrandFields extends UpdateScript
             'feature_redirects', 'feature_automatic_redirects', 'feature_not_found', 'feature_reports', 'feature_share_cards',
             'feature_favicons', 'feature_tracking', 'feature_leads',
         ],
+        '0.22.0' => ['feature_toolbar'],
     ];
 
     /** @var list<string>|null the fields this update brings, as shouldUpdate() found them */
