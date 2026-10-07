@@ -257,12 +257,36 @@ trait InteractsWithContent
     }
 
     /**
-     * A site-relative URL made absolute against the current site's address.
+     * A relative URL made absolute on the current site's domain. A path from
+     * the root (`/img/…`, an asset's URL, a route) is on the domain's root,
+     * not under a site's folder (`/fr/`); one without the slash is under the
+     * site's address.
      *
      * @api
      */
     public function absolute(string $url): string
     {
-        return preg_match('#^https?://#i', $url) ? $url : $this->home().ltrim($url, '/');
+        if (preg_match('#^https?://#i', $url)) {
+            return $url;
+        }
+
+        $home = $this->home();
+
+        if (str_starts_with($url, '//')) {
+            return (parse_url($home, PHP_URL_SCHEME) ?: 'https').':'.$url;
+        }
+
+        return str_starts_with($url, '/') ? self::domainRoot($home).$url : $home.$url;
+    }
+
+    /**
+     * `https://example.test` from `https://example.test/fr/`.
+     */
+    public static function domainRoot(string $url): string
+    {
+        $parts = parse_url($url);
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+
+        return isset($parts['scheme'], $parts['host']) ? $parts['scheme'].'://'.$parts['host'].$port : rtrim($url, '/');
     }
 }
