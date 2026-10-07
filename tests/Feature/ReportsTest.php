@@ -140,7 +140,7 @@ test('only the newest reports are kept', function () {
 
     $ids = [fullReport()->id, fullReport()->id, fullReport()->id];
 
-    expect(Report::query()->pluck('id')->all())->toBe(array_slice($ids, 1))
+    expect(Report::query()->orderBy('id')->pluck('id')->all())->toBe(array_slice($ids, 1))
         ->and(ReportPage::query()->distinct()->pluck('report_id')->sort()->values()->all())->toBe(array_slice($ids, 1));
 });
 
