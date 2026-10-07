@@ -25,7 +25,8 @@ use Statamic\Facades\URL;
  */
 class Matcher
 {
-    private const string KEY = 'mt:redirects';
+    /** Renamed when the compiled form changes, so a cached set in the old one is never read. */
+    private const string KEY = 'mt:redirect-rules';
 
     /** Set while many rules are saved at once (an import), which flush once at the end. */
     private static bool $deferred = false;
@@ -89,10 +90,20 @@ class Matcher
             }
         }
 
+        // Each path backwards (see pattern()), by character or by byte as each rule needs it.
+        $backwards = [];
+
         foreach ($rules['wildcards'] as $rule) {
-            foreach ($paths as $path) {
-                if (preg_match($rule['pattern'], $path, $captures)) {
-                    return $this->resolved($rule, array_slice($captures, 1), $query);
+            foreach ($paths as $i => $path) {
+                // Matched by character, a path that isn't valid UTF-8 matches no rule, as PCRE's `u` would have it.
+                if ($rule['chars'] && ! mb_check_encoding($path, 'UTF-8')) {
+                    continue;
+                }
+
+                if (preg_match($rule['pattern'], $backwards[$rule['chars']][$i] ??= self::reverse($path, $rule['chars']), $captures)) {
+                    $captures = array_map(fn (string $capture) => self::reverse($capture, $rule['chars']), array_reverse(array_slice($captures, 1)));
+
+                    return $this->resolved($rule, $captures, $query);
                 }
             }
         }
@@ -172,7 +183,7 @@ class Matcher
                 ->sortByDesc(fn (Redirect $redirect) => [strlen($redirect->source), $own($redirect)])
                 ->map(fn (Redirect $redirect) => [
                     ...$rule($redirect),
-                    'pattern' => self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
+                    ...self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
                 ])
                 ->values()
                 ->all(),
@@ -180,19 +191,42 @@ class Matcher
     }
 
     /**
-     * A wildcard source as a regular expression. Ignoring case, it folds letters
-     * beyond A–Z too (`/CAFÉ/*` matches `/café/x`), unless the source isn't valid
-     * UTF-8. What the `*` matched keeps the visitor's case either way.
+     * A wildcard source as a regular expression, written backwards, to match a
+     * path read backwards. Forwards, each `*` was a greedy `(.*)`, and with
+     * several, PCRE tried every way of sharing a long path between them: a
+     * rule that matched a path of a few hundred characters could run out of
+     * PCRE's backtrack limit and silently not match, and a made-up address
+     * cost every such rule that limit. Backwards, each piece of text between
+     * two `*` is taken at its first place (its last, forwards: where the
+     * greedy `*` before it puts it) and never tried again (an atomic group),
+     * so each `*` matches what it did, in time that grows with the path's
+     * length alone. Ignoring case, it folds letters beyond A–Z too (`/CAFÉ/*`
+     * matches `/café/x`), reading by character, unless the source isn't
+     * valid UTF-8. What the `*` matched keeps the visitor's case either way.
+     *
+     * @return array{pattern: string, chars: bool}
      */
-    private static function pattern(string $source, bool $ignoresCase): string
+    private static function pattern(string $source, bool $ignoresCase): array
     {
-        $pattern = '#^'.str_replace('\*', '(.*)', preg_quote($source, '#')).'$#';
+        $chars = $ignoresCase && mb_check_encoding($source, 'UTF-8');
+        $pieces = array_map(fn (string $piece) => preg_quote($piece, '#'), explode('*', self::reverse($source, $chars)));
+        // The source's end, then each piece between two `*`, then its start (a wildcard has at least one `*`).
+        $end = array_shift($pieces);
+        $start = array_pop($pieces);
+        $between = implode('', array_map(fn (string $piece) => '(?>(.*?)'.$piece.')', $pieces));
 
-        if (! $ignoresCase) {
-            return $pattern;
-        }
+        return [
+            'pattern' => '#^'.$end.$between.'(.*)'.$start.'$#'.($ignoresCase ? ($chars ? 'iu' : 'i') : ''),
+            'chars' => $chars,
+        ];
+    }
 
-        return $pattern.(mb_check_encoding($source, 'UTF-8') ? 'iu' : 'i');
+    /**
+     * Backwards by character (UTF-8), or by byte.
+     */
+    private static function reverse(string $text, bool $chars): string
+    {
+        return $chars ? implode('', array_reverse(mb_str_split($text, 1, 'UTF-8'))) : strrev($text);
     }
 
     /**
