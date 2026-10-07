@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.21.6 – 2026-10-07
+
+### Fixed
+- **An update leaves your Brand and Marketing settings blueprints alone once their old descriptions are gone.** `DropFieldDescriptions` checked the blueprints on every update; it now runs only when updating from before 0.21.2, or on a site that still has descriptions under their 0.19 `seo::` names (one that swapped Co-SEO for this package without `updates:run`). It never removed anything but the addon's own descriptions, so nothing changes for a site that has updated before.
+
 ## 0.21.5 – 2026-10-07
 
 A security and bug review of the whole addon: fixes for multi-site installs with a site under a folder (`/fr/`), translations, consent, leads, reports and the control panel. See [upgrading.md](docs/upgrading.md#from-0214-redirects-on-multi-site-installs) for the two changes to redirects on multi-site installs.

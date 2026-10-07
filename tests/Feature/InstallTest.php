@@ -361,6 +361,39 @@ test('an update takes out the old field descriptions still under their 0.19 `seo
         ->and($script->shouldUpdate('0.21.0', '0.18.0'))->toBeFalse();
 });
 
+test('updating from 0.21.2 or later leaves the site\'s blueprints alone, unless asked from 0.21.1', function () {
+    // A description that names a key the addon no longer has: taken out once, by the update to 0.21.2.
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => [
+        ['handle' => 'title_separator', 'field' => ['type' => 'text', 'instructions' => 'marketing-toolkit::fields.brand.title_separator.instructions']],
+    ]]]]]])->save();
+    $script = new DropFieldDescriptions(Package::NAME);
+
+    expect($script->shouldUpdate('0.21.6.0', '0.21.5.0'))->toBeFalse()
+        ->and($script->shouldUpdate('0.21.2.0', '0.21.2.0'))->toBeFalse()
+        ->and($script->shouldUpdate('0.21.6.0', 'dev-main'))->toBeFalse()
+        // `php please updates:run 0.21.1`, as upgrading.md says for a site that missed it.
+        ->and($script->shouldUpdate('0.21.6.0', '0.21.1'))->toBeTrue();
+});
+
+test('a site that swapped Co-SEO for this package without updates:run loses the old descriptions on its next update', function () {
+    // Statamic skips a package missing from the old composer.lock, so the swap itself ran nothing.
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => [
+        ['handle' => 'title_separator', 'field' => ['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display', 'instructions' => 'seo::fields.brand.title_separator.instructions']],
+    ]]]]]])->save();
+    $drop = new DropFieldDescriptions(Package::NAME);
+    $rename = new RenameFromSeo(Package::NAME);
+
+    expect($drop->shouldUpdate('0.21.6.0', '0.21.5.0'))->toBeTrue()
+        ->and($rename->shouldUpdate('0.21.6.0', '0.21.5.0'))->toBeTrue();
+    $drop->update();
+    $rename->update();
+
+    expect(Blueprint::find('globals.seo')->contents()['tabs']['brand']['sections'][0]['fields'][0]['field'])
+        ->toBe(['type' => 'text', 'display' => 'marketing-toolkit::fields.brand.title_separator.display'])
+        ->and($drop->shouldUpdate('0.21.7.0', '0.21.6.0'))->toBeFalse()
+        ->and($rename->shouldUpdate('0.21.7.0', '0.21.6.0'))->toBeFalse();
+});
+
 test('a site updating from 0.18 has no old field descriptions left after the rename', function () {
     // Statamic asks every script whether it should run before any runs, so this one runs before the rename.
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [[
