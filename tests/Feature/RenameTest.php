@@ -81,7 +81,7 @@ test('updating from 0.20 or later leaves the templates alone, Brand\'s values an
 
 test('another package\'s config/seo.php and translations stay where they are', function () {
     // ralphjsmit/laravel-seo publishes a config/seo.php.
-    File::put(config_path('seo.php'), "<?php\n\nreturn ['site_name' => 'Acme', 'sitemap' => null];\n");
+    File::put(config_path('seo.php'), "<?php\n\nreturn ['model' => null, 'site_name' => 'Acme', 'sitemap' => null, 'canonical_link' => true, 'robots' => ['default' => 'max-snippet:-1'], 'favicon' => null, 'title' => ['suffix' => ''], 'description' => ['fallback' => null], 'image' => ['fallback' => null], 'author' => ['fallback' => null], 'twitter' => ['@username' => null]];\n");
     File::ensureDirectoryExists(lang_path('vendor/seo/en'));
     File::put(lang_path('vendor/seo/en/messages.php'), "<?php\n\nreturn [];\n");
 
@@ -98,6 +98,25 @@ test('another package\'s config/seo.php and translations stay where they are', f
     } finally {
         File::delete(config_path('seo.php'));
         File::deleteDirectory(lang_path('vendor'));
+    }
+});
+
+test('a config/seo.php cut down to the site\'s own classes is moved too, on the next update of a site it was left behind on', function () {
+    // Up to 0.22.1 only a file naming a JothamLec\ class was moved; this one was left behind and ignored.
+    $config = "<?php\n\nuse App\\Seo;\n\nreturn [\n    'class' => Seo::class,\n    'collections' => ['pages' => ['og_type' => 'article']],\n    'favicons' => ['enabled' => false],\n];\n";
+    File::put(config_path('seo.php'), $config);
+
+    try {
+        $script = new RenameFromSeo(Package::NAME);
+
+        expect($script->shouldUpdate('0.22.2.0', '0.22.1.0'))->toBeTrue();
+        $script->update();
+
+        expect(config_path('seo.php'))->not->toBeFile()
+            ->and(File::get(config_path('marketing-toolkit.php')))->toBe($config)
+            ->and($script->shouldUpdate('0.22.3.0', '0.22.2.0'))->toBeFalse();
+    } finally {
+        File::delete([config_path('seo.php'), config_path('marketing-toolkit.php')]);
     }
 });
 

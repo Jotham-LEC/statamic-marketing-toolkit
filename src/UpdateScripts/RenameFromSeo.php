@@ -36,6 +36,12 @@ final class RenameFromSeo extends UpdateScript
     /** The tags the addon gave as `seo:` up to 0.19. */
     public const array TAGS = ['head', 'body', 'meta', 'favicons'];
 
+    /** Keys of the addon's config/seo.php that another package's (ralphjsmit/laravel-seo's) doesn't have. */
+    private const array CONFIG_KEYS = [
+        'collections', 'taxonomies', 'robots_txt', 'llms_txt', 'ads_txt', 'hreflang', 'not_found',
+        'indexnow', 'search_console', 'tracking', 'favicons', 'reports', 'og',
+    ];
+
     /** The addon's `seo::` names a blueprint or fieldset can hold: the fieldset and the translation files. */
     private const string NAMESPACED = '/(?<![\w-])seo::(?=(?:seo|cp|fields|frontend|reports|validation)\b)/';
 
@@ -104,12 +110,22 @@ final class RenameFromSeo extends UpdateScript
         ]);
     }
 
-    /** A config/seo.php published from this addon (it names its classes), not another package's. */
+    /**
+     * A config/seo.php published from this addon, not another package's: it
+     * names the addon's classes, or, cut down to what the site changed (only
+     * its own `App\Seo`, say), sets two of the addon's keys.
+     */
     private function hasOwnConfig(): bool
     {
-        return File::exists(config_path('seo.php'))
-            && ! File::exists(config_path('marketing-toolkit.php'))
-            && str_contains(File::get(config_path('seo.php')), 'JothamLec\\');
+        if (! File::exists(config_path('seo.php')) || File::exists(config_path('marketing-toolkit.php'))) {
+            return false;
+        }
+
+        $config = File::get(config_path('seo.php'));
+        $keys = implode('|', self::CONFIG_KEYS);
+        preg_match_all("/(['\"])($keys)\\1\\s*=>/", $config, $matches);
+
+        return str_contains($config, 'JothamLec\\') || count(array_unique($matches[2])) >= 2;
     }
 
     /** Translations published from this addon (its files are named so), not another package's. */
