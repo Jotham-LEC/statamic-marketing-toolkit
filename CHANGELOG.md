@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.22.1 – 2026-10-08
+
+### Changed
+- **Front-end pages no longer look up the tracking settings for the control panel.** The data the control panel's script needs (the tracking IDs set in `.env`, the redirect routes) is now worked out only when a control panel page renders.
+- Internal tidy-up, with no change in behaviour: one list of permission names, one way to ask whether a module is on, one set of per-site scopes, and tests that fail when the Brand and Marketing settings blueprints drift from the code.
+
 ## 0.22.0 – 2026-10-08
 
 Signed-in editors get a toolbar on the live site, showing what the addon knows about the page in front of them and where to fix it.
