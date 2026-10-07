@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
@@ -70,17 +71,18 @@ class OverviewController
             'searchConsole' => ['url' => cp_route('mt.search-console.index')],
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($tracking && $user->can('edit', $tracking) ? $tracking->editUrl() : null),
+            // From the domain's root, where the web server and the addon's routes serve them, also for a site under a folder.
             'files' => collect([
-                __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? 'sitemap.xml' : null,
-                __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? 'robots.txt' : null,
-                __('marketing-toolkit::cp.overview.files.llms') => config('marketing-toolkit.llms_txt.enabled') ? 'llms.txt' : null,
-                __('marketing-toolkit::cp.overview.files.favicon') => config('marketing-toolkit.favicons.enabled') && app(Favicons::class)->version() ? 'site.webmanifest' : null,
-                __('marketing-toolkit::cp.overview.files.card') => config('marketing-toolkit.og.enabled') ? 'og.png' : null,
+                __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? '/sitemap.xml' : null,
+                __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? '/robots.txt' : null,
+                __('marketing-toolkit::cp.overview.files.llms') => config('marketing-toolkit.llms_txt.enabled') ? '/llms.txt' : null,
+                __('marketing-toolkit::cp.overview.files.favicon') => config('marketing-toolkit.favicons.enabled') && app(Favicons::class)->version() ? '/site.webmanifest' : null,
+                __('marketing-toolkit::cp.overview.files.card') => config('marketing-toolkit.og.enabled') && app(Generator::class)->available() ? '/og.png' : null,
             ])->filter()->map(fn ($path, $label) => [
                 'label' => $label,
                 'url' => $seo->absolute($path),
                 // The web server answers with this file instead of the addon's.
-                'public' => file_exists(public_path($path)),
+                'public' => file_exists(public_path(ltrim($path, '/'))),
             ])->values(),
         ]);
     }

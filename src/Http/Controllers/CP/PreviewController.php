@@ -62,7 +62,7 @@ class PreviewController
     {
         $content = Draft::fromRequest($request);
 
-        abort_unless($content instanceof Entry && config('marketing-toolkit.og.enabled'), 404);
+        abort_unless($content instanceof Entry && config('marketing-toolkit.og.enabled') && $generator->available(), 404);
 
         $png = Sites::as($content->locale(), fn () => $generator->template($content)->image($generator->card($content))->toString());
 

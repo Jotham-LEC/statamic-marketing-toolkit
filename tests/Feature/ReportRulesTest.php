@@ -25,6 +25,7 @@ use JothamLec\MarketingToolkit\Reports\Rules\TitleLength;
 use JothamLec\MarketingToolkit\Reports\Rules\TitleUnique;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
+use Statamic\Facades\Site;
 
 /**
  * @param  array<string, mixed>  $facts
@@ -292,6 +293,16 @@ test('a link is checked against files in public/ and nowhere above it', function
     expect($links->check('/index.php'))->toBe('ok')
         ->and($links->check('/../composer.json'))->toBe('broken')
         ->and($links->check('/x/../../composer.json'))->toBe('broken');
+});
+
+test('a link to a page on a site in a folder is found there', function () {
+    multilang();
+    entryOn('fr', 'pages', 'a-propos');
+
+    Site::setCurrent('fr');
+
+    expect(app(LinkChecker::class)->check('/fr/a-propos'))->toBe('ok')
+        ->and(app(LinkChecker::class)->check('/fr/nowhere'))->toBe('broken');
 });
 
 test('a result keeps a translation key and its parameters, and reads as English', function () {

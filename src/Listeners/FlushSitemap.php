@@ -11,7 +11,8 @@ use Statamic\Facades\Site;
  * The sitemap and llms.txt. Any saved or deleted entry or term, a moved page, an entry whose scheduled
  * date arrives, or a collection or taxonomy given a new route can change
  * which URLs the sitemap lists or their dates; so can a deploy, which
- * clears the Stache.
+ * clears the Stache. llms.txt also begins with Brand's description, so a
+ * saved global set flushes them too.
  */
 class FlushSitemap
 {
