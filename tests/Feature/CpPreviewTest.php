@@ -60,7 +60,6 @@ test('an entry being edited is previewed from the form, not from what was saved'
             'og_title' => 'About us',
             'description' => 'Who we are, typed just now.',
             'url' => 'https://example.test/about',
-            'canonical' => 'https://example.test/about',
             'site_name' => 'Acme',
             'image' => ['generated' => true],
         ]);

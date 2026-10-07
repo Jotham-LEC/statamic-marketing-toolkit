@@ -287,6 +287,7 @@ return [
         'noindex' => 'This page is hidden from search engines (:robots), so this result will not appear.',
         'drawing' => 'Drawing the card…',
         'no_image' => 'No share image',
+        'card_failed' => 'The card could not be drawn.',
         'from' => 'From :host',
         'count' => ':label length is :count character, and the aim is :min to :max.|:label length is :count characters, and the aim is :min to :max.',
         'under' => 'under :min',
