@@ -8,10 +8,10 @@ use Statamic\Facades\Blueprint;
 use Statamic\UpdateScripts\UpdateScript;
 
 /**
- * After each update, the SEO & brand blueprint gets the fields the new
- * version brings, in the tabs the site kept, as `mt:install` would add
- * them. Statamic runs it on `composer update` (or `php please updates:run`);
- * commit the blueprint it changes.
+ * After each update, the Brand and Marketing settings blueprints get the
+ * fields the new version brings, in the tabs the site kept, as `mt:install`
+ * would add them. Statamic runs it on `composer update` (or `php please
+ * updates:run`); commit the blueprints it changes.
  */
 class AddNewBrandFields extends UpdateScript
 {
@@ -22,17 +22,19 @@ class AddNewBrandFields extends UpdateScript
 
     public function update()
     {
-        $blueprint = Blueprint::find('globals.'.config('marketing-toolkit.global'));
-        $container = Install::containerOf($blueprint) ?? AssetContainer::all()->first()?->handle();
+        $container = Install::containerOf(Blueprint::find('globals.'.config('marketing-toolkit.global'))) ?? AssetContainer::all()->first()?->handle();
 
         if ($container === null) {
             return;
         }
 
-        $added = Install::addMissingFields($blueprint, $container);
+        foreach (Install::SETS as $key => $set) {
+            $blueprint = Blueprint::find('globals.'.config('marketing-toolkit.'.$key));
+            $added = $blueprint ? Install::addMissingFields($blueprint, $container, $set['file']) : [];
 
-        if ($added !== []) {
-            $this->console()->info('Marketing Toolkit added to SEO & brand: '.implode(', ', $added).'.');
+            if ($added !== []) {
+                $this->console()->info("Marketing Toolkit added to {$set['title']}: ".implode(', ', $added).'.');
+            }
         }
     }
 }

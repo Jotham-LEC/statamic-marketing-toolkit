@@ -13,6 +13,7 @@ const props = defineProps({
     rules: { type: Array, required: true },
     listingUrl: { type: String, required: true },
     listUrl: { type: String, required: true },
+    exportUrl: { type: String, required: true },
 });
 
 const rule = ref(null);
@@ -30,7 +31,9 @@ function toggle(handle) {
     <Head :title="__('marketing-toolkit::reports.cp.report', { id: report.id })" />
 
     <Link :href="listUrl" class="mb-2 inline-block text-sm text-gray-600 dark:text-gray-400">{{ __('marketing-toolkit::reports.cp.back') }}</Link>
-    <Header :title="__('marketing-toolkit::reports.cp.report', { id: report.id })" icon="charts-donut-graph" />
+    <Header :title="__('marketing-toolkit::reports.cp.report', { id: report.id })" icon="charts-donut-graph">
+        <Button v-if="report.status === 'done'" :text="__('marketing-toolkit::reports.cp.export')" :href="exportUrl" />
+    </Header>
 
     <Card v-if="report.status === 'running'" class="mb-6 p-4">
         <ReportProgress :report="report" @done="router.reload()" />

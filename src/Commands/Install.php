@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
+use JothamLec\MarketingToolkit\Listeners\SaveFeatures;
 use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
@@ -18,11 +19,13 @@ use Statamic\Fields\Blueprint as BlueprintContents;
 use Statamic\Structures\Page;
 
 /**
- * `php please mt:install`: creates the "SEO & brand" global set and its
- * blueprint through Statamic's API, so editors can fill in the title
- * separator, defaults, publisher, verification codes, robots.txt and the
- * share-card colours in the control panel. Safe to rerun: it adds what is
- * missing (the fields a newer version brings too) and changes nothing else.
+ * `php please mt:install`: creates the "Brand" and "Marketing settings"
+ * global sets and their blueprints through Statamic's API, so editors can
+ * fill in the title separator, defaults, publisher and share-card colours
+ * (Brand), and the tracking tags, Consent Mode, leads, verification codes and
+ * robots.txt (Marketing settings) in the control panel. Safe to rerun: it
+ * adds what is missing (the fields a newer version brings too) and changes
+ * nothing else.
  */
 class Install extends Command
 {
@@ -33,7 +36,13 @@ class Install extends Command
         {--tab=* : Add these tabs the blueprint doesn\'t have, e.g. shop}
         {--forms : Add the lead source fields to every form}';
 
-    protected $description = 'Create the SEO & brand global set, or add what a newer version brings';
+    protected $description = 'Create the Brand and Marketing settings global sets, or add what a newer version brings';
+
+    /** Each set: its config key => its blueprint in resources/install and its title. */
+    public const array SETS = [
+        'global' => ['file' => 'seo', 'title' => 'Brand'],
+        'settings_global' => ['file' => 'marketing', 'title' => 'Marketing settings'],
+    ];
 
     /** Files the addon serves, by the config switch that turns each on. A file of the same name in public/ wins. */
     private const array SERVED = [
@@ -44,7 +53,6 @@ class Install extends Command
 
     public function handle(): int
     {
-        $handle = (string) config('marketing-toolkit.global');
         $containers = AssetContainer::all()->map->handle()->values()->all();
         $container = $this->option('container') ?? ($containers[0] ?? null);
 
@@ -61,32 +69,19 @@ class Install extends Command
         }
 
         $tabs = (array) $this->option('tab');
-        $unknown = array_diff($tabs, array_keys(self::tabs($container)));
+        $known = collect(self::SETS)->flatMap(fn (array $set) => array_keys(self::tabs($container, $set['file'])))->all();
+        $unknown = array_diff($tabs, $known);
 
         if ($unknown !== []) {
-            $this->components->error('No tab ['.implode(', ', $unknown).']. The tabs: '.implode(', ', array_keys(self::tabs($container))).'.');
+            $this->components->error('No tab ['.implode(', ', $unknown).']. The tabs: '.implode(', ', $known).'.');
 
             return self::FAILURE;
         }
 
         $changed = false;
 
-        if (! Blueprint::find("globals.{$handle}")) {
-            Blueprint::make($handle)
-                ->setNamespace('globals')
-                ->setContents(['tabs' => self::tabs($container)])
-                ->save();
-
-            $this->components->info("Blueprint globals.{$handle} created.");
-            $changed = true;
-        } else {
-            $blueprint = Blueprint::find("globals.{$handle}");
-            $added = [...$this->addTabs($blueprint, $tabs, $container), ...self::addMissingFields($blueprint, $container)];
-
-            if ($added !== []) {
-                $this->components->info('Added: '.implode(', ', $added).'.');
-                $changed = true;
-            }
+        foreach (self::SETS as $key => $definition) {
+            $changed = $this->installSet((string) config('marketing-toolkit.'.$key), $definition['file'], $definition['title'], $container, $tabs) || $changed;
         }
 
         if ($this->option('forms')) {
@@ -95,8 +90,45 @@ class Install extends Command
             $changed = $changed || $forms !== [];
         }
 
+        $changed = $this->checkPublicFiles() || $changed;
+
+        if (! $changed) {
+            $this->components->info('Already installed: nothing to add.');
+        }
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * One global set: its blueprint (or the fields it lacks), the set on
+     * every site, and the defaults its empty fields take.
+     *
+     * @param  list<string>  $tabs  tabs to add that the blueprint doesn't have
+     */
+    private function installSet(string $handle, string $file, string $title, string $container, array $tabs): bool
+    {
+        $changed = false;
+        $blueprint = Blueprint::find("globals.{$handle}");
+
+        if (! $blueprint) {
+            Blueprint::make($handle)
+                ->setNamespace('globals')
+                ->setContents(['tabs' => self::tabs($container, $file)])
+                ->save();
+
+            $this->components->info("Blueprint globals.{$handle} created.");
+            $changed = true;
+        } else {
+            $added = [...$this->addTabs($blueprint, $tabs, $container, $file), ...self::addMissingFields($blueprint, $container, $file)];
+
+            if ($added !== []) {
+                $this->components->info("Added to {$title}: ".implode(', ', $added).'.');
+                $changed = true;
+            }
+        }
+
         if (! GlobalSet::findByHandle($handle)) {
-            $set = GlobalSet::make($handle)->title('SEO & brand');
+            $set = GlobalSet::make($handle)->title($title);
 
             // On every site; the others take what they leave empty from the default site's.
             if (Site::multiEnabled()) {
@@ -104,6 +136,11 @@ class Install extends Command
             }
 
             $set->save();
+
+            // The Features tab starts as the addon's settings have the switches.
+            if ($handle === config('marketing-toolkit.settings_global')) {
+                SaveFeatures::seed($set);
+            }
 
             $this->components->info("Global set [{$handle}] created.");
             $changed = true;
@@ -115,17 +152,11 @@ class Install extends Command
         $filled = $this->fillDefaults($set);
 
         if ($filled !== []) {
-            $this->components->info('Filled in: '.implode(', ', $filled).'. Change them under Globals → SEO & brand.');
+            $this->components->info('Filled in: '.implode(', ', $filled).". Change them under Globals → {$title}.");
             $changed = true;
         }
 
-        $changed = $this->checkPublicFiles() || $changed;
-
-        if (! $changed) {
-            $this->components->info('Already installed: nothing to add.');
-        }
-
-        return self::SUCCESS;
+        return $changed;
     }
 
     /**
@@ -140,14 +171,14 @@ class Install extends Command
             return false;
         }
 
-        if ($this->input->isInteractive() && $this->confirm("SEO & brand isn't enabled on: {$missing->implode(', ')}. Enable it there, taking what each leaves empty from the default site?", true)) {
+        if ($this->input->isInteractive() && $this->confirm("{$set->title()} isn't enabled on: {$missing->implode(', ')}. Enable it there, taking what each leaves empty from the default site?", true)) {
             $set->sites([...$set->origins()->all(), ...$missing->mapWithKeys(fn (string $site) => [$site => Site::default()->handle()])->all()])->save();
             $this->components->info("Enabled on: {$missing->implode(', ')}.");
 
             return true;
         }
 
-        $this->components->warn("Global set [{$set->handle()}] isn't enabled on: {$missing->implode(', ')}. Those sites use the addon's defaults until it is (Globals → SEO & brand → Sites).");
+        $this->components->warn("Global set [{$set->handle()}] isn't enabled on: {$missing->implode(', ')}. Those sites use the addon's defaults until it is (Globals → {$set->title()} → Sites).");
 
         return false;
     }
@@ -170,7 +201,7 @@ class Install extends Command
         }
 
         $list = implode(', ', array_map(fn (string $file) => "public/{$file}", $found));
-        $this->components->warn("The web server serves {$list} instead of the addon's own. Delete them to use the addon's (its icons are made from the icon in SEO & brand).");
+        $this->components->warn("The web server serves {$list} instead of the addon's own. Delete them to use the addon's (its icons are made from the icon in Brand).");
 
         if (! $this->input->isInteractive() || ! $this->confirm('Delete them, so the addon serves its own?', false)) {
             return false;
@@ -191,10 +222,10 @@ class Install extends Command
      * @param  list<string>  $handles
      * @return list<string> the tabs added
      */
-    private function addTabs(BlueprintContents $blueprint, array $handles, string $container): array
+    private function addTabs(BlueprintContents $blueprint, array $handles, string $container, string $file): array
     {
         $contents = $blueprint->contents();
-        $tabs = self::tabs($container);
+        $tabs = self::tabs($container, $file);
         $added = array_values(array_filter($handles, fn (string $tab) => isset($tabs[$tab]) && ! isset($contents['tabs'][$tab])));
 
         foreach ($added as $tab) {
@@ -216,13 +247,13 @@ class Install extends Command
      *
      * @return list<string> the fields added
      */
-    public static function addMissingFields(BlueprintContents $blueprint, string $container): array
+    public static function addMissingFields(BlueprintContents $blueprint, string $container, string $file = 'seo'): array
     {
         $contents = $blueprint->contents();
         $existing = $blueprint->fields()->all()->keys()->all();
         $added = [];
 
-        foreach (self::tabs($container) as $tab => $config) {
+        foreach (self::tabs($container, $file) as $tab => $config) {
             if (! isset($contents['tabs'][$tab])) {
                 continue;
             }
@@ -296,7 +327,7 @@ class Install extends Command
      */
     private static function label(string $handle): string
     {
-        foreach (self::tabs('') as $tab) {
+        foreach (collect(self::SETS)->flatMap(fn (array $set) => self::tabs('', $set['file'])) as $tab) {
             foreach ($tab['sections'] as $section) {
                 foreach ($section['fields'] as $field) {
                     if ($field['handle'] === $handle) {
@@ -319,14 +350,15 @@ class Install extends Command
     }
 
     /**
-     * The blueprint's tabs, from resources/install/seo.yaml, with the asset
-     * container on each assets field.
+     * A set's tabs, from resources/install/{$file}.yaml (seo: Brand,
+     * marketing: Marketing settings), with the asset container on each
+     * assets field.
      *
      * @return array<string, mixed>
      */
-    public static function tabs(string $container): array
+    public static function tabs(string $container, string $file = 'seo'): array
     {
-        $tabs = YAML::file(__DIR__.'/../../resources/install/seo.yaml')->parse()['tabs'];
+        $tabs = YAML::file(__DIR__.'/../../resources/install/'.$file.'.yaml')->parse()['tabs'];
 
         foreach ($tabs as $tab => $config) {
             foreach ($config['sections'] as $section => $fields) {

@@ -12,7 +12,7 @@ use Statamic\Facades\Site;
 use Throwable;
 
 /**
- * How Search Console is set up, so Tools → SEO can walk someone through it:
+ * How Search Console is set up, so Marketing can walk someone through it:
  * the service account key and the property, from `.env` (which wins) or
  * from the control panel. A key uploaded there is kept in
  * storage/app/private, encrypted with APP_KEY, never in git; the property is

@@ -7,7 +7,7 @@ import When from '../components/When.vue';
 import { useRequests } from '../util.js';
 
 /*
- * Tools → SEO → Search Console: the steps to connect it, then where the
+ * Marketing → Search Console: the steps to connect it, then where the
  * connection stands, with Import now and Disconnect.
  */
 const props = defineProps({

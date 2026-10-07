@@ -8,7 +8,9 @@ use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Support\LegacySettings;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
+use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Fieldset;
+use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Permission;
 use Statamic\Widgets\VueComponent;
 
@@ -18,15 +20,20 @@ test('the addon registers its permissions in an SEO group', function () {
     expect($permissions)->toBe(['view marketing toolkit', 'manage marketing toolkit redirects', 'run marketing toolkit reports']);
 });
 
-test('Tools → SEO opens the overview and links to the brand global', function () {
+test('the Marketing section, between Fields and Tools, opens the overview and links to Brand and Settings', function () {
     seoGlobal([]);
+    GlobalSet::make('marketing')->title('Marketing settings')->save();
     $this->actingAs(cpUser(super: true));
 
-    $seo = toolsNav()->get('SEO');
+    $nav = marketingNav();
 
-    expect($seo)->not->toBeNull()
-        ->and($seo->url())->toBe(cp_route('mt.index'))
-        ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Reports', 'Redirects', '404s', 'Search Console', 'Brand & defaults', 'Report settings', 'Features']);
+    expect($nav->keys()->all())->toBe(['Overview', 'Reports', 'Redirects', '404s', 'Search Console', 'Brand', 'Settings'])
+        ->and($nav->get('Overview')->url())->toBe(cp_route('mt.index'))
+        ->and($nav->get('Brand')->url())->toBe(GlobalSet::findByHandle('seo')->in('default')->editUrl())
+        ->and($nav->get('Settings')->url())->toBe(GlobalSet::findByHandle('marketing')->in('default')->editUrl());
+
+    $sections = collect(Nav::build())->pluck('display')->all();
+    expect(array_slice($sections, array_search('Fields', $sections), 3))->toBe(['Fields', 'Marketing', 'Tools']);
 
     $this->get(cp_route('mt.index'))
         ->assertOk()
@@ -58,7 +65,7 @@ test('without the global the overview says so', function () {
 test('SEO is hidden from people without "view marketing toolkit"', function () {
     $this->actingAs(cpUser());
 
-    expect(toolsNav()->has('SEO'))->toBeFalse();
+    expect(marketingNav())->toBeEmpty();
     $this->get(cp_route('mt.index'))->assertRedirect(cp_route('index'))->assertSessionHas('error');
     $this->getJson(cp_route('mt.index'))->assertForbidden();
 
@@ -75,7 +82,7 @@ test('the dashboard widget shows its empty states until reports and 404s exist',
     expect($component)->toBeInstanceOf(VueComponent::class)
         ->and($component->toArray())->toBe([
             'name' => 'mt-widget',
-            'props' => ['title' => 'SEO', 'report' => null, 'notFound' => [], 'url' => cp_route('mt.index'), 'notFoundUrl' => cp_route('mt.404s.index')],
+            'props' => ['title' => 'Marketing', 'report' => null, 'notFound' => [], 'url' => cp_route('mt.index'), 'notFoundUrl' => cp_route('mt.404s.index')],
         ]);
 });
 
@@ -105,7 +112,7 @@ test('the addon finds itself under the package name in composer.json', function 
 
 test('the SEO names stay as they were under Co-SEO', function () {
     expect(config('marketing-toolkit.global'))->toBe('seo')
-        ->and(__('marketing-toolkit::cp.seo'))->toBe('SEO')
+        ->and(__('marketing-toolkit::cp.seo'))->toBe('Marketing')
         ->and(Fieldset::find('marketing-toolkit::seo'))->not->toBeNull()
         ->and(view()->exists('marketing-toolkit::meta'))->toBeTrue();
 });

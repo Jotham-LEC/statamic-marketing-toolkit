@@ -54,7 +54,7 @@ test('creating a redirect through the publish form, and the checks it must pass'
     $this->postJson(cp_route('mt.redirects.store'), ['source' => '/q?x=1', 'target' => '/x', 'status' => '301'])->assertJsonValidationErrors('source');
     $this->postJson(cp_route('mt.redirects.store'), ['source' => '/a', 'target' => '', 'status' => '301'])->assertJsonValidationErrors('target');
     $this->postJson(cp_route('mt.redirects.store'), ['source' => '/a', 'target' => 'ftp://x', 'status' => '301'])->assertJsonValidationErrors('target');
-    $this->postJson(cp_route('mt.redirects.store'), ['source' => '/a', 'target' => '/x/$2', 'status' => '301'])->assertJsonValidationErrors(['target' => 'has no *']);
+    $this->postJson(cp_route('mt.redirects.store'), ['source' => '/a', 'target' => '/x/$2', 'status' => '301'])->assertJsonValidationErrors(['target' => 'no matching *']);
     $this->postJson(cp_route('mt.redirects.store'), ['source' => '/a', 'target' => '/x', 'status' => '307'])->assertJsonValidationErrors('status');
     $this->postJson(cp_route('mt.redirects.store'), ['source' => '/gone', 'target' => '', 'status' => '410'])->assertOk();
 });

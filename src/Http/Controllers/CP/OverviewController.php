@@ -22,7 +22,7 @@ use Statamic\Facades\Site;
 use Statamic\Facades\User;
 
 /**
- * Tools → SEO: where the site stands (the latest report, redirects, recent
+ * Marketing → Overview: where the site stands (the latest report, redirects, recent
  * 404s, the brand defaults, the files it serves), each with a way into the
  * screen that changes it. Links the person may not use are left out. On a
  * multi-site install, all of it for the site selected in the control panel.
@@ -42,6 +42,8 @@ class OverviewController
     private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
     {
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
+        // The set the Tracking tab is in: Marketing settings, or Brand on a site that hasn't moved it yet.
+        $tracking = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($site) ?? $variables;
         $addon = Addon::get(Package::NAME);
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
@@ -67,7 +69,7 @@ class OverviewController
             'search' => $this->search($searchConsole, $site),
             'searchConsole' => ['url' => cp_route('mt.search-console.index')],
             // On the site's own address, which can differ from the control panel's.
-            'tracking' => $this->tracking($variables && $user->can('edit', $variables) ? $variables->editUrl() : null),
+            'tracking' => $this->tracking($tracking && $user->can('edit', $tracking) ? $tracking->editUrl() : null),
             'files' => collect([
                 __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? 'sitemap.xml' : null,
                 __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? 'robots.txt' : null,
@@ -135,7 +137,8 @@ class OverviewController
                     ->all(),
             ],
             'url' => cp_route('mt.reports.index'),
-            'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? $addon->settingsUrl() : null,
+            // The Settings tab of Reports.
+            'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? cp_route('mt.reports.index').'#settings' : null,
         ];
     }
 

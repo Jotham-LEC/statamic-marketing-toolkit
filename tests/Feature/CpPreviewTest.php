@@ -7,7 +7,6 @@ use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
-use Symfony\Component\Yaml\Yaml;
 
 beforeEach(function () {
     seoGlobal([]);
@@ -157,21 +156,4 @@ test('a blueprint that is not an entry or term has no preview', function () {
 
     previewOf('globals.seo', [])->assertStatus(422);
     previewOf('collections.pages.nope', [])->assertStatus(422);
-});
-
-test('the fieldset\'s help text has no raw HTML, which the CP would render as tags', function () {
-    $instructions = [];
-    $fieldset = Yaml::parseFile(__DIR__.'/../../resources/fieldsets/seo.yaml');
-
-    array_walk_recursive(
-        $fieldset,
-        function ($value, $key) use (&$instructions) {
-            if ($key === 'instructions') {
-                $instructions[] = preg_replace('/`[^`]*`/', '', $value);
-            }
-        },
-    );
-
-    expect($instructions)->not->toBeEmpty()
-        ->each->not->toMatch('/<[a-z!\/]/i');
 });

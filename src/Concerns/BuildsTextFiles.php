@@ -92,7 +92,7 @@ trait BuildsTextFiles
     }
 
     /**
-     * /ads.txt: the lines in SEO & brand → Crawlers, for a site that sells ad space.
+     * /ads.txt: the lines in Marketing settings → Crawlers, for a site that sells ad space.
      */
     public function adsTxt(): ?string
     {

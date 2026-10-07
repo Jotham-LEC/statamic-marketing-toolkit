@@ -47,8 +47,8 @@ test('lang/en has no key left unused', function () {
         ->flatMap(fn ($file) => array_keys(Arr::dot(['marketing-toolkit::'.$file->getFilenameWithoutExtension() => require $file->getPathname()])))
         ->all();
 
-    // Built from parts at run time: a rule's handle, a report check's message, a Pro feature.
-    $dynamic = fn (string $key) => str_starts_with($key, 'marketing-toolkit::reports.') || preg_match('/^marketing-toolkit::cp\.pro\.(sites|reports|not_found|search_console)\.(title|body)$/', $key) || str_starts_with($key, 'marketing-toolkit::cp.tracking.names.') || str_starts_with($key, 'marketing-toolkit::fields.attribution.') || str_starts_with($key, 'marketing-toolkit::cp.features.');
+    // Built from parts at run time: a rule's handle, a report check's message, a tracker's name.
+    $dynamic = fn (string $key) => str_starts_with($key, 'marketing-toolkit::reports.') || str_starts_with($key, 'marketing-toolkit::cp.tracking.names.') || str_starts_with($key, 'marketing-toolkit::fields.attribution.');
 
     expect(array_values(array_filter($defined, fn (string $key) => ! in_array($key, $used, true) && ! $dynamic($key))))->toBe([]);
 });
@@ -97,7 +97,7 @@ test('a control panel screen, a nav item and an error message come out in the us
     $this->get(cp_route('mt.index'))->assertInertia(fn ($page) => $page->where('files.0.label', 'XX Sitemap'));
     $this->postJson(cp_route('mt.search-console.check'))->assertJson(['ok' => false, 'message' => 'XX Add the key first.']);
 
-    expect(collect(toolsNav()->get('SEO')->resolveChildren()->children())->map->display()->all())->toContain('XX Redirects');
+    expect(marketingNav()->keys()->all())->toContain('XX Redirects');
 });
 
 test('"Page N" is in the page\'s own language', function () {

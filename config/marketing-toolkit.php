@@ -9,17 +9,21 @@ return [
     | Brand and defaults
     |--------------------------------------------------------------------------
     |
-    | The global set editors fill in (create it with `php please mt:install`):
-    | title separator, default description and image, the publisher for
-    | JSON-LD, verification codes, robots.txt lines and the OG card colours.
+    | The two global sets editors fill in, each with its own values per site
+    | (create them with `php please mt:install`). `global` is Brand: the title
+    | separator, default description and image, the publisher for JSON-LD, the
+    | shop and the share-card colours. `settings_global` is Marketing settings:
+    | tracking tags, Consent Mode, leads, verification codes and robots.txt.
     | The site's name is Statamic's own (Settings → Sites, else APP_NAME).
     |
     */
 
     'global' => 'seo',
 
+    'settings_global' => 'marketing',
+
     'title' => [
-        // With "Add the site name to page titles" on (SEO & brand), the title
+        // With "Add the site name to page titles" on (Brand), the title
         // becomes "{title}{separator}{site name}" only when the result fits.
         // The report's title check uses its own limit; the defaults match.
         'max' => 60,
@@ -28,7 +32,7 @@ return [
     'description' => [
         // A description taken from the page is cut to this, on a word. The
         // report's checks and the preview's counters use their own limits
-        // (Tools → SEO → Report settings); the defaults match.
+        // (Marketing → Reports → Settings); the defaults match.
         'length' => 160,
     ],
 
@@ -49,7 +53,7 @@ return [
     |   'product' => [                     // a Product + Offer from these fields (needs a price above 0 and a currency)
     |       'price_field' => 'price', 'availability_field' => 'in_stock', // a toggle, or InStock/PreOrder…
     |       'sku_field' => 'sku', 'gtin_field' => null, 'brand_field' => null, 'brand' => 'Acme',
-    |       'currency' => null,            // else the SEO & brand global's Shop currency
+    |       'currency' => null,            // else the Brand global's Shop currency
     |       'condition' => 'NewCondition',
     |   ],
     |   'og_template' => 'default',        // a key of og.templates
@@ -125,7 +129,7 @@ return [
         'enabled' => true,
     ],
 
-    // /ads.txt: the lines in SEO & brand → Crawlers, when there are any.
+    // /ads.txt: the lines in Marketing settings → Crawlers, when there are any.
     'ads_txt' => [
         'enabled' => true,
     ],
@@ -154,7 +158,7 @@ return [
     | Redirects
     |--------------------------------------------------------------------------
     |
-    | Rules managed under Tools → SEO → Redirects, applied only to addresses the
+    | Rules managed under Marketing → Redirects, applied only to addresses the
     | site would answer with a 404. `automatic` adds a 301 when an entry's or
     | a term's address changes (its slug, its date, its place in a tree).
     | `case_sensitive` false matches a rule's From in any letter case
@@ -176,7 +180,7 @@ return [
     | 404 log
     |--------------------------------------------------------------------------
     |
-    | One row per missing path, under Tools → SEO → 404s. Requests from these
+    | One row per missing path, under Marketing → 404s. Requests from these
     | user agents (matched case-insensitively, anywhere in the string) and to
     | these paths (`*` matches anything) are not logged.
     |
@@ -226,7 +230,7 @@ return [
     | Google Search Console
     |--------------------------------------------------------------------------
     |
-    | Clicks, impressions, CTR and position per page on Tools → SEO, imported
+    | Clicks, impressions, CTR and position per page on Marketing → Overview, imported
     | daily (`php please mt:search-console`). `credentials` is a service
     | account's JSON key, or the path to it; `property` is the property as
     | Search Console names it: `sc-domain:example.com` or `https://example.com/`.
@@ -246,7 +250,7 @@ return [
     |
     | Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the
     | LinkedIn Insight Tag, printed by <s:mt:head /> and <s:mt:body />. Set
-    | them in the Tracking tab of the SEO & brand global, or here (.env),
+    | them in the Tracking tab of Marketing settings, or here (.env),
     | which wins. They print only in these environments, never in Live Preview.
     |
     */
@@ -285,7 +289,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
-    | /icon-512.png and /site.webmanifest, made from the icon in SEO & brand,
+    | /icon-512.png and /site.webmanifest, made from the icon in Brand,
     | and their <link> tags in <s:mt:head />. A file of the same name in
     | public/ wins.
     |
@@ -301,7 +305,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Which checks a report runs, their thresholds and its schedule are set
-    | under Tools → SEO → Report settings. Off here (or under Features), no
+    | under Marketing → Reports → Settings. Off here (or under Features), no
     | report runs on the schedule; one can still run by hand.
     |
     */

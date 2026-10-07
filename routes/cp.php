@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\ActionController;
-use JothamLec\MarketingToolkit\Http\Controllers\CP\FeaturesController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\NotFoundController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\OverviewController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\PreviewController;
@@ -47,12 +46,12 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
         Route::get('reports/{report}', [ReportsController::class, 'show'])->whereNumber('report')->name('reports.show');
         Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
         Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');
+        Route::get('reports/{report}/export', [ReportsController::class, 'export'])->whereNumber('report')->name('reports.export');
+        // The Reports page's Settings tab: the controller checks the addon's settings permission.
+        Route::post('reports/settings', [ReportsController::class, 'saveSettings'])->name('reports.settings');
 
         Route::get('search-console', [SearchConsoleController::class, 'index'])->name('search-console.index');
     });
-
-    Route::get('features', [FeaturesController::class, 'index'])->name('features.index');
-    Route::post('features', [FeaturesController::class, 'update'])->name('features.update');
 
     Route::post('search-console/key', [SearchConsoleController::class, 'key'])->name('search-console.key');
     Route::delete('search-console/key', [SearchConsoleController::class, 'forgetKey'])->name('search-console.key.forget');

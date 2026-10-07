@@ -41,14 +41,14 @@ A site that prints its own meta tags (a Laravel layout that doesn't use `<s:mt:m
 
 ## One tool, one place: use Google Tag Manager
 
-With Google Tag Manager set, add GA4, PostHog, Meta and LinkedIn **as tags inside GTM** and leave their IDs empty here. A tool loaded by GTM and by this addon counts every visit twice. The Tracking tab shows a warning as soon as both are set, saving the global shows a reminder, and Tools → SEO lists the tools to move.
+With Google Tag Manager set, add GA4, PostHog, Meta and LinkedIn **as tags inside GTM** and leave their IDs empty here. A tool loaded by GTM and by this addon counts every visit twice. The Tracking tab shows a warning as soon as both are set, saving Marketing settings shows a reminder, and Marketing → Overview lists the tools to move.
 
 GTM also handles consent better than any page snippet: each tag has its own consent checks, and Google's tags read Consent Mode by themselves.
 
 ## Consent Mode
 
 
-Turn on **Use Consent Mode** in the Tracking tab and choose, for each of Google's four signals, whether it is denied until the visitor agrees (the default) or granted:
+Turn on **Use Consent Mode** in the Consent tab of Marketing → Settings and choose, for each of Google's four signals, whether it is denied until the visitor agrees (the default) or granted:
 
 | Signal | Covers |
 |---|---|
@@ -103,7 +103,7 @@ With regions, the page can't know where the visitor is, so the bridge waits for 
 
 ## Leads
 
-With **Send form submissions as leads** on (the Tracking tab; on by default), every Statamic form submission that goes through is sent to each tool set, on the page the visitor sees next (or the same page, for a form sent with JavaScript):
+With **Send form submissions as leads** on (the Leads tab of Marketing → Settings; on by default), every Statamic form submission that goes through is sent to each tool set, on the page the visitor sees next (or the same page, for a form sent with JavaScript):
 
 | Tool | Event |
 |---|---|

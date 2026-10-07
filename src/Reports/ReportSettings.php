@@ -6,7 +6,7 @@ use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 
 /**
- * The report settings editors set under Tools → Addons → SEO, with the
+ * The report settings editors set on the Settings tab of Marketing → Reports, with the
  * blueprint's defaults for anything not saved yet.
  */
 class ReportSettings

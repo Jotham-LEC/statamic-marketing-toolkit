@@ -19,7 +19,7 @@ use Statamic\Facades\User;
 use Throwable;
 
 /**
- * Tools → SEO → Search Console, and setting it up there: the service account key, the
+ * Marketing → Search Console, and setting it up there: the service account key, the
  * property, a check that Google lets the key read it, and the first import.
  * For whoever may change the addon's settings; `.env` values win and can't
  * be changed here. The property, the check and the import are of the site
@@ -30,7 +30,7 @@ class SearchConsoleController
     public function __construct(private Connection $connection) {}
 
     /**
-     * Tools → SEO → Search Console: the steps to connect it, then where the
+     * Marketing → Search Console: the steps to connect it, then where the
      * connection stands: the key, each site's property, the last import.
      * Anyone who may view SEO sees it, for the sites they may work on; only
      * whoever may change the addon's settings gets the steps, the buttons and

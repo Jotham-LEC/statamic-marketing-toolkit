@@ -9,7 +9,7 @@ use Statamic\Contracts\Assets\Asset;
 use Statamic\Facades\Site;
 
 /**
- * The site's icons, made from one image in the SEO & brand global (`favicon`):
+ * The site's icons, made from one image in the Brand global (`favicon`):
  * favicon.ico, the SVG as it is, the Apple touch icon, two PNGs for
  * site.webmanifest, and the manifest itself, named after the site in the
  * brand's colours. Made once per version of the image and colours, kept in

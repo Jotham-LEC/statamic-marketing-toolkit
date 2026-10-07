@@ -1,5 +1,31 @@
 # Upgrading
 
+## From 0.20: Brand and Marketing settings
+
+The "SEO & brand" global set is now two sets. **Brand** keeps its handle (`seo`, `marketing-toolkit.global`) and the Brand, Publisher, Shop and Share cards tabs. The new **Marketing settings** set (`marketing`, `marketing-toolkit.settings_global`) takes the Tracking, Consent, Leads and Crawlers tabs. In the control panel both sit in the new **Marketing** section of the sidebar, which replaces Tools → SEO: Brand as **Brand**, and Marketing settings as **Settings**. The report settings have moved from Tools → Addons to the **Settings** tab of **Marketing → Reports**.
+
+### What happens by itself
+
+On `composer update` (on your machine), the `MoveToMarketingSettings` update script:
+
+- creates the Marketing settings blueprint and global set, on the same sites as Brand;
+- moves each site's own values of the tracking, Consent Mode, leads and crawler fields from Brand to Marketing settings (a site that took a value from its origin site keeps taking it from there);
+- removes those fields from Brand's blueprint, along with any section or tab they leave empty, while fields the site added itself stay where they are;
+- renames "SEO & brand" to "Brand", unless you had already given the set another title.
+
+Until the script has run, the addon reads those values from Brand as before, so nothing stops working in between. Once a value is saved in Marketing settings, that one is used, even if an older copy is still in Brand.
+
+The script runs again whenever Brand still holds values of the moved fields, so it is safe to run more than once, and it never replaces a value that is already in Marketing settings.
+
+### What to commit and check
+
+- **Commit the files it changes**: the blueprints in `resources/blueprints/globals` (`seo.yaml` and the new `marketing.yaml`) and the global sets and their values under `content/globals`, then deploy. If editors change these settings on the production site rather than in git, bring production's `content/globals` into your copy before running `composer update`, so that the script moves the current values.
+- **Globals stored in the database**: if your site keeps global sets in the database (Statamic's Eloquent driver), the update moves the values in your own database only. After deploying, run `php please updates:run 0.20.0 --package=jotham-lec/statamic-marketing-toolkit` on each server whose database you didn't update, and the script moves that database's values in the same way.
+- **Roles**: Marketing settings is a new global set, so a role that may edit Brand can't edit it until you allow it. Under **Users → Roles**, tick it for the people who look after tracking and consent.
+- **Your own templates and code**: a template or class that reads a tracking, consent, leads or crawler field from the `seo` global (`{{ seo:gtm_id }}`, say) should read it from `marketing` instead once the values have moved.
+- **Field descriptions**: the fields of Brand and Marketing settings no longer show descriptions. The `DropFieldDescriptions` update script takes the addon's old descriptions out of your copies of those blueprints, and keeps any you wrote yourself. Commit the blueprints it changes.
+- **Bookmarks**: the report settings are now on the Settings tab of Marketing → Reports, and Features is a tab of Marketing → Settings, on the default site.
+
 ## From 0.19: the `seo` names
 
 Up to 0.19 most of the addon's names were `seo`. They are now `marketing-toolkit` (the addon's slug, wherever Statamic names a thing after it) and `mt` (wherever you type a short handle); see [the names](developers.md#names). Most of the move happens by itself.
@@ -8,7 +34,7 @@ Up to 0.19 most of the addon's names were `seo`. They are now `marketing-toolkit
 
 On `composer update` (on your machine), Statamic runs the addon's update scripts. They rename, in the site's own files:
 
-- `import: seo::seo` in blueprints and fieldsets → `marketing-toolkit::seo`, and the `seo::` labels in the SEO & brand blueprint and the forms' lead source fields → `marketing-toolkit::`.
+- `import: seo::seo` in blueprints and fieldsets → `marketing-toolkit::seo`, and the `seo::` labels in the SEO & brand blueprint (now Brand) and the forms' lead source fields → `marketing-toolkit::`.
 - `<s:seo:head />`, `{{ seo:head }}` and the other tags in `resources/views` → `<s:mt:head />`, `{{ mt:head }}`.
 - The widget in `config/statamic/cp.php`: `'type' => 'seo'` → `'type' => 'mt'`.
 - `config/seo.php` → `config/marketing-toolkit.php`, as it was: its old keys keep working.
@@ -52,6 +78,6 @@ The new package replaces the old one, so Composer won't install both. `jotham-le
 
 ### 3. Use the new modules
 
-- **Tracking and Consent Mode**: run `php please mt:install --tab=tracking`, swap `<s:mt:meta />` for `<s:mt:head />` (right after `<meta charset>` and the viewport), add `<s:mt:body />` right after `<body>`, then move the site's tracking IDs into the **Tracking** tab (or `.env`) and delete its own snippets, or each visit counts twice. See [tracking.md](tracking.md).
-- **Favicons**: upload the icon in **SEO & brand → Brand → Icon** (after `mt:install`), then delete the old `favicon.ico`, `apple-touch-icon.png` and `site.webmanifest` from `public/` and their `<link>` tags from the layout; files in `public/` win over the generated ones.
+- **Tracking and Consent Mode**: run `php please mt:install --tab=tracking`, swap `<s:mt:meta />` for `<s:mt:head />` (right after `<meta charset>` and the viewport), add `<s:mt:body />` right after `<body>`, then move the site's tracking IDs into the **Tracking** tab of **Marketing → Settings** (or `.env`) and delete its own snippets, or each visit counts twice. See [tracking.md](tracking.md).
+- **Favicons**: upload the icon in **Marketing → Brand**, under **Icon** on the Brand tab (after `mt:install`), then delete the old `favicon.ico`, `apple-touch-icon.png` and `site.webmanifest` from `public/` and their `<link>` tags from the layout; files in `public/` win over the generated ones.
 - **Leads**: run `php please mt:install --forms` to add the lead source fields to every form. A site that sends its own lead events (from Livewire forms, say) should call `window.mtConversion('form-handle')` instead, or leave **Send form submissions as leads** off.

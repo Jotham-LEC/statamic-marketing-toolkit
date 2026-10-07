@@ -42,7 +42,7 @@ class SearchConsole extends Command
         };
 
         if ($sites === [] || ! collect($sites)->every(fn (string $site) => $client->configured($site))) {
-            $this->components->error('Set MT_SEARCH_CONSOLE_CREDENTIALS and MT_SEARCH_CONSOLE_PROPERTY first, or connect it under Tools → SEO (docs/configuration.md).');
+            $this->components->error('Set MT_SEARCH_CONSOLE_CREDENTIALS and MT_SEARCH_CONSOLE_PROPERTY first, or connect it under Marketing (docs/configuration.md).');
 
             return self::FAILURE;
         }

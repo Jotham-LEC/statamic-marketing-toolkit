@@ -100,7 +100,7 @@ test('titles and descriptions must differ from every other page’s, ignoring ca
     $site->add('https://example.test/c', new PageFacts(title: 'Unique', description: 'same WORDS'));
 
     expect(verdict(TitleUnique::class, ['title' => 'Hello'], $site, 'https://example.test/a'))->toBe('fail')
-        ->and(resultText(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Hello'), $site)))->toBe('Same title as /b.')
+        ->and(resultText(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Hello'), $site)))->toBe('This page has the same title as /b.')
         ->and(verdict(TitleUnique::class, ['title' => 'Unique'], $site, 'https://example.test/c'))->toBe('pass')
         ->and(verdict(DescriptionUnique::class, ['description' => 'Same words'], $site, 'https://example.test/a'))->toBe('fail')
         ->and(verdict(DescriptionUnique::class, ['description' => 'Other words'], $site, 'https://example.test/b'))->toBe('pass');
@@ -234,8 +234,8 @@ test('a result keeps a translation key and its parameters, and reads as English'
     $result = app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'Short'), $site);
 
     expect($result->toArray())->toBe(['status' => 'warn', 'message' => 'marketing-toolkit::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 10, 'max' => 20]])
-        ->and(resultText($result))->toBe('5 characters; aim for 10–20. Short titles waste the space search results give them.')
-        ->and(resultText(app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'A'), $site)))->toStartWith('1 character;')
+        ->and(resultText($result))->toBe('The title is 5 characters long, and the aim is 10 to 20. A short title wastes the space that search results give it.')
+        ->and(resultText(app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'A'), $site)))->toStartWith('The title is 1 character long,')
         ->and(app(OgImage::class)->check('https://example.test/page', new PageFacts, $site)->toArray())->toBe(['status' => 'fail', 'message' => 'marketing-toolkit::reports.messages.og_image_missing']);
 });
 
@@ -246,11 +246,11 @@ test('a long list of pages ends with how many more there are', function () {
     }
     $links = ['/1', '/2', '/3', '/4', '/5', '/6'];
 
-    expect(resultText(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Same'), $site)))->toBe('Same title as /b, /c, /d and 1 more.')
+    expect(resultText(app(TitleUnique::class)->check('https://example.test/a', new PageFacts(title: 'Same'), $site)))->toBe('This page has the same title as /b, /c, /d and 1 more.')
         ->and(resultText(app(BrokenLinks::class)->check('https://example.test/a', new PageFacts(brokenLinks: $links), $site)))
-        ->toBe('Links to pages that don’t exist: /1, /2, /3, /4, /5 and 1 more.')
+        ->toBe('Some links point to pages that don’t exist (/1, /2, /3, /4, /5 and 1 more).')
         ->and(resultText(app(BrokenLinks::class)->check('https://example.test/a', new PageFacts(redirectedLinks: ['/old']), $site)))
-        ->toBe('Links that go through a redirect (link to the new address instead): /old.');
+        ->toBe('Some links go through a redirect (/old), so link to the new address instead.');
 });
 
 test('every built-in check’s name and message has English words', function () {

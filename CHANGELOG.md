@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+The control panel gets its own Marketing section, the brand is kept apart from the tracking and crawler settings, and reports can be exported.
+
+### Changed
+- **The control panel has a Marketing section** in the sidebar, between Fields and Tools, instead of Tools → SEO. Its items are Overview, Reports, Redirects, 404s, Search Console, Brand and Settings.
+- **"SEO & brand" is split in two.** **Brand** (handle `seo`, `marketing-toolkit.global`) keeps the Brand, Publisher, Shop and Share cards tabs. The new **Marketing settings** global set (handle `marketing`, `marketing-toolkit.settings_global`), shown in the nav as Settings, has the Tracking, Consent, Leads, Crawlers and Features tabs. Features replaces the separate Features screen; it shows on the default site only, and its switches are copied to the addon settings when it is saved. Each site has its own values in both. `php please mt:install` creates both sets.
+- **The report settings are on the Reports screen.** Marketing → Reports has a Reports tab and a Settings tab, which holds the checks, the length limits, the pages and the schedule that used to be under Tools → Addons. The Settings tab is shown to people who may change the addon's settings.
+- **The SEO fields on each entry are grouped.** Under the title and description, a Sharing heading has the share image, card title and card subtitle, and an Advanced heading has the canonical URL, hide from search engines, do not follow links, in sitemap, no snippet, snippet length and extra JSON-LD. Snippet length is hidden while No snippet is on.
+- The control panel's text has been rewritten in full sentences, and fields no longer carry descriptions: [editors.md](docs/editors.md) explains each one.
+
+### Added
+- **A checklist for moving an existing site** to Marketing Toolkit ([docs/migrating.md](docs/migrating.md)), and a [skill for AI coding agents](docs/agent-skill/README.md) that follows it.
+- **Export CSV on each report**: one row per page, the worst score first, with the columns Address, Title, Score, Failed checks and Warnings.
+
+### Upgrading
+- **`composer update` moves your settings to Marketing settings.** The `MoveToMarketingSettings` update script creates Marketing settings on the sites Brand is on, moves each site's tracking, Consent Mode, leads and crawler values across, removes those fields from Brand's blueprint (fields the site added itself stay), and renames "SEO & brand" to "Brand". Until it runs, the values are still read from Brand. Commit the blueprints and global sets it changes, give the roles that need it access to the new set, and point any template that reads those fields from the `seo` global at `marketing`. See [upgrading.md](docs/upgrading.md#from-020-brand-and-marketing-settings).
+
 ## 0.20.0 – 2026-10-07
 
 From a developer-experience audit: one set of names, a fresh install that works the first time, cached routes that follow the Features switches, a faster `<head>`, and one way to do each thing.

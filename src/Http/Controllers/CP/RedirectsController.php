@@ -23,7 +23,7 @@ use Statamic\Fields\Blueprint as BlueprintObject;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Tools → SEO → Redirects: the list, the create and edit forms (Statamic's
+ * Marketing → Redirects: the list, the create and edit forms (Statamic's
  * publish form, on a blueprint defined here), CSV in and out, and the two
  * endpoints behind the "add a redirect?" question when content is saved.
  */
@@ -247,7 +247,6 @@ class RedirectsController
         // A campaign link's UTM tags, added to the target when saved.
         $campaign = [[
             'display' => __('marketing-toolkit::cp.redirect_form.campaign'),
-            'instructions' => __('marketing-toolkit::cp.redirect_form.campaign_instructions'),
             'collapsible' => true,
             'collapsed' => true,
             'fields' => array_map(fn (string $tag) => ['handle' => $tag, 'field' => [
@@ -258,11 +257,9 @@ class RedirectsController
         return Blueprint::make('seo_redirect')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'source', 'field' => [
                 'type' => 'text', 'display' => __('marketing-toolkit::cp.redirect_form.source'),
-                'instructions' => __('marketing-toolkit::cp.redirect_form.source_instructions'),
             ]],
             ['handle' => 'target', 'field' => [
                 'type' => 'text', 'display' => __('marketing-toolkit::cp.redirect_form.target'),
-                'instructions' => __('marketing-toolkit::cp.redirect_form.target_instructions'),
             ]],
             ['handle' => 'status', 'field' => [
                 'type' => 'button_group', 'display' => __('marketing-toolkit::cp.redirect_form.status'), 'width' => 66, 'default' => '301',
@@ -276,7 +273,7 @@ class RedirectsController
             // Only where there is more than one site to choose from.
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
                 'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => true,
-                'placeholder' => __('marketing-toolkit::cp.redirect_form.all_sites'), 'instructions' => __('marketing-toolkit::cp.redirect_form.site_instructions'),
+                'placeholder' => __('marketing-toolkit::cp.redirect_form.all_sites'),
             ]]] : []),
         ]], ...$campaign]]]]);
     }

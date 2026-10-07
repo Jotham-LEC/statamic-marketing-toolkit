@@ -101,7 +101,7 @@ The methods you're most likely to override:
 | `robotsTxt()` | robots.txt. |
 | `llmsPerCollection()` | How many pages llms.txt lists per collection, the most recently changed first. 100 by default. |
 
-Helpers available in a subclass: `settings()` (the brand global, with `string()`, `list()`, `asset()`, `siteName()`), `contentConfig($context, $key, $default)` (the page's collection rules, or a term's taxonomy rules), `collectionConfig($context, $key, $default)` (an entry's collection only), and `absolute($url)`.
+Helpers available in a subclass: `settings()` (the Brand and Marketing settings globals, with `string()`, `list()`, `asset()`, `siteName()`), `contentConfig($context, $key, $default)` (the page's collection rules, or a term's taxonomy rules), `collectionConfig($context, $key, $default)` (an entry's collection only), and `absolute($url)`.
 
 ## The tag
 
@@ -175,18 +175,18 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 - **Automatic redirects** go through `JothamLec\MarketingToolkit\Redirects\AutoRedirects::create($from, $to, $site)`, which also collapses chains among that site's rules. Use it when you move content in code.
 - **The 404 log** is `JothamLec\MarketingToolkit\NotFound\MissingPath` (with `site`, as redirects).
 - **Reports**: `app(JothamLec\MarketingToolkit\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site.
-- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the brand global, `absolute()`, the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
+- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the Brand and Marketing settings globals, `absolute()` and the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
 
 ## Several sites and languages
 
 With Statamic Pro and more than one site, whether separate brands on their own domains or languages under `/fr/` or on their own domains, each site gets its own:
 
-- **Brand values**: `mt:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
+- **Brand and Marketing settings**: `mt:install` puts both global sets on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals** (or in the set's `sites`), else that site uses the addon's defaults.
 - **Sitemap and robots.txt** per domain: a sitemap lists every site on its domain, each URL with its other languages. **Share cards** and the **IndexNow key** on the site's own domain; IndexNow gets one request per domain.
 - **hreflang**: a page's localizations link to each other; see [configuration.md](configuration.md#languages-hreflang).
 - **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** on the site of the content that moved.
-- **404 log** and **reports**, one report per site (`mt:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
-- **Search Console property**: one key, a property per site (set up from Tools → SEO → Search Console with the site selected, or a map in config).
+- **404 log** and **reports**, one report per site (`mt:report` reports on each in turn, or `--site=`). The Marketing section's screens and the dashboard widget show the site selected in the control panel.
+- **Search Console property**: one key, a property per site (set up from Marketing → Search Console with the site selected, or a map in config).
 
 The SEO fields are `localizable`, so each language keeps its own values.
 
@@ -212,7 +212,7 @@ Two names, by one rule: `marketing-toolkit`, the addon's slug, wherever Statamic
 | `marketing-toolkit` | `config/marketing-toolkit.php` (`--tag=marketing-toolkit-config`); the `marketing-toolkit::` views, translations (`--tag=marketing-toolkit-translations`) and fieldset (`marketing-toolkit::seo`); the addon's settings (`resources/addons/marketing-toolkit.yaml`); the control panel's addresses (`/cp/marketing-toolkit`), scripts (`--tag=marketing-toolkit`, `public/vendor/statamic-marketing-toolkit`) and permissions (`view marketing toolkit`, `manage marketing toolkit redirects`, `run marketing toolkit reports`); its files in `storage/app/marketing-toolkit` and `storage/app/private/marketing-toolkit` |
 | `mt` | The tags (`<s:mt:head />`, `{{ mt:head }}`), the commands (`mt:install`, `mt:report`, `mt:search-console`), the tables (`mt_*`), route names (`mt.*`), `.env` (`MT_*`), the widget (`'type' => 'mt'`), the fieldtype (`mt_preview`), and in the browser `window.mtConversion()`, `window.mtConsent()` and the `mt_source` and `mt_conversion` cookies |
 
-`seo` is left only where it is content about SEO: the SEO fields' `seo` group in each entry, the `seo` fieldset, and the **SEO & brand** global set's handle (`seo`, `marketing-toolkit.global`). Up to 0.19 everything above was `seo`; [upgrading.md](upgrading.md) says how a site moves.
+`seo` is left only where it is content about SEO: the SEO fields' `seo` group in each entry, the `seo` fieldset, and the **Brand** global set's handle (`seo`, `marketing-toolkit.global`), which was called SEO & brand up to 0.20. The Marketing settings set, new after 0.20, has the handle `marketing` (`marketing-toolkit.settings_global`). Up to 0.19 everything above was `seo`; [upgrading.md](upgrading.md) says how a site moves.
 
 ## How the pieces fit
 

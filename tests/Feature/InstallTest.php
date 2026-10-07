@@ -4,22 +4,31 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
+use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\UpdateScripts\AddNewBrandFields;
+use JothamLec\MarketingToolkit\UpdateScripts\DropFieldDescriptions;
+use JothamLec\MarketingToolkit\UpdateScripts\MoveToMarketingSettings;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\YAML;
 
 // Blueprints are written to disk and outlive a test: start each without one.
-beforeEach(fn () => Blueprint::find('globals.seo')?->delete());
+beforeEach(function () {
+    Blueprint::find('globals.seo')?->delete();
+    Blueprint::find('globals.marketing')?->delete();
+});
 
-test('creates the SEO & brand global set and its blueprint, once', function () {
+test('creates the Brand and Marketing settings global sets and their blueprints, once', function () {
     $this->artisan('statamic:mt:install')->assertSuccessful();
     $this->artisan('statamic:mt:install')->assertSuccessful();
 
-    expect(GlobalSet::findByHandle('seo')?->title())->toBe('SEO & brand')
-        ->and(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('title_site_name', 'title_separator', 'publisher_type', 'og_background', 'robots_extra');
+    expect(GlobalSet::findByHandle('seo')?->title())->toBe('Brand')
+        ->and(GlobalSet::findByHandle('marketing')?->title())->toBe('Marketing settings')
+        ->and(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('title_site_name', 'title_separator', 'publisher_type', 'og_background')->not->toContain('gtm_id', 'robots_extra')
+        ->and(Blueprint::find('globals.marketing')->tabs()->keys()->all())->toBe(['tracking', 'consent', 'leads', 'crawlers', 'features'])
+        ->and(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('gtm_id', 'consent_mode', 'conversions', 'attribution', 'robots_extra', 'ads_txt');
 });
 
 test('fills each empty brand field with what the site uses, so editors can see and change it', function () {
@@ -27,10 +36,9 @@ test('fills each empty brand field with what the site uses, so editors can see a
 
     $this->artisan('statamic:mt:install')->assertSuccessful();
 
-    expect(GlobalSet::findByHandle('seo')->in('default')->data()->all())->toMatchArray([
-        'default_description' => 'We make things.',
-        'robots_disallow' => ['/cp/'],
-    ])->not->toHaveKeys(['title_separator', 'title_site_name']);
+    expect(GlobalSet::findByHandle('seo')->in('default')->data()->all())->toMatchArray(['default_description' => 'We make things.'])
+        ->not->toHaveKeys(['title_separator', 'title_site_name', 'robots_disallow'])
+        ->and(GlobalSet::findByHandle('marketing')->in('default')->data()->all())->toMatchArray(['robots_disallow' => ['/cp/']]);
 });
 
 test('never overwrites a value an editor has set', function () {
@@ -39,8 +47,9 @@ test('never overwrites a value an editor has set', function () {
     $this->artisan('statamic:mt:install')->assertSuccessful();
 
     expect(GlobalSet::findByHandle('seo')->in('default')->data()->all())
-        ->toMatchArray(['title_separator' => '|', 'robots_disallow' => ['/cp/']])
-        ->not->toHaveKey('default_description');
+        ->toMatchArray(['title_separator' => '|'])
+        ->not->toHaveKey('default_description')
+        ->and(GlobalSet::findByHandle('marketing')->in('default')->data()->all())->toMatchArray(['robots_disallow' => ['/cp/']]);
 });
 
 test('the separator gets a space on each side however it was typed', function (?string $typed, string $title) {
@@ -129,7 +138,7 @@ test('--tab adds a whole tab a site asks for', function () {
 });
 
 test('the consent regions the blueprint offers include the EEA the tracking code knows', function () {
-    $regions = collect(Install::tabs('assets')['tracking']['sections'][1]['fields'])->firstWhere('handle', 'consent_regions');
+    $regions = collect(Install::tabs('assets', 'marketing')['consent']['sections'][0]['fields'])->firstWhere('handle', 'consent_regions');
 
     expect($regions['field']['options'])->toHaveKey(Tracking::EEA);
 });
@@ -139,6 +148,7 @@ test('every label and help the blueprints name is in lang/en/fields.php', functi
         YAML::file(__DIR__.'/../../resources/fieldsets/seo.yaml')->parse(),
         YAML::file(__DIR__.'/../../resources/blueprints/settings.yaml')->parse(),
         Install::tabs('assets'),
+        Install::tabs('assets', 'marketing'),
         [(new ReflectionProperty(SeoPreview::class, 'title'))->getValue()],
     ];
     $keys = [];
@@ -170,4 +180,81 @@ test('the brand blueprint shows in the control panel user\'s language', function
         ->and($field->validationAttributes())->toBe(['title_separator' => 'Séparateur de titre'])
         ->and(__($blueprint->tabs()->get('brand')->display()))->toBe('Marque')
         ->and(__($blueprint->field('default_description')->display()))->toBe('Default description');
+});
+
+test('an update moves tracking, consent, leads and crawlers from SEO & brand to Marketing settings', function () {
+    multisite();
+    // SEO & brand as 0.20 had it: every tab in one set, and a field of the site's own on the Tracking tab.
+    $tabs = [...Install::tabs('assets'), ...Install::tabs('assets', 'marketing')];
+    $tabs['tracking']['sections'][0]['fields'][] = ['handle' => 'hotjar_id', 'field' => ['type' => 'text']];
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => $tabs])->save();
+    $set = GlobalSet::make('seo')->title('SEO & brand')->sites(['default' => null, 'cothinking' => 'default']);
+    $set->save();
+    $set->in('default')->data(['title_separator' => '|', 'gtm_id' => 'GTM-ABC123', 'robots_disallow' => ['/cp/'], 'hotjar_id' => '42'])->save();
+    $set->in('cothinking')->data(['consent_mode' => true])->save();
+    $script = new MoveToMarketingSettings(Package::NAME);
+
+    expect($script->shouldUpdate('0.21.0', '0.20.0'))->toBeTrue();
+    $script->update();
+
+    $brand = GlobalSet::findByHandle('seo');
+    $marketing = GlobalSet::findByHandle('marketing');
+    expect($brand->title())->toBe('Brand')
+        ->and($brand->in('default')->data()->all())->toBe(['title_separator' => '|', 'hotjar_id' => '42'])
+        ->and($marketing->title())->toBe('Marketing settings')
+        ->and($marketing->origins()->all())->toBe(['default' => null, 'cothinking' => 'default'])
+        ->and($marketing->in('default')->data()->all())->toBe(['gtm_id' => 'GTM-ABC123', 'robots_disallow' => ['/cp/']])
+        ->and($marketing->in('cothinking')->data()->all())->toBe(['consent_mode' => true])
+        ->and(Blueprint::find('globals.seo')->tabs()->keys()->all())->toBe(['brand', 'publisher', 'shop', 'share_cards', 'tracking'])
+        ->and(Blueprint::find('globals.seo')->fields()->all()->keys()->all())->toContain('hotjar_id')->not->toContain('gtm_id', 'robots_extra')
+        ->and(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('gtm_id', 'consent_mode', 'robots_extra')
+        ->and($script->shouldUpdate('0.21.0', '0.20.0'))->toBeFalse();
+
+    // Read from their new place, as before.
+    expect(app(Settings::class)->string('gtm_id'))->toBe('GTM-ABC123');
+});
+
+test('a site set up before the move reads its tracking from SEO & brand until it updates', function () {
+    seoGlobal(['gtm_id' => 'GTM-OLD123']);
+
+    expect(app(Settings::class)->string('gtm_id'))->toBe('GTM-OLD123');
+});
+
+test('values left in Brand after the blueprints moved are moved too, never over a newer one', function () {
+    seoGlobal(['title_separator' => '|', 'gtm_id' => 'GTM-OLD123', 'ga4_id' => 'G-OLD12345']);
+    Blueprint::make('marketing')->setNamespace('globals')->setContents(['tabs' => Install::tabs('assets', 'marketing')])->save();
+    $set = GlobalSet::make('marketing')->title('Marketing settings');
+    $set->save();
+    $set->in('default')->data(['gtm_id' => 'GTM-NEW123'])->save();
+    $script = new MoveToMarketingSettings(Package::NAME);
+
+    // The blueprints have moved already: only the values tell.
+    expect(Blueprint::find('globals.seo')->fields()->all()->keys())->not->toContain('gtm_id')
+        ->and(app(Settings::class)->string('gtm_id'))->toBe('GTM-NEW123')
+        ->and($script->shouldUpdate('0.21.0', '0.20.0'))->toBeTrue();
+    $script->update();
+
+    expect(GlobalSet::findByHandle('seo')->in('default')->data()->all())->toBe(['title_separator' => '|'])
+        ->and(GlobalSet::findByHandle('marketing')->in('default')->data()->all())->toBe(['gtm_id' => 'GTM-NEW123', 'ga4_id' => 'G-OLD12345'])
+        ->and($script->shouldUpdate('0.21.0', '0.20.0'))->toBeFalse();
+});
+
+test('an update takes the addon\'s old field descriptions out of the site\'s blueprints, keeping the site\'s own', function () {
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [[
+        'instructions' => 'marketing-toolkit::fields.brand.sections.publisher.instructions',
+        'fields' => [
+            ['handle' => 'title_separator', 'field' => ['type' => 'text', 'display' => 'marketing-toolkit::fields.brand.title_separator.display', 'instructions' => 'marketing-toolkit::fields.brand.title_separator.instructions']],
+            ['handle' => 'slogan', 'field' => ['type' => 'text', 'instructions' => 'Our own words.']],
+        ],
+    ]]]]])->save();
+    $script = new DropFieldDescriptions(Package::NAME);
+
+    expect($script->shouldUpdate('0.21.0', '0.20.0'))->toBeTrue();
+    $script->update();
+
+    $section = Blueprint::find('globals.seo')->contents()['tabs']['brand']['sections'][0];
+    expect($section)->not->toHaveKey('instructions')
+        ->and($section['fields'][0]['field'])->toBe(['type' => 'text', 'display' => 'marketing-toolkit::fields.brand.title_separator.display'])
+        ->and($section['fields'][1]['field']['instructions'])->toBe('Our own words.')
+        ->and($script->shouldUpdate('0.21.0', '0.20.0'))->toBeFalse();
 });

@@ -7,7 +7,7 @@ use JothamLec\MarketingToolkit\Settings;
 
 /**
  * The tracking tags of the current site, and its Consent Mode defaults: IDs from
- * the "Tracking" tab of the SEO & brand global, with config/marketing-toolkit.php (and so
+ * the "Tracking" tab of the Marketing settings global, with config/marketing-toolkit.php (and so
  * .env) winning over it. Printed by <s:mt:head /> and <s:mt:body />, in
  * production only and never in Live Preview.
  *

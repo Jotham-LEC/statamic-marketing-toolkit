@@ -2,14 +2,20 @@
 
 use Illuminate\Routing\RouteCollection;
 use Illuminate\Support\Facades\Route;
-use Inertia\Testing\AssertableInertia;
+use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
 use JothamLec\MarketingToolkit\ServiceProvider;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Site;
 
-afterEach(fn () => File::delete(resource_path('addons/marketing-toolkit.yaml')));
+afterEach(function () {
+    File::delete(resource_path('addons/marketing-toolkit.yaml'));
+    Blueprint::find('globals.marketing')?->delete();
+});
 
 /**
  * Boots the addon's Features step again, as the next request would, after the features were saved.
@@ -19,37 +25,66 @@ function rebootFeatures(): void
     (fn () => $this->bootFeatures())->call(app()->getProvider(ServiceProvider::class));
 }
 
-test('the Features screen saves what is off, for whoever may change the addon\'s settings', function () {
-    $this->actingAs(cpUser(super: true));
+/**
+ * Marketing settings, as `mt:install` makes it, on the default site and (with multisite()) the other.
+ */
+function marketingGlobal(): Statamic\Contracts\Globals\GlobalSet
+{
+    Blueprint::make('marketing')->setNamespace('globals')->setContents(['tabs' => Install::tabs('assets', 'marketing')])->save();
+    $set = GlobalSet::findByHandle('marketing') ?? GlobalSet::make('marketing')->title('Marketing settings');
 
-    $this->get(cp_route('mt.features.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-        ->component('marketing-toolkit::Features', false)
-        ->where('values.sitemap', true)
-        ->where('blueprint.tabs.0.sections.2.fields.0.handle', 'tracking'));
+    if (Site::multiEnabled()) {
+        $set->sites(Site::all()->mapWithKeys(fn ($each) => [$each->handle() => $each->handle() === 'default' ? null : 'default'])->all());
+    }
 
-    $this->postJson(cp_route('mt.features.update'), [...array_fill_keys(array_keys(Features::MODULES), true), 'sitemap' => false, 'tracking' => false])->assertOk();
+    $set->save();
+
+    return GlobalSet::findByHandle('marketing');
+}
+
+test('the Features tab of Settings saves what is off to the addon\'s settings', function () {
+    $set = marketingGlobal();
+
+    $set->in('default')->data(['gtm_id' => 'GTM-ABC1234', 'feature_sitemap' => false, 'feature_tracking' => false, 'feature_robots_txt' => true])->save();
 
     expect(Features::off())->toBe(['sitemap', 'tracking'])
         ->and(Addon::get(Package::NAME)->settings()->get('features_off'))->toBe(['sitemap', 'tracking']);
 
-    $this->get(cp_route('mt.features.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('values.sitemap', false)->where('values.robots_txt', true));
+    $set->in('default')->set('feature_sitemap', true)->save();
+
+    expect(Features::off())->toBe(['tracking']);
 });
 
-test('a module the request leaves out keeps its state', function () {
+test('a save without the tab\'s values leaves the switches as they are', function () {
     Features::save(['tracking']);
-    $this->actingAs(cpUser(super: true));
 
-    $this->postJson(cp_route('mt.features.update'), ['not_found' => false])->assertOk();
+    marketingGlobal()->in('default')->data(['gtm_id' => 'GTM-ABC1234'])->save();
 
-    expect(Features::off())->toBe(['not_found', 'tracking']);
+    expect(Features::off())->toBe(['tracking']);
 });
 
-test('someone who may not change the addon\'s settings can\'t open it, or see it in the nav', function () {
-    $this->actingAs(cpUser(['view marketing toolkit']));
+test('the tab starts as the addon\'s settings have the switches', function () {
+    Features::save(['not_found', 'tracking']);
+    Blueprint::find('globals.marketing')?->delete();
+    GlobalSet::findByHandle('marketing')?->delete();
 
-    $this->get(cp_route('mt.features.index'))->assertForbidden();
-    $this->postJson(cp_route('mt.features.update'), ['sitemap' => false])->assertForbidden();
-    expect(collect(toolsNav()->get('SEO')->resolveChildren()->children())->map->display()->all())->not->toContain('Features');
+    $this->artisan('statamic:mt:install')->assertSuccessful();
+
+    expect(GlobalSet::findByHandle('marketing')->in('default')->data()->only(['feature_not_found', 'feature_tracking', 'feature_sitemap'])->all())
+        ->toBe(['feature_not_found' => false, 'feature_tracking' => false]);
+});
+
+test('the tab is on the default site only, for whoever may change the addon\'s settings', function () {
+    multisite();
+    $set = marketingGlobal();
+
+    $this->actingAs(cpUser(super: true));
+    expect($set->in('default')->blueprint()->hasTab('features'))->toBeTrue()
+        ->and($set->in('cothinking')->blueprint()->hasTab('features'))->toBeFalse();
+    $this->get($set->in('default')->editUrl())->assertOk();
+
+    $this->actingAs(cpUser(['view marketing toolkit']));
+    expect(GlobalSet::findByHandle('marketing')->in('default')->blueprint()->hasTab('features'))->toBeFalse();
 });
 
 test('a module that is off is off in the config, and its pages answer 404 even with cached routes', function () {
@@ -96,25 +131,22 @@ test('listeners and middleware of modules that are off aren\'t registered', func
         ->and((fn () => $this->subscribe)->call($provider))->toBe([]);
 });
 
-test('a module config/marketing-toolkit.php switches off shows off, locked, and a save leaves it be', function () {
+test('a module config/marketing-toolkit.php switches off is locked in the tab, and a save leaves it be', function () {
     config(['marketing-toolkit.indexnow.enabled' => false]);
+    $set = marketingGlobal();
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('mt.features.index'))->assertInertia(fn (AssertableInertia $page) => $page
-        ->where('values.indexnow', false)
-        ->where('values.sitemap', true)
-        ->where('blueprint.tabs.0.sections.0.fields.4.handle', 'indexnow')
-        ->where('blueprint.tabs.0.sections.0.fields.4.visibility', 'read_only')
-        ->where('blueprint.tabs.0.sections.0.fields.4.instructions', 'Tells Bing and others when a page changes. Off in config/marketing-toolkit.php.'));
+    expect($set->in('default')->blueprint()->field('feature_indexnow')->config())->toMatchArray(['visibility' => 'read_only', 'default' => false])
+        ->and($set->in('default')->blueprint()->field('feature_sitemap')->config())->not->toHaveKey('visibility');
 
-    // Turning it on here can't override the config; turning it off here would only be saved twice.
-    $this->postJson(cp_route('mt.features.update'), ['indexnow' => true, 'sitemap' => false])->assertOk();
+    // Turning it on in the tab can't override the config.
+    $set->in('default')->data(['feature_indexnow' => true, 'feature_sitemap' => false])->save();
 
     expect(Features::off())->toBe(['sitemap'])
         ->and(Features::offInConfig())->toBe(['indexnow']);
 });
 
-test('a module off on the screen isn\'t counted as off in the config', function () {
+test('a module off in the tab isn\'t counted as off in the config', function () {
     Features::save(['sitemap']);
     rebootFeatures();
 

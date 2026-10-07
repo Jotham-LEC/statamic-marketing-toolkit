@@ -6,7 +6,6 @@ fields:
       type: mt_preview
       localizable: true
       display: 'marketing-toolkit::fields.seo.seo_preview.display'
-      instructions: 'marketing-toolkit::fields.seo.seo_preview.instructions'
       listable: false
   -
     handle: seo
@@ -15,20 +14,26 @@ fields:
       localizable: true
       display: 'marketing-toolkit::fields.seo.seo.display'
       fullscreen: false
-      instructions: 'marketing-toolkit::fields.seo.seo.instructions'
+      # No card around the fields: they sit in the SEO tab like any other.
+      border: false
+      hide_display: true
       fields:
         -
           handle: title
           field:
             type: text
             display: 'marketing-toolkit::fields.seo.title.display'
-            instructions: 'marketing-toolkit::fields.seo.title.instructions'
         -
           handle: description
           field:
             type: textarea
             display: 'marketing-toolkit::fields.seo.description.display'
-            instructions: 'marketing-toolkit::fields.seo.description.instructions'
+        -
+          handle: sharing
+          field:
+            type: mt_heading
+            display: 'marketing-toolkit::fields.seo.sharing.display'
+            hide_display: true
         -
           handle: image
           field:
@@ -36,28 +41,28 @@ fields:
             display: 'marketing-toolkit::fields.seo.image.display'
             max_files: 1
             mode: list
-            instructions: 'marketing-toolkit::fields.seo.image.instructions'
         -
           handle: og_title
           field:
             type: text
             display: 'marketing-toolkit::fields.seo.og_title.display'
-            width: 50
-            instructions: 'marketing-toolkit::fields.seo.og_title.instructions'
         -
           handle: og_subtitle
           field:
-            type: text
+            type: textarea
             display: 'marketing-toolkit::fields.seo.og_subtitle.display'
-            width: 50
-            instructions: 'marketing-toolkit::fields.seo.og_subtitle.instructions'
+        -
+          handle: advanced
+          field:
+            type: mt_heading
+            display: 'marketing-toolkit::fields.seo.advanced.display'
+            hide_display: true
         -
           handle: canonical
           field:
             type: text
             input_type: url
             display: 'marketing-toolkit::fields.seo.canonical.display'
-            instructions: 'marketing-toolkit::fields.seo.canonical.instructions'
             validate:
               - nullable
               - 'url:http,https'
@@ -66,38 +71,37 @@ fields:
           field:
             type: toggle
             display: 'marketing-toolkit::fields.seo.noindex.display'
-            width: 33
+            width: 50
         -
           handle: nofollow
           field:
             type: toggle
             display: 'marketing-toolkit::fields.seo.nofollow.display'
-            width: 33
-        -
-          handle: nosnippet
-          field:
-            type: toggle
-            display: 'marketing-toolkit::fields.seo.nosnippet.display'
-            width: 33
-            instructions: 'marketing-toolkit::fields.seo.nosnippet.instructions'
-        -
-          handle: max_snippet
-          field:
-            type: integer
-            display: 'marketing-toolkit::fields.seo.max_snippet.display'
-            width: 33
-            instructions: 'marketing-toolkit::fields.seo.max_snippet.instructions'
+            width: 50
         -
           handle: sitemap
           field:
             type: toggle
             display: 'marketing-toolkit::fields.seo.sitemap.display'
             default: true
-            width: 33
+            width: 50
+        -
+          handle: nosnippet
+          field:
+            type: toggle
+            display: 'marketing-toolkit::fields.seo.nosnippet.display'
+            width: 50
+        -
+          handle: max_snippet
+          field:
+            type: integer
+            display: 'marketing-toolkit::fields.seo.max_snippet.display'
+            width: 50
+            unless:
+              nosnippet: 'true'
         -
           handle: json_ld
           field:
             type: code
             mode: javascript
             display: 'marketing-toolkit::fields.seo.json_ld.display'
-            instructions: 'marketing-toolkit::fields.seo.json_ld.instructions'

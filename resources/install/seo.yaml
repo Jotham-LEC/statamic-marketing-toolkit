@@ -1,4 +1,4 @@
-# The "SEO & brand" blueprint that `php please mt:install` creates
+# The "Brand" blueprint that `php please mt:install` creates
 # (Commands/Install.php). Labels are translation keys (lang/en/fields.php),
 # so the control panel shows them in each user's language. Assets fields get
 # the asset container when the command runs.
@@ -10,40 +10,38 @@ tabs:
         fields:
           -
             handle: title_site_name
-            field: { type: toggle, display: 'marketing-toolkit::fields.brand.title_site_name.display', width: 50, instructions: 'marketing-toolkit::fields.brand.title_site_name.instructions' }
+            field: { type: toggle, display: 'marketing-toolkit::fields.brand.title_site_name.display', width: 50 }
           -
             handle: title_separator
-            field: { type: text, display: 'marketing-toolkit::fields.brand.title_separator.display', width: 50, placeholder: '·', if: { title_site_name: 'true' }, instructions: 'marketing-toolkit::fields.brand.title_separator.instructions' }
+            field: { type: text, display: 'marketing-toolkit::fields.brand.title_separator.display', width: 50, placeholder: '·', if: { title_site_name: 'true' } }
           -
             handle: default_description
-            field: { type: textarea, display: 'marketing-toolkit::fields.brand.default_description.display', character_limit: 160, instructions: 'marketing-toolkit::fields.brand.default_description.instructions' }
+            field: { type: textarea, display: 'marketing-toolkit::fields.brand.default_description.display', character_limit: 160 }
           -
             handle: default_image
-            field: { type: assets, display: 'marketing-toolkit::fields.brand.default_image.display', max_files: 1, instructions: 'marketing-toolkit::fields.brand.default_image.instructions' }
+            field: { type: assets, display: 'marketing-toolkit::fields.brand.default_image.display', max_files: 1 }
           -
             handle: site_alternate_name
-            field: { type: text, display: 'marketing-toolkit::fields.brand.site_alternate_name.display', width: 50, instructions: 'marketing-toolkit::fields.brand.site_alternate_name.instructions' }
+            field: { type: text, display: 'marketing-toolkit::fields.brand.site_alternate_name.display', width: 50 }
           -
             handle: twitter_handle
             field: { type: text, display: 'marketing-toolkit::fields.brand.twitter_handle.display', width: 50, prepend: '@' }
       -
         display: 'marketing-toolkit::fields.brand.sections.icon.display'
-        instructions: 'marketing-toolkit::fields.brand.sections.icon.instructions'
         fields:
           -
             handle: favicon
-            field: { type: assets, display: 'marketing-toolkit::fields.brand.favicon.display', max_files: 1, instructions: 'marketing-toolkit::fields.brand.favicon.instructions' }
+            field: { type: assets, display: 'marketing-toolkit::fields.brand.favicon.display', max_files: 1 }
           -
             handle: theme_color
-            field: { type: color, display: 'marketing-toolkit::fields.brand.theme_color.display', width: 50, instructions: 'marketing-toolkit::fields.brand.theme_color.instructions' }
+            field: { type: color, display: 'marketing-toolkit::fields.brand.theme_color.display', width: 50 }
           -
             handle: background_color
-            field: { type: color, display: 'marketing-toolkit::fields.brand.background_color.display', width: 50, instructions: 'marketing-toolkit::fields.brand.background_color.instructions' }
+            field: { type: color, display: 'marketing-toolkit::fields.brand.background_color.display', width: 50 }
   publisher:
     display: 'marketing-toolkit::fields.brand.tabs.publisher'
     sections:
       -
-        instructions: 'marketing-toolkit::fields.brand.sections.publisher.instructions'
         fields:
           -
             handle: publisher_type
@@ -64,13 +62,12 @@ tabs:
                 ProfessionalService: 'marketing-toolkit::fields.brand.publisher_type.options.professional_service'
                 Restaurant: 'marketing-toolkit::fields.brand.publisher_type.options.restaurant'
                 Person: 'marketing-toolkit::fields.brand.publisher_type.options.person'
-              instructions: 'marketing-toolkit::fields.brand.publisher_type.instructions'
           -
             handle: publisher_name
             field: { type: text, display: 'marketing-toolkit::fields.brand.publisher_name.display', width: 50 }
           -
             handle: publisher_alternate_name
-            field: { type: text, display: 'marketing-toolkit::fields.brand.publisher_alternate_name.display', width: 50, instructions: 'marketing-toolkit::fields.brand.publisher_alternate_name.instructions' }
+            field: { type: text, display: 'marketing-toolkit::fields.brand.publisher_alternate_name.display', width: 50 }
           -
             handle: founding_date
             field: { type: date, display: 'marketing-toolkit::fields.brand.founding_date.display', width: 50 }
@@ -79,7 +76,7 @@ tabs:
             field: { type: textarea, display: 'marketing-toolkit::fields.brand.publisher_description.display' }
           -
             handle: publisher_logo
-            field: { type: assets, display: 'marketing-toolkit::fields.brand.publisher_logo.display', max_files: 1, instructions: '' }
+            field: { type: assets, display: 'marketing-toolkit::fields.brand.publisher_logo.display', max_files: 1 }
           -
             handle: job_title
             field: { type: text, display: 'marketing-toolkit::fields.brand.job_title.display', width: 50, if: { publisher_type: 'contains Person' } }
@@ -94,7 +91,7 @@ tabs:
             field: { type: text, display: 'marketing-toolkit::fields.brand.area_served.display', width: 50 }
           -
             handle: same_as
-            field: { type: list, display: 'marketing-toolkit::fields.brand.same_as.display', instructions: 'marketing-toolkit::fields.brand.same_as.instructions' }
+            field: { type: list, display: 'marketing-toolkit::fields.brand.same_as.display' }
           -
             handle: contact_points
             field:
@@ -114,7 +111,6 @@ tabs:
                   field: { type: text, display: 'marketing-toolkit::fields.brand.email.display' }
       -
         display: 'marketing-toolkit::fields.brand.sections.address.display'
-        instructions: 'marketing-toolkit::fields.brand.sections.address.instructions'
         fields:
           -
             handle: street_address
@@ -133,7 +129,6 @@ tabs:
             field: { type: text, display: 'marketing-toolkit::fields.brand.address_country.display', width: 50, placeholder: 'MY, AU, US…' }
       -
         display: 'marketing-toolkit::fields.brand.sections.local_business.display'
-        instructions: 'marketing-toolkit::fields.brand.sections.local_business.instructions'
         fields:
           -
             handle: price_range
@@ -172,125 +167,14 @@ tabs:
                 -
                   handle: closes
                   field: { type: time, display: 'marketing-toolkit::fields.brand.closes.display' }
-  tracking:
-    display: 'marketing-toolkit::fields.brand.tabs.tracking'
-    sections:
-      -
-        instructions: 'marketing-toolkit::fields.brand.sections.tracking.instructions'
-        fields:
-          -
-            handle: tracking_overlap
-            field: { type: section, display: 'marketing-toolkit::fields.brand.tracking_overlap.display', instructions: 'marketing-toolkit::fields.brand.tracking_overlap.instructions', if: 'mtTrackingOverlap' }
-          -
-            handle: gtm_id
-            field:
-              type: text
-              display: 'marketing-toolkit::fields.brand.gtm_id.display'
-              width: 50
-              placeholder: 'GTM-XXXXXXX'
-              instructions: 'marketing-toolkit::fields.brand.gtm_id.instructions'
-              validate: ['nullable', 'regex:/^GTM-[A-Z0-9]{4,12}$/i']
-          -
-            handle: ga4_id
-            field: { type: text, display: 'marketing-toolkit::fields.brand.ga4_id.display', width: 50, placeholder: 'G-XXXXXXXXXX', validate: ['nullable', 'regex:/^G-[A-Z0-9]{4,16}$/i'] }
-          -
-            handle: posthog_key
-            field: { type: text, display: 'marketing-toolkit::fields.brand.posthog_key.display', width: 50, placeholder: 'phc_…', validate: ['nullable', 'regex:/^phc_[A-Za-z0-9]{16,64}$/'] }
-          -
-            handle: posthog_host
-            field: { type: text, input_type: url, display: 'marketing-toolkit::fields.brand.posthog_host.display', width: 50, placeholder: 'https://us.i.posthog.com', instructions: 'marketing-toolkit::fields.brand.posthog_host.instructions' }
-          -
-            handle: meta_pixel_id
-            field: { type: text, display: 'marketing-toolkit::fields.brand.meta_pixel_id.display', width: 50, validate: ['nullable', 'regex:/^\d{6,20}$/'] }
-          -
-            handle: linkedin_partner_id
-            field: { type: text, display: 'marketing-toolkit::fields.brand.linkedin_partner_id.display', width: 50, validate: ['nullable', 'regex:/^\d{3,12}$/'] }
-      -
-        display: 'marketing-toolkit::fields.brand.sections.consent.display'
-        instructions: 'marketing-toolkit::fields.brand.sections.consent.instructions'
-        fields:
-          -
-            handle: consent_mode
-            field: { type: toggle, display: 'marketing-toolkit::fields.brand.consent_mode.display', instructions: 'marketing-toolkit::fields.brand.consent_mode.instructions' }
-          -
-            handle: consent_ad_storage
-            field:
-              type: button_group
-              display: 'marketing-toolkit::fields.brand.consent_ad_storage.display'
-              width: 50
-              default: denied
-              if: { consent_mode: 'true' }
-              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
-          -
-            handle: consent_analytics_storage
-            field:
-              type: button_group
-              display: 'marketing-toolkit::fields.brand.consent_analytics_storage.display'
-              width: 50
-              default: denied
-              if: { consent_mode: 'true' }
-              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
-          -
-            handle: consent_ad_user_data
-            field:
-              type: button_group
-              display: 'marketing-toolkit::fields.brand.consent_ad_user_data.display'
-              width: 50
-              default: denied
-              if: { consent_mode: 'true' }
-              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
-          -
-            handle: consent_ad_personalization
-            field:
-              type: button_group
-              display: 'marketing-toolkit::fields.brand.consent_ad_personalization.display'
-              width: 50
-              default: denied
-              if: { consent_mode: 'true' }
-              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
-          -
-            handle: consent_wait_for_update
-            field:
-              type: integer
-              display: 'marketing-toolkit::fields.brand.consent_wait_for_update.display'
-              width: 50
-              default: 500
-              append: 'ms'
-              if: { consent_mode: 'true' }
-              instructions: 'marketing-toolkit::fields.brand.consent_wait_for_update.instructions'
-          -
-            handle: consent_regions
-            field:
-              type: select
-              display: 'marketing-toolkit::fields.brand.consent_regions.display'
-              width: 50
-              multiple: true
-              taggable: true
-              options: { EEA: 'marketing-toolkit::fields.brand.consent_regions.options.eea' }
-              if: { consent_mode: 'true' }
-              instructions: 'marketing-toolkit::fields.brand.consent_regions.instructions'
-      -
-        display: 'marketing-toolkit::fields.brand.sections.conversions.display'
-        instructions: 'marketing-toolkit::fields.brand.sections.conversions.instructions'
-        fields:
-          -
-            handle: conversions
-            field: { type: toggle, display: 'marketing-toolkit::fields.brand.conversions.display', default: true, width: 50, instructions: 'marketing-toolkit::fields.brand.conversions.instructions' }
-          -
-            handle: linkedin_conversion_id
-            field: { type: text, display: 'marketing-toolkit::fields.brand.linkedin_conversion_id.display', width: 50, if: { conversions: 'true' }, validate: ['nullable', 'regex:/^\d{3,12}$/'] }
-          -
-            handle: attribution
-            field: { type: toggle, display: 'marketing-toolkit::fields.brand.attribution.display', width: 50, instructions: 'marketing-toolkit::fields.brand.attribution.instructions' }
   shop:
     display: 'marketing-toolkit::fields.brand.tabs.shop'
     sections:
       -
-        instructions: 'marketing-toolkit::fields.brand.sections.shop.instructions'
         fields:
           -
             handle: currency
-            field: { type: text, display: 'marketing-toolkit::fields.brand.currency.display', width: 33, placeholder: 'MYR, AUD, USD…', instructions: 'marketing-toolkit::fields.brand.currency.instructions' }
+            field: { type: text, display: 'marketing-toolkit::fields.brand.currency.display', width: 33, placeholder: 'MYR, AUD, USD…' }
       -
         display: 'marketing-toolkit::fields.brand.sections.returns.display'
         fields:
@@ -309,7 +193,7 @@ tabs:
             field: { type: text, display: 'marketing-toolkit::fields.brand.return_country.display', width: 33, placeholder: 'MY' }
           -
             handle: return_policy_link
-            field: { type: text, input_type: url, display: 'marketing-toolkit::fields.brand.return_policy_link.display', instructions: 'marketing-toolkit::fields.brand.return_policy_link.instructions' }
+            field: { type: text, input_type: url, display: 'marketing-toolkit::fields.brand.return_policy_link.display' }
       -
         display: 'marketing-toolkit::fields.brand.sections.shipping.display'
         fields:
@@ -320,7 +204,6 @@ tabs:
               display: 'marketing-toolkit::fields.brand.shipping_rates.display'
               mode: table
               add_row: 'marketing-toolkit::fields.brand.shipping_rates.add_row'
-              instructions: 'marketing-toolkit::fields.brand.shipping_rates.instructions'
               fields:
                 -
                   handle: country
@@ -347,7 +230,6 @@ tabs:
     display: 'marketing-toolkit::fields.brand.tabs.share_cards'
     sections:
       -
-        instructions: 'marketing-toolkit::fields.brand.sections.share_cards.instructions'
         fields:
           -
             handle: og_background
@@ -360,36 +242,4 @@ tabs:
             field: { type: color, display: 'marketing-toolkit::fields.brand.og_accent.display', width: 33 }
           -
             handle: og_picture
-            field: { type: assets, display: 'marketing-toolkit::fields.brand.og_picture.display', max_files: 1, instructions: 'marketing-toolkit::fields.brand.og_picture.instructions' }
-  crawlers:
-    display: 'marketing-toolkit::fields.brand.tabs.crawlers'
-    sections:
-      -
-        fields:
-          -
-            handle: google_verification
-            field: { type: text, display: 'marketing-toolkit::fields.brand.google_verification.display', width: 50 }
-          -
-            handle: bing_verification
-            field: { type: text, display: 'marketing-toolkit::fields.brand.bing_verification.display', width: 50 }
-          -
-            handle: yandex_verification
-            field: { type: text, display: 'marketing-toolkit::fields.brand.yandex_verification.display', width: 50 }
-          -
-            handle: pinterest_verification
-            field: { type: text, display: 'marketing-toolkit::fields.brand.pinterest_verification.display', width: 50 }
-          -
-            handle: robots_disallow
-            field: { type: list, display: 'marketing-toolkit::fields.brand.robots_disallow.display', instructions: 'marketing-toolkit::fields.brand.robots_disallow.instructions' }
-          -
-            handle: allow_ai_training
-            field: { type: toggle, display: 'marketing-toolkit::fields.brand.allow_ai_training.display', default: true, width: 50, instructions: 'marketing-toolkit::fields.brand.allow_ai_training.instructions' }
-          -
-            handle: allow_ai_search
-            field: { type: toggle, display: 'marketing-toolkit::fields.brand.allow_ai_search.display', default: true, width: 50, instructions: 'marketing-toolkit::fields.brand.allow_ai_search.instructions' }
-          -
-            handle: robots_extra
-            field: { type: textarea, display: 'marketing-toolkit::fields.brand.robots_extra.display', instructions: 'marketing-toolkit::fields.brand.robots_extra.instructions' }
-          -
-            handle: ads_txt
-            field: { type: textarea, display: 'marketing-toolkit::fields.brand.ads_txt.display', instructions: 'marketing-toolkit::fields.brand.ads_txt.instructions' }
+            field: { type: assets, display: 'marketing-toolkit::fields.brand.og_picture.display', max_files: 1 }

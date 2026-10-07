@@ -2,9 +2,9 @@ import { components, conditions, config, hooks, inertia, stacks, toast } from '@
 import { router } from '@statamic/cms/inertia';
 import { PipelineStopped } from '@statamic/cms/save-pipeline';
 import RedirectConfirm from './components/RedirectConfirm.vue';
+import HeadingFieldtype from './components/HeadingFieldtype.vue';
 import SeoPreviewFieldtype from './components/SeoPreviewFieldtype.vue';
 import SeoWidget from './components/SeoWidget.vue';
-import Features from './pages/Features.vue';
 import NotFound from './pages/NotFound.vue';
 import Overview from './pages/Overview.vue';
 import RedirectForm from './pages/RedirectForm.vue';
@@ -98,6 +98,7 @@ function confirmRedirect(payload) {
 
 Statamic.booting(() => {
     components.register('mt_preview-fieldtype', SeoPreviewFieldtype);
+    components.register('mt_heading-fieldtype', HeadingFieldtype);
     components.register('mt-widget', SeoWidget);
     components.register('mt-redirect-confirm', RedirectConfirm);
     inertia.register('marketing-toolkit::Overview', Overview);
@@ -107,7 +108,6 @@ Statamic.booting(() => {
     inertia.register('marketing-toolkit::Reports', Reports);
     inertia.register('marketing-toolkit::Report', Report);
     inertia.register('marketing-toolkit::SearchConsole', SearchConsole);
-    inertia.register('marketing-toolkit::Features', Features);
 
     router.on('navigate', (event) => {
         page = event.detail.page;
@@ -117,11 +117,11 @@ Statamic.booting(() => {
         hooks.on(`${type}.saving`, (resolve, reject, payload) => confirmRedirect(payload).then(resolve, reject));
     }
 
-    // The Tracking tab's warning, as its fields change, and a toast when the brand global is saved.
+    // The Tracking tab's warning, as its fields change, and a toast when the set holding it is saved.
     conditions.add('mtTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
 
     hooks.on('global-set.saving', (resolve, reject, payload) => {
-        if (payload?.globalSet === config.get('marketingToolkit')?.global && trackingOverlaps(payload.values)) {
+        if (config.get('marketingToolkit')?.globals?.includes(payload?.globalSet) && trackingOverlaps(payload.values)) {
             setTimeout(() => toast.info(__('marketing-toolkit::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
         }
 

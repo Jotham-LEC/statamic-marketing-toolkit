@@ -243,13 +243,22 @@ function fakeDns(array $hosts): void
  *
  * @return Illuminate\Support\Collection<string, NavItem>
  */
-function toolsNav(): Illuminate\Support\Collection
+/**
+ * The Marketing section of the nav, as the current user sees it: its items
+ * by label, and with `children: true` each item's children after it.
+ */
+function marketingNav(bool $children = false): Illuminate\Support\Collection
 {
     // AddonTestCase mocks the nav after the addon has extended the real one.
     Nav::swap(new Statamic\CP\Navigation\Nav);
     Navigation::register();
 
-    $tools = collect(Nav::build())->firstWhere('display', 'Tools');
+    $section = collect(Nav::build())->firstWhere('display', __('marketing-toolkit::cp.seo'));
+    $items = collect($section['items'] ?? []);
 
-    return collect($tools['items'] ?? [])->keyBy(fn ($item) => $item->display());
+    if ($children) {
+        $items = $items->flatMap(fn ($item) => [$item, ...($item->resolveChildren()->children() ?? [])]);
+    }
+
+    return $items->keyBy(fn ($item) => $item->display());
 }

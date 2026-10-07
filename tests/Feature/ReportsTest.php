@@ -221,7 +221,7 @@ test('the reports screens and a report’s pages, filtered by a check', function
     $flagged = $this->getJson(cp_route('mt.reports.pages', [$report, 'rule' => 'title_unique']))->assertOk();
     expect($flagged->json('data.*.path'))->toEqualCanonicalizing(['/about', '/team'])
         ->and($flagged->json('data.0.issues.0'))->toMatchArray(['label' => 'Unique title', 'status' => 'fail'])
-        ->and($flagged->json('data.0.issues.0.message'))->toBeIn(['Same title as /about.', 'Same title as /team.'])
+        ->and($flagged->json('data.0.issues.0.message'))->toBeIn(['This page has the same title as /about.', 'This page has the same title as /team.'])
         ->and($flagged->json('data.0.edit_url'))->toContain('/cp/collections/pages/entries/');
 
     $sorted = $this->getJson(cp_route('mt.reports.pages', [$report, 'sort' => 'score', 'order' => 'asc']))->json('data.*.score');

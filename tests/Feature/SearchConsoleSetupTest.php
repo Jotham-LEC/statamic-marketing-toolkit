@@ -190,10 +190,10 @@ test('checking the connection says what to fix in Google\'s words turned into st
     $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.check'))
         ->assertOk()->assertJson(['ok' => $status === 200])->assertJsonPath('message', fn (string $message) => str_contains($message, $says));
 })->with([
-    'connected' => [200, ['siteUrl' => 'sc-domain:example.test', 'permissionLevel' => 'siteRestrictedUser'], 'Connected'],
+    'connected' => [200, ['siteUrl' => 'sc-domain:example.test', 'permissionLevel' => 'siteRestrictedUser'], 'is connected'],
     'not a user' => [403, ['error' => ['code' => 403, 'message' => 'User does not have sufficient permission', 'status' => 'PERMISSION_DENIED']], 'seo@project.iam.gserviceaccount.com is not a user of sc-domain:example.test'],
     'API off' => [403, ['error' => ['code' => 403, 'message' => 'Google Search Console API has not been used in project 1 before or it is disabled.', 'details' => [['reason' => 'SERVICE_DISABLED']]]], 'API is not enabled'],
-    'no such property' => [404, ['error' => ['code' => 404, 'message' => 'Not found']], 'has no property sc-domain:example.test'],
+    'no such property' => [404, ['error' => ['code' => 404, 'message' => 'Not found']], 'has no property called sc-domain:example.test'],
 ]);
 
 test('a key Google has disabled gets its own explanation, with the guide', function () {

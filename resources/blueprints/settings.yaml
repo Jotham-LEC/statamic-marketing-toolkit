@@ -4,7 +4,6 @@ tabs:
     sections:
       -
         display: 'marketing-toolkit::fields.settings.sections.checks.display'
-        instructions: 'marketing-toolkit::fields.settings.sections.checks.instructions'
         fields:
           -
             handle: rule_title_length
@@ -38,7 +37,7 @@ tabs:
             field: { type: toggle, display: 'marketing-toolkit::fields.settings.rule_orphan_pages.display', default: true, width: 33 }
           -
             handle: rule_external_links
-            field: { type: toggle, display: 'marketing-toolkit::fields.settings.rule_external_links.display', instructions: 'marketing-toolkit::fields.settings.rule_external_links.instructions', default: false, width: 33 }
+            field: { type: toggle, display: 'marketing-toolkit::fields.settings.rule_external_links.display', default: false, width: 33 }
           -
             handle: rule_og_image
             field: { type: toggle, display: 'marketing-toolkit::fields.settings.rule_og_image.display', default: true, width: 33 }
@@ -47,7 +46,6 @@ tabs:
             field: { type: toggle, display: 'marketing-toolkit::fields.settings.rule_json_ld.display', default: true, width: 33 }
       -
         display: 'marketing-toolkit::fields.settings.sections.lengths.display'
-        instructions: 'marketing-toolkit::fields.settings.sections.lengths.instructions'
         fields:
           -
             handle: title_min
@@ -75,13 +73,13 @@ tabs:
               mode: select
           -
             handle: max_pages
-            field: { type: integer, display: 'marketing-toolkit::fields.settings.max_pages.display', instructions: 'marketing-toolkit::fields.settings.max_pages.instructions', default: 0, width: 50, validate: ['required', 'integer', 'min:0'] }
+            field: { type: integer, display: 'marketing-toolkit::fields.settings.max_pages.display', default: 0, width: 50, validate: ['required', 'integer', 'min:0'] }
       -
         display: 'marketing-toolkit::fields.settings.sections.how.display'
         fields:
           -
             handle: chunk_size
-            field: { type: integer, display: 'marketing-toolkit::fields.settings.chunk_size.display', instructions: 'marketing-toolkit::fields.settings.chunk_size.instructions', default: 25, width: 50, validate: ['required', 'integer', 'min:1', 'max:500'] }
+            field: { type: integer, display: 'marketing-toolkit::fields.settings.chunk_size.display', default: 25, width: 50, validate: ['required', 'integer', 'min:1', 'max:500'] }
           -
             handle: keep_reports
             field: { type: integer, display: 'marketing-toolkit::fields.settings.keep_reports.display', default: 10, width: 50, validate: ['required', 'integer', 'min:1'] }
@@ -98,7 +96,6 @@ tabs:
             field: { type: array, mode: dynamic, visibility: hidden }
       -
         display: 'marketing-toolkit::fields.settings.sections.schedule.display'
-        instructions: 'marketing-toolkit::fields.settings.sections.schedule.instructions'
         fields:
           -
             handle: schedule

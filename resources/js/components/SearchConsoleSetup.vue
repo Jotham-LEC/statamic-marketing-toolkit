@@ -6,7 +6,7 @@ import { computed, ref } from 'vue';
 import { useRequests } from '../util.js';
 
 /*
- * Connecting Google Search Console, step by step, on Tools → SEO → Search Console: a key from
+ * Connecting Google Search Console, step by step, on Marketing → Search Console: a key from
  * Google Cloud, its email added as a user of the property, the property, a
  * check; the import is the page's. What .env sets is shown and can't be changed here.
  */

@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Og;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
@@ -61,7 +62,8 @@ class Generator
 
         return new Card(
             title: $overrides['og_title'] ?? (string) $entry->get('title'),
-            description: $overrides['og_subtitle'] ?? $seo->description($context),
+            // A long subtitle may be typed on several lines: the card draws it as one paragraph.
+            description: isset($overrides['og_subtitle']) ? Str::squish((string) $overrides['og_subtitle']) : $seo->description($context),
             label: $mount ? (string) $mount->get('title') : $settings->siteName(),
             siteName: $settings->siteName(),
             picture: $settings->asset('og_picture')?->resolvedPath(),

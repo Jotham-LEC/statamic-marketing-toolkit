@@ -1,18 +1,89 @@
 # A guide for editors
 
-This guide is for the people who write and look after the site's pages. It explains what the SEO parts of the control panel do and how to use them. No coding involved.
+This guide is for the people who write and look after the site's pages. It explains what the Marketing section of the control panel and the SEO fields on each page do and how to use them. No coding involved.
 
 **SEO** (search engine optimisation) is about how your pages show up in Google and other search engines, and how they look when someone shares a link on Facebook, LinkedIn, WhatsApp or X. Most of it happens on its own: if you leave the SEO fields empty, the site fills in sensible values from your page's title, description and text.
 
-## Tools → SEO
+## The Marketing section
 
-The overview: the latest report's score, recent 404s, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
+Everything the addon adds to the control panel is in its own **Marketing** section of the sidebar, between Fields and Tools. Its items are **Overview**, **Reports**, **Redirects**, **404s**, **Search Console**, **Brand** and **Settings**. The fields carry no descriptions in the control panel, so this page is where each one is explained. You see only the items your role allows: someone who may not manage redirects has no Redirects item, for example.
 
-**Connecting Google Search Console** is a one-time task for whoever looks after the site's settings: **Tools → SEO → Search Console** lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
+With more than one site, the overview, the 404s, the reports, Brand, Settings and the dashboard card are of the site chosen in the control panel's site menu. Redirects list every site's, with a Site column.
 
-## SEO & brand
+## Overview
 
-**Globals → SEO & brand** holds what applies to the whole site. Fill it in once and come back when something changes.
+**Marketing → Overview** shows the latest report's score, recent 404s, redirects and the brand, and, once Search Console is connected, Google Search's clicks and appearances with the pages people click most. Each part has a button to the screen that changes it. It also lists the files the site serves (the sitemap, robots.txt, llms.txt, the web app manifest and the home page's share card), and marks any file in the `public` folder that is served instead of the addon's.
+
+## Reports
+
+![A report: the score and its checks](images/report.png)
+
+**Marketing → Reports** checks every page of the site the way a search engine sees it, and gives each page a score out of 100. The site's score is the average.
+
+Click **Run report**. A bar shows the progress, and a few hundred pages take under a minute. When it's done you see:
+
+- **The site's score**.
+- **The checks**, with how many pages fail each one or get a warning. Choose a check to see only the pages it flagged.
+- **The pages**, lowest score first. Each one lists its problems and has a **Fix** link to its edit screen.
+
+**Export CSV**, on a report, downloads its pages as a spreadsheet, one row per page with the worst score first. The columns are Address, Title, Score, Failed checks and Warnings, so you can share the list or work through it outside the control panel.
+
+What the checks look for:
+
+| Check | Counts | What to do |
+|---|---|---|
+| Links within the site | 3 | A link to a page that doesn't exist: fix the link, or add a redirect. A link that goes through a redirect: link straight to the new address. |
+| Canonical address | 3 | Usually fine on its own; tell your developer if it fails. |
+| Hidden page in the sitemap | 3 | A page set to hide from search engines but still in the sitemap: tell your developer. |
+| Title length | 2 | Write an SEO title that fits. |
+| Unique title | 2 | Two pages with the same title: make each one say what that page is about. |
+| Description length | 2 | Write a description of the right length. |
+| Unique description | 2 | The same, for descriptions. |
+| One main heading | 2 | Each page should have one main heading. Usually the page template's job. |
+| Structured data | 2 | Usually the developer's job. |
+| Image descriptions | 1 | Describe each image in its "alt text" (in the asset's settings), for people who can't see it and for search engines. |
+| Share image | 1 | Pages without a picture when shared. |
+| Linked from another page | 2 | A page in the sitemap that no other page links to (a warning): link to it from a related page, so search engines and readers find it. The home page is exempt. |
+| Links to other sites | 1 | Off unless your administrator turns it on, since it asks each linked site: links to pages that no longer exist (404, 410), even after a redirect, or to sites that are gone. Links to `localhost` or a private network aren't checked. |
+
+A **warning** counts half. Pages set to hide from search engines are listed but not scored.
+
+### The Settings tab
+
+The Reports screen has two tabs, **Reports** and **Settings**. The Settings tab is shown to people who may change the addon's settings, and holds what the reports check and how they run:
+
+- **Checks**: a switch for each check (a check that's off is left out of the reports and the scores), and the shortest and longest a title and a description should be. The same lengths colour the counters in each page's preview.
+- **Running**: collections to leave out, the most pages a report covers, how many pages each step checks, how many reports to keep, and whether reports also run on their own, daily or weekly.
+
+## Redirects
+
+**Marketing → Redirects** lists every redirect. Those marked **Automatic** were added when a page moved (see [When a page's address changes](#when-a-pages-address-changes)).
+
+- **Create redirect**: send one address somewhere else.
+  - **From**: an address on this site, starting with `/`, for example `/old-page`. A `*` matches anything: `/blog/*` covers every address under `/blog/`. An address copied from the browser (`/caf%C3%A9`) works too. Capitals count: `/About` and `/about` are two addresses, unless your developer has set redirects to ignore them.
+  - **To**: where to send visitors: `/new-page`, or a full address on another site. With a `*` in From, `$1` stands for whatever it matched: from `/blog/*` to `/articles/$1` sends `/blog/my-post` to `/articles/my-post`. A `#section` at the end is kept. A redirect that would send visitors back where they came from, straight away or through another redirect, isn't accepted.
+  - **Type**: *301 Moved for good* (the usual one), *302 Moved for now* (temporary, e.g. during a sale), or *410 Gone* (removed for good; leave To empty).
+  - **Active**: switch off to pause a redirect without deleting it.
+  - **Campaign link**: for a short address you share in a campaign or print on a flyer, like `/go/linkedin`. Fill in the UTM tags (source, medium, campaign; content and term if you use them) and they're added to where it goes, so Google Analytics and each lead's source show the campaign. Choose *302*, so browsers don't remember it and every click is counted in the list.
+  - **Site** (only with more than one site): the site whose address this is. Leave empty for every site. A site's own redirect wins over one for every site from the same address.
+- **Hits** and **Last used** show whether a redirect is still needed.
+- **Import CSV** and **Export CSV**: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
+
+A redirect only applies when its address doesn't exist as a page. If you bring a page back at an old address, the page shows, not the redirect.
+
+## 404s
+
+A **404** is what visitors get when they ask for an address that doesn't exist. **Marketing → 404s** lists the ones real visitors hit, most recent first, with how often and the last page that linked there. Bots and hacking attempts are left out.
+
+Use it to catch broken links. For a missing address that should lead somewhere, open the row's **⋯** menu and choose **Create redirect**: the form opens with the address (and, with more than one site, its site) filled in, and you only add where it should go.
+
+## Search Console
+
+**Marketing → Search Console** connects Google Search Console, so the overview can show how often each page appears in Google and how often it is clicked. Connecting it is a one-time task for whoever looks after the site's settings, and the screen lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
+
+## Brand
+
+**Marketing → Brand** (the Brand global set) holds what describes the site and its owner. Fill it in once and come back when something changes. With several sites, each site has its own values, and a site that leaves a field empty takes the default site's.
 
 **Brand tab**
 - **Add the site name to page titles**: off by default, so a page's title is just its own ("Pricing"), as most top Google results are. On, it becomes "Pricing · Your site" when that fits in 60 characters.
@@ -25,15 +96,19 @@ The overview: the latest report's score, recent 404s, redirects, the brand defau
 
 **Publisher tab.** Who is behind the site, so search engines can show it correctly. Pick the most specific **type** (a Store rather than a Local business; an Educational organization), or two (Educational organization and Local business), or type any other schema.org type. Then the name, another name, when it was founded, a description, logo or portrait, phone, email, area served, profiles elsewhere and contact points. **Address**: needed for a business people visit; leave it empty for one that only delivers or serves an area. **Local business**: price range, map coordinates and opening hours. Each value only goes out where the type accepts it, so filling in more than applies does no harm.
 
-**Tracking tab.** Paste the ID of each tool you use: **Google Tag Manager**, **Google Analytics 4**, **PostHog** (and its host, for an EU project), the **Meta Pixel** and the **LinkedIn Insight Tag**. Leave the others empty. They load on the live site only, never while you edit. With Google Tag Manager, add every other tool as a tag inside GTM rather than here: a tool loaded both ways counts each visit twice, so the tab and Tools → SEO warn you when that happens. An ID your developer set in `.env` wins over the one here.
-
-**Leads** (same tab): **Send form submissions as leads** sends every form sent on the site to your tools as a lead (and to a LinkedIn conversion, if you paste its ID); **Save where each lead came from** adds the campaign, the site that sent them and their first page to each submission, under **Forms**. See [tracking.md](tracking.md#leads).
-
-**Consent Mode** (same tab), for a cookie banner you already have: what Google's tags may do before a visitor answers it. Turn it on, choose what's denied until the visitor agrees (everything, by default), and how long to wait for the banner. **Only in these regions**: the defaults apply there (for example the EEA, the UK and Switzerland), and everything is granted elsewhere. See [tracking.md](tracking.md) for how the banner passes on the answer.
-
 **Shop tab** (for a site that sells; your developer adds it). The **currency** of your prices; your **return policy** (within so many days, any time, or not accepted, for a country, and/or a link to the policy page); and your **shipping rates**: one row per destination and order value (for example free over RM 300), with the delivery time in days. Search engines show these with your products.
 
 **Share cards tab.** The background, text and accent colours of the generated share pictures, and a logo or portrait to put on every card.
+
+## Settings
+
+**Marketing → Settings** (the Marketing settings global set) holds the tracking tags, consent, leads and what crawlers are told. Like Brand, each site has its own values.
+
+**Tracking tab.** Paste the ID of each tool you use: **Google Tag Manager**, **Google Analytics 4**, **PostHog** (and its host, for an EU project), the **Meta Pixel** and the **LinkedIn Insight Tag**. Leave the others empty. They load on the live site only, never while you edit. With Google Tag Manager, add every other tool as a tag inside GTM rather than here: a tool loaded both ways counts each visit twice, so the tab and the overview warn you when that happens. An ID your developer set in `.env` wins over the one here.
+
+**Consent tab**, for a cookie banner you already have: what Google's tags may do before a visitor answers it. Turn on Consent Mode, choose what's denied until the visitor agrees (everything, by default), and how long to wait for the banner. **Only in these regions**: the defaults apply there (for example the EEA, the UK and Switzerland), and everything is granted elsewhere. See [tracking.md](tracking.md#consent-mode) for how the banner passes on the answer.
+
+**Leads tab.** **Send form submissions as leads** sends every form sent on the site to your tools as a lead (and to a LinkedIn conversion, if you paste its ID); **Save where each lead came from** adds the campaign, the site that sent them and their first page to each submission, under **Forms**. See [tracking.md](tracking.md#leads).
 
 **Crawlers tab**
 - **Verification** codes from Google Search Console, Bing, Yandex or Pinterest, when they ask you to prove you own the site.
@@ -44,6 +119,12 @@ The overview: the latest report's score, recent 404s, redirects, the brand defau
 - **ads.txt**: only for a site that sells ad space (AdSense and others): paste the lines your ad network gives you; they're served at `/ads.txt`.
 
 The site also serves **/llms.txt**, a list of its pages with their descriptions for AI assistants, made from the same pages as the sitemap.
+
+## Features
+
+![The Features tab of Settings, with a switch for each module](images/features.png)
+
+The **Features** tab of **Marketing → Settings** switches off what the site doesn't use (the 404 log, IndexNow, tracking and so on). It applies to the whole install, so it appears on the default site only, and only for people who may change the addon's settings. A feature that `config/marketing-toolkit.php` switches off is shown off and can't be switched on there. A feature that's off isn't loaded at all; switch it back on and everything it saved is still there.
 
 ## A page's SEO tab
 
@@ -69,20 +150,30 @@ If you see *"Hidden from search engines: this result will not appear"*, the page
 
 ### The fields
 
-All optional. Empty means "use the default".
+All the fields are optional, and an empty field means "use the default". **Title** and **Description** come first. Below them, the fields are in two groups: **Sharing**, for how the page looks when it's shared, and **Advanced**, for settings most pages never need.
 
 | Field | What it does | When it's empty |
 |---|---|---|
 | **Title** | Replaces the whole title in Google and the browser tab, exactly as you type it. | The page title, followed by the site name when there's room. |
 | **Description** | The text under the title in Google, and on share cards. | The page's own description, or its first paragraph. |
+
+**Sharing**
+
+| Field | What it does | When it's empty |
+|---|---|---|
 | **Share image** | The picture when the page is shared. Cropped to 1200 × 630. | A share card is drawn for the page automatically (see below). |
 | **Card title** / **Card subtitle** | The words on the generated share card. | The title and the description. |
+
+**Advanced**
+
+| Field | What it does | When it's empty |
+|---|---|---|
 | **Canonical URL** | Only for a piece first published on another site: the original's address, so search engines credit it. | This page's own address. |
 | **Hide from search engines** | Keeps the page out of Google. | The page can be found. |
 | **Do not follow links** | Tells search engines not to follow the links on this page. | Links are followed. |
-| **No snippet** | Shows no text from this page in Google's results, nor in its AI Overviews and AI Mode. | Text is shown. |
-| **Snippet length** | At most this many characters are quoted. | No limit. |
 | **In sitemap** | Lists the page in the sitemap search engines read. | On. |
+| **No snippet** | Shows no text from this page in Google's results, nor in its AI Overviews and AI Mode. | Text is shown. |
+| **Snippet length** | At most this many characters are quoted. It's hidden while **No snippet** is on, since no text is quoted then. | No limit. |
 | **Extra JSON-LD** | Structured data for search engines. Leave it to your developer. | Nothing extra. |
 
 ### Several languages
@@ -106,70 +197,6 @@ If you can manage redirects, saving a page whose address changes asks first:
 - **Don't save yet**: go back to the page without saving.
 
 If you can't manage redirects, the question isn't asked and the redirect is added for you. Moving pages around in a tree adds redirects for the page and everything under it, without asking.
-
-## Redirects
-
-**Tools → SEO → Redirects** lists every redirect. Those marked **Automatic** were added when a page moved.
-
-- **Create redirect**: send one address somewhere else.
-  - **From**: an address on this site, starting with `/`, for example `/old-page`. A `*` matches anything: `/blog/*` covers every address under `/blog/`. An address copied from the browser (`/caf%C3%A9`) works too. Capitals count: `/About` and `/about` are two addresses, unless your developer has set redirects to ignore them.
-  - **To**: where to send visitors: `/new-page`, or a full address on another site. With a `*` in From, `$1` stands for whatever it matched: from `/blog/*` to `/articles/$1` sends `/blog/my-post` to `/articles/my-post`. A `#section` at the end is kept. A redirect that would send visitors back where they came from, straight away or through another redirect, isn't accepted.
-  - **Type**: *301 Moved for good* (the usual one), *302 Moved for now* (temporary, e.g. during a sale), or *410 Gone* (removed for good; leave To empty).
-  - **Active**: switch off to pause a redirect without deleting it.
-  - **Campaign link**: for a short address you share in a campaign or print on a flyer, like `/go/linkedin`. Fill in the UTM tags (source, medium, campaign; content and term if you use them) and they're added to where it goes, so Google Analytics and each lead's source show the campaign. Choose *302*, so browsers don't remember it and every click is counted in the list.
-  - **Site** (only with more than one site): the site whose address this is. Leave empty for every site. A site's own redirect wins over one for every site from the same address.
-- **Hits** and **Last used** show whether a redirect is still needed.
-- **Import CSV** and **Export CSV**: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
-
-A redirect only applies when its address doesn't exist as a page. If you bring a page back at an old address, the page shows, not the redirect.
-
-## 404s
-
-A **404** is what visitors get when they ask for an address that doesn't exist. **Tools → SEO → 404s** lists the ones real visitors hit, most recent first, with how often and the last page that linked there. Bots and hacking attempts are left out.
-
-Use it to catch broken links. For a missing address that should lead somewhere, open the row's **⋯** menu and choose **Create redirect**: the form opens with the address (and, with more than one site, its site) filled in, and you only add where it should go.
-
-With more than one site, the overview, the 404s, the reports and the dashboard card are of the site chosen in the control panel's site menu; redirects list every site's, with a Site column.
-
-## Reports
-
-![A report: the score and its checks](images/report.png)
-
-**Tools → SEO → Reports** checks every page of the site the way a search engine sees it, and gives each page a score out of 100. The site's score is the average.
-
-Click **Run report**. A bar shows the progress; a few hundred pages take under a minute. When it's done you see:
-
-- **The site's score**.
-- **The checks**, with how many pages fail each one or get a warning. Choose a check to see only the pages it flagged.
-- **The pages**, lowest score first. Each one lists its problems and has a **Fix** link to its edit screen.
-
-What the checks look for:
-
-| Check | Counts | What to do |
-|---|---|---|
-| Links within the site | 3 | A link to a page that doesn't exist: fix the link, or add a redirect. A link that goes through a redirect: link straight to the new address. |
-| Canonical address | 3 | Usually fine on its own; tell your developer if it fails. |
-| Hidden page in the sitemap | 3 | A page set to hide from search engines but still in the sitemap: tell your developer. |
-| Title length | 2 | Write an SEO title that fits. |
-| Unique title | 2 | Two pages with the same title: make each one say what that page is about. |
-| Description length | 2 | Write a description of the right length. |
-| Unique description | 2 | The same, for descriptions. |
-| One main heading | 2 | Each page should have one main heading. Usually the page template's job. |
-| Structured data | 2 | Usually the developer's job. |
-| Image descriptions | 1 | Describe each image in its "alt text" (in the asset's settings), for people who can't see it and for search engines. |
-| Share image | 1 | Pages without a picture when shared. |
-| Linked from another page | 2 | A page in the sitemap that no other page links to (a warning): link to it from a related page, so search engines and readers find it. The home page is exempt. |
-| Links to other sites | 1 | Off unless your administrator turns it on, since it asks each linked site: links to pages that no longer exist (404, 410), even after a redirect, or to sites that are gone. Links to `localhost` or a private network aren't checked. |
-
-A **warning** counts half. Pages set to hide from search engines are listed but not scored.
-
-Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → SEO → Report settings). Reports can also run on their own, daily or weekly.
-
-## Features
-
-![Tools → SEO → Features](images/features.png)
-
-**Tools → SEO → Features** switches off what the site doesn't use (the 404 log, IndexNow, tracking…), for whoever may change the addon's settings. A feature that's off isn't loaded at all; switch it back on and everything it saved is still there.
 
 ## The dashboard
 

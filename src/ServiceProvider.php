@@ -196,7 +196,8 @@ class ServiceProvider extends AddonServiceProvider
         Statamic::provideToScript(['marketingToolkit' => [
             // Off: a save has nothing to ask the redirect check.
             'automaticRedirects' => (bool) config('marketing-toolkit.redirects.automatic'),
-            'global' => (string) config('marketing-toolkit.global'),
+            // Brand and Marketing settings: the Tracking tab is in one of them.
+            'globals' => Settings::handles(),
             // Trackers set in .env, which the Tracking tab's warning counts as well.
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
         ]]);

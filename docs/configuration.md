@@ -3,17 +3,20 @@
 Two places, by who changes what:
 
 - **`config/marketing-toolkit.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=marketing-toolkit-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them. A file published by 0.19 or earlier (as config/seo.php, which the update moves) keeps working: its `robots_txt`, `llms_txt` and `ads_txt` switches and its old tracking keys (`gtm`, `ga4`, `meta_pixel`, `linkedin`) are read under their new names.
-- **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit): report settings an editor may want to change.
+- **Marketing → Reports → Settings** (Statamic's addon settings for Marketing Toolkit): report settings an editor may want to change.
 
-The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
+The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours) are content, edited under **Marketing → Brand**, and so are the tracking IDs, Consent Mode, leads and crawler settings, under **Marketing → Settings**; see [editors.md](editors.md#brand).
 
 ## config/marketing-toolkit.php
 
-### Brand global
+### Global sets
 
 | Key | Default | |
 |---|---|---|
-| `global` | `'seo'` | Handle of the brand global set. |
+| `global` | `'seo'` | Handle of the Brand global set: the brand, the publisher, the shop and the share cards. |
+| `settings_global` | `'marketing'` | Handle of the Marketing settings global set: tracking, Consent Mode, leads and crawlers. |
+
+Each set has its own values per site. The addon looks for a field in Brand first, then in Marketing settings, so a site whose values haven't been moved to Marketing settings yet reads them as before.
 
 To change how a value is worked out, extend `SiteSeo` and bind your class in a service provider; see [developers.md](developers.md#change-a-rule-siteseo). (`class` in this file, the way before, still works until 1.0.)
 
@@ -24,7 +27,7 @@ To change how a value is worked out, extend `SiteSeo` and bind your class in a s
 | `title.max` | `60` | With **Add the site name to page titles** on, `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
 | `description.length` | `160` | A description taken from the page is cut to this, on a word, `…` included. |
 
-These two shape what the site prints. The report's title and description checks, and the counters in the entry's preview, have their own limits under **Report settings**, for editors to change; the defaults are the same, 60 and 160, so a generated title or description passes its check.
+These two shape what the site prints. The report's title and description checks, and the counters in the entry's preview, have their own limits under **Marketing → Reports → Settings**, for editors to change; the defaults are the same, 60 and 160, so a generated title or description passes its check.
 
 ### Collections
 
@@ -43,7 +46,7 @@ These two shape what the site prints. The report's title and description checks,
         'product' => [                     // a Product + Offer from these fields (needs a price above 0 and a currency)
             'price_field' => 'price', 'availability_field' => 'in_stock', // a toggle, or InStock/PreOrder…
             'sku_field' => 'sku', 'gtin_field' => null, 'brand_field' => null, 'brand' => 'Acme',
-            'currency' => null,            // else the SEO & brand global's Shop currency
+            'currency' => null,            // else the Brand global's Shop currency
             'condition' => 'NewCondition',
         ],
         'og_template' => 'default',        // a key of og.templates
@@ -99,7 +102,7 @@ Terms are listed in the sitemap (and checked by reports) when their taxonomy is 
 | `sitemap.exclude_collections` | `[]` | Left out even when `collections` is `null`. |
 | `sitemap.taxonomies` | `[]` | Taxonomies whose terms are listed (only terms with published entries). Reports check these terms too. |
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
-| `robots_txt.enabled` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins: the web server answers with it first. A new Statamic site has one; delete it (`mt:install` offers to). |
+| `robots_txt.enabled` | `true` | Serves `/robots.txt` from the Crawlers tab of Marketing settings. A real `public/robots.txt` wins: the web server answers with it first. A new Statamic site has one; delete it (`mt:install` offers to). |
 
 The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `marketing-toolkit.sitemap` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
@@ -107,7 +110,7 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 
 | Key | Default | |
 |---|---|---|
-| `redirects.enabled` | `true` | Applies the rules under Tools → SEO → Redirects. |
+| `redirects.enabled` | `true` | Applies the rules under Marketing → Redirects. |
 | `redirects.automatic` | `true` | Adds a 301 when published content moves (slug, date, place in a tree). |
 | `redirects.case_sensitive` | `true` | `false` matches a redirect's From in any letter case, accents and other alphabets included: `/ABOUT-US` and `/About-Us` as `/about-us`, `/CAFÉ` as `/café`. What a `*` matched keeps the visitor's case. Two redirects whose From differs only in case are then refused as the same address, and a CSV row updates the redirect with that From in any case. For a site moved off one whose addresses worked in any case (Wix, IIS). |
 | `not_found.enabled` | `true` | Logs 404s. |
@@ -136,9 +139,9 @@ A sitemap lists every site on its domain: languages under `/fr/` are in `example
 
 ### Google Search Console
 
-Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until there is a key and a property.
+Clicks, impressions, click-through rate and average position per page, imported daily and shown on Marketing → Overview. Off until there is a key and a property.
 
-**From the control panel**: **Tools → SEO → Search Console** walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/marketing-toolkit/search-console-key.json`, encrypted with `APP_KEY` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects; if `APP_KEY` changes, upload the key again), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
+**From the control panel**: **Marketing → Search Console** walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/marketing-toolkit/search-console-key.json`, encrypted with `APP_KEY` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects; if `APP_KEY` changes, upload the key again), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
 
 | Key | Default | |
 |---|---|---|
@@ -151,7 +154,7 @@ Setting it up:
 1. In [Google Cloud](https://console.cloud.google.com/), create a project (or use one), enable the **Google Search Console API**, and create a **service account** with a **JSON key**.
 2. In [Search Console](https://search.google.com/search-console), open the property → Settings → Users and permissions, and add the service account's email (`…@….iam.gserviceaccount.com`) as a **Restricted** user.
 3. Put the key on the server (outside the web root) and set `MT_SEARCH_CONSOLE_CREDENTIALS=/path/to/key.json` and `MT_SEARCH_CONSOLE_PROPERTY` in `.env`.
-4. Run `php please mt:search-console` once (or Import now on Tools → SEO → Search Console); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running). It is in the schedule (`php artisan schedule:list`) once a key and a property are set.
+4. Run `php please mt:search-console` once (or Import now on Marketing → Search Console); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running). It is in the schedule (`php artisan schedule:list`) once a key and a property are set.
 
 **Can't create a key, or Google says it is disabled?** New Google Cloud projects often have service account keys blocked by an organization policy, `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation). A key that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable); the check on the Search Console screen says when Google reports a disabled key or account.
 
@@ -167,7 +170,7 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 ## Features
 
-**Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot: its addresses answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted. Its routes stay registered, so cached routes (`php artisan route:cache`, `optimize`) follow a switch without being cached again.
+The **Features** tab of **Marketing → Settings** has a switch per module, on the default site and for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is copied to the addon settings (`features_off`) when the tab is saved and set off in the config at boot: its addresses answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted. Its routes stay registered, so cached routes (`php artisan route:cache`, `optimize`) follow a switch without being cached again.
 
 Since the switches apply at boot, a process that boots once and serves many requests or jobs (Laravel Octane, a queue worker, Horizon) picks up a change when it restarts: run `php artisan octane:reload` or `php artisan queue:restart` after switching a module on or off. A PHP-FPM site picks it up from the next request.
 
@@ -175,7 +178,7 @@ Each switch sets the matching key below to off, whatever `config/marketing-toolk
 
 ## Tracking
 
-Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (and shows as "set in .env" on Tools → SEO). Each key is the field's handle in the Tracking tab, and in `.env` it is `MT_` and the key in capitals. Every `.env` name the addon reads starts with `MT_`; the names up to 0.19, `SEO_…`, are read too until 1.0. See [tracking.md](tracking.md).
+Each ID can be set in the **Tracking** tab of Marketing settings (Marketing → Settings), or here, which wins (and shows as "set in .env" on Marketing → Overview). Each key is the field's handle in the Tracking tab, and in `.env` it is `MT_` and the key in capitals. Every `.env` name the addon reads starts with `MT_`; the names up to 0.19, `SEO_…`, are read too until 1.0. See [tracking.md](tracking.md).
 
 | Key | `.env` | |
 |---|---|---|
@@ -189,14 +192,14 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
 | `leads.enabled` | | `true`. Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads). |
 
-An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed; Tools → SEO says which one, and where it is set. Consent Mode is set in the global only.
+An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed; Marketing → Overview says which one, and where it is set. Consent Mode is set in the global only (the Consent tab of Marketing settings).
 
 ## llms.txt and ads.txt
 
 | Key | Default | |
 |---|---|---|
 | `llms_txt.enabled` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Cached until content changes, like the sitemap. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
-| `ads_txt.enabled` | `true` | `/ads.txt`: the lines in **SEO & brand → Crawlers → ads.txt**; a 404 while that's empty. |
+| `ads_txt.enabled` | `true` | `/ads.txt`: the lines in **Marketing → Settings → Crawlers → ads.txt**; a 404 while that's empty. |
 
 A file of the same name in `public/` wins over either.
 
@@ -204,13 +207,13 @@ A file of the same name in `public/` wins over either.
 
 | Key | Default | |
 |---|---|---|
-| `favicons.enabled` | `true` | Make the icons from **Icon** in SEO & brand, serve them, and print their links in `<s:mt:head />` (or `<s:mt:favicons />`). |
+| `favicons.enabled` | `true` | Make the icons from **Icon** in Marketing → Brand, serve them, and print their links in `<s:mt:head />` (or `<s:mt:favicons />`). |
 
-From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg` (an SVG upload, as it is), `/apple-touch-icon.png` (180 px, on the icon background), `/icon-192.png`, `/icon-512.png` and `/site.webmanifest` (the site's name, short name and colours). They're made once per version of the image and colours, kept in `storage/app/marketing-toolkit/favicons`, made again when SEO & brand is saved, and served without a session or cookie. A file of the same name in `public/` wins, so delete old ones there. Drawing SVG needs PHP's Imagick; with GD alone an SVG gives `/favicon.svg` and the manifest, so upload a PNG on such hosts.
+From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg` (an SVG upload, as it is), `/apple-touch-icon.png` (180 px, on the icon background), `/icon-192.png`, `/icon-512.png` and `/site.webmanifest` (the site's name, short name and colours). They're made once per version of the image and colours, kept in `storage/app/marketing-toolkit/favicons`, made again when Brand is saved, and served without a session or cookie. A file of the same name in `public/` wins, so delete old ones there. Drawing SVG needs PHP's Imagick; with GD alone an SVG gives `/favicon.svg` and the manifest, so upload a PNG on such hosts.
 
 ## Report settings
 
-**Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit), saved as YAML in `resources/addons/marketing-toolkit.yaml` (or wherever your site stores addon settings). On a site where the production control panel is where content lives, keep that file out of deploys, or store addon settings in the database, so a deploy doesn't overwrite them.
+The **Settings** tab of **Marketing → Reports**, for whoever may change the addon's settings. They are Statamic's addon settings for Marketing Toolkit, saved as YAML in `resources/addons/marketing-toolkit.yaml` (or wherever your site stores addon settings). On a site where the production control panel is where content lives, keep that file out of deploys, or store addon settings in the database, so a deploy doesn't overwrite them.
 
 **Checks** tab:
 
@@ -230,13 +233,13 @@ From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg`
 | Reports to keep | 10 | Older reports are deleted when a new one finishes. |
 | Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. `marketing-toolkit.reports.enabled` (or the Features switch) off stops the schedule. |
 
-The Search Console property is kept here too (`search_console_property`, and `search_console_properties` for the other sites), but set on **Tools → SEO → Search Console**. `MT_SEARCH_CONSOLE_PROPERTY` wins over them.
+The Search Console property is kept here too (`search_console_property`, and `search_console_properties` for the other sites), but set on **Marketing → Search Console**. `MT_SEARCH_CONSOLE_PROPERTY` wins over them.
 
 ## Permissions
 
 | Permission | |
 |---|---|
-| `view marketing toolkit` | Tools → SEO, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
+| `view marketing toolkit` | Marketing → Overview, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
 | `manage marketing toolkit redirects` | Create, edit and delete redirects, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
 | `run marketing toolkit reports` | Start a report. |
 
@@ -244,8 +247,8 @@ The Search Console property is kept here too (`search_console_property`, and `se
 
 | Command | |
 |---|---|
-| `php please mt:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (the home page's description, the robots.txt rule). Run again, it adds what is missing, such as the fields a newer version brings (in the tabs the blueprint still has), and never overwrites a value. With several sites, offers to enable an existing set on the sites it's missing from. Names any file in `public/` that would be served instead of the addon's, and offers to delete it. |
-| `php please mt:install --tab=shop` | Adds a whole tab the blueprint doesn't have (`shop`, `publisher`…). |
+| `php please mt:install [--container=]` | Creates the Brand and Marketing settings global sets and their blueprints, and fills their empty fields with what the site uses (the home page's description, the robots.txt rule). Run again, it adds what is missing, such as the fields a newer version brings (in the tabs the blueprint still has), and never overwrites a value. With several sites, offers to enable an existing set on the sites it's missing from. Names any file in `public/` that would be served instead of the addon's, and offers to delete it. |
+| `php please mt:install --tab=shop` | Adds a whole tab the blueprint doesn't have (`shop`, `publisher`, `tracking`…), to whichever of the two sets it belongs to. |
 | `php please mt:install --forms` | Adds the lead source fields to every form; see [tracking.md](tracking.md#leads). |
 | `php please mt:search-console [--site=]` | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
 | `php please mt:report [--site=]` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |

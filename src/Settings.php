@@ -10,19 +10,23 @@ use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
 /**
- * The brand-and-defaults global set (config `marketing-toolkit.global`), read for the
- * current site. A site whose localization leaves a field empty takes its
- * origin's value. Every getter tolerates the set or the field being missing,
- * so a site works before `php please mt:install` has run.
+ * The Brand and Marketing settings global sets (config
+ * `marketing-toolkit.global` and `settings_global`), read for the current
+ * site: a field is looked for in Marketing settings, then in Brand, so a site
+ * whose values haven't moved to Marketing settings yet reads them as before,
+ * and a value saved in Marketing settings wins over one left behind.
+ * A site whose localization leaves a field empty takes its origin's value.
+ * Every getter tolerates a set or a field being missing, so a site works
+ * before `php please mt:install` has run.
  */
 class Settings
 {
-    /** @var array<string, ?Variables> site handle => its localization */
+    /** @var array<string, list<Variables>> site handle => its localizations of both sets */
     private array $variables = [];
 
     public function string(string $key, ?string $default = null): ?string
     {
-        $value = $this->variables()?->value($key);
+        $value = $this->value($key);
 
         return filled($value) && is_scalar($value) ? (string) $value : $default;
     }
@@ -32,7 +36,7 @@ class Settings
      */
     public function bool(string $key, bool $default = false): bool
     {
-        $value = $this->variables()?->value($key);
+        $value = $this->value($key);
 
         return $value === null ? $default : (bool) $value;
     }
@@ -42,7 +46,7 @@ class Settings
      */
     public function list(string $key): array
     {
-        $value = $this->variables()?->value($key);
+        $value = $this->value($key);
 
         return array_values(array_filter(is_array($value) ? $value : [], fn ($item) => filled($item) && is_string($item)));
     }
@@ -54,7 +58,7 @@ class Settings
      */
     public function rows(string $key): array
     {
-        $value = $this->variables()?->value($key);
+        $value = $this->value($key);
 
         return collect(is_array($value) ? $value : [])
             ->filter(fn ($row) => is_array($row))
@@ -71,7 +75,7 @@ class Settings
      */
     public function asset(string $key): ?Asset
     {
-        $variables = $this->variables();
+        $variables = collect($this->variables())->first(fn (Variables $variables) => $variables->value($key) !== null);
         $value = $variables?->value($key);
         $path = is_array($value) ? collect($value)->first() : $value;
 
@@ -86,16 +90,16 @@ class Settings
         $container = $this->container($key);
 
         // A field the blueprint doesn't name a container for (imported): augmented, which finds it.
-        return Assets::from($container === null ? $variables->augmentedValue($key) : $container.'::'.$path);
+        return Assets::from($container === null ? $variables?->augmentedValue($key) : $container.'::'.$path);
     }
 
     /**
-     * The asset container an assets field of the set's blueprint names, read
-     * from the blueprint as saved (an imported field isn't looked into).
+     * The asset container an assets field of either set's blueprint names,
+     * read from the blueprint as saved (an imported field isn't looked into).
      */
     private function container(string $key): ?string
     {
-        $tabs = Blueprint::find('globals.'.config('marketing-toolkit.global'))?->contents()['tabs'] ?? [];
+        $tabs = collect(self::handles())->flatMap(fn (string $handle) => Blueprint::find('globals.'.$handle)?->contents()['tabs'] ?? [])->all();
 
         foreach ($tabs as $tab) {
             foreach ($tab['sections'] ?? [] as $section) {
@@ -139,17 +143,48 @@ class Settings
     }
 
     /**
-     * The current site's localization, or null where the set isn't enabled.
-     * Kept per site: the current site can change while one instance lives.
+     * The handles of the two sets, in the order a field is looked for:
+     * Marketing settings, then Brand.
+     *
+     * @return list<string>
      */
-    private function variables(): ?Variables
+    public static function handles(): array
+    {
+        return array_values(array_unique(array_filter([
+            (string) config('marketing-toolkit.settings_global'),
+            (string) config('marketing-toolkit.global'),
+        ])));
+    }
+
+    /**
+     * A field's value, from the first set that has one.
+     */
+    private function value(string $key): mixed
+    {
+        foreach ($this->variables() as $variables) {
+            $value = $variables->value($key);
+
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * The current site's localizations of the sets enabled there. Kept per
+     * site: the current site can change while one instance lives.
+     *
+     * @return list<Variables>
+     */
+    private function variables(): array
     {
         $site = Site::current()->handle();
 
-        if (! array_key_exists($site, $this->variables)) {
-            $this->variables[$site] = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
-        }
-
-        return $this->variables[$site];
+        return $this->variables[$site] ??= array_values(array_filter(array_map(
+            fn (string $handle) => GlobalSet::findByHandle($handle)?->in($site),
+            self::handles(),
+        )));
     }
 }

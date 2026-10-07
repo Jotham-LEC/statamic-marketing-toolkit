@@ -32,7 +32,7 @@ class Seo extends Tags
     }
 
     /**
-     * The icons' <link> tags and theme colour, when SEO & brand has an icon.
+     * The icons' <link> tags and theme colour, when Brand has an icon.
      */
     public function favicons(): string
     {

@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -18,9 +19,10 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Tools → SEO → Reports: the list, "Run report", one report's checks and
+ * Marketing → Reports: the list, "Run report", one report's checks and
  * pages, and the progress endpoint a running report's screen polls. Without
  * a queue worker that endpoint also does the work for whoever may run
  * reports, one step per request, so a report finishes on the sync queue
@@ -36,13 +38,86 @@ class ReportsController
     public function index(): Response
     {
         $addon = Addon::get(Package::NAME);
+        $fields = $this->canEditSettings() ? $addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess() : null;
 
         return Inertia::render('marketing-toolkit::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
             'canRun' => (bool) User::current()?->can('run marketing toolkit reports'),
             'runUrl' => cp_route('mt.reports.run'),
-            'settingsUrl' => $addon && User::current()?->can('editSettings', $addon) ? $addon->settingsUrl() : null,
+            // The Settings tab, for whoever may change the addon's settings.
+            'settings' => $fields ? [
+                'blueprint' => $addon->settingsBlueprint()->toPublishArray(),
+                'values' => $fields->values()->all(),
+                'meta' => $fields->meta()->all(),
+                'submitUrl' => cp_route('mt.reports.settings'),
+            ] : null,
         ]);
+    }
+
+    /**
+     * Saves the Settings tab. Only its own fields are set: the addon's
+     * settings also keep the Features switches and the Search Console setup.
+     */
+    public function saveSettings(Request $request): JsonResponse
+    {
+        abort_unless($this->canEditSettings(), 403);
+
+        $addon = Addon::get(Package::NAME);
+        $fields = $addon->settingsBlueprint()->fields()->addValues($request->all());
+        $fields->validate();
+
+        $settings = $addon->settings();
+
+        foreach ($fields->process()->values()->all() as $key => $value) {
+            $settings->set($key, $value);
+        }
+
+        $settings->save();
+
+        return response()->json(['saved' => true]);
+    }
+
+    /**
+     * A report's pages as CSV: each page's address, title and score, with the
+     * checks it failed and those it only warns about.
+     */
+    public function export(Report $report): StreamedResponse
+    {
+        $this->authorizeSite($report);
+
+        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('marketing-toolkit::reports.rules.render'));
+        $names = fn (ReportPage $page, string $status) => collect($page->results ?? [])
+            ->filter(fn ($result) => $result['status'] === $status)
+            ->keys()
+            ->map(fn (string $handle) => $labels[$handle] ?? $handle)
+            ->implode('; ');
+
+        return response()->streamDownload(function () use ($report, $names) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, array_map(fn (string $column) => __('marketing-toolkit::reports.cp.csv.'.$column), ['url', 'title', 'score', 'failed', 'warnings']), escape: '');
+
+            $report->pages()->orderBy('score')->orderBy('url')->each(function (ReportPage $page) use ($out, $names) {
+                fputcsv($out, array_map(self::cell(...), [$page->url, $page->title, $page->score, $names($page, 'fail'), $names($page, 'warn')]), escape: '');
+            });
+
+            fclose($out);
+        }, 'report-'.$report->id.'-'.$report->created_at->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * A cell a spreadsheet won't run as a formula: page titles come from the
+     * pages themselves.
+     */
+    private static function cell(mixed $value): mixed
+    {
+        return is_string($value) && preg_match('/^[=+\-@\t\r]/', $value) ? "'".$value : $value;
+    }
+
+    private function canEditSettings(): bool
+    {
+        $addon = Addon::get(Package::NAME);
+
+        return $addon?->hasSettingsBlueprint() === true && (bool) User::current()?->can('editSettings', $addon);
     }
 
     /**
@@ -94,6 +169,7 @@ class ReportsController
             'rules' => $rules,
             'listingUrl' => cp_route('mt.reports.pages', $report),
             'listUrl' => cp_route('mt.reports.index'),
+            'exportUrl' => cp_route('mt.reports.export', $report),
         ]);
     }
 

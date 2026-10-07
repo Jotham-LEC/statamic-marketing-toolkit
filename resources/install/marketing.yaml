@@ -1,0 +1,199 @@
+# The "Marketing settings" blueprint that `php please mt:install` creates
+# (Commands/Install.php): tracking tags, Consent Mode, leads and crawlers, per
+# site, and the Features switches (the default site's, for the whole install).
+# Labels are translation keys (lang/en/fields.php).
+tabs:
+  tracking:
+    display: 'marketing-toolkit::fields.brand.tabs.tracking'
+    sections:
+      -
+        fields:
+          -
+            handle: tracking_overlap
+            field: { type: section, display: 'marketing-toolkit::fields.brand.tracking_overlap.display', instructions: 'marketing-toolkit::fields.brand.tracking_overlap.instructions', if: 'mtTrackingOverlap' }
+          -
+            handle: gtm_id
+            field:
+              type: text
+              display: 'marketing-toolkit::fields.brand.gtm_id.display'
+              width: 50
+              placeholder: 'GTM-XXXXXXX'
+              validate: ['nullable', 'regex:/^GTM-[A-Z0-9]{4,12}$/i']
+          -
+            handle: ga4_id
+            field: { type: text, display: 'marketing-toolkit::fields.brand.ga4_id.display', width: 50, placeholder: 'G-XXXXXXXXXX', validate: ['nullable', 'regex:/^G-[A-Z0-9]{4,16}$/i'] }
+          -
+            handle: posthog_key
+            field: { type: text, display: 'marketing-toolkit::fields.brand.posthog_key.display', width: 50, placeholder: 'phc_…', validate: ['nullable', 'regex:/^phc_[A-Za-z0-9]{16,64}$/'] }
+          -
+            handle: posthog_host
+            field: { type: text, input_type: url, display: 'marketing-toolkit::fields.brand.posthog_host.display', width: 50, placeholder: 'https://us.i.posthog.com' }
+          -
+            handle: meta_pixel_id
+            field: { type: text, display: 'marketing-toolkit::fields.brand.meta_pixel_id.display', width: 50, validate: ['nullable', 'regex:/^\d{6,20}$/'] }
+          -
+            handle: linkedin_partner_id
+            field: { type: text, display: 'marketing-toolkit::fields.brand.linkedin_partner_id.display', width: 50, validate: ['nullable', 'regex:/^\d{3,12}$/'] }
+  consent:
+    display: 'marketing-toolkit::fields.brand.tabs.consent'
+    sections:
+      -
+        fields:
+          -
+            handle: consent_mode
+            field: { type: toggle, display: 'marketing-toolkit::fields.brand.consent_mode.display' }
+          -
+            handle: consent_ad_storage
+            field:
+              type: button_group
+              display: 'marketing-toolkit::fields.brand.consent_ad_storage.display'
+              width: 50
+              default: denied
+              if: { consent_mode: 'true' }
+              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
+          -
+            handle: consent_analytics_storage
+            field:
+              type: button_group
+              display: 'marketing-toolkit::fields.brand.consent_analytics_storage.display'
+              width: 50
+              default: denied
+              if: { consent_mode: 'true' }
+              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
+          -
+            handle: consent_ad_user_data
+            field:
+              type: button_group
+              display: 'marketing-toolkit::fields.brand.consent_ad_user_data.display'
+              width: 50
+              default: denied
+              if: { consent_mode: 'true' }
+              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
+          -
+            handle: consent_ad_personalization
+            field:
+              type: button_group
+              display: 'marketing-toolkit::fields.brand.consent_ad_personalization.display'
+              width: 50
+              default: denied
+              if: { consent_mode: 'true' }
+              options: { denied: 'marketing-toolkit::fields.brand.consent_value.options.denied', granted: 'marketing-toolkit::fields.brand.consent_value.options.granted' }
+          -
+            handle: consent_wait_for_update
+            field:
+              type: integer
+              display: 'marketing-toolkit::fields.brand.consent_wait_for_update.display'
+              width: 50
+              default: 500
+              append: 'ms'
+              if: { consent_mode: 'true' }
+          -
+            handle: consent_regions
+            field:
+              type: select
+              display: 'marketing-toolkit::fields.brand.consent_regions.display'
+              width: 50
+              multiple: true
+              taggable: true
+              options: { EEA: 'marketing-toolkit::fields.brand.consent_regions.options.eea' }
+              if: { consent_mode: 'true' }
+  leads:
+    display: 'marketing-toolkit::fields.brand.tabs.leads'
+    sections:
+      -
+        fields:
+          -
+            handle: conversions
+            field: { type: toggle, display: 'marketing-toolkit::fields.brand.conversions.display', default: true, width: 50 }
+          -
+            handle: linkedin_conversion_id
+            field: { type: text, display: 'marketing-toolkit::fields.brand.linkedin_conversion_id.display', width: 50, if: { conversions: 'true' }, validate: ['nullable', 'regex:/^\d{3,12}$/'] }
+          -
+            handle: attribution
+            field: { type: toggle, display: 'marketing-toolkit::fields.brand.attribution.display', width: 50 }
+  crawlers:
+    display: 'marketing-toolkit::fields.brand.tabs.crawlers'
+    sections:
+      -
+        fields:
+          -
+            handle: google_verification
+            field: { type: text, display: 'marketing-toolkit::fields.brand.google_verification.display', width: 50 }
+          -
+            handle: bing_verification
+            field: { type: text, display: 'marketing-toolkit::fields.brand.bing_verification.display', width: 50 }
+          -
+            handle: yandex_verification
+            field: { type: text, display: 'marketing-toolkit::fields.brand.yandex_verification.display', width: 50 }
+          -
+            handle: pinterest_verification
+            field: { type: text, display: 'marketing-toolkit::fields.brand.pinterest_verification.display', width: 50 }
+          -
+            handle: robots_disallow
+            field: { type: list, display: 'marketing-toolkit::fields.brand.robots_disallow.display' }
+          -
+            handle: allow_ai_training
+            field: { type: toggle, display: 'marketing-toolkit::fields.brand.allow_ai_training.display', default: true, width: 50 }
+          -
+            handle: allow_ai_search
+            field: { type: toggle, display: 'marketing-toolkit::fields.brand.allow_ai_search.display', default: true, width: 50 }
+          -
+            handle: robots_extra
+            field: { type: textarea, display: 'marketing-toolkit::fields.brand.robots_extra.display' }
+          -
+            handle: ads_txt
+            field: { type: textarea, display: 'marketing-toolkit::fields.brand.ads_txt.display' }
+  features:
+    display: 'marketing-toolkit::cp.features.title'
+    sections:
+      -
+        display: 'marketing-toolkit::cp.features.groups.search'
+        fields:
+          -
+            handle: feature_sitemap
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.sitemap.display', default: true, width: 50 }
+          -
+            handle: feature_robots_txt
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.robots_txt.display', default: true, width: 50 }
+          -
+            handle: feature_llms_txt
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.llms_txt.display', default: true, width: 50 }
+          -
+            handle: feature_hreflang
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.hreflang.display', default: true, width: 50 }
+          -
+            handle: feature_indexnow
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.indexnow.display', default: true, width: 50 }
+          -
+            handle: feature_share_cards
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.share_cards.display', default: true, width: 50 }
+      -
+        display: 'marketing-toolkit::cp.features.groups.redirects'
+        fields:
+          -
+            handle: feature_redirects
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.redirects.display', default: true, width: 50 }
+          -
+            handle: feature_automatic_redirects
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.automatic_redirects.display', default: true, width: 50 }
+          -
+            handle: feature_not_found
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.not_found.display', default: true, width: 50 }
+          -
+            handle: feature_reports
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.reports.display', default: true, width: 50 }
+      -
+        display: 'marketing-toolkit::cp.features.groups.marketing'
+        fields:
+          -
+            handle: feature_tracking
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.tracking.display', default: true, width: 50 }
+          -
+            handle: feature_leads
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.leads.display', default: true, width: 50 }
+          -
+            handle: feature_favicons
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.favicons.display', default: true, width: 50 }
+          -
+            handle: feature_ads_txt
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.ads_txt.display', default: true, width: 50 }

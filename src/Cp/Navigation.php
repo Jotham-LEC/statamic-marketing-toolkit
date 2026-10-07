@@ -2,45 +2,62 @@
 
 namespace JothamLec\MarketingToolkit\Cp;
 
-use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\CP\Navigation\Nav;
-use Statamic\CP\Navigation\NavItem;
-use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav as NavFacade;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
 /**
- * Tools → SEO in the control panel, with its screens as children.
+ * The Marketing section of the control panel's nav, between Fields and
+ * Tools: the overview, reports, redirects, 404s and Search Console, then the
+ * Brand and Marketing settings global sets (Features is a tab of Settings).
  */
 class Navigation
 {
     public static function register(): void
     {
-        NavFacade::extend(fn (Nav $nav) => $nav->tools(__('marketing-toolkit::cp.seo'))
-            ->route('mt.index')
-            ->icon('search-magnifying-glass')
-            ->can('view marketing toolkit')
-            ->children(fn () => self::children($nav)));
+        NavFacade::extend(function (Nav $nav) {
+            $section = __('marketing-toolkit::cp.seo');
+            [$brand, $settings] = array_map(
+                fn (string $handle) => GlobalSet::findByHandle($handle)?->in(Site::selected()->handle()),
+                [(string) config('marketing-toolkit.global'), (string) config('marketing-toolkit.settings_global')],
+            );
+
+            $nav->create(__('marketing-toolkit::cp.nav.overview'))->section($section)->route('mt.index')->icon('megaphone')->can('view marketing toolkit');
+            $nav->create(__('marketing-toolkit::cp.nav.reports'))->section($section)->route('mt.reports.index')->icon('charts-donut-graph')->can('view marketing toolkit');
+            $nav->create(__('marketing-toolkit::cp.nav.redirects'))->section($section)->route('mt.redirects.index')->icon('moved')->can('manage marketing toolkit redirects');
+            $nav->create(__('marketing-toolkit::cp.nav.not_found'))->section($section)->route('mt.404s.index')->icon('warning-diamond')->can('view marketing toolkit');
+            $nav->create(__('marketing-toolkit::cp.nav.search_console'))->section($section)->route('mt.search-console.index')->icon('search-magnifying-glass')->can('view marketing toolkit');
+
+            if ($brand) {
+                $nav->create(__('marketing-toolkit::cp.nav.brand'))->section($section)->url($brand->editUrl())->icon('palette')->can('edit', $brand);
+            }
+
+            if ($settings) {
+                $nav->create(__('marketing-toolkit::cp.nav.settings'))->section($section)->url($settings->editUrl())->icon('cog')->can('edit', $settings);
+            }
+
+            self::placeAfterFields($nav, $section);
+        });
     }
 
     /**
-     * @return list<NavItem>
+     * The section's place in the sidebar: after Fields, before Tools. A
+     * section shows where its first item was added, so the section's items
+     * move to just after the last item of Fields. Someone who reorders the
+     * sidebar in their preferences keeps their order.
      */
-    private static function children(Nav $nav): array
+    private static function placeAfterFields(Nav $nav, string $section): void
     {
-        $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in(Site::selected()->handle());
+        (function () use ($section) {
+            $ours = array_filter($this->items, fn ($item) => $item->section() === $section);
+            $rest = array_values(array_filter($this->items, fn ($item) => $item->section() !== $section));
+            $fields = array_keys(array_filter($rest, fn ($item) => $item->section() === 'Fields'));
 
-        $addon = Addon::get(Package::NAME);
-
-        return array_values(array_filter([
-            $nav->item(__('marketing-toolkit::cp.nav.reports'))->route('mt.reports.index')->can('view marketing toolkit'),
-            $nav->item(__('marketing-toolkit::cp.nav.redirects'))->route('mt.redirects.index')->can('manage marketing toolkit redirects'),
-            $nav->item(__('marketing-toolkit::cp.nav.not_found'))->route('mt.404s.index')->can('view marketing toolkit'),
-            $nav->item(__('marketing-toolkit::cp.nav.search_console'))->route('mt.search-console.index')->can('view marketing toolkit'),
-            $variables ? $nav->item(__('marketing-toolkit::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
-            $nav->item(__('marketing-toolkit::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon),
-            $nav->item(__('marketing-toolkit::cp.nav.features'))->route('mt.features.index')->can('editSettings', $addon),
-        ]));
+            if ($fields !== []) {
+                array_splice($rest, end($fields) + 1, 0, array_values($ours));
+                $this->items = $rest;
+            }
+        })->call($nav);
     }
 }

@@ -26,7 +26,7 @@ class SeoPreview extends Fieldtype
                 'meta' => cp_route('mt.preview.meta'),
                 'card' => cp_route('mt.preview.card'),
             ],
-            // The report's thresholds (Tools → Addons → SEO), so the counters and the reports agree.
+            // The report's thresholds (Marketing → Reports → Settings), so the counters and the reports agree.
             'limits' => [
                 'title' => [$settings->int('title_min'), $settings->int('title_max')],
                 'description' => [$settings->int('description_min'), $settings->int('description_max')],

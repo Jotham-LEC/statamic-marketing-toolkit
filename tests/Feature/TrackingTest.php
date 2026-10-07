@@ -170,8 +170,8 @@ test('the overview says where an ID comes from, and which set ones aren\'t IDs',
             ['name' => 'LinkedIn Insight Tag', 'id' => '7654321', 'from_env' => false],
         ])
         ->where('tracking.invalid', [
-            'Google Tag Manager: “GTM-AB1” in MT_GTM_ID isn’t an ID, so it isn’t on the site.',
-            'Google Analytics 4: “UA-12345-1” in Brand & defaults → Tracking isn’t an ID, so it isn’t on the site.',
+            'The Google Tag Manager value “GTM-AB1” in MT_GTM_ID isn’t a valid ID, so the tag isn’t added to the site.',
+            'The Google Analytics 4 value “UA-12345-1” in Settings → Tracking isn’t a valid ID, so the tag isn’t added to the site.',
         ]));
 });
 
@@ -183,15 +183,16 @@ class LinkedInFromCode extends Tracking
     }
 }
 
-test('the Tracking tab shows its warning through a custom condition, and validates IDs', function () {
-    seoGlobal([]);
-    $fields = Blueprint::find('globals.seo')->fields();
+test('the Tracking tab of Marketing settings shows its warning through a custom condition, and validates IDs', function () {
+    Blueprint::find('globals.marketing')?->delete();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
+    $fields = Blueprint::find('globals.marketing')->fields();
 
     expect($fields->get('tracking_overlap')->config()['if'])->toBe('mtTrackingOverlap')
         ->and($fields->get('gtm_id')->rules()['gtm_id'])->toContain('regex:/^GTM-[A-Z0-9]{4,12}$/i');
 
     $this->actingAs(cpUser(super: true))
-        ->get(GlobalSet::findByHandle('seo')->in('default')->editUrl())
+        ->get(GlobalSet::findByHandle('marketing')->in('default')->editUrl())
         ->assertOk();
 });
 
@@ -205,10 +206,12 @@ test('a CSP nonce is added to every script', function () {
         ->toBe(substr_count($head, '<script nonce="abc123">'));
 });
 
-test('install adds the Tracking tab to an existing blueprint on request', function () {
-    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => []]]]]])->save();
+test('install adds a Marketing settings tab the site removed, on request', function () {
+    Blueprint::find('globals.seo')?->delete();
+    Blueprint::make('marketing')->setNamespace('globals')->setContents(['tabs' => ['crawlers' => ['sections' => [['fields' => [['handle' => 'robots_extra', 'field' => ['type' => 'textarea']]]]]]]])->save();
 
-    $this->artisan('statamic:mt:install', ['--tab' => ['tracking']])->assertSuccessful();
+    $this->artisan('statamic:mt:install', ['--tab' => ['tracking', 'consent']])->assertSuccessful();
 
-    expect(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('gtm_id', 'consent_mode', 'consent_regions');
+    expect(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('gtm_id', 'consent_mode', 'consent_regions')->not->toContain('conversions')
+        ->and(Blueprint::find('globals.seo')->fields()->all()->keys())->not->toContain('gtm_id');
 });

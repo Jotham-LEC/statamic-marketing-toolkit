@@ -8,9 +8,13 @@
 [![Licence](https://img.shields.io/packagist/l/jotham-lec/statamic-marketing-toolkit)](LICENSE.md)
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/jothamh)
 
+[![Heart Marketing Toolkit on the Statamic Marketplace](https://img.shields.io/badge/%E2%99%A5%20Heart%20Marketing%20Toolkit-on%20the%20Statamic%20Marketplace-ff269e?style=for-the-badge)](https://statamic.com/creators/jothamlec)
+
+If Marketing Toolkit is useful to you, please heart it on the Statamic Marketplace, because it helps other people find it.
+
 The marketing fundamentals for a Statamic website, in one addon: SEO with a score, redirects and 404s, your tracking tags, Google Consent Mode, leads from your forms, and the site's icons. For web developers and marketing teams who know what Yoast, Rank Math and Redirection do on WordPress, and want the same on Statamic, without the bloat.
 
-![The SEO score on Tools → SEO](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/overview.png)
+![The SEO score on the Marketing overview](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/overview.png)
 
 ## For marketers
 
@@ -26,7 +30,7 @@ The marketing fundamentals for a Statamic website, in one addon: SEO with a scor
 
 - **Statamic native**: fieldsets, globals, forms, tags and the control panel, extended through Statamic's own APIs. Two tags in the layout: `<s:mt:head />` and `<s:mt:body />`.
 - **Performance first**: no front-end script unless a feature that needs one is on, files served without sessions or cookies, and caches that clear when content changes.
-- **Batteries included, no bloat**: SEO, redirects, tracking, favicons and leads in one package, with one set of brand settings.
+- **Batteries included, no bloat**: SEO, redirects, tracking, favicons and leads in one package, with the brand and the marketing settings in one section of the control panel.
 - **Feature toggles**: switch off what a site doesn't use, and it isn't loaded at all.
 - **Overridable rules**: every value comes from a class you can extend.
 
@@ -78,7 +82,7 @@ Everything is free, under the MIT licence. There are no editions and no licence 
 
 ## Documentation
 
-[Getting started](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/getting-started.md) · [For editors](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/editors.md) · [Tracking and Consent Mode](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/tracking.md) · [Configuration](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/configuration.md) · [For developers](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/developers.md) · [Troubleshooting](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/troubleshooting.md) · [Upgrading from Co-SEO](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/upgrading.md) · [Changelog](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/CHANGELOG.md)
+[Getting started](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/getting-started.md) · [Moving an existing site](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/migrating.md) · [Migration skill for AI agents](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/agent-skill/README.md) · [For editors](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/editors.md) · [Tracking and Consent Mode](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/tracking.md) · [Configuration](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/configuration.md) · [For developers](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/developers.md) · [Troubleshooting](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/troubleshooting.md) · [Upgrading from Co-SEO](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/upgrading.md) · [Changelog](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/CHANGELOG.md)
 
 ## Licence and support
 

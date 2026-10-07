@@ -13,7 +13,7 @@ use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
 /**
- * Tools → SEO → 404s: the missing paths visitors hit, most recent first,
+ * Marketing → 404s: the missing paths visitors hit, most recent first,
  * each with a "Create redirect" action. On a multi-site install, those of
  * the selected site.
  */

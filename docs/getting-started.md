@@ -1,6 +1,8 @@
 # Getting started
 
-From nothing to a site with meta tags, a sitemap, share cards, redirects and reports. Allow about twenty minutes.
+[![Heart Marketing Toolkit on the Statamic Marketplace](https://img.shields.io/badge/%E2%99%A5%20Heart%20Marketing%20Toolkit-on%20the%20Statamic%20Marketplace-ff269e?style=for-the-badge)](https://statamic.com/creators/jothamlec)
+
+From nothing to a site with meta tags, a sitemap, share cards, redirects and reports. Allow about twenty minutes. If the site already has its SEO done by hand or with another add-on, follow [Moving an existing site](migrating.md) instead.
 
 ## What you need
 
@@ -16,15 +18,15 @@ Everything is included: Marketing Toolkit is free and open source, with no editi
 ```bash
 composer require jotham-lec/statamic-marketing-toolkit
 php artisan migrate                          # mt_redirects, mt_404s, mt_reports, mt_report_pages, mt_search_stats
-php please mt:install                       # the "SEO & brand" global set
+php please mt:install                       # the "Brand" and "Marketing settings" global sets
 php artisan vendor:publish --tag=marketing-toolkit-config  # optional: config/marketing-toolkit.php, to change the defaults
 ```
 
-`mt:install` uses the first asset container for the logo, default image and icon; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing: it adds only what is missing, such as the fields a newer version brings. With several sites it creates the set on each, the others taking what they leave empty from the default site; for a set that already exists, it offers to enable it on the sites it's missing from.
+`mt:install` uses the first asset container for the logo, default image and icon; pass `--container=handle` to choose another. It also fills the empty fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing: it adds only what is missing, such as the fields a newer version brings. With several sites it creates each set on every site, the others taking what they leave empty from the default site; for a set that already exists, it offers to enable it on the sites it's missing from.
 
-**A new Statamic site has a `public/robots.txt` and an empty `public/favicon.ico`.** The web server answers with those files before the addon sees the request, so the addon's robots.txt (with its `Sitemap:` line) and icons never show. `mt:install` names them and offers to delete them; Tools → SEO marks them too. The same goes for `llms.txt`, `ads.txt` and the other icon files.
+**A new Statamic site has a `public/robots.txt` and an empty `public/favicon.ico`.** The web server answers with those files before the addon sees the request, so the addon's robots.txt (with its `Sitemap:` line) and icons never show. `mt:install` names them and offers to delete them, and Marketing → Overview marks them too. The same goes for `llms.txt`, `ads.txt` and the other icon files.
 
-The control panel's scripts and styles are published to `public/vendor/statamic-marketing-toolkit` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=marketing-toolkit --force`.
+The control panel's scripts and styles are published to `public/vendor/statamic-marketing-toolkit` when Composer installs or updates the package. If the Marketing screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 
 ## 2. Add the SEO fields to your blueprints
 
@@ -77,9 +79,9 @@ Pages that aren't Statamic entries (a controller page, a 404 view) pass what the
 
 All the parameters are in [developers.md](developers.md#the-tag).
 
-## 4. Fill in "SEO & brand"
+## 4. Fill in Brand and Settings
 
-In the control panel, open **Globals → SEO & brand**: separator, default description and share image, who publishes the site (organisation, local business or person), tracking IDs and Consent Mode, verification codes, robots.txt lines, humans.txt and the share-card colours. [editors.md](editors.md#seo--brand) explains each field.
+In the control panel's **Marketing** section, open **Brand** for the title separator, the default description and share image, the icon, who publishes the site (organisation, local business or person), the shop and the share-card colours. Then open **Settings** for the tracking IDs, Consent Mode, leads, verification codes, robots.txt lines and ads.txt. [editors.md](editors.md#brand) explains each field.
 
 ## 5. Add the dashboard widget (optional)
 
@@ -95,11 +97,11 @@ It shows the latest report's score and the most recent 404s, to people with the 
 
 ## 6. Give people access
 
-Super users see everything. For other roles, tick the SEO permissions under **Users → Roles**:
+Super users see everything. For other roles, tick the permissions in the **Marketing** group under **Users → Roles**:
 
 | Permission | Lets them |
 |---|---|
-| `view marketing toolkit` | open Tools → SEO, the reports, the 404 log, the Search Console screen and the widget |
+| `view marketing toolkit` | open the Marketing overview, the reports, the 404 log, the Search Console screen and the widget |
 | `manage marketing toolkit redirects` | create, edit and delete redirects, import and export them, and answer the "add a redirect?" question when saving |
 | `run marketing toolkit reports` | start a report |
 
@@ -107,7 +109,7 @@ The search and share preview needs no SEO permission, only access to the entry.
 
 ## 7. Schedule reports (optional)
 
-Reports can run daily or weekly (Tools → SEO → Report settings → Running). That needs Laravel's scheduler, as for any scheduled task:
+Reports can run daily or weekly (Marketing → Reports → Settings → Running). That needs Laravel's scheduler, as for any scheduled task:
 
 ```
 * * * * * cd /path/to/site && php artisan schedule:run >> /dev/null 2>&1
@@ -119,8 +121,8 @@ Reports can run daily or weekly (Tools → SEO → Report settings → Running).
 - Open `/sitemap.xml` and `/robots.txt`, and `/og.png` (the home page's share card).
 - Edit an entry: the SEO tab shows the Google result and the share cards, and they change as you type.
 - With several languages: a translated page's source has a `<link rel="alternate" hreflang="…">` for each language, and the sitemap an `<xhtml:link>` for each.
-- Visit a page that doesn't exist, then **Tools → SEO → 404s**: the path is listed. (Visit it in a browser; `curl` counts as a bot and isn't logged.)
-- **Tools → SEO → Reports → Run report.** A few hundred pages take under a minute.
+- Visit a page that doesn't exist, then **Marketing → 404s**: the path is listed. (Visit it in a browser; `curl` counts as a bot and isn't logged.)
+- **Marketing → Reports → Run report.** A few hundred pages take under a minute.
 
 If something doesn't, see [troubleshooting.md](troubleshooting.md).
 
@@ -131,4 +133,4 @@ composer update jotham-lec/statamic-marketing-toolkit
 php artisan migrate
 ```
 
-Statamic runs the addon's update scripts on `composer update` (or `php please updates:run`): they add the fields a new version brings to SEO & brand, and make any change it needs to your settings. Commit the files they change (the blueprint in `resources/blueprints/globals`, the global set in `content/globals`). The control panel's scripts are republished at the same time. [CHANGELOG.md](../CHANGELOG.md) says what each version needs beyond that, under **Upgrading**.
+Statamic runs the addon's update scripts on `composer update` (or `php please updates:run`): they add the fields a new version brings to Brand and Marketing settings, and make any change it needs to your settings. Commit the files they change (the blueprint in `resources/blueprints/globals`, the global set in `content/globals`). The control panel's scripts are republished at the same time. [CHANGELOG.md](../CHANGELOG.md) says what each version needs beyond that, under **Upgrading**.

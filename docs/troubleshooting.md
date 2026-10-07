@@ -9,7 +9,7 @@
 
 ### Search Console: I can't create a key, or Google says the key is disabled
 
-New Google Cloud projects often block service account keys with the organization policy `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation), then you create the key as usual. A key (or service account) that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable). **Check the connection** on Tools → SEO → Search Console says which of these Google reports.
+New Google Cloud projects often block service account keys with the organization policy `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation), then you create the key as usual. A key (or service account) that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable). **Check the connection** on Marketing → Search Console says which of these Google reports.
 
 ### Share cards: "Imagick PHP extension must be installed"
 
@@ -17,12 +17,12 @@ the-og draws cards with Imagick. Install PHP's `imagick` extension (on NixOS, ad
 
 ### robots.txt has no Sitemap line, or the favicon is blank
 
-A file in `public/` (`robots.txt`, `favicon.ico`, `llms.txt`, `ads.txt`, the other icons) is served by the web server before the addon sees the request. A new Statamic site comes with a `public/robots.txt` and an empty `public/favicon.ico`. Delete them; `php please mt:install` names them and offers to, and Tools → SEO marks them under **What the site serves**.
+A file in `public/` (`robots.txt`, `favicon.ico`, `llms.txt`, `ads.txt`, the other icons) is served by the web server before the addon sees the request. A new Statamic site comes with a `public/robots.txt` and an empty `public/favicon.ico`. Delete them; `php please mt:install` names them and offers to, and Marketing → Overview marks them under **What the site serves**.
 
 ### A tracking tag doesn't load
 
 - Tags load only in `marketing-toolkit.tracking.environments` (production) and never in Live Preview.
-- An ID that doesn't look like one (`GTM-AB1`, a `UA-` property) is never printed. Tools → SEO says which one and where it is set.
+- An ID that doesn't look like one (`GTM-AB1`, a `UA-` property) is never printed. Marketing → Overview says which one and where it is set.
 - After switching **Tracking** on under Features, restart Octane or the queue workers if the site runs them.
 
 ### The SEO screens are unstyled or blank
@@ -52,7 +52,7 @@ That's `marketing-toolkit.robots.noindex_outside_production`: unless `APP_ENV=pr
 
 - **With a queue worker** (`QUEUE_CONNECTION` other than `sync`), is the worker running? The CP queues one job per step.
 - **Without one**, the report advances while its screen is open, one step per progress request. Keep the tab open, or run `php please mt:report` in a terminal.
-- If a step times out, lower **Pages per step** (Tools → SEO → Report settings → Running).
+- If a step times out, lower **Pages per step** (Marketing → Reports → Settings → Running).
 - A report that stops moving for 30 minutes is marked failed when the next one starts.
 
 ### A report flags links that work

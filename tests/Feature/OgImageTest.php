@@ -131,3 +131,9 @@ test('a brand image field that takes several files gives its first', function ()
 
     expect(metaFor(entryIn('pages', 'plain'))->image['url'])->toContain('/brand.png');
 });
+
+test('a card subtitle typed on several lines is drawn as one paragraph', function () {
+    $entry = entryIn('pages', 'launch', ['seo' => ['og_subtitle' => "Spring launch\n\n  now open "]]);
+
+    expect(app(Generator::class)->card($entry)->description)->toBe('Spring launch now open');
+});
