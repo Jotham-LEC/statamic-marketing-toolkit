@@ -125,8 +125,8 @@ test('a site\'s own route for one of the addresses keeps it, and robots.txt stil
     require __DIR__.'/../../routes/web.php';
     app('router')->getRoutes()->refreshNameLookups();
 
-    $this->get('https://example.test/sitemap.xml')->assertOk()->assertSeeText('the site\'s sitemap');
-    $this->get('https://example.test/llms.txt')->assertOk()->assertSeeText('the site\'s llms.txt');
+    $this->get('https://example.test/sitemap.xml')->assertOk()->assertContent('the site\'s sitemap');
+    $this->get('https://example.test/llms.txt')->assertOk()->assertContent('the site\'s llms.txt');
     expect(Route::has('mt.sitemap'))->toBeFalse()->and(Route::has('mt.robots'))->toBeTrue();
 
     config(['marketing-toolkit.sitemap.enabled' => true]);
