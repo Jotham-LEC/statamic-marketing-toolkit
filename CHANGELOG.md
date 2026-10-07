@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.21.2 – 2026-10-07
+
+### Fixed
+- **The old field descriptions are taken out on a site coming from 0.19 or earlier.** `DropFieldDescriptions` looked for them under their `marketing-toolkit::` names only, but on such a site they are still `seo::` when it runs (Statamic decides which scripts run before any of them does, so `RenameFromSeo` renames them afterwards), and Brand's fields showed raw keys such as `marketing-toolkit::fields.brand.title_separator.instructions` underneath. It now takes out both. A site that updated to 0.21.0 or 0.21.1 has them taken out on its next `composer update`: see [upgrading.md](docs/upgrading.md#from-020-brand-and-marketing-settings).
+
 ## 0.21.1 – 2026-10-07
 
 ### Fixed

@@ -10,6 +10,7 @@ use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\UpdateScripts\AddNewBrandFields;
 use JothamLec\MarketingToolkit\UpdateScripts\DropFieldDescriptions;
 use JothamLec\MarketingToolkit\UpdateScripts\MoveToMarketingSettings;
+use JothamLec\MarketingToolkit\UpdateScripts\RenameFromSeo;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\YAML;
@@ -257,4 +258,40 @@ test('an update takes the addon\'s old field descriptions out of the site\'s blu
         ->and($section['fields'][0]['field'])->toBe(['type' => 'text', 'display' => 'marketing-toolkit::fields.brand.title_separator.display'])
         ->and($section['fields'][1]['field']['instructions'])->toBe('Our own words.')
         ->and($script->shouldUpdate('0.21.0', '0.20.0'))->toBeFalse();
+});
+
+test('an update takes out the old field descriptions still under their 0.19 `seo::` names', function () {
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => [
+        ['handle' => 'title_separator', 'field' => ['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display', 'instructions' => 'seo::fields.brand.title_separator.instructions']],
+    ]]]]]])->save();
+    $script = new DropFieldDescriptions(Package::NAME);
+
+    expect($script->shouldUpdate('0.21.0', '0.18.0'))->toBeTrue();
+    $script->update();
+
+    expect(Blueprint::find('globals.seo')->contents()['tabs']['brand']['sections'][0]['fields'][0]['field'])
+        ->toBe(['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display'])
+        ->and($script->shouldUpdate('0.21.0', '0.18.0'))->toBeFalse();
+});
+
+test('a site updating from 0.18 has no old field descriptions left after the rename', function () {
+    // Statamic asks every script whether it should run before any runs, so this one runs before the rename.
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [[
+        'instructions' => 'seo::fields.brand.sections.publisher.instructions',
+        'fields' => [
+            ['handle' => 'title_separator', 'field' => ['type' => 'text', 'display' => 'seo::fields.brand.title_separator.display', 'instructions' => 'seo::fields.brand.title_separator.instructions']],
+            ['handle' => 'publisher_type', 'field' => ['type' => 'select', 'display' => 'seo::fields.brand.publisher_type.display', 'instructions' => 'seo::fields.brand.publisher_type.instructions']],
+        ],
+    ]]]]])->save();
+    $path = Blueprint::find('globals.seo')->path();
+
+    $drop = new DropFieldDescriptions(Package::NAME);
+    $rename = new RenameFromSeo(Package::NAME);
+    expect($drop->shouldUpdate('0.21.1', '0.18.0'))->toBeTrue()
+        ->and($rename->shouldUpdate('0.21.1', '0.18.0'))->toBeTrue();
+    $drop->update();
+    $rename->update();
+
+    expect(File::get($path))->toContain('marketing-toolkit::fields.brand.title_separator.display')
+        ->not->toContain('instructions:')->not->toContain('seo::');
 });

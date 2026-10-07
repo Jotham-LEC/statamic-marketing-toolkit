@@ -12,7 +12,10 @@ use Statamic\UpdateScripts\UpdateScript;
  * settings (editors.md explains them). The site's own copies of those
  * blueprints still name the descriptions `mt:install` gave them, which no
  * longer exist and would show as raw keys: this takes them out. A
- * description the site wrote itself stays.
+ * description the site wrote itself stays. A site coming from 0.19 or
+ * earlier still has them under `seo::`: RenameFromSeo renames them after
+ * this has run (Statamic asks every script before running any), so those
+ * are taken out too, judged by the name they are renamed to.
  */
 class DropFieldDescriptions extends UpdateScript
 {
@@ -42,7 +45,7 @@ class DropFieldDescriptions extends UpdateScript
     private function without(array $contents): array
     {
         foreach ($contents as $key => $value) {
-            if ($key === 'instructions' && is_string($value) && str_starts_with($value, 'marketing-toolkit::') && ! Lang::has($value, 'en', false)) {
+            if ($key === 'instructions' && is_string($value) && $this->isGone($value)) {
                 unset($contents[$key]);
             } elseif (is_array($value)) {
                 $contents[$key] = $this->without($value);
@@ -50,5 +53,18 @@ class DropFieldDescriptions extends UpdateScript
         }
 
         return $contents;
+    }
+
+    /**
+     * Whether the value names an addon description that no longer exists,
+     * by its current name or the 0.19 `seo::` one.
+     */
+    private function isGone(string $instructions): bool
+    {
+        if (str_starts_with($instructions, 'seo::')) {
+            $instructions = 'marketing-toolkit::'.substr($instructions, strlen('seo::'));
+        }
+
+        return str_starts_with($instructions, 'marketing-toolkit::') && ! Lang::has($instructions, 'en', false);
     }
 }
