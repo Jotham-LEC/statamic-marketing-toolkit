@@ -4,11 +4,19 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Where another package already has `seo_reports` or `seo_report_pages`, that
+ * table is made under its later name, `mt_*`, from the start: the migrations
+ * after this one change the `mt_*` table where it exists, and the rename to
+ * it leaves the other package's alone.
+ */
 return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('seo_reports', function (Blueprint $table) {
+        $reports = Schema::hasTable('seo_reports') ? 'mt_reports' : 'seo_reports';
+
+        Schema::create($reports, function (Blueprint $table) {
             $table->id();
             $table->string('status', 16)->default('running')->index();
             $table->unsignedInteger('pages_total')->default(0);
@@ -21,9 +29,9 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('seo_report_pages', function (Blueprint $table) {
+        Schema::create(Schema::hasTable('seo_report_pages') ? 'mt_report_pages' : 'seo_report_pages', function (Blueprint $table) use ($reports) {
             $table->id();
-            $table->foreignId('report_id')->constrained('seo_reports')->cascadeOnDelete();
+            $table->foreignId('report_id')->constrained($reports)->cascadeOnDelete();
             $table->string('url', 2048);
             $table->string('content_type', 8);
             $table->string('content_id');
@@ -42,7 +50,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('seo_report_pages');
-        Schema::dropIfExists('seo_reports');
+        Schema::dropIfExists(Schema::hasTable('mt_report_pages') ? 'mt_report_pages' : 'seo_report_pages');
+        Schema::dropIfExists(Schema::hasTable('mt_reports') ? 'mt_reports' : 'seo_reports');
     }
 };
