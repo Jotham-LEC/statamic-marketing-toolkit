@@ -240,3 +240,7 @@ test('install adds a Marketing settings tab the site removed, on request', funct
     expect(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('gtm_id', 'consent_mode', 'consent_regions')->not->toContain('conversions')
         ->and(Blueprint::find('globals.seo')->fields()->all()->keys())->not->toContain('gtm_id');
 });
+
+test('the control panel’s script gets the Tracking tab’s fields from the tracking code', function () {
+    expect(Statamic\Statamic::jsonVariables(request())['marketingToolkit']['trackingFields'])->toBe(Tracking::FIELDS);
+});

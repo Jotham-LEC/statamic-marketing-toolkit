@@ -151,14 +151,8 @@ Statamic.booting(() => {
  * if GTM loads that tracker too, each visit counts twice.
  */
 function trackingOverlaps(values) {
-    const env = config.get('marketingToolkit')?.trackingFromConfig ?? {};
-    const set = (tracker, field) => Boolean(env[tracker] || String(values?.[field] ?? '').trim());
-    const others = [
-        ['ga4', 'ga4_id'],
-        ['posthog', 'posthog_key'],
-        ['meta', 'meta_pixel_id'],
-        ['linkedin', 'linkedin_partner_id'],
-    ];
+    const { trackingFields: fields = {}, trackingFromConfig: env = {} } = config.get('marketingToolkit') ?? {};
+    const set = (tracker) => Boolean(env[tracker] || String(values?.[fields[tracker]] ?? '').trim());
 
-    return set('gtm', 'gtm_id') && others.some(([tracker, field]) => set(tracker, field));
+    return set('gtm') && Object.keys(fields).some((tracker) => tracker !== 'gtm' && set(tracker));
 }

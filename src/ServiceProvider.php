@@ -211,7 +211,8 @@ class ServiceProvider extends AddonServiceProvider
             'automaticRedirects' => Features::on('automatic_redirects'),
             // Brand and Marketing settings: the Tracking tab is in one of them.
             'globals' => Settings::handles(),
-            // Trackers set in .env, which the Tracking tab's warning counts as well.
+            // The Tracking tab's fields, and those set in .env, which its warning counts as well.
+            'trackingFields' => Tracking::FIELDS,
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
         ]]);
     }
