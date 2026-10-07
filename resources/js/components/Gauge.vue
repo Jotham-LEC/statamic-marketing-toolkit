@@ -52,11 +52,11 @@ const width = computed(() => ({ sm: 'w-28', md: 'w-44', lg: 'w-64' })[props.size
         <svg viewBox="0 -12 200 118" class="w-full overflow-visible" aria-hidden="true">
             <path v-for="(segment, index) in segments" :key="index" :d="segment.d" :fill="segment.color" :opacity="clamped === null ? 0.25 : 1" />
             <template v-if="size !== 'sm'">
-                <text v-for="{ tick, at } in ticks" :key="tick" :x="at[0]" :y="at[1]" font-size="11" text-anchor="middle" class="fill-gray-500">{{ tick }}</text>
+                <text v-for="{ tick, at } in ticks" :key="tick" :x="at[0]" :y="at[1]" font-size="11" text-anchor="middle" class="fill-gray-500 dark:fill-gray-400">{{ tick }}</text>
             </template>
             <circle v-if="marker" :cx="marker[0]" :cy="marker[1]" r="4.5" class="fill-gray-900 dark:fill-white" />
             <text x="100" y="98" text-anchor="middle" font-size="40" font-weight="600" class="fill-gray-900 tabular-nums dark:fill-white">{{ clamped ?? '—' }}</text>
         </svg>
-        <figcaption v-if="label" class="mt-1 text-xs uppercase tracking-wide text-gray-500">{{ label }}</figcaption>
+        <figcaption v-if="label" class="mt-1 text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ label }}</figcaption>
     </figure>
 </template>

@@ -19,6 +19,7 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
+use Statamic\Fields\Field;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -56,7 +57,9 @@ class ReportsController
 
     /**
      * Saves the Settings tab. Only its own fields are set: the addon's
-     * settings also keep the Features switches and the Search Console setup.
+     * settings also keep the Features switches and the Search Console setup,
+     * hidden fields in the blueprint that their own screens change, so a
+     * stale copy of them in this form must not overwrite them.
      */
     public function saveSettings(Request $request): JsonResponse
     {
@@ -68,7 +71,9 @@ class ReportsController
 
         $settings = $addon->settings();
 
-        foreach ($fields->process()->values()->all() as $key => $value) {
+        $own = $fields->all()->reject(fn (Field $field) => $field->visibility() === 'hidden')->keys()->all();
+
+        foreach ($fields->process()->values()->only($own)->all() as $key => $value) {
             $settings->set($key, $value);
         }
 
@@ -165,7 +170,8 @@ class ReportsController
 
         return Inertia::render('marketing-toolkit::Report', [
             'report' => $this->summary($report),
-            'counts' => array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors'])),
+            // Every count, also for a report that failed before it had any.
+            'counts' => [...['scored' => 0, 'noindex' => 0, 'errors' => 0], ...array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors']))],
             'rules' => $rules,
             'listingUrl' => cp_route('mt.reports.pages', $report),
             'listUrl' => cp_route('mt.reports.index'),
@@ -241,6 +247,9 @@ class ReportsController
             'finished_at' => $report->finished_at?->toIso8601String(),
             'url' => cp_route('mt.reports.show', $report),
             'progress_url' => cp_route('mt.reports.progress', $report),
+            // Whether watching it moves it on: false for a running report on the
+            // sync queue watched by someone who may not run reports (see progress()).
+            'advancing' => $report->isRunning() && (RunReportStep::usesWorker() || (bool) User::current()?->can('run marketing toolkit reports')),
         ];
     }
 

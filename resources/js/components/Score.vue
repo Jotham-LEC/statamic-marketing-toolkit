@@ -6,5 +6,5 @@ defineProps({ value: { type: Number, default: null } });
 
 <template>
     <Badge v-if="value !== null" :text="value" :color="value >= 90 ? 'green' : value >= 70 ? 'amber' : 'red'" class="tabular-nums" />
-    <span v-else class="text-sm text-gray-500">—</span>
+    <span v-else class="text-sm text-gray-500 dark:text-gray-400">—</span>
 </template>

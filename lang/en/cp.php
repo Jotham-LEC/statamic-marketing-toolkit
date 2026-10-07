@@ -124,6 +124,7 @@ return [
             'the_email' => 'the key’s email address',
             'copy_email' => 'Copy the email address',
             'copied' => 'Copied',
+            'copy_failed' => 'The browser didn’t allow copying, so select the email address and copy it yourself.',
             'step_property' => 'Name the property.',
             'step_property_body' => 'Type it the way Search Console names it, which is :domain for a domain or :prefix for an address prefix.',
             'save' => 'Save',
@@ -137,6 +138,8 @@ return [
             'add_first' => 'Add the key and the property first.',
             'connected' => 'Search Console is connected, and the key can read :property.',
             'imported' => 'Imported :count page.|Imported :count pages.',
+            'import_failed' => 'The import failed.',
+            'import_failed_log' => 'The import failed, and the site’s log (storage/logs) says why.',
             'key_in_env' => 'The key is set in .env (MT_SEARCH_CONSOLE_CREDENTIALS).',
             'property_in_env' => 'The property is set in .env (MT_SEARCH_CONSOLE_PROPERTY).',
             'not_a_key' => 'That is not a service account key. Download one as JSON from Google Cloud → IAM & Admin → Service accounts → Keys.',
@@ -260,6 +263,14 @@ return [
         'label' => 'SEO score',
     ],
 
+    // A running report's progress bar, and a report that failed.
+    'report_progress' => [
+        'failed' => 'The report’s progress could not be loaded. It may have been deleted, or you may need to sign in again.',
+        'retry' => 'Try again',
+        'watching' => 'This report only moves on while someone who may run reports has it open, because the site has no queue worker.',
+        'report_failed' => 'The report did not finish.',
+    ],
+
     // The dashboard widget.
     'widget' => [
         'latest_report' => 'Latest report',
@@ -277,6 +288,7 @@ return [
         'noindex' => 'This page is hidden from search engines (:robots), so this result will not appear.',
         'drawing' => 'Drawing the card…',
         'no_image' => 'No share image',
+        'card_failed' => 'The card could not be drawn.',
         'from' => 'From :host',
         'count' => ':label length is :count character, and the aim is :min to :max.|:label length is :count characters, and the aim is :min to :max.',
         'under' => 'under :min',
@@ -292,6 +304,7 @@ return [
         'question' => 'Do you want to add a 301 redirect from the old address, so that links to it keep working?',
         'not_yet' => 'Don’t save yet',
         'not_saved' => 'The page was not saved.',
+        'choice_failed' => 'Your answer didn’t reach the server, so saving adds a redirect from the old address. You can delete it under Redirects.',
     ],
 
     'actions' => [

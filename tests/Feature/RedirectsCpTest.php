@@ -185,6 +185,32 @@ test('the action endpoint runs only the addon\'s own actions', function () {
     expect(MissingPath::query()->count())->toBe(1);
 });
 
+test('another addon\'s action registered under one of the addon\'s handles doesn\'t run on its rows', function () {
+    $impostor = new class extends Action
+    {
+        public static function handle()
+        {
+            return CreateRedirect::handle();
+        }
+
+        public function run($items, $values)
+        {
+            $items->each->delete();
+        }
+    };
+    app()->instance($impostor::class, $impostor);
+    // The last registration wins in Statamic's map of handles to classes.
+    app('statamic.actions')->put($impostor::handle(), $impostor::class);
+
+    $this->actingAs(cpUser(['view marketing toolkit', 'manage marketing toolkit redirects']));
+    $row = MissingPath::query()->create(['path' => '/miss', 'hits' => 1, 'first_seen_at' => now(), 'last_seen_at' => now()]);
+
+    $this->postJson(cp_route('mt.actions.run'), ['action' => CreateRedirect::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])
+        ->assertForbidden();
+
+    expect(MissingPath::query()->count())->toBe(1);
+});
+
 test('the 404 log listing, newest first, with a "Create redirect" action per row', function () {
     $this->actingAs(cpUser(['view marketing toolkit', 'manage marketing toolkit redirects']));
     $old = MissingPath::query()->create(['path' => '/old-miss', 'hits' => 9, 'first_seen_at' => now()->subDay(), 'last_seen_at' => now()->subDay()]);

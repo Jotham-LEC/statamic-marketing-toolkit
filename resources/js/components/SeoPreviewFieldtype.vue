@@ -17,6 +17,8 @@ const resolved = ref(null);
 const failed = ref(false);
 const card = ref(null);
 const cardLoading = ref(false);
+const cardFailed = ref(false);
+let unmounted = false;
 
 const seo = computed(() => values.value?.seo ?? {});
 const filled = (value) => typeof value === 'string' && value.trim() !== '';
@@ -52,28 +54,67 @@ function payload() {
     };
 }
 
+/**
+ * Only the latest of a kind of request counts: starting one cancels the one
+ * before it, so a slow, stale answer never overwrites a newer one.
+ */
+function latest() {
+    let controller = null;
+
+    return {
+        start() {
+            controller?.abort();
+            controller = new AbortController();
+            return controller;
+        },
+        // Whether this request's answer still counts.
+        current: (mine) => !unmounted && mine === controller,
+        cancel: () => controller?.abort(),
+    };
+}
+
+const metaRequests = latest();
+const cardRequests = latest();
+
 const fetchMeta = debounce(async () => {
+    const mine = metaRequests.start();
+
     try {
-        resolved.value = (await axios.post(props.meta.urls.meta, payload())).data;
+        const { data } = await axios.post(props.meta.urls.meta, payload(), { signal: mine.signal });
+        if (!metaRequests.current(mine)) return;
+        resolved.value = data;
         failed.value = false;
     } catch {
-        failed.value = true;
+        if (metaRequests.current(mine)) failed.value = true;
     }
 }, 600);
 
 const fetchCard = debounce(async () => {
+    const mine = cardRequests.start();
     cardLoading.value = true;
 
     try {
-        const response = await axios.post(props.meta.urls.card, payload(), { responseType: 'blob' });
+        const response = await axios.post(props.meta.urls.card, payload(), { responseType: 'blob', signal: mine.signal });
+        if (!cardRequests.current(mine)) return;
         if (card.value) URL.revokeObjectURL(card.value);
         card.value = URL.createObjectURL(response.data);
+        cardFailed.value = false;
     } catch {
+        if (!cardRequests.current(mine)) return;
+        if (card.value) URL.revokeObjectURL(card.value);
         card.value = null;
+        cardFailed.value = true;
     } finally {
-        cardLoading.value = false;
+        if (cardRequests.current(mine)) cardLoading.value = false;
     }
 }, 300);
+
+// Where the share image goes while there is none to show.
+const placeholder = computed(() => {
+    if (cardLoading.value) return __('marketing-toolkit::cp.preview.drawing');
+    if (cardFailed.value && resolved.value?.image?.generated) return __('marketing-toolkit::cp.preview.card_failed');
+    return __('marketing-toolkit::cp.preview.no_image');
+});
 
 watch(values, fetchMeta, { deep: true, immediate: true });
 
@@ -86,8 +127,11 @@ const cardKey = computed(() =>
 watch(cardKey, (key) => key && props.meta.og && fetchCard());
 
 onBeforeUnmount(() => {
+    unmounted = true;
     fetchMeta.cancel();
     fetchCard.cancel();
+    metaRequests.cancel();
+    cardRequests.cancel();
     if (card.value) URL.revokeObjectURL(card.value);
 });
 </script>
@@ -134,10 +178,10 @@ onBeforeUnmount(() => {
                     <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                         <div class="relative aspect-[1200/630] bg-gray-100 dark:bg-gray-800">
                             <img v-if="image" :src="image" :alt="resolved?.image?.alt ?? ''" class="size-full object-cover" />
-                            <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? __('marketing-toolkit::cp.preview.drawing') : __('marketing-toolkit::cp.preview.no_image') }}</span>
+                            <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">{{ placeholder }}</span>
                         </div>
                         <div class="border-t border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
-                            <p class="text-xs uppercase text-gray-500">{{ host }}</p>
+                            <p class="text-xs uppercase text-gray-500 dark:text-gray-400">{{ host }}</p>
                             <p class="truncate font-semibold text-gray-900 dark:text-gray-100">{{ ogTitle }}</p>
                             <p class="truncate text-sm text-gray-600 dark:text-gray-400">{{ description }}</p>
                         </div>
@@ -148,11 +192,11 @@ onBeforeUnmount(() => {
                     <h3 class="mb-2 text-sm font-medium">X</h3>
                     <div class="relative aspect-[1200/630] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
                         <img v-if="image" :src="image" :alt="resolved?.image?.alt ?? ''" class="size-full object-cover" />
-                        <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? __('marketing-toolkit::cp.preview.drawing') : __('marketing-toolkit::cp.preview.no_image') }}</span>
+                        <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">{{ placeholder }}</span>
                     </div>
                     <!-- The title under the picture rather than over it, where it covered the card's own text. -->
                     <p class="mt-1.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ogTitle }}</p>
-                    <p class="text-xs text-gray-500">{{ __('marketing-toolkit::cp.preview.from', { host }) }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.preview.from', { host }) }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
                 </section>
             </div>
         </template>

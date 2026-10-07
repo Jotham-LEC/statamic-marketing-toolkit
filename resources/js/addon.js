@@ -76,8 +76,14 @@ function confirmRedirect(payload) {
                     return true;
                 };
                 const answer = (create) => {
-                    // A failed answer leaves the default: the redirect is added.
-                    if (settle()) axios.post(cp_url('marketing-toolkit/redirects/choice'), { reference, create }).then(resolve, resolve);
+                    if (!settle()) return;
+
+                    // A failed answer leaves the default: the redirect is added. The save
+                    // goes ahead, so say so when that isn't what was chosen.
+                    axios.post(cp_url('marketing-toolkit/redirects/choice'), { reference, create }).then(resolve, () => {
+                        if (!create) toast.error(__('marketing-toolkit::cp.confirm.choice_failed'), { duration: 10000 });
+                        resolve();
+                    });
                 };
 
                 modal.on('add', () => answer(true));
@@ -120,8 +126,19 @@ Statamic.booting(() => {
     // The Tracking tab's warning, as its fields change, and a toast when the set holding it is saved.
     conditions.add('mtTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
 
+    // Worked out while saving, which has the values, and shown once saved, which
+    // only runs when the save worked (its payload has no values).
+    const overlapping = new Set();
+
     hooks.on('global-set.saving', (resolve, reject, payload) => {
-        if (config.get('marketingToolkit')?.globals?.includes(payload?.globalSet) && trackingOverlaps(payload.values)) {
+        const handle = payload?.globalSet;
+        config.get('marketingToolkit')?.globals?.includes(handle) && trackingOverlaps(payload.values) ? overlapping.add(handle) : overlapping.delete(handle);
+
+        resolve();
+    });
+
+    hooks.on('global-set.saved', (resolve, reject, payload) => {
+        if (overlapping.delete(payload?.globalSet)) {
             setTimeout(() => toast.info(__('marketing-toolkit::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
         }
 

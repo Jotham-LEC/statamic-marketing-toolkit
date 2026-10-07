@@ -39,6 +39,11 @@ function toggle(handle) {
         <ReportProgress :report="report" @done="router.reload()" />
     </Card>
 
+    <Card v-else-if="report.status === 'failed'" class="mb-6 p-4 text-sm">
+        <p class="font-semibold text-(--theme-color-danger)">{{ __('marketing-toolkit::cp.report_progress.report_failed') }}</p>
+        <p v-if="report.error" class="mt-1">{{ report.error }}</p>
+    </Card>
+
     <template v-else>
         <div class="mb-6 grid gap-4 md:grid-cols-[auto_1fr]">
             <Card class="flex flex-col items-center justify-center p-6">
@@ -104,7 +109,7 @@ function toggle(handle) {
                     <Badge v-if="row.noindex" size="sm" :text="__('marketing-toolkit::reports.cp.hidden')" />
                     <Button v-if="row.edit_url" :href="row.edit_url" :text="__('marketing-toolkit::reports.cp.fix')" size="sm" />
                 </div>
-                <div class="font-mono text-xs text-gray-500">{{ row.path }}</div>
+                <div class="font-mono text-xs text-gray-500 dark:text-gray-400">{{ row.path }}</div>
                 <ul v-if="row.issues.length" class="mt-1 space-y-0.5 text-xs">
                     <li v-for="issue in row.issues" :key="issue.label" :class="issue.status === 'fail' ? 'text-(--theme-color-danger)' : 'text-amber-700 dark:text-amber-400'">
                         <strong>{{ issue.label }}:</strong> {{ issue.message }}

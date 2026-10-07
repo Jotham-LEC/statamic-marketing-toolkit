@@ -40,7 +40,6 @@ class PreviewController
             'og_title' => $meta->ogTitle,
             'description' => $meta->description,
             'url' => $meta->url,
-            'canonical' => $meta->canonical,
             'robots' => $meta->robots,
             'site_name' => $meta->siteName,
             'twitter_site' => $meta->twitterSite,
