@@ -120,6 +120,42 @@ export function bar(root, data, hooks) {
         ['seo_tab', t.seo, page.seo_url],
     ].filter(([, , url]) => (pending ? url : safe(url)));
 
+    // A short answer beside the bar, read out: what Refresh this page's cache did.
+    const toast = h('p', { class: 'toast', role: 'status' });
+    let quiet;
+    const say = (text) => {
+        toast.textContent = text;
+        clearTimeout(quiet);
+        quiet = setTimeout(() => (toast.textContent = ''), 5000);
+    };
+
+    const refresh = async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+
+        try {
+            const response = await fetch(data.more.cache_url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': data.user.csrf, 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ url: location.href }),
+            });
+            say(response.ok ? t.cache_refreshed : t.cache_failed);
+        } catch {
+            say(t.cache_failed);
+        } finally {
+            button.disabled = false;
+        }
+    };
+
+    // After the panels: the control panel, and this page's cache where there is one.
+    const tools = [
+        data.more?.cache ? h('li', { class: 'link' }, item('button', 'cache', t.refresh_cache, pending ? { type: 'button', disabled: true } : { type: 'button', onclick: refresh })) : null,
+        data.more?.dashboard_url
+            ? h('li', { class: 'link' }, pending ? item('button', 'dashboard', t.dashboard, { type: 'button', disabled: true }) : item('a', 'dashboard', t.dashboard, { href: safe(data.more.dashboard_url) }))
+            : null,
+    ];
+
     const tray = h(
         'div',
         { id: 'mt-tray', class: 'tray' },
@@ -127,14 +163,16 @@ export function bar(root, data, hooks) {
             'ul',
             { class: 'items' },
             links.map(([name, label, url]) => h('li', { class: 'link' }, pending ? item('button', name, label, { type: 'button', disabled: true }) : item('a', name, label, { href: safe(url) }))),
-            panels.filter((name) => name !== 'seo').map((name) => h('li', { class: 'tab' }, buttons[name])),
+            panels.filter((name) => name !== 'seo' && name !== 'more').map((name) => h('li', { class: 'tab' }, buttons[name])),
+            tools,
+            panels.includes('more') ? h('li', { class: 'tab' }, buttons.more) : null,
         ),
         // Minimise: the bar folds back to its corner button, which stays on every page (Hide, in More, takes that away too).
         h('button', { type: 'button', class: 'minimise', 'aria-label': t.close, 'data-tip': t.minimise, onclick: () => expand(false) }, icon('minimise')),
         h('div', { class: 'panels' }, panels.filter((name) => sections[name]).map((name) => sections[name])),
     );
 
-    const nav = h('nav', { class: 'mt', 'aria-label': t.name, 'data-position': settings().position, 'data-theme': data.user.color_mode }, toggle, tray);
+    const nav = h('nav', { class: 'mt', 'aria-label': t.name, 'data-position': settings().position, 'data-theme': data.user.color_mode }, toggle, tray, toast);
     paint(nav, data.user.theme);
 
     const narrow = matchMedia('(max-width: 639.98px)');

@@ -36,6 +36,7 @@ const stored = () => {
 const shellOf = (data) => ({
     user: { ...data.user, csrf: null },
     page: { type: data.page.type, edit_url: Boolean(data.page.edit_url), seo_url: Boolean(data.page.seo_url) },
+    more: { dashboard_url: Boolean(data.more.dashboard_url), cache: data.more.cache },
     panels: panelsOf(data),
 });
 

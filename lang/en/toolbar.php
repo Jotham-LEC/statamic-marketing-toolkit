@@ -22,7 +22,7 @@ return [
             'redirects' => 'Redirects',
             'tracking' => 'Tracking and consent',
             'sites' => 'This page in other sites',
-            'more' => 'More',
+            'more' => 'Toolbar settings',
         ],
         'tabs' => [
             'seo' => 'Score',
@@ -30,7 +30,7 @@ return [
             'redirects' => 'Redirects',
             'tracking' => 'Tracking',
             'sites' => 'Sites',
-            'more' => 'More',
+            'more' => 'Settings',
         ],
         'missing' => 'Missing page',
         'google' => 'Google',

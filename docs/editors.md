@@ -204,11 +204,12 @@ While you're signed in to the control panel, the live site shows a small button 
 - **Redirects**: the redirects that send visitors to this page, and one from its address that never applies because the page exists. On a missing page the button turns red and says **Missing page**; the panel says how often the 404 log has seen the address, with **Add a redirect**.
 - **Tracking**: which tags load on this page, or why none do, Consent Mode, and what your own browser has agreed to.
 - **Sites**: the page on the other sites, with its status, and links to view and edit each one.
-- **More**: the control panel, **Refresh this page's cache** (on a site with static caching, for whoever may use the cache utility), and the toolbar's settings.
+- **Refresh this page's cache** (on a site with static caching, for whoever may use the cache utility) and **Control panel** (the house).
+- **Toolbar settings** (the gear): see below.
 
 Each panel shows only what your role may see in the control panel. The toolbar takes the colours of your control panel theme, remembers whether you left it open, and closes with Escape. Between pages it stays where it was while the new page's details load. It never shows in Live Preview.
 
-The toolbar's settings fold out from **Toolbar settings** at the bottom of **More**, and are kept in your browser: its **Corner** (bottom left unless you choose bottom right, top left or top right), its **Shortcut** (**Change**, then press the new keys, or **Turn off**), and **Hide the toolbar**. Minimise keeps the button in its corner; hiding takes the button away too, on every page in this browser, until you press the shortcut, so hiding needs one. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
+The toolbar's settings are in **Toolbar settings**, and are kept in your browser: its **Corner** (bottom left unless you choose bottom right, top left or top right), its **Shortcut** (**Change**, then press the new keys, or **Turn off**), and **Hide the toolbar**. Minimise keeps the button in its corner; hiding takes the button away too, on every page in this browser, until you press the shortcut, so hiding needs one. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
 
 ## When a page's address changes
 

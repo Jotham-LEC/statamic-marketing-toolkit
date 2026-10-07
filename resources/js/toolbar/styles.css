@@ -768,29 +768,30 @@ ul.menu {
     }
 }
 
-/* More → Toolbar settings: folded away until opened. */
-.disclosure {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    min-height: 32px;
-    margin-top: 8px;
-    padding: 0;
-    border-top: 1px solid var(--border);
-    font-weight: 600;
-    text-align: start;
+/* What Refresh this page's cache did, beside the bar. */
+.toast {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    max-width: min(360px, calc(100vw - 32px));
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--text);
+    color: var(--surface);
+    box-shadow: var(--shadow);
 }
 
-.disclosure::before {
-    content: '▸';
-    color: var(--muted);
-}
-
-.disclosure[aria-expanded='true']::before {
-    content: '▾';
-}
-
-.settings[hidden] {
+.toast:empty {
     display: none;
+}
+
+.mt[data-position$='right'] .toast {
+    left: auto;
+    right: 0;
+}
+
+.mt[data-position^='top'] .toast {
+    bottom: auto;
+    top: calc(100% + 8px);
 }
