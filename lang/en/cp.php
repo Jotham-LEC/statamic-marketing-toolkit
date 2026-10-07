@@ -262,6 +262,14 @@ return [
         'label' => 'SEO score',
     ],
 
+    // A running report's progress bar, and a report that failed.
+    'report_progress' => [
+        'failed' => 'The report’s progress could not be loaded. It may have been deleted, or you may need to sign in again.',
+        'retry' => 'Try again',
+        'watching' => 'This report only moves on while someone who may run reports has it open, because the site has no queue worker.',
+        'report_failed' => 'The report did not finish.',
+    ],
+
     // The dashboard widget.
     'widget' => [
         'latest_report' => 'Latest report',

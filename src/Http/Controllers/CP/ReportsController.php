@@ -170,7 +170,8 @@ class ReportsController
 
         return Inertia::render('marketing-toolkit::Report', [
             'report' => $this->summary($report),
-            'counts' => array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors'])),
+            // Every count, also for a report that failed before it had any.
+            'counts' => [...['scored' => 0, 'noindex' => 0, 'errors' => 0], ...array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors']))],
             'rules' => $rules,
             'listingUrl' => cp_route('mt.reports.pages', $report),
             'listUrl' => cp_route('mt.reports.index'),
@@ -246,6 +247,9 @@ class ReportsController
             'finished_at' => $report->finished_at?->toIso8601String(),
             'url' => cp_route('mt.reports.show', $report),
             'progress_url' => cp_route('mt.reports.progress', $report),
+            // Whether watching it moves it on: false for a running report on the
+            // sync queue watched by someone who may not run reports (see progress()).
+            'advancing' => $report->isRunning() && (RunReportStep::usesWorker() || (bool) User::current()?->can('run marketing toolkit reports')),
         ];
     }
 

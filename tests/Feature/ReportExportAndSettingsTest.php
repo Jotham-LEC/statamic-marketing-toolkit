@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\File;
 use Inertia\Testing\AssertableInertia;
+use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
@@ -83,4 +84,25 @@ test('the Settings tab is only for those who may change the addon settings', fun
 
     $this->get(cp_route('mt.reports.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('settings', null));
     $this->postJson(cp_route('mt.reports.settings'), ['keep_reports' => 3])->assertForbidden();
+});
+
+test('a report that failed before it scored any page still has every count, and its error', function () {
+    $report = Report::query()->create(['status' => Report::FAILED, 'error' => 'The report stopped.', 'settings' => [], 'pages_total' => 0, 'pages_done' => 0, 'summary' => []]);
+    $this->actingAs(cpUser(['view marketing toolkit']));
+
+    $this->get(cp_route('mt.reports.show', $report))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('counts', ['scored' => 0, 'noindex' => 0, 'errors' => 0])
+        ->where('report.status', 'failed')
+        ->where('report.error', 'The report stopped.'));
+});
+
+test('a running report says whether watching it moves it on', function () {
+    entryIn('pages', 'a');
+    $report = app(Runner::class)->start();
+
+    $this->actingAs(cpUser(['view marketing toolkit']));
+    $this->postJson(cp_route('mt.reports.progress', $report))->assertJson(['status' => 'running', 'advancing' => false]);
+
+    config(['queue.default' => 'database', 'queue.connections.database.driver' => 'database']);
+    $this->postJson(cp_route('mt.reports.progress', $report))->assertJson(['status' => 'running', 'advancing' => true]);
 });
