@@ -1,3 +1,5 @@
 @import "@statamic/cms/tailwind.css";
 
 @source "../js";
+/* The front-end toolbar has its own stylesheet, in its Shadow DOM. */
+@source not "../js/toolbar";

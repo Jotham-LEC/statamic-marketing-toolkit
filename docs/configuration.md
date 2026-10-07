@@ -200,7 +200,7 @@ An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is ne
 |---|---|---|
 | `toolbar.enabled` | `true` | The front-end toolbar for signed-in control panel users. Off (here or under Features): no script on the page, no cookie, and its endpoint answers 404. |
 
-`<s:mt:body />` ends with a script of about 300 bytes, the same for every visitor, so a page stays safe to cache under every static caching strategy. It loads the toolbar (`/vendor/statamic-marketing-toolkit/build/toolbar.js`, about 6 kB gzipped) only when the `mt_toolbar` cookie is there and the page isn't in a frame; visitors download nothing else and make no request. A layout without `mt:body` adds `<s:mt:toolbar />` before `</body>`. The script isn't printed in Live Preview or by `ssg:generate`.
+`<s:mt:body />` ends with a script of about 300 bytes, the same for every visitor, so a page stays safe to cache under every static caching strategy. It loads the toolbar (`/vendor/statamic-marketing-toolkit/build/toolbar.js`, about 7 kB gzipped) only when the `mt_toolbar` cookie is there and the page isn't in a frame; visitors download nothing else and make no request. A layout without `mt:body` adds `<s:mt:toolbar />` before `</body>`. The script isn't printed in Live Preview or by `ssg:generate`.
 
 The cookie is set when someone who may access the control panel signs in, and on their control panel requests, and removed when they sign out or hide the toolbar. It holds `1` and nothing else: the toolbar then asks `/!/marketing-toolkit/toolbar` about the page, which checks the session and each permission. It is set on the session's domain (`SESSION_DOMAIN`) for the session's lifetime. If the control panel is on another domain than the site (`admin.example.com` and `www.example.com`), set `SESSION_DOMAIN=.example.com` so one sign-in covers both; on unrelated domains, sign in on each.
 
@@ -280,4 +280,4 @@ The addon sends nothing to its author: no licence check, no usage numbers, no up
 
 Reports render pages and check internal links inside the application, without a request over the network.
 
-The front-end toolbar talks only to the site itself. Its `mt_toolbar` cookie, set for signed-in control panel users only, holds `1`, so it carries nothing about the user; the toolbar's open or closed state is kept in the browser's `localStorage` and never sent.
+The front-end toolbar talks only to the site itself. Its `mt_toolbar` cookie, set for signed-in control panel users only, holds `1`, so it carries nothing about the user; the toolbar's open or closed state, and what it draws while a page loads (the user's corner, theme, labels and which items they had, nothing about a page), are kept in the browser's `localStorage` and never sent; they are read only while the cookie is there.

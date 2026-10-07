@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Toolbar;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Number;
+use Illuminate\Support\Str;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Preview\MetaPayload;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
@@ -20,6 +21,7 @@ use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Contracts\Auth\User;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
+use Statamic\CP\Color;
 use Statamic\Facades\Data;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -69,6 +71,7 @@ class PageData
             'user' => [
                 ...Toolbar::preferences($this->user),
                 'color_mode' => $this->user->preferredColorMode(),
+                'theme' => $this->theme(),
                 'csrf' => csrf_token(),
                 'labels' => __('marketing-toolkit::toolbar.ui'),
             ],
@@ -81,6 +84,43 @@ class PageData
             'sites' => $this->sites(),
             'more' => $this->more(),
         ];
+    }
+
+    /**
+     * The user's control panel theme (Preferences → Theme), as the colours
+     * the toolbar draws with: the page's background, panels, borders, text,
+     * the accent and the focus ring, for light and dark.
+     *
+     * @return array{light: array<string, string>, dark: array<string, string>}
+     */
+    private function theme(): array
+    {
+        $light = Color::theme();
+        $dark = [...$light, ...collect(Color::theme(dark: true))->mapWithKeys(fn ($color, $name) => [Str::after($name, 'dark-') => $color])->all()];
+        $pick = fn (array $palette, array $tokens) => array_filter(array_map(fn (string $name) => self::resolve($palette, $name), $tokens));
+
+        return [
+            'light' => $pick($light, ['bg' => 'body-bg', 'surface' => 'content-bg', 'border' => 'gray-200', 'text' => 'gray-925', 'muted' => 'gray-600', 'accent' => 'ui-accent-bg', 'link' => 'ui-accent-text', 'focus' => 'focus-outline']),
+            'dark' => $pick($dark, ['bg' => 'body-bg', 'surface' => 'gray-850', 'border' => 'gray-700', 'text' => 'gray-100', 'muted' => 'gray-400', 'accent' => 'ui-accent-bg', 'link' => 'ui-accent-text', 'focus' => 'focus-outline']),
+        ];
+    }
+
+    /**
+     * A theme colour, with any `var(--theme-color-…)` it refers to filled in:
+     * the toolbar's Shadow DOM doesn't have the control panel's variables.
+     *
+     * @param  array<string, string>  $palette
+     */
+    private static function resolve(array $palette, string $name): ?string
+    {
+        $color = $palette[$name] ?? null;
+
+        for ($depth = 0; $color !== null && $depth < 3 && preg_match('/var\(--theme-color-([a-z0-9-]+)\)/', $color, $match); $depth++) {
+            $color = str_replace($match[0], (string) ($palette[$match[1]] ?? ''), $color);
+        }
+
+        // Printed into a style property: a colour, never anything that could end it.
+        return $color !== null && $color !== '' && ! preg_match('/[;{}<>]/', $color) ? $color : null;
     }
 
     /**
@@ -494,7 +534,8 @@ class PageData
     private function more(): array
     {
         return [
-            'overview_url' => $this->user->can('view marketing toolkit') ? $this->cp(cp_route('mt.index')) : null,
+            // Where the user hides, moves or changes the shortcut of the toolbar.
+            'preferences_url' => cp_route('preferences.user.edit'),
             'dashboard_url' => $this->cp(cp_route('dashboard')),
             'cache' => (bool) config('statamic.static_caching.strategy') && $this->user->can('access cache utility'),
             'cache_url' => route('statamic.mt.toolbar.cache', [], false),

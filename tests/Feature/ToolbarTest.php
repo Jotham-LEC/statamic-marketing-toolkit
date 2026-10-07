@@ -12,6 +12,7 @@ use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\Toolbar\Toolbar;
+use Statamic\CP\Color;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Preference;
@@ -221,12 +222,28 @@ test('a user who may only use the control panel gets the bar and the basics, and
         ->assertJsonPath('preview', null)
         ->assertJsonPath('redirects', null)
         ->assertJsonPath('tracking', null)
-        ->assertJsonPath('more.overview_url', null)
         ->assertJsonPath('more.cache', false)
         ->assertJsonPath('user.position', 'bottom-left')
         ->assertJsonPath('user.shortcut', 'Alt+Shift+M')
         ->assertJsonPath('user.color_mode', 'auto')
         ->assertJsonPath('user.labels.open', 'Open the Marketing Toolkit toolbar');
+});
+
+test('the toolbar takes the user\'s control panel theme, with its references filled in and nothing that could break out of a style', function () {
+    $user = cpUser(super: true);
+    $user->setPreference('theme', ['colors' => [
+        'ui-accent-bg' => 'oklch(0.5 0.2 30)',
+        'ui-accent-text' => 'var(--theme-color-ui-accent-bg)',
+        'content-bg' => 'red; } body { display: none',
+        'dark-ui-accent-text' => '#fbbf24',
+    ]])->save();
+    $this->actingAs($user);
+
+    $theme = toolbarFor('/about')->assertOk()->json('user.theme');
+
+    expect($theme['light'])->toMatchArray(['accent' => 'oklch(0.5 0.2 30)', 'link' => 'oklch(0.5 0.2 30)', 'bg' => Color::Zinc[100]])
+        ->and($theme['light'])->not->toHaveKey('surface')
+        ->and($theme['dark'])->toMatchArray(['accent' => 'oklch(0.5 0.2 30)', 'link' => '#fbbf24']);
 });
 
 test('each permission brings its panel', function () {
@@ -240,7 +257,7 @@ test('each permission brings its panel', function () {
         ->assertJsonPath('preview.title', 'About')
         ->assertJsonPath('redirects.messages.0', 'No redirects send visitors to this page.')
         ->assertJsonPath('tracking.messages.0', 'No tracking tags are set up in Marketing settings.')
-        ->assertJsonPath('more.overview_url', cp_route('mt.index'))
+        ->assertJsonPath('more.preferences_url', cp_route('preferences.user.edit'))
         ->assertJsonPath('more.cache', true);
 });
 

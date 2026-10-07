@@ -55,7 +55,7 @@ return [
         'settings' => 'Open Marketing settings',
         'view' => 'View',
         'edit' => 'Edit',
-        'overview' => 'Marketing overview',
+        'preferences' => 'Toolbar preferences',
         'dashboard' => 'Control panel',
         'refresh_cache' => 'Refresh this page’s cache',
         'cache_refreshed' => 'This page’s cache was cleared, so the next visit stores a fresh copy.',

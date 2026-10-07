@@ -12,13 +12,15 @@
 
 .mt,
 .notice {
-    --bg: #f3f4f6;
-    --surface: #fff;
-    --text: #111827;
-    --muted: #4b5563;
-    --border: #d1d5db;
-    --accent: #4338ca;
-    --link: #3730a3;
+    /* The user's control panel theme (--l-* light, --d-* dark, set by the script), else the control panel's defaults. */
+    --bg: var(--l-bg, #f4f4f5);
+    --surface: var(--l-surface, #fff);
+    --text: var(--l-text, #111113);
+    --muted: var(--l-muted, #52525b);
+    --border: var(--l-border, #e4e4e7);
+    --accent: var(--l-accent, #4338ca);
+    --link: var(--l-link, #4338ca);
+    --focus: var(--l-focus, #60a5fa);
     --good-bg: #dcfce7;
     --good: #14532d;
     --fair-bg: #fef3c7;
@@ -33,13 +35,14 @@
 }
 
 .mt[data-theme='dark'] {
-    --bg: #1f2937;
-    --surface: #111827;
-    --text: #f3f4f6;
-    --muted: #d1d5db;
-    --border: #4b5563;
-    --accent: #a5b4fc;
-    --link: #c7d2fe;
+    --bg: var(--d-bg, #18181b);
+    --surface: var(--d-surface, #1f1f23);
+    --text: var(--d-text, #f4f4f5);
+    --muted: var(--d-muted, #a1a1aa);
+    --border: var(--d-border, #3f3f46);
+    --accent: var(--d-accent, #4338ca);
+    --link: var(--d-link, #818cf8);
+    --focus: var(--d-focus, #60a5fa);
     --good-bg: #14532d;
     --good: #dcfce7;
     --fair-bg: #78350f;
@@ -50,13 +53,14 @@
 
 @media (prefers-color-scheme: dark) {
     .mt[data-theme='auto'] {
-        --bg: #1f2937;
-        --surface: #111827;
-        --text: #f3f4f6;
-        --muted: #d1d5db;
-        --border: #4b5563;
-        --accent: #a5b4fc;
-        --link: #c7d2fe;
+        --bg: var(--d-bg, #18181b);
+        --surface: var(--d-surface, #1f1f23);
+        --text: var(--d-text, #f4f4f5);
+        --muted: var(--d-muted, #a1a1aa);
+        --border: var(--d-border, #3f3f46);
+        --accent: var(--d-accent, #4338ca);
+        --link: var(--d-link, #818cf8);
+        --focus: var(--d-focus, #60a5fa);
         --good-bg: #14532d;
         --good: #dcfce7;
         --fair-bg: #78350f;
@@ -122,7 +126,7 @@ a {
 
 /* 2 px in the accent, with a ring of the surface around it, so it shows on the bar and on the page. */
 :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus);
     outline-offset: 1px;
     box-shadow: 0 0 0 4px var(--surface);
 }
@@ -138,16 +142,6 @@ a {
     border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: var(--shadow);
-}
-
-.toggle svg {
-    width: 16px;
-    height: 16px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
 }
 
 .toggle.missing {
@@ -237,6 +231,60 @@ a {
     border-radius: 6px;
     text-decoration: none;
     color: var(--text);
+}
+
+.items svg,
+.toggle svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.items .label {
+    display: none;
+}
+
+.items button:disabled {
+    opacity: 0.5;
+    cursor: progress;
+}
+
+/* An item's name above it, on hover and on keyboard focus (never hover alone). */
+[data-tip] {
+    position: relative;
+}
+
+[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--text);
+    color: var(--surface);
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Not over the panel the item has opened. */
+[data-tip][aria-expanded='true']::after {
+    display: none;
 }
 
 .items a:hover,
@@ -414,7 +462,7 @@ ul.menu {
     padding: 6px 12px;
     border-radius: 6px;
     background: var(--accent);
-    color: var(--surface);
+    color: #fff;
     text-decoration: none;
     font-weight: 600;
 }
@@ -564,6 +612,16 @@ ul.menu {
     }
 
     .items .tab {
+        display: none;
+    }
+
+    /* In the sheet, items are named in full; there is no hover to show a tooltip. */
+    .items .label {
+        display: inline;
+        margin-inline-start: 6px;
+    }
+
+    [data-tip]::after {
         display: none;
     }
 

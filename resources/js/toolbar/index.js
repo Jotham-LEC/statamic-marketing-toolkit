@@ -1,4 +1,4 @@
-import { bar } from './bar.js';
+import { bar, panelsOf } from './bar.js';
 import styles from './styles.css?inline';
 
 /*
@@ -6,12 +6,39 @@ import styles from './styles.css?inline';
  * says a control panel user is signed in. Asks the endpoint about this page,
  * then draws the toolbar in a Shadow DOM, so the site's CSS and the
  * toolbar's never meet.
+ *
+ * Every page load starts afresh, so the bar is drawn at once from what the
+ * last page kept (its theme, corner, open state and items, nothing about a
+ * page), and replaced by this page's as soon as the endpoint answers.
  */
 const script = document.currentScript;
 const endpoint = script?.dataset.endpoint;
+const SHELL = 'mt-toolbar-shell';
+
+const store = (value) => {
+    try {
+        value === null ? localStorage.removeItem(SHELL) : localStorage.setItem(SHELL, JSON.stringify(value));
+    } catch {}
+};
+
+const stored = () => {
+    try {
+        return JSON.parse(localStorage.getItem(SHELL) ?? 'null');
+    } catch {
+        return null;
+    }
+};
+
+/** What the next page draws while it loads: the user's settings and labels, and which items there were. */
+const shellOf = (data) => ({
+    user: { ...data.user, csrf: null },
+    page: { type: data.page.type, edit_url: Boolean(data.page.edit_url), seo_url: Boolean(data.page.seo_url) },
+    panels: panelsOf(data),
+});
 
 const forget = () => {
     document.cookie = 'mt_toolbar=; Max-Age=0; Path=/; SameSite=Lax';
+    store(null);
 };
 
 function host() {
@@ -56,23 +83,59 @@ const typing = (event) => {
     return target instanceof HTMLElement && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
 };
 
+let drawn = null;
+let pressed = () => false;
+
+/** Draws a bar, then takes the one before it away, so nothing flickers between them. */
+function draw(data) {
+    const previous = drawn;
+    const { element, root } = host();
+    const toolbar = bar(root, data, () => element.remove());
+
+    if (previous) {
+        if (previous.toolbar.focused()) toolbar.focus();
+        previous.element.remove();
+    }
+
+    drawn = { element, toolbar };
+}
+
+document.addEventListener('keydown', (event) => {
+    if (drawn && pressed(event) && !typing(event)) {
+        event.preventDefault();
+        drawn.toolbar.toggle();
+    }
+});
+
 async function boot() {
-    if (!endpoint || document.getElementById('mt-toolbar')) return;
+    if (!endpoint || window.mtToolbar) return;
+    window.mtToolbar = true;
 
     const status = performance.getEntriesByType?.('navigation')[0]?.responseStatus;
     const query = new URLSearchParams({ url: location.href });
     if (status) query.set('status', status);
 
+    // Asked first, then the bar drawn while the answer is on its way.
+    const answer = fetch(endpoint + '?' + query, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+    const shell = stored();
+
+    if (shell) {
+        pressed = shortcut(shell.user.shortcut);
+        draw({ ...shell, pending: true });
+    }
+
     let response;
 
     try {
-        response = await fetch(endpoint + '?' + query, { credentials: 'same-origin', headers: { Accept: 'application/json' }, priority: 'low' });
+        response = await answer;
     } catch {
+        drawn?.element.remove();
         return;
     }
 
     // Signed out (or the toolbar was switched off): nothing more on this browser until the next sign-in.
     if (response.status === 401 || response.status === 404) {
+        drawn?.element.remove();
         forget();
         if (response.status === 401) notice((await response.json().catch(() => ({}))).message ?? '');
         return;
@@ -84,21 +147,16 @@ async function boot() {
         if (!response.ok) throw new Error();
         data = await response.json();
     } catch {
-        notice('The toolbar couldn’t load this page’s details. Reload the page to try again.');
+        drawn?.element.remove();
+        notice(shell?.user.labels.error ?? 'The toolbar couldn’t load this page’s details. Reload the page to try again.');
         return;
     }
 
-    const { element, root } = host();
-    const toolbar = bar(root, data, () => element.remove());
-    const pressed = shortcut(data.user.shortcut);
-
-    document.addEventListener('keydown', (event) => {
-        if (pressed(event) && !typing(event)) {
-            event.preventDefault();
-            toolbar.toggle();
-        }
-    });
+    pressed = shortcut(data.user.shortcut);
+    draw(data);
+    store(shellOf(data));
 }
 
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-else boot();
+// The guard runs inside <body>, so the bar can be drawn before the rest of the page has loaded.
+if (document.body) boot();
+else document.addEventListener('DOMContentLoaded', boot);

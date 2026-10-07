@@ -27,7 +27,7 @@ export default function more(data, t, actions) {
         h(
             'ul',
             { class: 'menu' },
-            more.overview_url ? h('li', {}, link(more.overview_url, t.overview)) : null,
+            h('li', {}, link(more.preferences_url, t.preferences)),
             h('li', {}, link(more.dashboard_url, t.dashboard)),
             more.cache
                 ? h('li', {}, h('button', { type: 'button', onclick: (event) => post(more.cache_url, event.currentTarget, t.cache_refreshed, t.cache_failed) }, t.refresh_cache))

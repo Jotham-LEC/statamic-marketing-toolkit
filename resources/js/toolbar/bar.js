@@ -1,4 +1,5 @@
-import { h, link, tone } from './dom.js';
+import { h, safe, tone } from './dom.js';
+import { icon } from './icons.js';
 import more from './panels/more.js';
 import preview from './panels/preview.js';
 import redirects from './panels/redirects.js';
@@ -9,22 +10,13 @@ import tracking from './panels/tracking.js';
 const PANELS = { seo, preview, redirects, tracking, sites, more };
 const OPEN = 'mt-toolbar-open';
 
-// Lucide's "trending-up" (ISC licence), the toolbar's mark.
-const mark = () => {
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 24 24');
-    svg.setAttribute('aria-hidden', 'true');
-    svg.innerHTML = '<path d="M22 7 13.5 15.5l-5-5L2 17M16 7h6v6"/>';
-    return svg;
-};
-
 const remember = (open) => {
     try {
         localStorage.setItem(OPEN, open ? '1' : '0');
     } catch {}
 };
 
-const remembered = () => {
+export const remembered = () => {
     try {
         return localStorage.getItem(OPEN) === '1';
     } catch {
@@ -32,26 +24,54 @@ const remembered = () => {
     }
 };
 
+/** The panels this data has something for, in the bar's order. */
+export const panelsOf = (data) => Object.keys(PANELS).filter((name) => (name === 'sites' ? data.sites?.length : name === 'more' || data[name]));
+
+/**
+ * The user's control panel theme on the bar: each colour as a variable the
+ * stylesheet reads, light and dark, with its own colours where one is missing.
+ */
+function paint(nav, theme) {
+    for (const mode of ['light', 'dark']) {
+        for (const [name, color] of Object.entries(theme?.[mode] ?? {})) {
+            nav.style.setProperty(`--${mode[0]}-${name}`, color);
+        }
+    }
+}
+
 /**
  * The bar: a toggle in its corner and, once open, the bar along the bottom
- * with the edit links and a button per panel. Panels are disclosures, one
- * open at a time, opening upwards. Below 640 px the open bar is a bottom
- * sheet with every panel in it.
+ * with an icon for each item (its name as a tooltip and to screen readers)
+ * and a button per panel. Panels are disclosures, one open at a time,
+ * opening upwards. Below 640 px the open bar is a bottom sheet with every
+ * panel in it, its items named in full.
+ *
+ * Pending (`data.pending`), it is drawn from the last page's items, disabled,
+ * while this page's details load: the bar stays where it was between pages.
  */
 export function bar(root, data, onRemove) {
     const t = data.user.labels;
     const page = data.page;
+    const pending = Boolean(data.pending);
     const score = data.seo?.score;
-    const panels = Object.keys(PANELS).filter((name) => (name === 'sites' ? data.sites?.length : name === 'more' || data[name]));
+    const panels = pending ? data.panels : panelsOf(data);
     const buttons = {};
     const sections = {};
     let current = null;
 
+    const badge = pending
+        ? h('span', { class: 'badge', 'aria-hidden': 'true' }, '…')
+        : page.missing
+          ? h('span', { class: 'badge poor' }, t.missing)
+          : score != null
+            ? h('span', { class: 'badge ' + tone(score), 'aria-hidden': 'true' }, String(score))
+            : null;
+
     const toggle = h(
         'button',
-        { type: 'button', class: 'toggle' + (page.missing ? ' missing' : ''), 'aria-controls': 'mt-tray', 'aria-expanded': 'false' },
-        mark(),
-        page.missing ? h('span', { class: 'badge poor' }, t.missing) : score != null ? h('span', { class: 'badge ' + tone(score), 'aria-hidden': 'true' }, String(score)) : null,
+        { type: 'button', class: 'toggle' + (page.missing ? ' missing' : ''), 'aria-controls': 'mt-tray', 'aria-expanded': 'false', 'aria-busy': pending ? 'true' : null },
+        icon('mark'),
+        badge,
         h('span', { class: 'sr' }, t.open, score != null ? '. ' + t.score.replace(':score', score) : ''),
         h('span', { class: 'closing', 'aria-hidden': 'true' }, t.close_panel),
     );
@@ -71,38 +91,46 @@ export function bar(root, data, onRemove) {
         }
     };
 
+    /** An item of the bar: its icon, its name as a tooltip and, in the sheet, as text. */
+    const item = (tag, name, label, attrs) =>
+        h(tag, { 'aria-label': label, 'data-tip': label, ...attrs }, icon(name), h('span', { class: 'label', 'aria-hidden': 'true' }, label));
+
     for (const name of panels) {
         const id = 'mt-panel-' + name;
-        const heading = h('h2', { id: id + '-title', tabindex: '-1' }, t.panels[name]);
 
-        buttons[name] = h('button', { type: 'button', 'aria-expanded': 'false', 'aria-controls': id, onclick: () => open(name) }, t.tabs[name]);
-        sections[name] = h(
-            'section',
-            { id, class: 'panel', role: 'dialog', 'aria-labelledby': id + '-title' },
-            h('header', {}, heading, h('button', { type: 'button', class: 'close', 'aria-label': t.close_panel, onclick: () => (open(null), buttons[name].focus()) }, '×')),
-            h('div', { class: 'body' }, PANELS[name](data, t, { hidden: () => setTimeout(onRemove, 4000) })),
-        );
+        buttons[name] = item('button', name, t.panels[name], pending ? { type: 'button', disabled: true } : { type: 'button', 'aria-expanded': 'false', 'aria-controls': id, onclick: () => open(name) });
+
+        if (!pending) {
+            sections[name] = h(
+                'section',
+                { id, class: 'panel', role: 'dialog', 'aria-labelledby': id + '-title' },
+                h('header', {}, h('h2', { id: id + '-title', tabindex: '-1' }, t.panels[name]), h('button', { type: 'button', class: 'close', 'aria-label': t.close_panel, onclick: () => (open(null), buttons[name].focus()) }, '×')),
+                h('div', { class: 'body' }, PANELS[name](data, t, { hidden: () => setTimeout(onRemove, 4000) })),
+            );
+        }
     }
 
-    const edit = page.edit_url ? link(page.edit_url, page.type === 'term' ? t.edit_term : t.edit_entry, { class: 'edit' }) : null;
+    const links = [
+        ['edit', page.type === 'term' ? t.edit_term : t.edit_entry, page.edit_url],
+        ['seo_tab', t.seo, page.seo_url],
+    ].filter(([, , url]) => (pending ? url : safe(url)));
+
     const tray = h(
         'div',
         { id: 'mt-tray', class: 'tray' },
         h(
             'ul',
             { class: 'items' },
-            edit ? h('li', { class: 'link' }, edit) : null,
-            page.seo_url ? h('li', { class: 'link' }, link(page.seo_url, t.seo)) : null,
+            links.map(([name, label, url]) => h('li', { class: 'link' }, pending ? item('button', name, label, { type: 'button', disabled: true }) : item('a', name, label, { href: safe(url) }))),
             panels.map((name) => h('li', { class: 'tab' }, buttons[name])),
         ),
-        h(
-            'div',
-            { class: 'panels' },
-            panels.map((name) => sections[name]),
-        ),
+        h('div', { class: 'panels' }, panels.filter((name) => sections[name]).map((name) => sections[name])),
     );
 
     const nav = h('nav', { class: 'mt', 'aria-label': t.name, 'data-position': data.user.position, 'data-theme': data.user.color_mode }, toggle, tray);
+    paint(nav, data.user.theme);
+
+    const narrow = matchMedia('(max-width: 639.98px)');
 
     const expand = (expanded, focus = true) => {
         nav.classList.toggle('expanded', expanded);
@@ -114,12 +142,11 @@ export function bar(root, data, onRemove) {
         if (!expanded) {
             open(null);
             if (focus) toggle.focus();
-        } else if (page.missing && panels.includes('redirects') && !current && !narrow.matches) {
+        } else if (!pending && page.missing && panels.includes('redirects') && !current && !narrow.matches) {
             open('redirects');
         }
     };
 
-    const narrow = matchMedia('(max-width: 639.98px)');
     toggle.addEventListener('click', () => expand(!nav.classList.contains('expanded')));
 
     // Escape closes the open panel, back to its button; then the bar.
@@ -143,14 +170,15 @@ export function bar(root, data, onRemove) {
     });
 
     root.append(nav);
-
-    if (remembered()) expand(true, false);
-    else document.documentElement.style.setProperty('--mt-toolbar-height', '0px');
+    expand(remembered(), false);
 
     return {
         toggle: () => {
             expand(!nav.classList.contains('expanded'));
             toggle.focus();
         },
+        focus: () => toggle.focus(),
+        /** Whether focus is on the toggle, so the bar replacing this one can take it over. */
+        focused: () => root.activeElement === toggle,
     };
 }
