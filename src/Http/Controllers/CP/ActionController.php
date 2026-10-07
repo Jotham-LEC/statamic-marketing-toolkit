@@ -20,12 +20,16 @@ class ActionController extends StatamicActionController
     /**
      * Only the addon's actions run here: Statamic's `run()` would run any
      * registered action on our rows, and asks only that action to authorize.
+     * The class the handle resolves to is checked, not the handle: Statamic
+     * maps handles to classes and the last registration wins, so another
+     * addon's action could take one of ours.
      */
     public function run(Request $request)
     {
-        $handles = array_map(fn (string $class): string => $class::handle(), RecordActions::ACTIONS);
+        $action = $request->input('action');
+        $class = is_string($action) ? app('statamic.actions')->get($action) : null;
 
-        abort_unless(in_array($request->input('action'), $handles, true), 403);
+        abort_unless(in_array($class, RecordActions::ACTIONS, true), 403);
 
         return parent::run($request);
     }
