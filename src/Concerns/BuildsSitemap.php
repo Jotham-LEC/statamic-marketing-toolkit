@@ -56,7 +56,8 @@ trait BuildsSitemap
     /** @api */
     public function inSitemap(Entry|Term $content): bool
     {
-        $seo = $content->get('seo');
+        // A translation's own group, else its origin's.
+        $seo = $content->value('seo');
         $seo = is_array($seo) ? $seo : [];
         $canonical = $seo['canonical'] ?? null;
 

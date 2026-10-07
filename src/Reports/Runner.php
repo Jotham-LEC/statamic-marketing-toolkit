@@ -305,7 +305,7 @@ class Runner
             'url' => (string) $content->absoluteUrl(),
             'content_type' => $content instanceof EntryContract ? 'entry' : 'term',
             'content_id' => (string) $content->id(),
-            'title' => (string) self::title((string) $content->get('title')),
+            'title' => (string) self::title((string) $content->value('title')),
         ];
     }
 

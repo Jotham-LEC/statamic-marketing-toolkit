@@ -331,7 +331,7 @@ trait BuildsSchema
 
             // A draft's title and address aren't public yet.
             if ($ancestor instanceof Entry && $ancestor->status() === 'published') {
-                $trail->push(['name' => (string) $ancestor->get('title'), 'item' => $ancestor->absoluteUrl()]);
+                $trail->push(['name' => (string) $ancestor->value('title'), 'item' => $ancestor->absoluteUrl()]);
             }
         }
 
@@ -417,7 +417,7 @@ trait BuildsSchema
 
         return $items
             ->map(fn ($author): ?array => match (true) {
-                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->get('title'), 'url' => (string) $author->absoluteUrl()],
+                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->value('title'), 'url' => (string) $author->absoluteUrl()],
                 $author instanceof User => ['@type' => 'Person', 'name' => (string) ($author->name() ?: $author->get('name')), 'url' => (string) $author->get('url')],
                 default => null,
             })

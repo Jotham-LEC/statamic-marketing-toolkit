@@ -61,10 +61,10 @@ class Generator
         $mount = $mount?->in($entry->locale()) ?? $mount;
 
         return new Card(
-            title: $overrides['og_title'] ?? (string) $entry->get('title'),
+            title: $overrides['og_title'] ?? (string) $entry->value('title'),
             // A long subtitle may be typed on several lines: the card draws it as one paragraph.
             description: isset($overrides['og_subtitle']) ? Str::squish((string) $overrides['og_subtitle']) : $seo->description($context),
-            label: $mount ? (string) $mount->get('title') : $settings->siteName(),
+            label: $mount ? (string) $mount->value('title') : $settings->siteName(),
             siteName: $settings->siteName(),
             picture: $settings->asset('og_picture')?->resolvedPath(),
             background: $settings->string('og_background', '#ffffff'),

@@ -53,14 +53,16 @@ final readonly class Context
     }
 
     /**
-     * The entry's own `seo` group, without the fields left empty: an override
-     * cleared in the control panel counts as not set.
+     * The entry's `seo` group, without the fields left empty: an override
+     * cleared in the control panel counts as not set. A translation that has
+     * no group of its own takes its origin's, as the control panel shows it
+     * (a group is linked to its origin, or not, as a whole).
      *
      * @return array<string, mixed>
      */
     public function seo(): array
     {
-        $values = $this->content()?->get('seo');
+        $values = $this->content()?->value('seo');
 
         return array_filter(is_array($values) ? $values : [], fn ($value) => filled($value));
     }

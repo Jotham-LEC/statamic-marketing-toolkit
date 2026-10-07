@@ -71,7 +71,7 @@ trait InteractsWithContent
     protected function contentTitle(Context $context): ?string
     {
         $content = $context->content();
-        $title = $content instanceof Term ? $content->title() : $content?->get('title');
+        $title = $content instanceof Term ? $content->title() : $content?->value('title');
 
         return filled($title) ? (string) $title : null;
     }
@@ -143,17 +143,18 @@ trait InteractsWithContent
 
     /**
      * The stored value of a field, as a list: one value for a plain field, one
-     * per visible matching set for a path into a Replicator.
+     * per visible matching set for a path into a Replicator. A translation's
+     * own value, else its origin's: value(), as get() reads only its own.
      *
      * @return Collection<int, mixed>
      */
     protected function rawValues(Entry|Term $content, string $field): Collection
     {
         if ($set = $this->setPath($field)) {
-            return $this->visibleSets($content->get($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
+            return $this->visibleSets($content->value($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
         }
 
-        return collect([$content->get($field)]);
+        return collect([$content->value($field)]);
     }
 
     /**
