@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.21.0 – 2026-10-07
 
 The control panel gets its own Marketing section, the brand is kept apart from the tracking and crawler settings, and reports can be exported.
 
