@@ -25,6 +25,8 @@ Fixes from a second audit, a licence, and the requirements stated and tested.
 - The 404 log keeps a one-off address only when one of the site's own pages links to it; a made-up `Referer` header no longer protects it.
 - Answering the "add a redirect?" question twice (a double click) counts the first answer only.
 - The control panel preview could say a generated share card wasn't generated when the second ticked over between two reads.
+- **"Don't save yet" on the redirect question says "Not saved."**, not "Something went wrong": the save now stops the way Statamic expects.
+- The Search Console steps have a space between each step's title and its text.
 
 ### Changed
 - `LICENSE.md` sets out the terms: Free on any number of sites, Pro per production site for a major version (a 0.x licence also covers 1.x), with the third-party software it relies on.

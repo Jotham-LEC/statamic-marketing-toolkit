@@ -1,5 +1,6 @@
 import { components, conditions, config, hooks, inertia, stacks, toast } from '@statamic/cms/api';
 import { router } from '@statamic/cms/inertia';
+import { PipelineStopped } from '@statamic/cms/save-pipeline';
 import RedirectConfirm from './components/RedirectConfirm.vue';
 import SeoPreviewFieldtype from './components/SeoPreviewFieldtype.vue';
 import SeoWidget from './components/SeoWidget.vue';
@@ -82,13 +83,17 @@ function confirmRedirect(payload) {
                 modal.on('add', () => answer(true));
                 modal.on('skip', () => answer(false));
                 // Closed, or "not yet": nothing is saved; the next save asks again.
+                // PipelineStopped is how Statamic's save stops quietly; anything
+                // else it reports as "Something went wrong".
                 modal.on('cancel', () => {
-                    if (settle()) reject(__('seo::cp.confirm.not_saved'));
+                    if (!settle()) return;
+                    toast.info(__('seo::cp.confirm.not_saved'));
+                    reject(new PipelineStopped());
                 });
             });
         })
         // A failed check never blocks a save; the server adds the redirect by default.
-        .catch((error) => (typeof error === 'string' ? Promise.reject(error) : undefined));
+        .catch((error) => (error instanceof PipelineStopped ? Promise.reject(error) : undefined));
 }
 
 Statamic.booting(() => {

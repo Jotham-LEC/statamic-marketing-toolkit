@@ -77,7 +77,7 @@ function copyEmail() {
         <ol class="list-decimal space-y-5 ps-5 text-sm">
             <li class="space-y-2">
                 <p>
-                    <strong>{{ __('seo::cp.search_console.setup.step_key') }}</strong>
+                    <strong class="me-1">{{ __('seo::cp.search_console.setup.step_key') }}</strong>
                     <span
                         v-html="
                             __('seo::cp.search_console.setup.step_key_body', {
@@ -120,7 +120,7 @@ function copyEmail() {
 
             <li class="space-y-2">
                 <p>
-                    <strong>{{ __('seo::cp.search_console.setup.step_users') }}</strong>
+                    <strong class="me-1">{{ __('seo::cp.search_console.setup.step_users') }}</strong>
                     <span
                         v-html="
                             __('seo::cp.search_console.setup.step_users_body', {
@@ -135,7 +135,7 @@ function copyEmail() {
 
             <li class="space-y-2">
                 <p>
-                    <strong>{{ __('seo::cp.search_console.setup.step_property') }}</strong>
+                    <strong class="me-1">{{ __('seo::cp.search_console.setup.step_property') }}</strong>
                     <span v-html="__('seo::cp.search_console.setup.step_property_body', { domain: code('sc-domain:example.com'), prefix: code('https://example.com/') })" />
                 </p>
                 <div v-if="propertyFromEnv" class="flex items-center gap-2">
@@ -150,7 +150,7 @@ function copyEmail() {
             </li>
 
             <li class="space-y-2">
-                <p><strong>{{ __('seo::cp.search_console.setup.step_check') }}</strong>{{ __('seo::cp.search_console.setup.step_check_body') }}</p>
+                <p><strong class="me-1">{{ __('seo::cp.search_console.setup.step_check') }}</strong>{{ __('seo::cp.search_console.setup.step_check_body') }}</p>
                 <Button :text="__('seo::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
                 <p role="status" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
                 <p class="text-gray-500" v-html="__('seo::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />

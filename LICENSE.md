@@ -10,7 +10,7 @@ Marketing Toolkit is commercial software. By installing or using it you agree to
 
 **Pro.** A Pro licence costs $39 per site and is bought through the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit).
 
-- One licence covers one production site.
+- One licence covers one production site. A Statamic install that runs several sites or languages counts as one site.
 - Local, development and staging copies of a licensed site don't need a licence of their own.
 - A licence covers every release of one major version (all of 1.x, for example). One bought during 0.x also covers 1.x. A new major version needs a new licence.
 - If Pro isn't for you, ask for a refund within 14 days of buying it.
