@@ -23,6 +23,13 @@ final class Toolbar
 {
     public const string COOKIE = 'mt_toolbar';
 
+    /**
+     * The guard's code. The addresses it loads are attributes of its tag, so
+     * the code is the same on every site and in every version, and a Content
+     * Security Policy can allow it by its hash (docs/configuration.md#toolbar).
+     */
+    public const string SCRIPT = "(function(c,d){if(/(?:^|; )mt_toolbar=1(?:;|$)/.test(d.cookie)&&self===top){var s=d.createElement('script');s.src=c.dataset.src;s.dataset.endpoint=c.dataset.endpoint;d.head.appendChild(s);}})(document.currentScript,document);";
+
     public static function enabled(): bool
     {
         return Features::on('toolbar');

@@ -44,8 +44,8 @@ test('every visitor gets the same guard, which names the script and the endpoint
     expect($guest)->toBe($signedIn)
         ->toContain('mt_toolbar=1')
         ->toContain('self===top')
-        ->toContain('"\/vendor\/statamic-marketing-toolkit\/build\/toolbar.js?v=')
-        ->toContain('"\/!\/marketing-toolkit\/toolbar"')
+        ->toContain('data-src="/vendor/statamic-marketing-toolkit/build/toolbar.js?v=')
+        ->toContain('data-endpoint="/!/marketing-toolkit/toolbar"')
         ->not->toContain('editor@example.test')
         ->not->toContain('super@example.test');
 });
@@ -64,8 +64,16 @@ test('the guard is left out with the toolbar off, and in Live Preview', function
 test('<s:mt:toolbar /> prints the guard alone, with the CSP nonce', function () {
     Vite::useCspNonce('abc123');
 
-    expect(trim(renderAt('/', '<s:mt:toolbar />')))->toStartWith('<script nonce="abc123">(function(d){')
-        ->toEndWith('</script>');
+    expect(trim(renderAt('/', '<s:mt:toolbar />')))->toStartWith('<script nonce="abc123" data-src=')
+        ->toEndWith('>'.Toolbar::SCRIPT.'</script>');
+});
+
+test('the guard\'s code is the same in every version, so a Content Security Policy can allow it by the hash the docs give', function () {
+    preg_match('#<script[^>]*>(.*?)</script>#', renderAt('/', '<s:mt:toolbar />'), $match);
+    $hash = "'sha256-".base64_encode(hash('sha256', $match[1], true))."'";
+
+    expect($match[1])->toBe(Toolbar::SCRIPT)->not->toContain('?v=')
+        ->and(file_get_contents(__DIR__.'/../../docs/configuration.md'))->toContain($hash);
 });
 
 test('a page cached while a control panel user is signed in holds nothing of theirs', function () {
@@ -422,7 +430,7 @@ test('refreshing this page\'s cache needs the cache utility\'s permission, and c
 });
 
 test('the guard loads the built script, which ships with the addon and is published with its other assets', function () {
-    preg_match('#"\\\\/vendor\\\\/statamic-marketing-toolkit\\\\/build\\\\/(toolbar\.js)\?v=#', renderAt('/', '<s:mt:toolbar />'), $match);
+    preg_match('#data-src="/vendor/statamic-marketing-toolkit/build/(toolbar\.js)\?v=#', renderAt('/', '<s:mt:toolbar />'), $match);
 
     expect($match[1] ?? null)->toBe('toolbar.js')
         ->and(__DIR__.'/../../resources/dist/build/toolbar.js')->toBeFile();
