@@ -35,6 +35,11 @@ final class Features
 
     public const string SETTING = 'features_off';
 
+    public static function on(string $module): bool
+    {
+        return (bool) config(self::MODULES[$module]);
+    }
+
     /**
      * The modules switched off, as saved.
      *

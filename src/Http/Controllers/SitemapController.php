@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
@@ -53,8 +54,7 @@ class SitemapController
      */
     private function urls(): Collection
     {
-        // Off in the config or under Features.
-        throw_unless(config('marketing-toolkit.sitemap.enabled'), NotFoundHttpException::class);
+        throw_unless(Features::on('sitemap'), NotFoundHttpException::class);
 
         $build = fn () => app(SiteSeo::class)->sitemapUrls();
 

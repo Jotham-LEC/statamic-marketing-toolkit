@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\Preview\Draft;
 use JothamLec\MarketingToolkit\Preview\MetaPayload;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Contracts\Entries\Entry;
 
@@ -34,7 +35,7 @@ class PreviewController
     {
         $content = Draft::fromRequest($request);
 
-        abort_unless($content instanceof Entry && config('marketing-toolkit.og.enabled') && $generator->available(), 404);
+        abort_unless($content instanceof Entry && Features::on('share_cards') && $generator->available(), 404);
 
         $png = Sites::as($content->locale(), fn () => $generator->template($content)->image($generator->card($content))->toString());
 

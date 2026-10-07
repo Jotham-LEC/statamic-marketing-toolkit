@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
@@ -21,7 +22,7 @@ class Recorder
     public function shouldRecord(Request $request): bool
     {
         // HandleMissing only asks about GET and HEAD.
-        if (! config('marketing-toolkit.not_found.enabled')) {
+        if (! Features::on('not_found')) {
             return false;
         }
 

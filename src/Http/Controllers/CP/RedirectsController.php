@@ -13,6 +13,7 @@ use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
 use JothamLec\MarketingToolkit\Redirects\Campaign;
 use JothamLec\MarketingToolkit\Redirects\Csv;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Uris;
@@ -142,7 +143,7 @@ class RedirectsController
      */
     public function check(Request $request): array
     {
-        if (! config('marketing-toolkit.redirects.automatic') || ! User::current()?->can(Permissions::REDIRECTS)) {
+        if (! Features::on('automatic_redirects') || ! User::current()?->can(Permissions::REDIRECTS)) {
             return ['changes' => false];
         }
 

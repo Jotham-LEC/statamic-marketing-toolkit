@@ -12,6 +12,7 @@ use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Sites;
@@ -71,14 +72,14 @@ class OverviewController
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($tracking && $user->can('edit', $tracking) ? $tracking->editUrl() : null),
             // On, but nothing to draw them with (Og\Generator::available()): said, so a missing card isn't a mystery.
-            'cardsUnavailable' => config('marketing-toolkit.og.enabled') && ! app(Generator::class)->available(),
+            'cardsUnavailable' => Features::on('share_cards') && ! app(Generator::class)->available(),
             // From the domain's root, where the web server and the addon's routes serve them, also for a site under a folder.
             'files' => collect([
-                __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? '/sitemap.xml' : null,
-                __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? '/robots.txt' : null,
-                __('marketing-toolkit::cp.overview.files.llms') => config('marketing-toolkit.llms_txt.enabled') ? '/llms.txt' : null,
-                __('marketing-toolkit::cp.overview.files.favicon') => config('marketing-toolkit.favicons.enabled') && app(Favicons::class)->version() ? '/site.webmanifest' : null,
-                __('marketing-toolkit::cp.overview.files.card') => config('marketing-toolkit.og.enabled') && app(Generator::class)->available() ? '/og.png' : null,
+                __('marketing-toolkit::cp.overview.files.sitemap') => Features::on('sitemap') ? '/sitemap.xml' : null,
+                __('marketing-toolkit::cp.overview.files.robots') => Features::on('robots_txt') ? '/robots.txt' : null,
+                __('marketing-toolkit::cp.overview.files.llms') => Features::on('llms_txt') ? '/llms.txt' : null,
+                __('marketing-toolkit::cp.overview.files.favicon') => Features::on('favicons') && app(Favicons::class)->version() ? '/site.webmanifest' : null,
+                __('marketing-toolkit::cp.overview.files.card') => Features::on('share_cards') && app(Generator::class)->available() ? '/og.png' : null,
             ])->filter()->map(fn ($path, $label) => [
                 'label' => $label,
                 'url' => $seo->absolute($path),

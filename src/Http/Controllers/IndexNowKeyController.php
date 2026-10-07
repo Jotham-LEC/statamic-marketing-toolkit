@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
@@ -13,7 +14,7 @@ class IndexNowKeyController
 {
     public function __invoke(IndexNow $indexNow): Response
     {
-        throw_unless(config('marketing-toolkit.indexnow.enabled'), NotFoundHttpException::class);
+        throw_unless(Features::on('indexnow'), NotFoundHttpException::class);
 
         return new Response($indexNow->key(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Entry;
@@ -21,8 +22,8 @@ class OgImageController
 {
     public function __invoke(Request $request, Generator $generator, ?string $path = null): Response
     {
-        // Off in the config or under Features, or no Imagick to draw with.
-        throw_unless(config('marketing-toolkit.og.enabled') && $generator->available(), NotFoundHttpException::class);
+        // No Imagick to draw with.
+        throw_unless(Features::on('share_cards') && $generator->available(), NotFoundHttpException::class);
 
         $entry = $this->entry($request, trim((string) $path, '/'));
         // A protected page's card would show its title and text to anyone.

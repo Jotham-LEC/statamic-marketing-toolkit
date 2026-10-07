@@ -9,6 +9,7 @@ use JothamLec\MarketingToolkit\Cp\Listing;
 use JothamLec\MarketingToolkit\Cp\RecordActions;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\NotFound\Recorder;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
@@ -24,7 +25,7 @@ class NotFoundController
         return Inertia::render('marketing-toolkit::NotFound', [
             'listingUrl' => cp_route('mt.404s.listing'),
             'actionUrl' => cp_route('mt.actions.run'),
-            'enabled' => (bool) config('marketing-toolkit.not_found.enabled'),
+            'enabled' => Features::on('not_found'),
             'maxRows' => (int) config('marketing-toolkit.not_found.max_rows'),
         ]);
     }

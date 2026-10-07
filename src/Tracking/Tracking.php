@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Tracking;
 
 use Illuminate\Support\Facades\Vite;
 use JothamLec\MarketingToolkit\Settings;
+use JothamLec\MarketingToolkit\Support\Features;
 
 /**
  * The tracking tags of the current site, and its Consent Mode defaults: IDs from
@@ -57,7 +58,7 @@ class Tracking
      */
     public function enabled(): bool
     {
-        return config('marketing-toolkit.tracking.enabled')
+        return Features::on('tracking')
             && app()->environment((array) config('marketing-toolkit.tracking.environments'))
             && ! request()->isLivePreview();
     }
@@ -234,7 +235,7 @@ class Tracking
      */
     public function conversions(): bool
     {
-        return config('marketing-toolkit.leads.enabled') && $this->settings->bool('conversions', true);
+        return Features::on('leads') && $this->settings->bool('conversions', true);
     }
 
     /**
@@ -252,7 +253,7 @@ class Tracking
      */
     public function attribution(): bool
     {
-        return config('marketing-toolkit.leads.enabled') && $this->settings->bool('attribution');
+        return Features::on('leads') && $this->settings->bool('attribution');
     }
 
     /**

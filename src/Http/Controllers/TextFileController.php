@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
@@ -21,8 +22,7 @@ class TextFileController
 
     public function llms(Request $request, SiteSeo $seo): Response
     {
-        // Off in the config or under Features.
-        throw_unless(config('marketing-toolkit.llms_txt.enabled'), NotFoundHttpException::class);
+        throw_unless(Features::on('llms_txt'), NotFoundHttpException::class);
 
         $build = fn () => $seo->llmsTxt();
 
@@ -32,7 +32,7 @@ class TextFileController
 
     public function ads(SiteSeo $seo): Response
     {
-        throw_unless(config('marketing-toolkit.ads_txt.enabled'), NotFoundHttpException::class);
+        throw_unless(Features::on('ads_txt'), NotFoundHttpException::class);
 
         $text = $seo->adsTxt();
         throw_if($text === null, NotFoundHttpException::class);

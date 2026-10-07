@@ -6,6 +6,7 @@ use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Meta;
 use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Entries\Entry;
@@ -171,7 +172,7 @@ trait BuildsMeta
      */
     public function generatedImageUrl(Entry $entry): ?string
     {
-        if (! config('marketing-toolkit.og.enabled') || $entry->status() !== 'published' || ! $entry->url() || $this->isProtected($entry)
+        if (! Features::on('share_cards') || $entry->status() !== 'published' || ! $entry->url() || $this->isProtected($entry)
             || ! app(Generator::class)->available()) {
             return null;
         }

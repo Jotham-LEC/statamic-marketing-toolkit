@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Listeners;
 
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Settings;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Events\FormSubmitted;
 
 /**
@@ -16,7 +17,7 @@ class AttributeSubmission
 {
     public function handle(FormSubmitted $event): void
     {
-        if (config('marketing-toolkit.leads.enabled') && app(Settings::class)->bool('attribution')) {
+        if (Features::on('leads') && app(Settings::class)->bool('attribution')) {
             app(Attribution::class)->apply($event->submission, request());
         }
     }

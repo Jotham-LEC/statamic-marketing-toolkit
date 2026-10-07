@@ -150,16 +150,16 @@ class ServiceProvider extends AddonServiceProvider
     protected function leaveOutUnused(): void
     {
         $this->unused = array_keys(array_filter([
-            FlushSitemap::class => ! config('marketing-toolkit.sitemap.enabled') && ! config('marketing-toolkit.llms_txt.enabled'),
-            SubmitToIndexNow::class => ! config('marketing-toolkit.indexnow.enabled'),
-            RemakeFavicons::class => ! config('marketing-toolkit.favicons.enabled'),
-            AttributeSubmission::class => ! config('marketing-toolkit.leads.enabled'),
-            CountConversion::class => ! config('marketing-toolkit.leads.enabled'),
-            RedirectChangedUris::class => ! config('marketing-toolkit.redirects.automatic'),
-            HandleMissing::class => ! config('marketing-toolkit.redirects.enabled') && ! config('marketing-toolkit.not_found.enabled'),
-            MarkToolbarUser::class => ! Toolbar::enabled(),
-            ToolbarSignIn::class => ! Toolbar::enabled(),
-            ToolbarSignOut::class => ! Toolbar::enabled(),
+            FlushSitemap::class => ! Features::on('sitemap') && ! Features::on('llms_txt'),
+            SubmitToIndexNow::class => ! Features::on('indexnow'),
+            RemakeFavicons::class => ! Features::on('favicons'),
+            AttributeSubmission::class => ! Features::on('leads'),
+            CountConversion::class => ! Features::on('leads'),
+            RedirectChangedUris::class => ! Features::on('automatic_redirects'),
+            HandleMissing::class => ! Features::on('redirects') && ! Features::on('not_found'),
+            MarkToolbarUser::class => ! Features::on('toolbar'),
+            ToolbarSignIn::class => ! Features::on('toolbar'),
+            ToolbarSignOut::class => ! Features::on('toolbar'),
         ]));
 
         $this->listen = array_filter(array_map(fn (array $listeners) => array_values(array_diff($listeners, $this->unused)), $this->listen));
@@ -208,7 +208,7 @@ class ServiceProvider extends AddonServiceProvider
 
         Statamic::provideToScript(['marketingToolkit' => [
             // Off: a save has nothing to ask the redirect check.
-            'automaticRedirects' => (bool) config('marketing-toolkit.redirects.automatic'),
+            'automaticRedirects' => Features::on('automatic_redirects'),
             // Brand and Marketing settings: the Tracking tab is in one of them.
             'globals' => Settings::handles(),
             // Trackers set in .env, which the Tracking tab's warning counts as well.
@@ -242,7 +242,7 @@ class ServiceProvider extends AddonServiceProvider
     {
         $settings = app(ReportSettings::class);
         // Off under Features (or in config/marketing-toolkit.php): reports run only by hand.
-        $schedules = config('marketing-toolkit.reports.enabled') ? $settings->get('schedule') : 'off';
+        $schedules = Features::on('reports') ? $settings->get('schedule') : 'off';
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ReportSettings::DAYS, true);
 

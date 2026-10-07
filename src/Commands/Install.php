@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\File;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\Listeners\SaveFeatures;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
@@ -46,11 +47,11 @@ class Install extends Command
         'settings_global' => ['file' => 'marketing', 'title' => 'Marketing settings'],
     ];
 
-    /** Files the addon serves, by the config switch that turns each on. A file of the same name in public/ wins. */
+    /** Files the addon serves, by the module that serves each. A file of the same name in public/ wins. */
     private const array SERVED = [
-        'robots.txt' => 'marketing-toolkit.robots_txt.enabled',
-        'llms.txt' => 'marketing-toolkit.llms_txt.enabled',
-        'ads.txt' => 'marketing-toolkit.ads_txt.enabled',
+        'robots.txt' => 'robots_txt',
+        'llms.txt' => 'llms_txt',
+        'ads.txt' => 'ads_txt',
     ];
 
     public function handle(): int
@@ -235,8 +236,8 @@ class Install extends Command
     private function checkPublicFiles(): bool
     {
         $files = [
-            ...array_keys(array_filter(self::SERVED, fn (string $key) => config($key))),
-            ...(config('marketing-toolkit.favicons.enabled') ? array_keys(Favicons::FILES) : []),
+            ...array_keys(array_filter(self::SERVED, fn (string $module) => Features::on($module))),
+            ...(Features::on('favicons') ? array_keys(Favicons::FILES) : []),
         ];
         $found = array_values(array_filter($files, fn (string $file) => is_file(public_path($file))));
 

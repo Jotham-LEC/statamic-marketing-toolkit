@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Listeners;
 
 use Illuminate\Support\Facades\Cookie;
 use JothamLec\MarketingToolkit\Settings;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Events\SubmissionCreated;
 use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
 
@@ -27,7 +28,7 @@ class CountConversion
 
     public function handle(SubmissionCreated $event): void
     {
-        if (! config('marketing-toolkit.leads.enabled') || ! app(Settings::class)->bool('conversions', true)) {
+        if (! Features::on('leads') || ! app(Settings::class)->bool('conversions', true)) {
             return;
         }
 

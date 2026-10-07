@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use JothamLec\MarketingToolkit\NotFound\Recorder;
 use JothamLec\MarketingToolkit\Redirects\Matcher;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\StatamicRoutes;
 use Statamic\Facades\Site;
@@ -36,7 +37,7 @@ class HandleMissing
         // added later would never apply, and the log would count one visit.
         // Each module is asked here, not only at boot (leaveOutUnused): either
         // may be off alone, and an Octane worker outlives a switch.
-        if (config('marketing-toolkit.redirects.enabled') || config('marketing-toolkit.not_found.enabled')) {
+        if (Features::on('redirects') || Features::on('not_found')) {
             $response->headers->set('X-Statamic-Uncacheable', 'true');
         }
 
@@ -45,7 +46,7 @@ class HandleMissing
         $path = '/'.trim($request->decodedPath(), '/');
         // The lookup reads the rules table. Missing (the addon installed, `migrate` not yet run) or
         // failing, it is reported and the address answers its 404 as before, not a 500.
-        $rule = config('marketing-toolkit.redirects.enabled') ? rescue(fn () => $this->matcher->match($path, (string) $request->getQueryString(), $site->handle()), null) : null;
+        $rule = Features::on('redirects') ? rescue(fn () => $this->matcher->match($path, (string) $request->getQueryString(), $site->handle()), null) : null;
 
         // A rule back to the address asked for would loop; the address is simply missing.
         if ($rule && $rule['target'] !== null && str_starts_with($rule['target'], '/') && Redirect::normalize(self::fromRoot($rule['target'], $site)) === $path) {

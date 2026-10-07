@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\IndexNow;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use JothamLec\MarketingToolkit\Support\Features;
 use Throwable;
 
 /**
@@ -24,7 +25,7 @@ class IndexNow
 
     public function enabled(): bool
     {
-        return (bool) config('marketing-toolkit.indexnow.enabled') && app()->isProduction();
+        return Features::on('indexnow') && app()->isProduction();
     }
 
     /**

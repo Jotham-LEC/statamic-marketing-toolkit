@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Fieldtypes;
 
 use JothamLec\MarketingToolkit\Reports\ReportSettings;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Fields\Fieldtype;
 
 /**
@@ -31,7 +32,7 @@ class SeoPreview extends Fieldtype
                 'title' => [$settings->int('title_min'), $settings->int('title_max')],
                 'description' => [$settings->int('description_min'), $settings->int('description_max')],
             ],
-            'og' => (bool) config('marketing-toolkit.og.enabled'),
+            'og' => Features::on('share_cards'),
         ];
     }
 

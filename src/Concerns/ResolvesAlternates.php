@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Concerns;
 use Illuminate\Support\Str;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
@@ -63,7 +64,7 @@ trait ResolvesAlternates
      */
     public function contentAlternates(Entry|Term $content): array
     {
-        if (! config('marketing-toolkit.hreflang.enabled') || ! Sites::multiple()) {
+        if (! Features::on('hreflang') || ! Sites::multiple()) {
             return [];
         }
 

@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Concerns;
 use Illuminate\Support\Collection;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Entries\Entry;
@@ -153,7 +154,7 @@ trait BuildsTextFiles
             $lines[] = trim($extra);
         }
 
-        if (config('marketing-toolkit.sitemap.enabled')) {
+        if (Features::on('sitemap')) {
             $lines[] = '';
             $lines[] = 'Sitemap: '.$this->absolute(route('mt.sitemap', [], false));
         }

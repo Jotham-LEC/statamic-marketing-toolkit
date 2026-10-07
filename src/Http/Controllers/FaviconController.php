@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
@@ -17,8 +18,7 @@ class FaviconController
     public function __invoke(Request $request, Favicons $favicons): Response
     {
         $name = ltrim($request->getPathInfo(), '/');
-        // Off in the config or under Features.
-        throw_unless(config('marketing-toolkit.favicons.enabled'), NotFoundHttpException::class);
+        throw_unless(Features::on('favicons'), NotFoundHttpException::class);
 
         $bytes = $favicons->file($name);
         throw_if($bytes === null, NotFoundHttpException::class);

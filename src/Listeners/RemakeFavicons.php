@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Listeners;
 
 use JothamLec\MarketingToolkit\Favicons\Favicons;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Events\GlobalVariablesSaved;
 use Throwable;
@@ -17,7 +18,7 @@ class RemakeFavicons
     {
         // Not registered with favicons off (ServiceProvider::leaveOutUnused()); asked again
         // for a queue worker or Octane process booted before they were switched off.
-        if ($event->variables->handle() !== config('marketing-toolkit.global') || ! config('marketing-toolkit.favicons.enabled')) {
+        if ($event->variables->handle() !== config('marketing-toolkit.global') || ! Features::on('favicons')) {
             return;
         }
 

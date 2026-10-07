@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Redirects;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\User;
 
@@ -24,7 +25,7 @@ class AutoRedirects
         $from = Redirect::normalize($from);
         $to = Redirect::normalize($to);
 
-        if ($from === $to || ! config('marketing-toolkit.redirects.automatic')) {
+        if ($from === $to || ! Features::on('automatic_redirects')) {
             return;
         }
 
@@ -40,7 +41,7 @@ class AutoRedirects
         $from = Redirect::normalize($from);
         $to = Redirect::normalize($to);
 
-        if ($from === $to || $from === '/' || ! config('marketing-toolkit.redirects.automatic')) {
+        if ($from === $to || $from === '/' || ! Features::on('automatic_redirects')) {
             return;
         }
 

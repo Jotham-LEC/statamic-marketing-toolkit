@@ -7,6 +7,7 @@ use Illuminate\Events\Dispatcher;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term;
@@ -219,7 +220,7 @@ class RedirectChangedUris
 
     private function enabled(): bool
     {
-        return (bool) config('marketing-toolkit.redirects.enabled') && (bool) config('marketing-toolkit.redirects.automatic');
+        return Features::on('redirects') && Features::on('automatic_redirects');
     }
 
     private function entryUri(EntryContract $entry): ?string
