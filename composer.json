@@ -24,7 +24,7 @@
     },
     "suggest": {
         "ext-gd": "Draws favicons when Imagick isn't installed",
-        "ext-imagick": "Draws the share cards (Pro) and favicons"
+        "ext-imagick": "Draws the share cards and favicons"
     },
     "replace": {
         "jotham-lec/statamic-co-seo": "self.version"
