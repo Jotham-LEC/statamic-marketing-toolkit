@@ -42,6 +42,9 @@ test('no tags until an ID is set; then each prints in the head, and GTM\'s noscr
         ->toContain("fbq('init',\"123456789012\")")
         ->toContain('window._linkedin_data_partner_ids.push("1234567")')
         ->not->toContain('mtConsent')
+        // Without Consent Mode, the snippets load the scripts themselves, as their makers wrote them.
+        ->toContain("s.parentNode.insertBefore(t,s)\n}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');")
+        ->toContain("p.src=s.api_host.replace('.i.posthog.com','-assets.i.posthog.com')+'/static/array.js'")
         // Before the meta tags: Google's tags want to be as high in the <head> as they can.
         ->and(strpos($head, 'gtm.js'))->toBeLessThan(strpos($head, '<title>'))
         ->and($body)->toContain('https://www.googletagmanager.com/ns.html?id=GTM-ABC1234')
@@ -130,6 +133,12 @@ test('Consent Mode holds back Meta, LinkedIn and PostHog until the banner says y
         // Banners send the update on every page: opt in once, without an $opt_in event each time.
         ->toContain("if(!posthog.has_opted_in_capturing()){posthog.set_config({persistence:'localStorage+cookie'});posthog.opt_in_capturing({captureEventName:false});}")
         ->toContain("mtConsent(function(s){if(s.ad_storage==='granted')load();});")
+        // Meta's and PostHog's scripts aren't downloaded before consent either: only the bridge loads them.
+        ->toContain("if(g)mtConsent.load('https://connect.facebook.net/en_US/fbevents.js');")
+        ->toContain('mtConsent.load("https:\/\/us-assets.i.posthog.com\/static\/array.js");l=1;')
+        ->toContain("else if(s.analytics_storage==='denied'&&l){posthog.opt_out_capturing();}")
+        ->not->toContain('insertBefore(t,s)')
+        ->not->toContain("p.crossOrigin='anonymous'")
         ->and(strpos($head, 'w.mtConsent=function'))->toBeLessThan(strpos($head, 'fbevents.js'))
         ->and(trackingBody())->not->toContain('facebook.com/tr')->not->toContain('px.ads.linkedin.com');
 });
