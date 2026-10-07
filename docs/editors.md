@@ -12,11 +12,13 @@ With more than one site, the overview, the 404s, the reports, Brand, Settings an
 
 ## Overview
 
+![The Marketing overview, with the SEO score, the failing checks, recent 404s, redirects, and the brand](images/overview.png)
+
 **Marketing → Overview** shows the latest report's score, recent 404s, redirects and the brand, and, once Search Console is connected, Google Search's clicks and appearances with the pages people click most. Each part has a button to the screen that changes it. It also lists the files the site serves (the sitemap, robots.txt, llms.txt, the web app manifest and the home page's share card), and marks any file in the `public` folder that is served instead of the addon's.
 
 ## Reports
 
-![A report: the score and its checks](images/report.png)
+![A report, with its score, its checks, and the Export CSV button](images/report.png)
 
 **Marketing → Reports** checks every page of the site the way a search engine sees it, and gives each page a score out of 100. The site's score is the average.
 
@@ -25,6 +27,8 @@ Click **Run report**. A bar shows the progress, and a few hundred pages take und
 - **The site's score**.
 - **The checks**, with how many pages fail each one or get a warning. Choose a check to see only the pages it flagged.
 - **The pages**, lowest score first. Each one lists its problems and has a **Fix** link to its edit screen.
+
+![The pages flagged by one check, each with its problems and a Fix button](images/report-pages.png)
 
 **Export CSV**, on a report, downloads its pages as a spreadsheet, one row per page with the worst score first. The columns are Address, Title, Score, Failed checks and Warnings, so you can share the list or work through it outside the control panel.
 
@@ -56,6 +60,8 @@ The Reports screen has two tabs, **Reports** and **Settings**. The Settings tab 
 - **Running**: collections to leave out, the most pages a report covers, how many pages each step checks, how many reports to keep, and whether reports also run on their own, daily or weekly.
 
 ## Redirects
+
+![The redirects list, with a wildcard redirect, a 410, and a redirect marked Automatic](images/redirects.png)
 
 **Marketing → Redirects** lists every redirect. Those marked **Automatic** were added when a page moved (see [When a page's address changes](#when-a-pages-address-changes)).
 
@@ -131,6 +137,8 @@ The **Features** tab of **Marketing → Settings** switches off what the site do
 Every page with SEO fields has them on its SEO tab.
 
 ### The search and share preview
+
+![An entry's SEO tab, with the Google preview and the share cards for Facebook and X](images/entry-seo.png)
 
 At the top is a live preview:
 

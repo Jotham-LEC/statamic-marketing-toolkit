@@ -5,6 +5,9 @@ import { Alert, Button, Card, Description, Header, Heading, Table, TableCell, Ta
 import Gauge from '../components/Gauge.vue';
 import When from '../components/When.vue';
 
+// "A and B", "A, B, and C": the copy uses the Oxford comma.
+const toolList = (tools) => new Intl.ListFormat('en-US', { type: 'conjunction' }).format(tools);
+
 defineProps({
     siteName: { type: String, required: true },
     global: { type: Object, required: true },
@@ -27,7 +30,7 @@ defineProps({
         <Card v-if="tracking.overlap.length" class="flex flex-wrap items-center justify-between gap-3 border-amber-400 p-4">
             <div class="space-y-1">
                 <Heading size="lg">{{ __('marketing-toolkit::cp.tracking.overlap_title') }}</Heading>
-                <Description>{{ __('marketing-toolkit::cp.tracking.overlap', { tools: tracking.overlap.join(', ') }) }}</Description>
+                <Description>{{ __n('marketing-toolkit::cp.tracking.overlap', tracking.overlap.length, { tools: toolList(tracking.overlap) }) }}</Description>
             </div>
             <Button v-if="tracking.url" :href="tracking.url" :text="__('marketing-toolkit::cp.tracking.edit')" />
         </Card>
@@ -72,7 +75,11 @@ defineProps({
 
             <Card v-if="redirects" class="flex flex-col gap-3 p-4">
                 <Heading size="lg">{{ __('marketing-toolkit::cp.overview.redirects.title') }}</Heading>
-                <Description>{{ __('marketing-toolkit::cp.overview.redirects.summary', { active: redirects.active, automatic: redirects.automatic }) }}</Description>
+                <Description>
+                    {{ __n('marketing-toolkit::cp.overview.redirects.active', redirects.active, { count: redirects.active }) }}
+                    <template v-if="redirects.automatic">{{ __n('marketing-toolkit::cp.overview.redirects.automatic', redirects.automatic, { count: redirects.automatic }) }}</template>
+                    {{ __('marketing-toolkit::cp.overview.redirects.only_404') }}
+                </Description>
                 <div class="mt-auto"><Button :href="redirects.url" :text="__('marketing-toolkit::cp.overview.redirects.manage')" /></div>
             </Card>
 

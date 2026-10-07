@@ -43,7 +43,9 @@ return [
         ],
         'redirects' => [
             'title' => 'Redirects',
-            'summary' => 'There are :active active redirects, and :automatic of them were added when a page moved. A redirect is only used where the site would otherwise show a 404.',
+            'active' => 'There is :count active redirect.|There are :count active redirects.',
+            'automatic' => 'Of these, :count was added when a page moved.|Of these, :count were added when a page moved.',
+            'only_404' => 'A redirect is only used where the site would otherwise show a 404.',
             'manage' => 'Manage redirects',
         ],
         'brand' => [
@@ -246,7 +248,7 @@ return [
         'from_env' => 'set in .env',
         'consent' => 'Consent Mode is on.',
         'overlap_title' => 'Move these tags into Google Tag Manager',
-        'overlap' => 'Google Tag Manager is set, and so are :tools. If Tag Manager loads them as well, every visit is counted twice. Add them as tags in Tag Manager, and then clear their IDs where they are set, which is either Settings → Tracking or .env.',
+        'overlap' => 'Google Tag Manager is set, and so is :tools. If Tag Manager loads it as well, every visit is counted twice. Add it as a tag in Tag Manager, and then clear its ID where it is set, which is either Settings → Tracking or .env.|Google Tag Manager is set, and so are :tools. If Tag Manager loads them as well, every visit is counted twice. Add them as tags in Tag Manager, and then clear their IDs where they are set, which is either Settings → Tracking or .env.',
         'invalid' => 'The :name value “:value” in :where isn’t a valid ID, so the tag isn’t added to the site.',
         'where_global' => 'Settings → Tracking',
         'overlap_toast' => 'Your changes are saved. Google Tag Manager is set, and so is another tracking tool, so move that tool into Tag Manager or every visit may be counted twice.',

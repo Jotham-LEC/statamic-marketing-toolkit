@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.21.3 – 2026-10-07
+
+### Fixed
+- **The overview's sentences agree with their numbers.** The Redirects card said "1 of them were added" when one redirect was automatic, and the warning about tags beside Google Tag Manager said "so are Google Analytics 4" for one tool and joined several without "and". Both now read correctly for one or several.
+
+### Changed
+- **The README works as the Statamic Marketplace listing.** It reads as full sentences, has an Installation section, and uses full addresses for every link and image. The badges are gone, because the Marketplace stacks them one per line.
+- New screenshots in the README and docs show the overview, a report and the pages it flagged, an entry's search and share preview, redirects, the tracking warning, and the Features tab.
+
 ## 0.21.2 – 2026-10-07
 
 ### Fixed
