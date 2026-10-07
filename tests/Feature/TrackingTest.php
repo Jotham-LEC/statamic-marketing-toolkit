@@ -143,6 +143,14 @@ test('regions (Pro): granted everywhere, the defaults in those regions, and the 
         ->toContain('r=true');
 });
 
+test('the bridge hands the banner\'s update to Google\'s tags before its own callbacks, and a callback that throws is skipped', function () {
+    seoGlobal(['consent_mode' => true, 'meta_pixel_id' => '123456789012']);
+
+    expect(trackingHead())->toContain('d.push=function(){var x=p.apply(d,arguments);')
+        ->toContain('function call(fn){try{fn(s);}catch(e){}}')
+        ->toContain('w.mtConsent=function(fn){f.push(fn);call(fn);};');
+});
+
 test('the CP warns when GTM is set beside another tracker, on the overview', function () {
     seoGlobal(['gtm_id' => 'GTM-ABC1234', 'ga4_id' => 'G-ABCDE12345', 'meta_pixel_id' => '123456789012']);
     $this->actingAs(cpUser(super: true));
