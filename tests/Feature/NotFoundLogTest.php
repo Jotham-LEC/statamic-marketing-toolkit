@@ -63,6 +63,26 @@ test('a flood of made-up addresses pushes out one-off misses, not links that rec
     expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/linked', '/popular', '/random-5']);
 });
 
+test('a flood of made-up addresses each asked for twice pushes out the new ones, not links that have recurred for longer than a day', function () {
+    config(['marketing-toolkit.not_found.max_rows' => 3]);
+    $browser = ['User-Agent' => 'Mozilla/5.0'];
+
+    $this->get('/broken', $browser);
+    $this->get('/linked', [...$browser, 'Referer' => 'https://example.test/news']);
+    $this->travel(2)->days();
+    $this->get('/broken', $browser);
+
+    // Asked for twice each between two trims (with a larger cap, one new path in a tenth of it trims).
+    foreach (range(1, 5) as $i) {
+        $this->travel(1)->minutes();
+        MissingPath::query()->create(['path' => "/random-{$i}", 'hits' => 2, 'first_seen_at' => now(), 'last_seen_at' => now()]);
+    }
+
+    $this->get('/one-more', $browser);
+
+    expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/broken', '/linked', '/random-5']);
+});
+
 test('only a link from one of the site\'s own pages keeps a one-off miss: any request can name another', function () {
     config(['marketing-toolkit.not_found.max_rows' => 3]);
     $browser = ['User-Agent' => 'Mozilla/5.0'];
