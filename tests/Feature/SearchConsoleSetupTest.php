@@ -120,6 +120,15 @@ test('an uploaded key is encrypted on disk, and one saved before that still read
 
     expect($connection->readKey($connection->keyPath()))->toBe($key)
         ->and($connection->email())->toBe('seo@project.iam.gserviceaccount.com');
+
+    // Read once, it is encrypted on disk from then on.
+    expect(File::get($connection->keyPath()))->not->toContain('private_key')
+        ->and($connection->readKey($connection->keyPath()))->toBe($key);
+
+    // Something that isn't a key (one encrypted with an earlier APP_KEY, say) is left as it is.
+    File::put($connection->keyPath(), 'not a key');
+    $connection->readKey($connection->keyPath());
+    expect(File::get($connection->keyPath()))->toBe('not a key');
 });
 
 test('the encrypted key is what signs the requests to Google', function () {
