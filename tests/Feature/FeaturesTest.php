@@ -116,6 +116,23 @@ test('the public routes are registered with their module off, so cached routes a
     $this->get('https://example.test/sitemap.xml')->assertOk();
 });
 
+test('a site\'s own route for one of the addresses keeps it, and robots.txt still names the sitemap', function () {
+    // A site that serves its own sitemap and llms.txt, with the addon's switched off.
+    config(['marketing-toolkit.sitemap.enabled' => false, 'marketing-toolkit.llms_txt.enabled' => false]);
+    app('router')->setRoutes(new RouteCollection);
+    Route::get('sitemap.xml', fn () => 'the site\'s sitemap')->name('sitemap');
+    Route::get('llms.txt', fn () => 'the site\'s llms.txt');
+    require __DIR__.'/../../routes/web.php';
+    app('router')->getRoutes()->refreshNameLookups();
+
+    $this->get('https://example.test/sitemap.xml')->assertOk()->assertSeeText('the site\'s sitemap');
+    $this->get('https://example.test/llms.txt')->assertOk()->assertSeeText('the site\'s llms.txt');
+    expect(Route::has('mt.sitemap'))->toBeFalse()->and(Route::has('mt.robots'))->toBeTrue();
+
+    config(['marketing-toolkit.sitemap.enabled' => true]);
+    $this->get('https://example.test/robots.txt')->assertOk()->assertSee('Sitemap: https://example.test/sitemap.xml');
+});
+
 test('listeners and middleware of modules that are off aren\'t registered', function () {
     Features::save(['favicons', 'sitemap', 'llms_txt', 'redirects', 'not_found', 'automatic_redirects', 'toolbar']);
     $provider = app()->getProvider(ServiceProvider::class);

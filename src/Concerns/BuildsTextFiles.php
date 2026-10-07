@@ -142,7 +142,7 @@ trait BuildsTextFiles
 
         if (Features::on('sitemap')) {
             $lines[] = '';
-            $lines[] = 'Sitemap: '.$this->absolute(route('mt.sitemap', [], false));
+            $lines[] = 'Sitemap: '.$this->absolute('/sitemap.xml');
         }
 
         return implode("\n", $lines)."\n";

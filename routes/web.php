@@ -33,18 +33,23 @@ Route::withoutMiddleware([
     ->group(function () {
         // Registered whatever the config says, so cached routes follow a module switched on
         // or off later: each controller answers 404 while its module is off. A file of the
-        // same name in public/ wins, since the web server serves it before Laravel runs.
-        Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
-        Route::get('sitemap_{page}.xml', [SitemapController::class, 'page'])->whereNumber('page')->name('sitemap.page');
-        Route::get('robots.txt', RobotsController::class)->name('robots');
-        Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
-        Route::get('llms.txt', [TextFileController::class, 'llms'])->name('llms');
-        Route::get('ads.txt', [TextFileController::class, 'ads'])->name('ads');
+        // same name in public/ wins, since the web server serves it before Laravel runs, and
+        // so does a route of the site's own for the address (its own sitemap.xml, say).
+        $get = function (string $uri, array|string $action) {
+            return array_key_exists($uri, Route::getRoutes()->get('GET')) ? null : Route::get($uri, $action);
+        };
+
+        $get('sitemap.xml', [SitemapController::class, 'index'])?->name('sitemap');
+        $get('sitemap_{page}.xml', [SitemapController::class, 'page'])?->whereNumber('page')->name('sitemap.page');
+        $get('robots.txt', RobotsController::class)?->name('robots');
+        $get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)?->name('indexnow.key');
+        $get('llms.txt', [TextFileController::class, 'llms'])?->name('llms');
+        $get('ads.txt', [TextFileController::class, 'ads'])?->name('ads');
 
         foreach (array_keys(Favicons::FILES) as $file) {
-            Route::get($file, FaviconController::class)->name('favicons.'.$file);
+            $get($file, FaviconController::class)?->name('favicons.'.$file);
         }
 
-        Route::get('og.png', OgImageController::class)->name('og.home');
-        Route::get('og/{path}.png', OgImageController::class)->where('path', '.*')->name('og');
+        $get('og.png', OgImageController::class)?->name('og.home');
+        $get('og/{path}.png', OgImageController::class)?->where('path', '.*')->name('og');
     });

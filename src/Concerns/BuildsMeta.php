@@ -171,9 +171,9 @@ trait BuildsMeta
 
         $absolute = (string) $entry->absoluteUrl();
         $path = trim((string) parse_url($absolute, PHP_URL_PATH), '/');
-        $route = $path === '' ? route('mt.og.home', [], false) : route('mt.og', ['path' => $path], false);
+        $route = $path === '' ? 'og.png' : 'og/'.$path.'.png';
 
-        return self::domainRoot($absolute).'/'.ltrim($route, '/').'?v='.$entry->lastModified()->timestamp;
+        return self::domainRoot($absolute).'/'.$route.'?v='.$entry->lastModified()->timestamp;
     }
 
     /**

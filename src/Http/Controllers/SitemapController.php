@@ -34,7 +34,7 @@ final class SitemapController
         $pages = range(1, (int) ceil($urls->count() / $perPage));
 
         return $this->xml(view('marketing-toolkit::sitemap-index', [
-            'pages' => array_map(fn (int $page) => $seo->absolute(route('mt.sitemap.page', ['page' => $page], false)), $pages),
+            'pages' => array_map(fn (int $page) => $seo->absolute('/sitemap_'.$page.'.xml'), $pages),
         ])->render());
     }
 
