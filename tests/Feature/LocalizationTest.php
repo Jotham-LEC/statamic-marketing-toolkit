@@ -89,3 +89,15 @@ test('the breadcrumbs of a page under a folder (/fr/) name its ancestors on its 
     expect(collect($crumbs)->pluck('name')->all())->toBe(['Acme', 'Prestations', 'Sites web'])
         ->and(collect($crumbs)->pluck('item')->all())->toBe(['https://example.test/fr/', 'https://example.test/fr/services', 'https://example.test/fr/services/web']);
 });
+
+test('switching hreflang off or on is seen in the cached sitemap at once', function () {
+    translationOf(entryIn('pages', 'about'), 'fr', 'a-propos');
+
+    $this->get('https://example.test/sitemap.xml')->assertSee('hreflang="fr"', false);
+
+    config(['marketing-toolkit.hreflang.enabled' => false]);
+    $this->get('https://example.test/sitemap.xml')->assertDontSee('hreflang', false);
+
+    config(['marketing-toolkit.hreflang.enabled' => true, 'marketing-toolkit.hreflang.x_default' => false]);
+    $this->get('https://example.test/sitemap.xml')->assertSee('hreflang="fr"', false)->assertDontSee('x-default', false);
+});

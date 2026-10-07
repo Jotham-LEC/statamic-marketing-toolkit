@@ -59,12 +59,14 @@ class SitemapController
     }
 
     /**
-     * Per site, and per `marketing-toolkit.sitemap` settings, so a deploy that changes
-     * them doesn't serve the old list until the next save.
+     * Per site, and per `marketing-toolkit.sitemap` and `.hreflang` settings
+     * (the rows carry each page's other languages), so a deploy or a switch
+     * under Features that changes them doesn't serve the old list until the
+     * next save.
      */
     public static function cacheKey(string $site): string
     {
-        return self::CACHE_KEY.':'.$site.':'.md5(serialize(config('marketing-toolkit.sitemap')));
+        return self::CACHE_KEY.':'.$site.':'.md5(serialize([config('marketing-toolkit.sitemap'), config('marketing-toolkit.hreflang')]));
     }
 
     private function perPage(): int
