@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Vite;
 use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Contracts\Auth\User;
-use Statamic\Preferences\DefaultPreferences;
 use Symfony\Component\HttpFoundation\Cookie as CookieObject;
 use Throwable;
 
@@ -15,25 +14,13 @@ use Throwable;
  * The front-end toolbar's rules, in one place. Pages print the same small
  * guard for everyone (guard()), so they stay safe to cache; it loads the
  * toolbar only while the `mt_toolbar` cookie is there. That cookie is a hint,
- * not a credential: it is set for a control panel user who hasn't hidden the
- * toolbar (on sign-in and on control panel requests) and removed on sign-out.
+ * not a credential: it is set for a control panel user (on sign-in and on
+ * control panel requests) and removed on sign-out.
  * What the toolbar shows comes from an endpoint that checks the session.
  */
 final class Toolbar
 {
     public const string COOKIE = 'mt_toolbar';
-
-    /** Each user preference, under Preferences → Marketing Toolkit, and its value when the user hasn't set one. */
-    public const array PREFERENCES = [
-        'hidden' => ['key' => 'mt_toolbar_hidden', 'default' => false],
-        'position' => ['key' => 'mt_toolbar_position', 'default' => 'bottom-left'],
-        'shortcut' => ['key' => 'mt_toolbar_shortcut', 'default' => 'Alt+Shift+M'],
-    ];
-
-    public const array POSITIONS = ['bottom-left', 'bottom-right'];
-
-    /** A key combination: one or more modifiers, then a letter or a digit. */
-    public const string SHORTCUT = '/^((Ctrl|Alt|Shift|Meta)\+)+[A-Z0-9]$/';
 
     public static function enabled(): bool
     {
@@ -41,51 +28,13 @@ final class Toolbar
     }
 
     /**
-     * Whether $user gets the toolbar: the module is on, they may use the
-     * control panel, and they haven't hidden it.
+     * Whether $user gets the toolbar: the module is on and they may use the
+     * control panel. Its corner, shortcut and whether it is hidden are kept
+     * in the browser, where the toolbar's More panel changes them.
      */
     public static function wants(?User $user): bool
     {
-        return self::enabled() && $user !== null && $user->can('access cp') && ! self::preferences($user)['hidden'];
-    }
-
-    /**
-     * The user's toolbar preferences, as Statamic merges them: theirs, then
-     * their roles', then the defaults set for everyone, then the addon's.
-     * Read here rather than through Statamic's Preference facade, which is of
-     * the signed-in user only and boots only in the control panel.
-     *
-     * @return array{hidden: bool, position: string, shortcut: ?string}
-     */
-    public static function preferences(User $user): array
-    {
-        $value = fn (string $name) => self::preference($user, self::PREFERENCES[$name]['key'], self::PREFERENCES[$name]['default']);
-        $position = $value('position');
-        $shortcut = $value('shortcut');
-
-        return [
-            'hidden' => (bool) $value('hidden'),
-            'position' => in_array($position, self::POSITIONS, true) ? $position : self::PREFERENCES['position']['default'],
-            // Cleared under Preferences (kept as null): no shortcut. Anything that isn't a combination is ignored.
-            'shortcut' => is_string($shortcut) && preg_match(self::SHORTCUT, $shortcut) ? $shortcut : null,
-        ];
-    }
-
-    /**
-     * The first preference set, null included: Statamic keeps a cleared
-     * field as null, and leaves out one saved at its default.
-     */
-    private static function preference(User $user, string $key, mixed $default): mixed
-    {
-        $holders = [$user, ...$user->roles()->merge($user->groups()->map->roles()->flatten())->all(), app(DefaultPreferences::class)];
-
-        foreach ($holders as $holder) {
-            if (is_object($holder) && method_exists($holder, 'hasPreference') && $holder->hasPreference($key)) {
-                return $holder->getPreference($key);
-            }
-        }
-
-        return $default;
+        return self::enabled() && $user !== null && $user->can('access cp');
     }
 
     /**

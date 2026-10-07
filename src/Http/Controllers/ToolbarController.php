@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Validator;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Toolbar\PageData;
 use JothamLec\MarketingToolkit\Toolbar\Toolbar;
-use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
 use Statamic\StaticCaching\Cacher;
@@ -19,8 +18,7 @@ use Symfony\Component\HttpFoundation\Response as BaseResponse;
  * The front-end toolbar's endpoint, at /!/marketing-toolkit/toolbar: what
  * the toolbar shows about one page, for the signed-in user. Nothing it
  * answers is cached anywhere. Besides reading, it can clear this one page's
- * static cache (for whoever may use the cache utility) and hide the toolbar
- * for the user asking, which is their own preference.
+ * static cache, for whoever may use the cache utility.
  */
 class ToolbarController
 {
@@ -69,24 +67,6 @@ class ToolbarController
         $cacher->invalidateUrls([strtok($url, '?')]);
 
         return $this->private(response()->noContent());
-    }
-
-    /**
-     * "Hide the toolbar": the user's own preference, and the marker cookie goes.
-     */
-    public function hide(): Response
-    {
-        abort_unless(Toolbar::enabled(), 404);
-
-        $user = User::current();
-
-        if (! $user instanceof UserContract) {
-            return $this->private(response()->noContent(401))->withCookie(Toolbar::forget());
-        }
-
-        $user->setPreference(Toolbar::PREFERENCES['hidden']['key'], true)->save();
-
-        return $this->private(response()->noContent())->withCookie(Toolbar::forget());
     }
 
     /**

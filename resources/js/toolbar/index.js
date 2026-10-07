@@ -1,4 +1,5 @@
 import { bar, panelsOf } from './bar.js';
+import { matcher, save, settings } from './settings.js';
 import styles from './styles.css?inline';
 
 /*
@@ -8,8 +9,10 @@ import styles from './styles.css?inline';
  * toolbar's never meet.
  *
  * Every page load starts afresh, so the bar is drawn at once from what the
- * last page kept (its theme, corner, open state and items, nothing about a
- * page), and replaced by this page's as soon as the endpoint answers.
+ * last page kept (its theme, labels and items, nothing about a page), and
+ * replaced by this page's as soon as the endpoint answers. Hidden (More →
+ * Hide the toolbar), it asks nothing and draws nothing until its shortcut
+ * is pressed.
  */
 const script = document.currentScript;
 const endpoint = script?.dataset.endpoint;
@@ -65,18 +68,6 @@ function notice(text) {
     setTimeout(() => element.remove(), 6000);
 }
 
-/** "Alt+Shift+M" → a test for a keydown, by the key's place on the keyboard (so Option on a Mac works). */
-function shortcut(combination) {
-    if (!combination) return () => false;
-
-    const parts = combination.split('+');
-    const key = parts.pop();
-    const code = /^\d$/.test(key) ? 'Digit' + key : 'Key' + key;
-    const wants = { Ctrl: 'ctrlKey', Alt: 'altKey', Shift: 'shiftKey', Meta: 'metaKey' };
-
-    return (event) => event.code === code && Object.entries(wants).every(([name, flag]) => event[flag] === parts.includes(name));
-}
-
 const typing = (event) => {
     const target = event.composedPath()[0];
 
@@ -84,13 +75,20 @@ const typing = (event) => {
 };
 
 let drawn = null;
-let pressed = () => false;
+let pressed = matcher(settings().shortcut);
 
 /** Draws a bar, then takes the one before it away, so nothing flickers between them. */
 function draw(data) {
     const previous = drawn;
     const { element, root } = host();
-    const toolbar = bar(root, data, () => element.remove());
+    const toolbar = bar(root, data, {
+        shortcut: (shortcut) => (pressed = matcher(shortcut)),
+        hidden: () => {
+            element.remove();
+            drawn = null;
+            notice(data.user.labels.hidden.replace(':keys', settings().shortcut));
+        },
+    });
 
     if (previous) {
         if (previous.toolbar.focused()) toolbar.focus();
@@ -101,16 +99,27 @@ function draw(data) {
 }
 
 document.addEventListener('keydown', (event) => {
-    if (drawn && pressed(event) && !typing(event)) {
-        event.preventDefault();
+    if (!pressed(event) || typing(event)) return;
+
+    event.preventDefault();
+
+    if (drawn) {
         drawn.toolbar.toggle();
+    } else if (settings().hidden) {
+        // Hidden: the shortcut brings it back, open.
+        save({ hidden: false, open: true });
+        load();
     }
 });
 
-async function boot() {
+function boot() {
     if (!endpoint || window.mtToolbar) return;
     window.mtToolbar = true;
 
+    if (!settings().hidden) load();
+}
+
+async function load() {
     const status = performance.getEntriesByType?.('navigation')[0]?.responseStatus;
     const query = new URLSearchParams({ url: location.href });
     if (status) query.set('status', status);
@@ -119,10 +128,7 @@ async function boot() {
     const answer = fetch(endpoint + '?' + query, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
     const shell = stored();
 
-    if (shell) {
-        pressed = shortcut(shell.user.shortcut);
-        draw({ ...shell, pending: true });
-    }
+    if (shell) draw({ ...shell, pending: true });
 
     let response;
 
@@ -152,7 +158,6 @@ async function boot() {
         return;
     }
 
-    pressed = shortcut(data.user.shortcut);
     draw(data);
     store(shellOf(data));
 }

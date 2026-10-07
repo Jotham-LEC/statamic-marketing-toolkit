@@ -1,18 +1,7 @@
 <?php
 
-// The front-end toolbar (resources/js/toolbar, Toolbar\PageData) and its preferences.
+// The front-end toolbar (resources/js/toolbar, Toolbar\PageData).
 return [
-    'preferences' => [
-        'tab' => 'Marketing Toolkit',
-        'hidden' => 'Hide the toolbar',
-        'position' => 'Toolbar position',
-        'positions' => [
-            'bottom_left' => 'Bottom left',
-            'bottom_right' => 'Bottom right',
-        ],
-        'shortcut' => 'Toolbar shortcut',
-    ],
-
     // What the toolbar's script shows; the rest arrives as sentences.
     'ui' => [
         'name' => 'Marketing Toolkit',
@@ -55,15 +44,24 @@ return [
         'settings' => 'Open Marketing settings',
         'view' => 'View',
         'edit' => 'Edit',
-        'preferences' => 'Toolbar preferences',
         'dashboard' => 'Control panel',
         'refresh_cache' => 'Refresh this page’s cache',
         'cache_refreshed' => 'This page’s cache was cleared, so the next visit stores a fresh copy.',
         'cache_failed' => 'This page’s cache couldn’t be cleared. Try again from the control panel.',
+        'toolbar_settings' => 'Toolbar settings',
+        'settings_note' => 'These settings are kept in this browser.',
+        'corner' => 'Corner',
+        'bottom_left' => 'Bottom left',
+        'bottom_right' => 'Bottom right',
+        'shortcut' => 'Shortcut',
+        'shortcut_is' => 'Press :keys to open or close the toolbar.',
+        'no_shortcut' => 'The toolbar has no keyboard shortcut.',
+        'change_shortcut' => 'Change',
+        'recording' => 'Press the new keys: Ctrl, Alt, Shift or Meta with a letter or digit. Escape cancels.',
+        'remove_shortcut' => 'Turn off',
         'hide' => 'Hide the toolbar',
-        'hidden' => 'The toolbar is hidden on every device you use. You can turn it back on under Preferences in the control panel.',
-        'shortcut' => 'Press :keys to open or close the toolbar.',
-        'no_shortcut' => 'The toolbar has no keyboard shortcut. You can set one under Preferences in the control panel.',
+        'hidden' => 'The toolbar is hidden in this browser. Press :keys to bring it back.',
+        'hide_needs_shortcut' => 'Set a shortcut to hide the toolbar, since the shortcut is how it comes back.',
         'consent_state' => 'In this browser, :granted are granted and :denied are denied.',
         'consent_all_granted' => 'In this browser, :granted are granted.',
         'consent_all_denied' => 'In this browser, :denied are denied.',

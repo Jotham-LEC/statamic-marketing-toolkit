@@ -36,8 +36,6 @@ use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
-use Statamic\Facades\Preference;
-use Statamic\Preferences\Preferences;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Statamic;
 
@@ -60,7 +58,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $middlewareGroups = [
         'statamic.web' => [HandleMissing::class],
-        // After Statamic's own: the user is known and their preferences are booted.
+        // After Statamic's own: the user is known.
         'statamic.cp.authenticated' => [MarkToolbarUser::class],
     ];
 
@@ -204,8 +202,6 @@ class ServiceProvider extends AddonServiceProvider
 
         Navigation::register();
 
-        $this->registerPreferences();
-
         Statamic::provideToScript(['marketingToolkit' => [
             // Off: a save has nothing to ask the redirect check.
             'automaticRedirects' => (bool) config('marketing-toolkit.redirects.automatic'),
@@ -214,44 +210,6 @@ class ServiceProvider extends AddonServiceProvider
             // Trackers set in .env, which the Tracking tab's warning counts as well.
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
         ]]);
-    }
-
-    /**
-     * The toolbar's preferences, under Preferences → Marketing Toolkit, for
-     * each user (or a role, or everyone). Shown while the toolbar is on.
-     */
-    private function registerPreferences(): void
-    {
-        if (! Toolbar::enabled()) {
-            return;
-        }
-
-        // The facade's own instance: Statamic doesn't bind it as a singleton.
-        /** @var Preferences $registry */
-        $registry = Preference::getFacadeRoot();
-
-        $registry->extend(fn (Preferences $preferences) => $preferences->tab('marketing-toolkit', __('marketing-toolkit::toolbar.preferences.tab'), function (Preferences $preferences) {
-            $preferences->register(Toolbar::PREFERENCES['hidden']['key'], [
-                'type' => 'toggle',
-                'display' => __('marketing-toolkit::toolbar.preferences.hidden'),
-            ]);
-            $preferences->register(Toolbar::PREFERENCES['position']['key'], [
-                'type' => 'button_group',
-                'display' => __('marketing-toolkit::toolbar.preferences.position'),
-                'default' => Toolbar::PREFERENCES['position']['default'],
-                'options' => [
-                    'bottom-left' => __('marketing-toolkit::toolbar.preferences.positions.bottom_left'),
-                    'bottom-right' => __('marketing-toolkit::toolbar.preferences.positions.bottom_right'),
-                ],
-            ]);
-            $preferences->register(Toolbar::PREFERENCES['shortcut']['key'], [
-                'type' => 'text',
-                'display' => __('marketing-toolkit::toolbar.preferences.shortcut'),
-                'placeholder' => Toolbar::PREFERENCES['shortcut']['default'],
-                'default' => Toolbar::PREFERENCES['shortcut']['default'],
-                'validate' => ['nullable', 'regex:'.Toolbar::SHORTCUT],
-            ]);
-        }));
     }
 
     /**

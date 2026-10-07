@@ -11,8 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * On every control panel request, the toolbar's marker cookie follows the
- * user: set while they get the toolbar, removed once they don't (they hid it
- * under Preferences, or lost `access cp`). This covers sessions from before
+ * user: set while they get the toolbar, removed once they don't (the toolbar
+ * was switched off, or they lost `access cp`). This covers sessions from before
  * the addon had a toolbar, and "remember me" sign-ins, which skip the
  * sign-in form. Checked after the request, so saving the preference counts at once.
  */

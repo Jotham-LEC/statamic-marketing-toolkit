@@ -6,23 +6,9 @@ import redirects from './panels/redirects.js';
 import seo from './panels/seo.js';
 import sites from './panels/sites.js';
 import tracking from './panels/tracking.js';
+import { save, settings } from './settings.js';
 
 const PANELS = { seo, preview, redirects, tracking, sites, more };
-const OPEN = 'mt-toolbar-open';
-
-const remember = (open) => {
-    try {
-        localStorage.setItem(OPEN, open ? '1' : '0');
-    } catch {}
-};
-
-export const remembered = () => {
-    try {
-        return localStorage.getItem(OPEN) === '1';
-    } catch {
-        return false;
-    }
-};
 
 /** The panels this data has something for, in the bar's order. */
 export const panelsOf = (data) => Object.keys(PANELS).filter((name) => (name === 'sites' ? data.sites?.length : name === 'more' || data[name]));
@@ -49,7 +35,7 @@ function paint(nav, theme) {
  * Pending (`data.pending`), it is drawn from the last page's items, disabled,
  * while this page's details load: the bar stays where it was between pages.
  */
-export function bar(root, data, onRemove) {
+export function bar(root, data, hooks) {
     const t = data.user.labels;
     const page = data.page;
     const pending = Boolean(data.pending);
@@ -58,6 +44,23 @@ export function bar(root, data, onRemove) {
     const buttons = {};
     const sections = {};
     let current = null;
+
+    // What the More panel changes: kept in this browser, applied at once.
+    const actions = {
+        position: (position) => {
+            save({ position });
+            nav.dataset.position = position;
+        },
+        shortcut: (shortcut) => {
+            save({ shortcut });
+            hooks.shortcut(shortcut);
+        },
+        hide: () => {
+            save({ hidden: true, open: false });
+            document.documentElement.style.setProperty('--mt-toolbar-height', '0px');
+            hooks.hidden();
+        },
+    };
 
     const badge = pending
         ? h('span', { class: 'badge', 'aria-hidden': 'true' }, '…')
@@ -105,7 +108,7 @@ export function bar(root, data, onRemove) {
                 'section',
                 { id, class: 'panel', role: 'dialog', 'aria-labelledby': id + '-title' },
                 h('header', {}, h('h2', { id: id + '-title', tabindex: '-1' }, t.panels[name]), h('button', { type: 'button', class: 'close', 'aria-label': t.close_panel, onclick: () => (open(null), buttons[name].focus()) }, '×')),
-                h('div', { class: 'body' }, PANELS[name](data, t, { hidden: () => setTimeout(onRemove, 4000) })),
+                h('div', { class: 'body' }, PANELS[name](data, t, actions)),
             );
         }
     }
@@ -127,7 +130,7 @@ export function bar(root, data, onRemove) {
         h('div', { class: 'panels' }, panels.filter((name) => sections[name]).map((name) => sections[name])),
     );
 
-    const nav = h('nav', { class: 'mt', 'aria-label': t.name, 'data-position': data.user.position, 'data-theme': data.user.color_mode }, toggle, tray);
+    const nav = h('nav', { class: 'mt', 'aria-label': t.name, 'data-position': settings().position, 'data-theme': data.user.color_mode }, toggle, tray);
     paint(nav, data.user.theme);
 
     const narrow = matchMedia('(max-width: 639.98px)');
@@ -137,7 +140,7 @@ export function bar(root, data, onRemove) {
         toggle.setAttribute('aria-expanded', String(expanded));
         toggle.querySelector('.sr').firstChild.textContent = expanded ? t.close : t.open;
         document.documentElement.style.setProperty('--mt-toolbar-height', expanded && !narrow.matches ? '40px' : '0px');
-        remember(expanded);
+        save({ open: expanded });
 
         if (!expanded) {
             open(null);
@@ -170,7 +173,7 @@ export function bar(root, data, onRemove) {
     });
 
     root.append(nav);
-    expand(remembered(), false);
+    expand(settings().open, false);
 
     return {
         toggle: () => {

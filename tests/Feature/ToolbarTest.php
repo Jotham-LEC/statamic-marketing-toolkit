@@ -4,6 +4,7 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Testing\TestResponse;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
@@ -95,24 +96,14 @@ test('a user who may not use the control panel gets no marker cookie', function 
     expect(Cookie::queued(Toolbar::COOKIE))->toBeNull();
 });
 
-test('a user who hid the toolbar gets no marker cookie', function () {
-    $user = cpUser(super: true);
-    $user->setPreference('mt_toolbar_hidden', true)->save();
-
-    event(new Login('web', $user, false));
-
-    expect(Cookie::queued(Toolbar::COOKIE))->toBeNull()
-        ->and(Toolbar::wants($user))->toBeFalse();
-});
-
-test('a control panel request sets the cookie once, and takes it away once the toolbar is hidden', function () {
+test('a control panel request sets the cookie once, and takes it away once the toolbar is off', function () {
     $user = cpUser(super: true);
     $this->actingAs($user);
 
     expect(toolbarCookie($this->get(cp_route('dashboard')))?->getValue())->toBe('1')
         ->and(toolbarCookie($this->withUnencryptedCookie(Toolbar::COOKIE, '1')->get(cp_route('dashboard'))))->toBeNull();
 
-    $user->setPreference('mt_toolbar_hidden', true)->save();
+    config(['marketing-toolkit.toolbar.enabled' => false]);
     $forgotten = toolbarCookie($this->withUnencryptedCookie(Toolbar::COOKIE, '1')->get(cp_route('dashboard')));
 
     expect($forgotten?->getValue())->toBe('')
@@ -123,30 +114,6 @@ test('signing out removes the marker cookie', function () {
     event(new Logout('web', cpUser(super: true)));
 
     expect(Cookie::queued(Toolbar::COOKIE)?->getExpiresTime())->toBeLessThan(time());
-});
-
-test('the preferences: bottom left and Alt+Shift+M unless the user, a role or the defaults say otherwise; a cleared shortcut is none', function () {
-    $user = cpUser(super: true);
-
-    expect(Toolbar::preferences($user))->toBe(['hidden' => false, 'position' => 'bottom-left', 'shortcut' => 'Alt+Shift+M']);
-
-    $user->setPreference('mt_toolbar_position', 'bottom-right')->setPreference('mt_toolbar_shortcut', null)->save();
-    expect(Toolbar::preferences($user))->toBe(['hidden' => false, 'position' => 'bottom-right', 'shortcut' => null]);
-
-    $user->setPreference('mt_toolbar_shortcut', 'Ctrl+Alt+T')->setPreference('mt_toolbar_position', 'top')->save();
-    expect(Toolbar::preferences($user))->toMatchArray(['position' => 'bottom-left', 'shortcut' => 'Ctrl+Alt+T']);
-});
-
-test('the preferences are under Preferences → Marketing Toolkit, and a shortcut must be a combination', function () {
-    $this->actingAs(cpUser(super: true));
-
-    $this->get(cp_route('preferences.user.edit'))->assertOk();
-    $tab = Preference::tabs()->get('marketing-toolkit');
-
-    expect($tab['display'])->toBe('Marketing Toolkit')
-        ->and(array_keys($tab['fields']))->toBe(['mt_toolbar_hidden', 'mt_toolbar_position', 'mt_toolbar_shortcut']);
-
-    $this->patchJson(cp_route('preferences.user.update'), ['mt_toolbar_shortcut' => 'press m'])->assertJsonValidationErrors('mt_toolbar_shortcut');
 });
 
 /**
@@ -223,8 +190,6 @@ test('a user who may only use the control panel gets the bar and the basics, and
         ->assertJsonPath('redirects', null)
         ->assertJsonPath('tracking', null)
         ->assertJsonPath('more.cache', false)
-        ->assertJsonPath('user.position', 'bottom-left')
-        ->assertJsonPath('user.shortcut', 'Alt+Shift+M')
         ->assertJsonPath('user.color_mode', 'auto')
         ->assertJsonPath('user.labels.open', 'Open the Marketing Toolkit toolbar');
 });
@@ -257,7 +222,6 @@ test('each permission brings its panel', function () {
         ->assertJsonPath('preview.title', 'About')
         ->assertJsonPath('redirects.messages.0', 'No redirects send visitors to this page.')
         ->assertJsonPath('tracking.messages.0', 'No tracking tags are set up in Marketing settings.')
-        ->assertJsonPath('more.preferences_url', cp_route('preferences.user.edit'))
         ->assertJsonPath('more.cache', true);
 });
 
@@ -457,20 +421,18 @@ test('refreshing this page\'s cache needs the cache utility\'s permission, and c
     $this->postJson('https://example.test/!/marketing-toolkit/toolbar/cache', ['url' => 'https://example.test/about?page=2#top'])->assertNoContent();
 });
 
-test('"Hide the toolbar" sets the user\'s preference and removes the cookie', function () {
-    $user = cpUser();
-    $this->actingAs($user);
-
-    $response = $this->postJson('https://example.test/!/marketing-toolkit/toolbar/hide')->assertNoContent();
-
-    expect($user->fresh()->getPreference('mt_toolbar_hidden'))->toBeTrue()
-        ->and(toolbarCookie($response)?->getExpiresTime())->toBeLessThan(time());
-    toolbarFor('/about')->assertUnauthorized();
-});
-
 test('the guard loads the built script, which ships with the addon and is published with its other assets', function () {
     preg_match('#"\\\\/vendor\\\\/statamic-marketing-toolkit\\\\/build\\\\/(toolbar\.js)\?v=#', renderAt('/', '<s:mt:toolbar />'), $match);
 
     expect($match[1] ?? null)->toBe('toolbar.js')
         ->and(__DIR__.'/../../resources/dist/build/toolbar.js')->toBeFile();
+});
+
+test('the toolbar\'s corner, shortcut and hiding are the browser\'s: no preferences, nothing to post', function () {
+    $this->actingAs(cpUser(super: true));
+    $this->get(cp_route('preferences.user.edit'))->assertOk();
+
+    expect(Preference::tabs()->has('marketing-toolkit'))->toBeFalse()
+        ->and(Route::has('statamic.mt.toolbar.hide'))->toBeFalse()
+        ->and(toolbarFor('/about')->json('user'))->not->toHaveKeys(['position', 'shortcut', 'hidden']);
 });

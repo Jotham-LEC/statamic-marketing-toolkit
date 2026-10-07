@@ -204,11 +204,11 @@ While you're signed in to the control panel, the live site shows a small button 
 - **Redirects**: the redirects that send visitors to this page, and one from its address that never applies because the page exists. On a missing page the button turns red and says **Missing page**; the panel says how often the 404 log has seen the address, with **Add a redirect**.
 - **Tracking**: which tags load on this page, or why none do, Consent Mode, and what your own browser has agreed to.
 - **Sites**: the page on the other sites, with its status, and links to view and edit each one.
-- **More**: **Toolbar preferences**, the control panel, **Refresh this page's cache** (on a site with static caching, for whoever may use the cache utility), and **Hide the toolbar**.
+- **More**: the control panel, **Refresh this page's cache** (on a site with static caching, for whoever may use the cache utility), and the toolbar's settings.
 
 Each panel shows only what your role may see in the control panel. The toolbar takes the colours of your control panel theme, remembers whether you left it open, and closes with Escape. Between pages it stays where it was while the new page's details load. It never shows in Live Preview.
 
-The toolbar's settings are your own, not the site's: under **Preferences → Marketing Toolkit** in the control panel (your avatar, top right, or **More → Toolbar preferences**), you can hide the toolbar on every device, move it to the bottom-right corner, or change its keyboard shortcut. Clear the shortcut to have none. A developer can switch it off for everyone under [Features](#features).
+The toolbar's settings are at the bottom of **More**, and are kept in your browser: its **Corner** (bottom left or bottom right), its **Shortcut** (**Change**, then press the new keys, or **Turn off**), and **Hide the toolbar**. A hidden toolbar comes back with its shortcut, so hiding needs one. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
 
 ## When a page's address changes
 

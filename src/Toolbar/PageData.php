@@ -69,7 +69,6 @@ class PageData
 
         return [
             'user' => [
-                ...Toolbar::preferences($this->user),
                 'color_mode' => $this->user->preferredColorMode(),
                 'theme' => $this->theme(),
                 'csrf' => csrf_token(),
@@ -534,12 +533,9 @@ class PageData
     private function more(): array
     {
         return [
-            // Where the user hides, moves or changes the shortcut of the toolbar.
-            'preferences_url' => cp_route('preferences.user.edit'),
             'dashboard_url' => $this->cp(cp_route('dashboard')),
             'cache' => (bool) config('statamic.static_caching.strategy') && $this->user->can('access cache utility'),
             'cache_url' => route('statamic.mt.toolbar.cache', [], false),
-            'hide_url' => route('statamic.mt.toolbar.hide', [], false),
         ];
     }
 
