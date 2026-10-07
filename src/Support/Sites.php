@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Support;
 
 use Closure;
+use Illuminate\Http\Request;
 use ReflectionProperty;
 use Statamic\Facades\Site;
 use Statamic\Sites\Sites as StatamicSites;
@@ -60,6 +61,31 @@ final class Sites
     public static function options(): array
     {
         return Site::all()->mapWithKeys(fn ($site) => [$site->handle() => (string) $site->name()])->all();
+    }
+
+    /**
+     * Whether the addresses built for this request may be cached and served
+     * to every request. A site whose URL is relative (`url: '/'`) takes its
+     * domain from the request's Host header, which a client sets to anything:
+     * cached after a save, one request with `Host: evil.test` would give
+     * every visitor a sitemap of evil.test addresses until the next save. So
+     * with such a site only a request on a host the install names (an
+     * absolute site URL's, else APP_URL's) is cached; others are built afresh,
+     * for that request alone. With every site's URL absolute nothing depends
+     * on the Host, and everything is cached.
+     */
+    public static function trustsHost(Request $request): bool
+    {
+        $urls = Site::all()->map(fn ($site) => (string) $site->url());
+        $absolute = $urls->filter(fn (string $url) => preg_match('#^https?://#i', $url) === 1);
+
+        if ($absolute->count() === $urls->count()) {
+            return true;
+        }
+
+        return $absolute->push((string) config('app.url'))
+            ->map(fn (string $url) => strtolower((string) parse_url($url, PHP_URL_HOST)))
+            ->contains(strtolower($request->getHost()));
     }
 
     /**

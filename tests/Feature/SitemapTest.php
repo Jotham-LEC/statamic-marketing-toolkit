@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use JothamLec\MarketingToolkit\Http\Controllers\SitemapController;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
@@ -8,6 +10,7 @@ use Statamic\Events\EntryScheduleReached;
 use Statamic\Events\StacheCleared;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
+use Statamic\Facades\Site;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
 use Statamic\StaticCaching\Cacher;
@@ -201,4 +204,21 @@ test('the sitemap and robots.txt are never kept by Statamic\'s static cache, whi
     expect($cached('/about'))->toBeTrue()
         ->and($cached('/sitemap.xml'))->toBeFalse()
         ->and($cached('/robots.txt'))->toBeFalse();
+});
+
+test('with a site at a relative URL, a request on another Host is answered but never cached', function () {
+    config(['app.url' => 'https://example.test', 'marketing-toolkit.llms_txt.enabled' => true]);
+    Site::setSites(['default' => ['name' => 'Acme', 'url' => '/', 'locale' => 'en_US']]);
+    entryIn('pages', 'about');
+
+    // Its own addresses for the forged Host, which only that request sees.
+    $this->get('http://evil.test/sitemap.xml')->assertOk()->assertSee('http://evil.test/about');
+    $this->get('http://evil.test/llms.txt')->assertOk()->assertSee('http://evil.test/about');
+
+    $this->get('https://example.test/sitemap.xml')->assertSee('https://example.test/about')->assertDontSee('evil.test');
+    $this->get('https://example.test/llms.txt')->assertSee('https://example.test/about')->assertDontSee('evil.test');
+
+    // Cached from the install's own host, and not served to the forged one either.
+    $this->get('http://evil.test/sitemap.xml')->assertDontSee('https://example.test/about');
+    expect(Cache::has(SitemapController::cacheKey('default')))->toBeTrue();
 });
