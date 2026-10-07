@@ -148,13 +148,12 @@ export function bar(root, data, hooks) {
         }
     };
 
-    // After the panels: the control panel, and this page's cache where there is one.
-    const tools = [
-        data.more?.cache ? h('li', { class: 'link' }, item('button', 'cache', t.refresh_cache, pending ? { type: 'button', disabled: true } : { type: 'button', onclick: refresh })) : null,
-        data.more?.dashboard_url
-            ? h('li', { class: 'link' }, pending ? item('button', 'dashboard', t.dashboard, { type: 'button', disabled: true }) : item('a', 'dashboard', t.dashboard, { href: safe(data.more.dashboard_url) }))
-            : null,
-    ];
+    // By how often each is wanted, from the score outwards: the control panel and this
+    // page's edit screens, the panels about the page, then refreshing its cache and the settings.
+    const dashboard = data.more?.dashboard_url
+        ? h('li', { class: 'link' }, pending ? item('button', 'dashboard', t.dashboard, { type: 'button', disabled: true }) : item('a', 'dashboard', t.dashboard, { href: safe(data.more.dashboard_url) }))
+        : null;
+    const cache = data.more?.cache ? h('li', { class: 'link' }, item('button', 'cache', t.refresh_cache, pending ? { type: 'button', disabled: true } : { type: 'button', onclick: refresh })) : null;
 
     const tray = h(
         'div',
@@ -162,9 +161,10 @@ export function bar(root, data, hooks) {
         h(
             'ul',
             { class: 'items' },
+            dashboard,
             links.map(([name, label, url]) => h('li', { class: 'link' }, pending ? item('button', name, label, { type: 'button', disabled: true }) : item('a', name, label, { href: safe(url) }))),
             panels.filter((name) => name !== 'seo' && name !== 'more').map((name) => h('li', { class: 'tab' }, buttons[name])),
-            tools,
+            cache,
             panels.includes('more') ? h('li', { class: 'tab' }, buttons.more) : null,
         ),
         // Minimise: the bar folds back to its corner button, which stays on every page (Hide, in More, takes that away too).

@@ -40,7 +40,7 @@ Each check lists the pages it flagged. Export the report as a CSV.
 
 Signed in, each page of the live site shows its score and what to fix, and visitors never see it.
 
-![The toolbar along the bottom of a page, with its SEO score panel open on two failing checks and three warnings](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/toolbar.png)
+![The toolbar in the bottom-left corner of a page, its SEO score panel open on two warnings, with icons for the control panel, editing, preview, redirects, tracking, the cache and settings](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/toolbar.png)
 
 Moved pages get their redirect automatically.
 
