@@ -21,8 +21,8 @@ class OgImageController
 {
     public function __invoke(Request $request, Generator $generator, ?string $path = null): Response
     {
-        // Off in the config or under Features.
-        throw_unless(config('marketing-toolkit.og.enabled'), NotFoundHttpException::class);
+        // Off in the config or under Features, or no Imagick to draw with.
+        throw_unless(config('marketing-toolkit.og.enabled') && $generator->available(), NotFoundHttpException::class);
 
         $entry = $this->entry($request, trim((string) $path, '/'));
         // A protected page's card would show its title and text to anyone.
