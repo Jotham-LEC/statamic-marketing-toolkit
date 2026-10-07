@@ -238,7 +238,6 @@ class ReportsController
             'pages_total' => $report->pages_total,
             'pages_done' => $report->pages_done,
             'error' => $report->error === null ? null : __($report->error),
-            'created_at' => $report->created_at->toIso8601String(),
             'finished_at' => $report->finished_at?->toIso8601String(),
             'url' => cp_route('mt.reports.show', $report),
             'progress_url' => cp_route('mt.reports.progress', $report),
