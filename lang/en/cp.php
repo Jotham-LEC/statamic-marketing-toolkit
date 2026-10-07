@@ -304,6 +304,7 @@ return [
         'question' => 'Do you want to add a 301 redirect from the old address, so that links to it keep working?',
         'not_yet' => 'Don’t save yet',
         'not_saved' => 'The page was not saved.',
+        'choice_failed' => 'Your answer didn’t reach the server, so saving adds a redirect from the old address. You can delete it under Redirects.',
     ],
 
     'actions' => [
