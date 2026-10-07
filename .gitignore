@@ -7,3 +7,6 @@
 composer.lock
 /resources/dist/hot
 /.agent-shell
+
+# A local wiki for learning the codebase (DEV_FILES/wiki/build.py): not shipped, not published.
+/DEV_FILES/
