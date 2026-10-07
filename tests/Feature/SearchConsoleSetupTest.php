@@ -224,10 +224,25 @@ test('a failed import from the control panel is reported, and the editor told wh
     fakeGoogle(404, ['error' => ['code' => 404, 'message' => 'Not found']]);
 
     $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.import'))
-        ->assertOk()->assertJson(['ok' => false])->assertJsonPath('message', fn (string $message) => str_contains($message, 'has no property'));
+        ->assertOk()->assertJson(['ok' => false])->assertJsonPath('message', fn (string $message) => str_contains($message, 'import failed') && str_contains($message, 'has no property'));
 
     // Reported through Statamic's control panel handler, which logs it.
     expect($logged)->toHaveCount(1)->and($logged[0])->toBeInstanceOf(RequestException::class);
+});
+
+test('an import that fails while the key can still read the property is not reported as a success', function () {
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
+    Http::fake([
+        'oauth2.googleapis.com/token' => Http::response(['access_token' => 'token-1', 'expires_in' => 3599]),
+        'www.googleapis.com/webmasters/v3/sites/*/searchAnalytics/query' => Http::response(['error' => ['code' => 500, 'message' => 'Backend error']], 500),
+        'www.googleapis.com/webmasters/v3/sites/*' => Http::response(['siteUrl' => 'sc-domain:example.test', 'permissionLevel' => 'siteRestrictedUser']),
+    ]);
+
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.import'))
+        ->assertOk()->assertJson(['ok' => false])
+        ->assertJsonPath('message', fn (string $message) => str_contains($message, 'import failed') && ! str_contains($message, 'is connected'));
+
+    expect(SearchStat::query()->count())->toBe(0);
 });
 
 test('on several sites, someone who may only view SEO sees whether the sites they work on are connected, not their properties', function () {

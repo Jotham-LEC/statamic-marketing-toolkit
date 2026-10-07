@@ -137,6 +137,8 @@ return [
             'add_first' => 'Add the key and the property first.',
             'connected' => 'Search Console is connected, and the key can read :property.',
             'imported' => 'Imported :count page.|Imported :count pages.',
+            'import_failed' => 'The import failed.',
+            'import_failed_log' => 'The import failed, and the site’s log (storage/logs) says why.',
             'key_in_env' => 'The key is set in .env (MT_SEARCH_CONSOLE_CREDENTIALS).',
             'property_in_env' => 'The property is set in .env (MT_SEARCH_CONSOLE_PROPERTY).',
             'not_a_key' => 'That is not a service account key. Download one as JSON from Google Cloud → IAM & Admin → Service accounts → Keys.',
