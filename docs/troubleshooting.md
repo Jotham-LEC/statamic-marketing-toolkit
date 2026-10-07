@@ -1,12 +1,8 @@
 # Troubleshooting
 
-### I see "Pro" cards instead of reports, 404s or Search Console
-
-The addon is running as Free. If you bought Pro, set it in `config/statamic/editions.php`: `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, then clear the config cache (`php artisan config:clear`) if the site caches it. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, not this addon's edition.
-
 ### No hreflang tags, or a language is missing from them
 
-- hreflang needs several sites (Statamic Pro, `multisite` on), Marketing Toolkit Pro and `marketing-toolkit.hreflang.enabled`.
+- hreflang needs several sites (Statamic Pro, `multisite` on) and `marketing-toolkit.hreflang.enabled`.
 - The pages must be linked: a translation is an entry **localized** from another (it has an `origin`), not a separate entry with the same title.
 - A version that is a draft, noindexed, left out of the sitemap or canonical elsewhere is left out. If the page you're looking at is one of those, it gets no tags at all.
 - Page 2 and later of a listing, and error pages, get none.
@@ -37,7 +33,7 @@ The built assets weren't published. Run `php artisan vendor:publish --tag=market
 
 - Is the cache store `array`? Automatic redirects compare the entry with the copy loaded before it was edited, and the `array` store returns the same object, so nothing looks changed. Use `file`, `redis` or `database`.
 - Only **published** entries get one: a draft has no public address to protect.
-- `marketing-toolkit.redirects.automatic` and `marketing-toolkit.redirects.enabled` must be `true`, and the addon must be Pro: Free adds no automatic redirects.
+- `marketing-toolkit.redirects.automatic` and `marketing-toolkit.redirects.enabled` must be `true`.
 - Did someone answer "Don't add" in the save dialog? That skips it for that save.
 
 ### A redirect doesn't apply

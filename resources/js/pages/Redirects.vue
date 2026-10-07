@@ -10,10 +10,8 @@ const props = defineProps({
     listingUrl: { type: String, required: true },
     actionUrl: { type: String, required: true },
     createUrl: { type: String, required: true },
-    // CSV in and out is Pro: null in the free edition, which links to it instead.
-    exportUrl: { type: String, default: null },
-    importUrl: { type: String, default: null },
-    upgradeUrl: { type: String, default: null },
+    exportUrl: { type: String, required: true },
+    importUrl: { type: String, required: true },
 });
 
 const axios = useAxios();
@@ -50,19 +48,9 @@ async function importCsv(event) {
     <Head :title="__('marketing-toolkit::cp.redirects.title')" />
 
     <Header :title="__('marketing-toolkit::cp.redirects.title')" icon="moved">
-        <template v-if="importUrl && exportUrl">
-            <input ref="file" type="file" accept=".csv,text/csv" class="hidden" @change="importCsv" />
-            <Button :text="__('marketing-toolkit::cp.redirects.import')" :loading="importing" @click="file.click()" />
-            <Button :text="__('marketing-toolkit::cp.redirects.export')" :href="exportUrl" />
-        </template>
-        <Button
-            v-else-if="upgradeUrl"
-            :text="__('marketing-toolkit::cp.redirects.csv_pro')"
-            icon="padlock-locked"
-            :href="upgradeUrl"
-            target="_blank"
-            v-tooltip="__('marketing-toolkit::cp.pro.csv')"
-        />
+        <input ref="file" type="file" accept=".csv,text/csv" class="hidden" @change="importCsv" />
+        <Button :text="__('marketing-toolkit::cp.redirects.import')" :loading="importing" @click="file.click()" />
+        <Button :text="__('marketing-toolkit::cp.redirects.export')" :href="exportUrl" />
         <Button :text="__('marketing-toolkit::cp.redirects.create')" variant="primary" :href="createUrl" />
     </Header>
 

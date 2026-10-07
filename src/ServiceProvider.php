@@ -5,9 +5,6 @@ namespace JothamLec\MarketingToolkit;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
-use JothamLec\MarketingToolkit\Actions\CreateRedirect;
-use JothamLec\MarketingToolkit\Commands\Report;
-use JothamLec\MarketingToolkit\Commands\SearchConsole;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Cp\Navigation;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
@@ -22,11 +19,9 @@ use JothamLec\MarketingToolkit\Reports\ReportSettings;
 use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\Support\Config;
-use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
-use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Events\CollectionSaved;
 use Statamic\Events\CollectionTreeSaved;
 use Statamic\Events\EntryDeleted;
@@ -85,9 +80,6 @@ class ServiceProvider extends AddonServiceProvider
     /** @var list<class-string> listeners and middleware of modules that are off (leaveOutUnused) */
     private array $unused = [];
 
-    /** What the free edition leaves out of Statamic's autoloading (autoloadFilesFromFolder). */
-    private const array PRO_ONLY = [Report::class, SearchConsole::class, SeoWidget::class, CreateRedirect::class];
-
     public function register(): void
     {
         parent::register();
@@ -125,17 +117,16 @@ class ServiceProvider extends AddonServiceProvider
     public function boot()
     {
         // Ahead of the parent's own callback, which registers the commands,
-        // widget, actions and routes this takes out of the free edition.
-        Statamic::booted(fn () => $this->bootEdition());
+        // widget, actions, listeners and middleware of the modules that are on.
+        Statamic::booted(fn () => $this->bootFeatures());
 
         parent::boot();
     }
 
     /**
-     * The modules that are off (Features), off before anything registers. The
-     * free edition's Pro classes are left out of the autoloading below.
+     * The modules that are off (Features), off before anything registers.
      */
-    protected function bootEdition(): void
+    protected function bootFeatures(): void
     {
         Features::apply();
 
@@ -165,22 +156,11 @@ class ServiceProvider extends AddonServiceProvider
 
     /**
      * Statamic also registers every command, widget, action and listener in
-     * their folders: the free edition's leave Pro's out there too, and none
-     * registers one of a module that's off.
+     * their folders: none registers one of a module that's off.
      */
     protected function autoloadFilesFromFolder($folder, $requiredClass = null)
     {
-        $classes = array_values(array_diff(parent::autoloadFilesFromFolder($folder, $requiredClass), $this->unused));
-
-        return Edition::pro() ? $classes : array_values(array_diff($classes, self::PRO_ONLY));
-    }
-
-    /**
-     * The settings are the reports': Pro only.
-     */
-    protected function bootSettingsBlueprint()
-    {
-        return Edition::pro() ? parent::bootSettingsBlueprint() : $this;
+        return array_values(array_diff(parent::autoloadFilesFromFolder($folder, $requiredClass), $this->unused));
     }
 
     public function bootAddon(): void
@@ -191,9 +171,7 @@ class ServiceProvider extends AddonServiceProvider
         EncryptCookies::except([Attribution::COOKIE, CountConversion::COOKIE]);
 
         // A key and property set up in the control panel, where .env has none.
-        if (Edition::pro()) {
-            Connection::apply();
-        }
+        Connection::apply();
 
         $this->app->terminating(fn () => $this->app->make(IndexNow::class)->flush());
 
@@ -208,18 +186,16 @@ class ServiceProvider extends AddonServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         Permission::extend(fn () => Permission::group('marketing-toolkit', __('marketing-toolkit::cp.permissions.group'), function () {
-            Permission::register('view marketing toolkit')->label(__(Edition::pro() ? 'marketing-toolkit::cp.permissions.view' : 'marketing-toolkit::cp.permissions.view_free'));
+            Permission::register('view marketing toolkit')->label(__('marketing-toolkit::cp.permissions.view'));
             Permission::register('manage marketing toolkit redirects')->label(__('marketing-toolkit::cp.permissions.redirects'));
-
-            if (Edition::pro()) {
-                Permission::register('run marketing toolkit reports')->label(__('marketing-toolkit::cp.permissions.reports'));
-            }
+            Permission::register('run marketing toolkit reports')->label(__('marketing-toolkit::cp.permissions.reports'));
         }));
 
         Navigation::register();
 
         Statamic::provideToScript(['marketingToolkit' => [
-            'pro' => Edition::pro(),
+            // Off: a save has nothing to ask the redirect check.
+            'automaticRedirects' => (bool) config('marketing-toolkit.redirects.automatic'),
             'global' => (string) config('marketing-toolkit.global'),
             // Trackers set in .env, which the Tracking tab's warning counts as well.
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
@@ -240,9 +216,7 @@ class ServiceProvider extends AddonServiceProvider
     {
         if ($this->app->runningConsoleCommand(['schedule:run', 'schedule:work', 'schedule:test', 'schedule:list', 'schedule:finish'])) {
             // A key set up in the control panel, which bootAddon() would only apply after this.
-            if (Edition::pro()) {
-                Connection::apply();
-            }
+            Connection::apply();
 
             parent::bootSchedule();
         }
@@ -252,11 +226,6 @@ class ServiceProvider extends AddonServiceProvider
 
     protected function schedule($schedule)
     {
-        // Reports and Search Console are Pro.
-        if (! Edition::pro()) {
-            return;
-        }
-
         $settings = app(ReportSettings::class);
         // Off under Features (or in config/marketing-toolkit.php): reports run only by hand.
         $schedules = config('marketing-toolkit.reports.enabled') ? $settings->get('schedule') : 'off';

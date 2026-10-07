@@ -5,18 +5,18 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
 use JothamLec\MarketingToolkit\ServiceProvider;
-use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 
 afterEach(fn () => File::delete(resource_path('addons/marketing-toolkit.yaml')));
 
 /**
- * Boots the addon's edition step again, as the next request would, after the features were saved.
+ * Boots the addon's Features step again, as the next request would, after the features were saved.
  */
 function rebootFeatures(): void
 {
-    (fn () => $this->bootEdition())->call(app()->getProvider(ServiceProvider::class));
+    (fn () => $this->bootFeatures())->call(app()->getProvider(ServiceProvider::class));
 }
 
 test('the Features screen saves what is off, for whoever may change the addon\'s settings', function () {
@@ -30,7 +30,7 @@ test('the Features screen saves what is off, for whoever may change the addon\'s
     $this->postJson(cp_route('mt.features.update'), [...array_fill_keys(array_keys(Features::MODULES), true), 'sitemap' => false, 'tracking' => false])->assertOk();
 
     expect(Features::off())->toBe(['sitemap', 'tracking'])
-        ->and(Addon::get(Edition::PACKAGE)->settings()->get('features_off'))->toBe(['sitemap', 'tracking']);
+        ->and(Addon::get(Package::NAME)->settings()->get('features_off'))->toBe(['sitemap', 'tracking']);
 
     $this->get(cp_route('mt.features.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('values.sitemap', false)->where('values.robots_txt', true));
 });

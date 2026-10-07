@@ -18,7 +18,7 @@ class OgImageController
 {
     public function __invoke(Generator $generator, ?string $path = null): Response
     {
-        // Off in the config, under Features, or in Free.
+        // Off in the config or under Features.
         throw_unless(config('marketing-toolkit.og.enabled'), NotFoundHttpException::class);
 
         $entry = Entry::findByUri('/'.trim((string) $path, '/'), Site::current()->handle());

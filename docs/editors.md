@@ -4,13 +4,11 @@ This guide is for the people who write and look after the site's pages. It expla
 
 **SEO** (search engine optimisation) is about how your pages show up in Google and other search engines, and how they look when someone shares a link on Facebook, LinkedIn, WhatsApp or X. Most of it happens on its own: if you leave the SEO fields empty, the site fills in sensible values from your page's title, description and text.
 
-Some parts are in **Marketing Toolkit Pro** only, marked *(Pro)* below. On the free edition, Tools → SEO shows a card for each of them instead.
-
 ## Tools → SEO
 
-The overview: the latest report's score *(Pro)*, recent 404s *(Pro)*, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most *(Pro)*, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
+The overview: the latest report's score, recent 404s, redirects, the brand defaults, and, once connected, Google Search's clicks and appearances with the pages people click most, each with a button to the screen that changes it, and the files the site serves (sitemap, robots.txt).
 
-**Connecting Google Search Console** *(Pro)* is a one-time task for whoever looks after the site's settings: **Tools → SEO → Search Console** lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
+**Connecting Google Search Console** is a one-time task for whoever looks after the site's settings: **Tools → SEO → Search Console** lists the steps, with links to the right pages at Google. You create a key in Google Cloud and upload it, add the key's email as a user in Search Console, confirm the property (the site's address, filled in for you), then check the connection and import. If the check fails, it says what to fix. With several sites, do the property, the check and the import once per site, with that site chosen in the control panel's site menu; the key is uploaded once.
 
 ## SEO & brand
 
@@ -29,9 +27,9 @@ The overview: the latest report's score *(Pro)*, recent 404s *(Pro)*, redirects,
 
 **Tracking tab.** Paste the ID of each tool you use: **Google Tag Manager**, **Google Analytics 4**, **PostHog** (and its host, for an EU project), the **Meta Pixel** and the **LinkedIn Insight Tag**. Leave the others empty. They load on the live site only, never while you edit. With Google Tag Manager, add every other tool as a tag inside GTM rather than here: a tool loaded both ways counts each visit twice, so the tab and Tools → SEO warn you when that happens. An ID your developer set in `.env` wins over the one here.
 
-**Leads** *(Pro)* (same tab): **Send form submissions as leads** sends every form sent on the site to your tools as a lead (and to a LinkedIn conversion, if you paste its ID); **Save where each lead came from** adds the campaign, the site that sent them and their first page to each submission, under **Forms**. See [tracking.md](tracking.md#leads-pro).
+**Leads** (same tab): **Send form submissions as leads** sends every form sent on the site to your tools as a lead (and to a LinkedIn conversion, if you paste its ID); **Save where each lead came from** adds the campaign, the site that sent them and their first page to each submission, under **Forms**. See [tracking.md](tracking.md#leads).
 
-**Consent Mode** *(Pro)* (same tab), for a cookie banner you already have: what Google's tags may do before a visitor answers it. Turn it on, choose what's denied until the visitor agrees (everything, by default), and how long to wait for the banner. **Only in these regions**: the defaults apply there (for example the EEA, the UK and Switzerland), and everything is granted elsewhere. See [tracking.md](tracking.md) for how the banner passes on the answer.
+**Consent Mode** (same tab), for a cookie banner you already have: what Google's tags may do before a visitor answers it. Turn it on, choose what's denied until the visitor agrees (everything, by default), and how long to wait for the banner. **Only in these regions**: the defaults apply there (for example the EEA, the UK and Switzerland), and everything is granted elsewhere. See [tracking.md](tracking.md) for how the banner passes on the answer.
 
 **Shop tab** (for a site that sells; your developer adds it). The **currency** of your prices; your **return policy** (within so many days, any time, or not accepted, for a country, and/or a link to the policy page); and your **shipping rates**: one row per destination and order value (for example free over RM 300), with the delivery time in days. Search engines show these with your products.
 
@@ -87,15 +85,15 @@ All optional. Empty means "use the default".
 | **In sitemap** | Lists the page in the sitemap search engines read. | On. |
 | **Extra JSON-LD** | Structured data for search engines. Leave it to your developer. | Nothing extra. |
 
-### Several languages *(Pro)*
+### Several languages
 
 On a site in several languages, each translation of a page has its own SEO fields: give each language its own title and description. Search engines are told about the other languages by themselves (with "hreflang" links), so a French visitor is sent to the French page. A translation left as a draft, or hidden from search engines, is left out of those links.
 
-### Share cards *(Pro)*
+### Share cards
 
 When a page has no share image, the site draws one: the page title and description on your brand colours. You see it in the preview. To change the words, fill in **Card title** and **Card subtitle**. To use a photo instead, upload a **Share image**.
 
-## When a page's address changes *(Pro)*
+## When a page's address changes
 
 A page's address (its URL) changes when you change its slug, when its date changes on a dated page such as a news article, or when you move it to another place in a page tree. Old links to it, from Google, other sites or your own emails, would then lead nowhere. So the site adds a **redirect**: anyone visiting the old address is sent to the new one.
 
@@ -118,14 +116,14 @@ If you can't manage redirects, the question isn't asked and the redirect is adde
   - **To**: where to send visitors: `/new-page`, or a full address on another site. With a `*` in From, `$1` stands for whatever it matched: from `/blog/*` to `/articles/$1` sends `/blog/my-post` to `/articles/my-post`. A `#section` at the end is kept. A redirect that would send visitors back where they came from, straight away or through another redirect, isn't accepted.
   - **Type**: *301 Moved for good* (the usual one), *302 Moved for now* (temporary, e.g. during a sale), or *410 Gone* (removed for good; leave To empty).
   - **Active**: switch off to pause a redirect without deleting it.
-  - **Campaign link** *(Pro)*: for a short address you share in a campaign or print on a flyer, like `/go/linkedin`. Fill in the UTM tags (source, medium, campaign; content and term if you use them) and they're added to where it goes, so Google Analytics and each lead's source show the campaign. Choose *302*, so browsers don't remember it and every click is counted in the list.
+  - **Campaign link**: for a short address you share in a campaign or print on a flyer, like `/go/linkedin`. Fill in the UTM tags (source, medium, campaign; content and term if you use them) and they're added to where it goes, so Google Analytics and each lead's source show the campaign. Choose *302*, so browsers don't remember it and every click is counted in the list.
   - **Site** (only with more than one site): the site whose address this is. Leave empty for every site. A site's own redirect wins over one for every site from the same address.
 - **Hits** and **Last used** show whether a redirect is still needed.
-- **Import CSV** and **Export CSV** *(Pro)*: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
+- **Import CSV** and **Export CSV**: move many redirects at once, for example from an old site. The file has the columns `source,target,status,active`, and `site` with more than one site (a site's handle, or empty for every site).
 
 A redirect only applies when its address doesn't exist as a page. If you bring a page back at an old address, the page shows, not the redirect.
 
-## 404s *(Pro)*
+## 404s
 
 A **404** is what visitors get when they ask for an address that doesn't exist. **Tools → SEO → 404s** lists the ones real visitors hit, most recent first, with how often and the last page that linked there. Bots and hacking attempts are left out.
 
@@ -133,7 +131,7 @@ Use it to catch broken links. For a missing address that should lead somewhere, 
 
 With more than one site, the overview, the 404s, the reports and the dashboard card are of the site chosen in the control panel's site menu; redirects list every site's, with a Site column.
 
-## Reports *(Pro)*
+## Reports
 
 ![A report: the score and its checks](images/report.png)
 
@@ -167,12 +165,12 @@ A **warning** counts half. Pages set to hide from search engines are listed but 
 
 Who can see and run reports, which checks they include and the length targets are set by your administrator (Tools → SEO → Report settings). Reports can also run on their own, daily or weekly.
 
-## Features *(Pro)*
+## Features
 
 ![Tools → SEO → Features](images/features.png)
 
 **Tools → SEO → Features** switches off what the site doesn't use (the 404 log, IndexNow, tracking…), for whoever may change the addon's settings. A feature that's off isn't loaded at all; switch it back on and everything it saved is still there.
 
-## The dashboard *(Pro)*
+## The dashboard
 
 The **SEO** box on the dashboard (if your administrator added it) shows the latest report's score and the most recent 404s. Click through for the details.

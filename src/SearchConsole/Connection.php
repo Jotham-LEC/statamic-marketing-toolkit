@@ -6,7 +6,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\File;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
 use Throwable;
@@ -192,7 +192,7 @@ class Connection
         $site ??= Site::current()->handle();
 
         try {
-            $addon = Addon::get(Edition::PACKAGE);
+            $addon = Addon::get(Package::NAME);
             $key = $site === Site::default()->handle() ? self::SETTING : self::SITES_SETTING;
             $value = $addon?->settings()->get($key);
             $value = $key === self::SITES_SETTING ? ((array) $value)[$site] ?? null : $value;
@@ -209,7 +209,7 @@ class Connection
     {
         $site ??= Site::current()->handle();
         $property = filled($property) ? trim((string) $property) : null;
-        $settings = Addon::get(Edition::PACKAGE)->settings();
+        $settings = Addon::get(Package::NAME)->settings();
 
         if ($site === Site::default()->handle()) {
             $settings->set(self::SETTING, $property);

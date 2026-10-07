@@ -21,33 +21,8 @@ return [
     'permissions' => [
         'group' => 'Marketing Toolkit',
         'view' => 'View SEO overview, reports and 404s',
-        'view_free' => 'View SEO overview',
         'redirects' => 'Manage redirects',
         'reports' => 'Run SEO reports',
-    ],
-
-    'pro' => [
-        'badge' => 'Pro',
-        'get' => 'Get Marketing Toolkit Pro',
-        'title' => 'What Pro adds',
-        'reports' => [
-            'title' => 'Reports',
-            'body' => 'Every page checked and scored out of 100: missing titles and descriptions, broken links, pages nothing links to, share images. On a schedule, or when you ask.',
-        ],
-        'not_found' => [
-            'title' => '404s',
-            'body' => 'The addresses visitors and search engines ask for that don’t exist, most frequent first, each a click away from a redirect.',
-        ],
-        'search_console' => [
-            'title' => 'Google Search',
-            'body' => 'Clicks, appearances and position for each page, from Google Search Console, next to what the reports find.',
-        ],
-        'sites' => [
-            'title' => 'Several sites and languages',
-            'body' => 'Every site’s sitemap, robots.txt and settings, and hreflang links between languages so each visitor gets the page in their language.',
-            'free' => 'This install has several sites. The free edition looks after the default site alone: the sitemap and robots.txt are on its domain only (the other sites’ domains answer 404 for them), with no hreflang links between languages.',
-        ],
-        'csv' => 'Import and export redirects as CSV with Marketing Toolkit Pro.',
     ],
 
     'overview' => [
@@ -179,7 +154,6 @@ return [
         'title' => 'Redirects',
         'import' => 'Import CSV',
         'export' => 'Export CSV',
-        'csv_pro' => 'Import and export CSV (Pro)',
         'create' => 'Create redirect',
         'intro' => 'Used only when an address would otherwise be a 404, so a page that exists always wins. “Automatic” ones were added when content moved.',
         'automatic' => 'Automatic',
@@ -207,7 +181,7 @@ return [
     ],
 
     'redirect_form' => [
-        'campaign' => 'Campaign link (Pro)',
+        'campaign' => 'Campaign link',
         'campaign_instructions' => 'For a short address you share in a campaign, like /go/linkedin: these tags are added to where it goes, so Analytics and each lead’s source show the campaign. Use 302, so every click counts.',
         'source' => 'From',
         'source_instructions' => 'A path on this site, such as `/old-page`. A `*` matches anything, `/blog/*` for example.',
@@ -234,7 +208,7 @@ return [
         'off' => 'The 404 log is turned off (:setting).',
     ],
 
-    // Tools → SEO → Features (Pro).
+    // Tools → SEO → Features.
     'features' => [
         'title' => 'Features',
         'intro' => 'Switch off what this site doesn’t use. A feature that’s off isn’t loaded at all, so it costs nothing on any page. Nothing you set up is lost: switch it back on and it’s there.',

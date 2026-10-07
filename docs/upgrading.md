@@ -29,7 +29,7 @@ On `php artisan migrate` (on the server, as every deploy runs it), the tables `s
 
 ## From Co-SEO
 
-Co-SEO is now **Marketing Toolkit**: a site changes its Composer package and the key in `editions.php`, and the update scripts and migrations above do the rest.
+Co-SEO is now **Marketing Toolkit**: a site changes its Composer package, and the update scripts and migrations above do the rest.
 
 ### 1. Swap the package
 
@@ -44,25 +44,14 @@ The new package replaces the old one, so Composer won't install both. `jotham-le
 
 `php artisan migrate` also copies the addon settings (the Search Console property) to the new name, from `resources/addons/seo.yaml` to `resources/addons/marketing-toolkit.yaml`, or, with Statamic's Eloquent driver, from the `addon_settings` row of `jotham-lec/statamic-co-seo`. Commit the new file if you keep it in git.
 
-### 2. Rename the edition key
-
-In `config/statamic/editions.php`, the key is the package name:
-
-```php
-'addons' => [
-    'jotham-lec/statamic-marketing-toolkit' => 'pro',
-],
-```
-
-A site without this line runs as Free. Since Co-SEO 0.17 that leaves out the reports, the 404 log, automatic redirects and generated share cards, so check every site that used them.
-
-### 3. What else changes
+### 2. What else changes
 
 - The control panel's scripts are published to `public/vendor/statamic-marketing-toolkit`, with the publish tag `marketing-toolkit`: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 - PHP classes moved from `JothamLec\Seo\…` to `JothamLec\MarketingToolkit\…`. Only a site that overrides `SiteSeo` or extends a share-card template needs to change its `use` lines.
+- There are no editions any more: delete the addon's line (`jotham-lec/statamic-co-seo`) from `config/statamic/editions.php`. Everything that was Pro is in every install.
 
-### 4. Use the new modules
+### 3. Use the new modules
 
 - **Tracking and Consent Mode**: run `php please mt:install --tab=tracking`, swap `<s:mt:meta />` for `<s:mt:head />` (right after `<meta charset>` and the viewport), add `<s:mt:body />` right after `<body>`, then move the site's tracking IDs into the **Tracking** tab (or `.env`) and delete its own snippets, or each visit counts twice. See [tracking.md](tracking.md).
 - **Favicons**: upload the icon in **SEO & brand → Brand → Icon** (after `mt:install`), then delete the old `favicon.ico`, `apple-touch-icon.png` and `site.webmanifest` from `public/` and their `<link>` tags from the layout; files in `public/` win over the generated ones.
-- **Leads (Pro)**: run `php please mt:install --forms` to add the lead source fields to every form. A site that sends its own lead events (from Livewire forms, say) should call `window.mtConversion('form-handle')` instead, or leave **Send form submissions as leads** off.
+- **Leads**: run `php please mt:install --forms` to add the lead source fields to every form. A site that sends its own lead events (from Livewire forms, say) should call `window.mtConversion('form-handle')` instead, or leave **Send form submissions as leads** off.

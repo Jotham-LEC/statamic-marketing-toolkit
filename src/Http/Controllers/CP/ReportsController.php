@@ -12,7 +12,7 @@ use JothamLec\MarketingToolkit\Reports\ReportPage;
 use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\Reports\RunReportStep;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
@@ -35,7 +35,7 @@ class ReportsController
 {
     public function index(): Response
     {
-        $addon = Addon::get(Edition::PACKAGE);
+        $addon = Addon::get(Package::NAME);
 
         return Inertia::render('marketing-toolkit::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),

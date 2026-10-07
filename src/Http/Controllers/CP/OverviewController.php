@@ -11,7 +11,7 @@ use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Addons\Addon as AddonPackage;
@@ -33,7 +33,6 @@ class OverviewController
     {
         $user = User::current();
 
-        // Free works with the default site alone (several sites are Pro).
         $site = Sites::multiple() ? Site::selected()->handle() : Site::default()->handle();
 
         // The selected site's brand values and addresses, not the control panel's domain's.
@@ -43,37 +42,32 @@ class OverviewController
     private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
     {
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
-        $addon = Addon::get(Edition::PACKAGE);
-        $pro = Edition::pro();
+        $addon = Addon::get(Package::NAME);
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
         return Inertia::render('marketing-toolkit::Overview', [
             'siteName' => $seo->settings()->siteName(),
-            'upgradeUrl' => Edition::marketplaceUrl(),
             'global' => [
                 'exists' => $variables !== null,
                 'url' => $variables && $user->can('edit', $variables) ? $variables->editUrl() : null,
                 'separator' => $seo->settings()->titleSiteName() ? $seo->settings()->separator() : null,
                 'description' => $seo->settings()->string('default_description'),
             ],
-            // Pro's panels are null in the free edition, which shows what they would add instead.
-            'report' => $pro ? $this->report($user, $addon, $site) : null,
+            'report' => $this->report($user, $addon, $site),
             'redirects' => $user->can('manage marketing toolkit redirects') ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
                 'url' => cp_route('mt.redirects.index'),
             ] : null,
-            'notFound' => $pro ? [
+            'notFound' => [
                 'paths' => MissingPath::query()->shownOn($site)->count(),
                 'recent' => MissingPath::recent($site),
                 'url' => cp_route('mt.404s.index'),
-            ] : null,
-            'search' => $pro ? $this->search($searchConsole, $site) : null,
-            'searchConsole' => $pro ? ['url' => cp_route('mt.search-console.index')] : null,
+            ],
+            'search' => $this->search($searchConsole, $site),
+            'searchConsole' => ['url' => cp_route('mt.search-console.index')],
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($variables && $user->can('edit', $variables) ? $variables->editUrl() : null),
-            // Free on a multi-site install: what Pro adds there.
-            'severalSites' => Sites::installed() && ! $pro,
             'files' => collect([
                 __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? 'sitemap.xml' : null,
                 __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? 'robots.txt' : null,

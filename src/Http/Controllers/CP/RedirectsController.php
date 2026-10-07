@@ -13,7 +13,6 @@ use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
 use JothamLec\MarketingToolkit\Redirects\Campaign;
 use JothamLec\MarketingToolkit\Redirects\Csv;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
-use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
@@ -36,10 +35,8 @@ class RedirectsController
             'listingUrl' => cp_route('mt.redirects.listing'),
             'actionUrl' => cp_route('mt.actions.run'),
             'createUrl' => cp_route('mt.redirects.create'),
-            // CSV in and out is Pro: the free edition shows what it would add.
-            'exportUrl' => Edition::pro() ? cp_route('mt.redirects.export') : null,
-            'importUrl' => Edition::pro() ? cp_route('mt.redirects.import') : null,
-            'upgradeUrl' => Edition::marketplaceUrl(),
+            'exportUrl' => cp_route('mt.redirects.export'),
+            'importUrl' => cp_route('mt.redirects.import'),
         ]);
     }
 
@@ -210,8 +207,8 @@ class RedirectsController
     {
         $all = $this->blueprint()->fields()->addValues($request->all())->process()->values();
         $values = $all->only(['source', 'target', 'status', 'active', 'site'])->all();
-        // Pro: a campaign link's UTM tags, kept as the target's query string.
-        $values['target'] = Edition::pro() && is_string($values['target'] ?? null) && $values['target'] !== ''
+        // A campaign link's UTM tags, kept as the target's query string.
+        $values['target'] = is_string($values['target'] ?? null) && $values['target'] !== ''
             ? Campaign::withTags($values['target'], $all->only(Campaign::TAGS)->all())
             : ($values['target'] ?? null);
         $values['status'] = (int) ($values['status'] ?? 301);
@@ -247,8 +244,8 @@ class RedirectsController
 
     private function blueprint(): BlueprintObject
     {
-        // Pro: a campaign link's UTM tags, added to the target when saved.
-        $campaign = Edition::pro() ? [[
+        // A campaign link's UTM tags, added to the target when saved.
+        $campaign = [[
             'display' => __('marketing-toolkit::cp.redirect_form.campaign'),
             'instructions' => __('marketing-toolkit::cp.redirect_form.campaign_instructions'),
             'collapsible' => true,
@@ -256,7 +253,7 @@ class RedirectsController
             'fields' => array_map(fn (string $tag) => ['handle' => $tag, 'field' => [
                 'type' => 'text', 'display' => $tag, 'width' => $tag === 'utm_campaign' ? 100 : 50,
             ]], Campaign::TAGS),
-        ]] : [];
+        ]];
 
         return Blueprint::make('seo_redirect')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'source', 'field' => [

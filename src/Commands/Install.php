@@ -6,7 +6,6 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
-use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
@@ -32,7 +31,7 @@ class Install extends Command
     protected $signature = 'statamic:mt:install
         {--container= : Asset container for the logo, share image and icon (else the first one)}
         {--tab=* : Add these tabs the blueprint doesn\'t have, e.g. shop}
-        {--forms : Add the lead source fields to every form (Pro)}';
+        {--forms : Add the lead source fields to every form}';
 
     protected $description = 'Create the SEO & brand global set, or add what a newer version brings';
 
@@ -91,13 +90,9 @@ class Install extends Command
         }
 
         if ($this->option('forms')) {
-            if (! Edition::pro()) {
-                $this->components->warn('Leads are a Pro feature: no fields were added to the forms.');
-            } else {
-                $forms = Attribution::addToForms();
-                $this->components->info($forms === [] ? 'Every form has the lead source fields.' : 'Lead source fields added to: '.implode(', ', $forms).'.');
-                $changed = $changed || $forms !== [];
-            }
+            $forms = Attribution::addToForms();
+            $this->components->info($forms === [] ? 'Every form has the lead source fields.' : 'Lead source fields added to: '.implode(', ', $forms).'.');
+            $changed = $changed || $forms !== [];
         }
 
         if (! GlobalSet::findByHandle($handle)) {

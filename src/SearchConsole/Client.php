@@ -4,7 +4,6 @@ namespace JothamLec\MarketingToolkit\SearchConsole;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use JothamLec\MarketingToolkit\Support\Edition;
 use RuntimeException;
 
 /**
@@ -25,7 +24,7 @@ class Client
 
     public function configured(?string $site = null): bool
     {
-        return Edition::pro() && filled(config('marketing-toolkit.search_console.credentials')) && (new Connection)->property($site) !== null;
+        return filled(config('marketing-toolkit.search_console.credentials')) && (new Connection)->property($site) !== null;
     }
 
     /**
@@ -33,7 +32,7 @@ class Client
      */
     public function configuredForAnySite(): bool
     {
-        return Edition::pro() && filled(config('marketing-toolkit.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
+        return filled(config('marketing-toolkit.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
     }
 
     /**

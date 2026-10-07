@@ -56,7 +56,7 @@ final class LegacySettings
                 return;
             }
 
-            $new = $model::query()->firstOrNew(['addon' => Edition::PACKAGE]);
+            $new = $model::query()->firstOrNew(['addon' => Package::NAME]);
             $new->settings = [...(array) $old->settings, ...(array) $new->settings];
             $new->save();
         } catch (Throwable $exception) {

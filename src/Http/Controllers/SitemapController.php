@@ -6,7 +6,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
@@ -53,8 +52,8 @@ class SitemapController
      */
     private function urls(): Collection
     {
-        // Off in the config or under Features; Free: the default site's domain only.
-        throw_unless(config('marketing-toolkit.sitemap.enabled') && Sites::served(), NotFoundHttpException::class);
+        // Off in the config or under Features.
+        throw_unless(config('marketing-toolkit.sitemap.enabled'), NotFoundHttpException::class);
 
         return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
     }

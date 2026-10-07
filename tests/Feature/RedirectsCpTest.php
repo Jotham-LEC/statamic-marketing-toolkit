@@ -313,7 +313,7 @@ test('a campaign link: UTM tags join the target\'s own query, show again when ed
     $this->get(cp_route('mt.redirects.edit', $redirect))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('values.utm_source', 'linkedin')
         ->where('values.utm_medium', 'paid social')
-        ->where('blueprint.tabs.0.sections.1.display', 'Campaign link (Pro)'));
+        ->where('blueprint.tabs.0.sections.1.display', 'Campaign link'));
 
     // Emptied in the form: taken out of the target.
     $this->patchJson(cp_route('mt.redirects.update', $redirect), ['source' => '/go/linkedin', 'target' => $redirect->target, 'status' => '302', 'active' => true, 'utm_source' => 'linkedin', 'utm_medium' => '', 'utm_campaign' => 'autumn'])->assertOk();

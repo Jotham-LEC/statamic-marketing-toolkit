@@ -6,10 +6,9 @@ use Statamic\Facades\Addon;
 use Throwable;
 
 /**
- * The modules, each switched on by one config key. Pro: a site can switch
- * them off under Tools → SEO → Features, kept in the addon settings
- * (`features_off`). Free: Pro's modules are off, and the rest run as
- * config/marketing-toolkit.php says. A module that's off is set off in the config at boot,
+ * The modules, each switched on by one config key. A site can switch them
+ * off in config/marketing-toolkit.php or under Features in the control
+ * panel, kept in the addon settings (`features_off`). A module that's off is set off in the config at boot,
  * before the routes, listeners and middleware register, so it costs nothing
  * on a request.
  */
@@ -33,9 +32,6 @@ final class Features
         'favicons' => 'marketing-toolkit.favicons.enabled',
     ];
 
-    /** The modules only Pro has. Their data stays in the database, ready for an upgrade. */
-    public const array PRO = ['share_cards', 'automatic_redirects', 'not_found', 'reports', 'leads'];
-
     public const string SETTING = 'features_off';
 
     /**
@@ -46,7 +42,7 @@ final class Features
     public static function off(): array
     {
         try {
-            $saved = Addon::get(Edition::PACKAGE)?->settings()->get(self::SETTING);
+            $saved = Addon::get(Package::NAME)?->settings()->get(self::SETTING);
         } catch (Throwable $exception) {
             // Asked while booting: logged, but never in the way of it.
             rescue(fn () => report($exception), report: false);
@@ -72,13 +68,12 @@ final class Features
     }
 
     /**
-     * Sets the modules that are off, off in the config: those switched off in
-     * Pro, Pro's own in Free. At every boot rather than in the merged config,
+     * Sets the modules switched off, off in the config. At every boot rather than in the merged config,
      * which isn't merged once it is cached.
      */
     public static function apply(): void
     {
-        foreach (Edition::pro() ? self::off() : self::PRO as $module) {
+        foreach (self::off() as $module) {
             config([self::MODULES[$module] => false]);
         }
     }
@@ -88,7 +83,7 @@ final class Features
      */
     public static function save(array $off): void
     {
-        $settings = Addon::get(Edition::PACKAGE)->settings();
+        $settings = Addon::get(Package::NAME)->settings();
         $settings->set(self::SETTING, array_values(array_intersect(array_keys(self::MODULES), $off)) ?: null);
         $settings->save();
     }

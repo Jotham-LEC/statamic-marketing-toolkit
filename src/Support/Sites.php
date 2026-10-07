@@ -15,45 +15,11 @@ use Statamic\Sites\Sites as StatamicSites;
 final class Sites
 {
     /**
-     * Whether the addon works with several sites: more than one site
-     * (Statamic Pro, multi-site on), and the addon's Pro edition. Free works
-     * as on a single site, the default one: no hreflang, rows for every
-     * site, and a sitemap and robots.txt on the default site's domain only.
+     * Whether Statamic has several sites (Statamic Pro, multi-site on).
      */
     public static function multiple(): bool
     {
-        return self::installed() && Edition::pro();
-    }
-
-    /**
-     * Whether Statamic itself has more than one site, whatever the edition.
-     */
-    public static function installed(): bool
-    {
         return Site::multiEnabled() && Site::hasMultiple();
-    }
-
-    /**
-     * Whether the current site is one the addon serves files for: any of
-     * them, or in Free the default site and those on its domain.
-     */
-    public static function served(): bool
-    {
-        return self::servesUrl((string) Site::current()->absoluteUrl());
-    }
-
-    /**
-     * Whether $url is on a domain the addon serves (see served()).
-     */
-    public static function servesUrl(string $url): bool
-    {
-        if (self::multiple() || ! self::installed()) {
-            return true;
-        }
-
-        $host = fn (string $url) => strtolower((string) parse_url($url, PHP_URL_HOST));
-
-        return $host($url) === $host((string) Site::default()->absoluteUrl());
     }
 
     /**

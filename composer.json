@@ -1,8 +1,8 @@
 {
     "name": "jotham-lec/statamic-marketing-toolkit",
-    "description": "The marketing fundamentals for a Statamic website: SEO, tracking tags, Consent Mode, favicons and redirects, plus Search Console numbers, site reports with a score and conversion events on Pro.",
+    "description": "The marketing fundamentals for a Statamic website: SEO, tracking tags, Consent Mode, favicons and redirects, Search Console numbers, site reports with a score and conversion events.",
     "type": "statamic-addon",
-    "license": "proprietary",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "JothamLec\\MarketingToolkit\\": "src"
@@ -51,11 +51,7 @@
         "statamic": {
             "name": "Marketing Toolkit",
             "description": "The marketing fundamentals for your Statamic site: SEO, tracking, consent, favicons and redirects",
-            "slug": "marketing-toolkit",
-            "editions": [
-                "free",
-                "pro"
-            ]
+            "slug": "marketing-toolkit"
         },
         "laravel": {
             "providers": [

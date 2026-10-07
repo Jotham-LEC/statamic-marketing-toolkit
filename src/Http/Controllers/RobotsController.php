@@ -4,7 +4,6 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
@@ -15,8 +14,8 @@ class RobotsController
 {
     public function __invoke(): Response
     {
-        // Off in the config or under Features; Free: the default site's domain only.
-        throw_unless(config('marketing-toolkit.robots_txt.enabled') && Sites::served(), NotFoundHttpException::class);
+        // Off in the config or under Features.
+        throw_unless(config('marketing-toolkit.robots_txt.enabled'), NotFoundHttpException::class);
 
         return new Response(app(SiteSeo::class)->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

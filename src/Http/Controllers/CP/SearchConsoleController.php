@@ -11,7 +11,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\SearchConsole\Importer;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
@@ -172,6 +172,6 @@ class SearchConsoleController
 
     private function canSetUp(): bool
     {
-        return (bool) User::current()?->can('editSettings', Addon::get(Edition::PACKAGE));
+        return (bool) User::current()?->can('editSettings', Addon::get(Package::NAME));
     }
 }

@@ -66,7 +66,7 @@ return [
         ],
     ],
 
-    // The lead source fields `mt:install --forms` adds to each form (Pro).
+    // The lead source fields `mt:install --forms` adds to each form.
     'attribution' => [
         'tab' => 'Lead source',
         'utm_source' => 'Source (utm_source)',
@@ -176,11 +176,11 @@ return [
                 'instructions' => 'Paste each tool’s ID; leave the others empty. They load on the live site only, never while editing. An ID your developer set in .env wins over the one here.',
             ],
             'conversions' => [
-                'display' => 'Leads (Pro)',
+                'display' => 'Leads',
                 'instructions' => 'A form sent on the site counts as a lead in your tools: generate_lead in Google Tag Manager and Analytics, Lead for Meta, “form submitted” in PostHog, and your LinkedIn conversion.',
             ],
             'consent' => [
-                'display' => 'Consent Mode (Pro)',
+                'display' => 'Consent Mode',
                 'instructions' => 'For a cookie banner you already have (Cookiebot, CookieYes, Iubenda…): what Google’s tags may do before a visitor answers. The banner then tells them the answer.',
             ],
             'publisher' => [

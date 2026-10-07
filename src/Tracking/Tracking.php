@@ -4,10 +4,9 @@ namespace JothamLec\MarketingToolkit\Tracking;
 
 use Illuminate\Support\Facades\Vite;
 use JothamLec\MarketingToolkit\Settings;
-use JothamLec\MarketingToolkit\Support\Edition;
 
 /**
- * The tracking tags of the current site, and (Pro) its Consent Mode defaults: IDs from
+ * The tracking tags of the current site, and its Consent Mode defaults: IDs from
  * the "Tracking" tab of the SEO & brand global, with config/marketing-toolkit.php (and so
  * .env) winning over it. Printed by <s:mt:head /> and <s:mt:body />, in
  * production only and never in Live Preview.
@@ -141,15 +140,15 @@ class Tracking
     }
 
     /**
-     * Pro: Consent Mode v2 defaults, for a cookie banner that updates them;
-     * null while Consent Mode is off, and in Free. With regions, the
+     * Consent Mode v2 defaults, for a cookie banner that updates them;
+     * null while Consent Mode is off. With regions, the
      * defaults apply there, and everything is granted elsewhere.
      *
      * @return array{defaults: array<string, string>, regions: list<string>, wait_for_update: int}|null
      */
     public function consent(): ?array
     {
-        if (! Edition::pro() || ! $this->settings->bool('consent_mode')) {
+        if (! $this->settings->bool('consent_mode')) {
             return null;
         }
 
@@ -229,7 +228,7 @@ class Tracking
     }
 
     /**
-     * Pro: whether a form submission is sent to the tools as a lead. The free edition switches leads off at boot (Features::apply).
+     * Whether a form submission is sent to the tools as a lead.
      */
     public function conversions(): bool
     {
@@ -237,7 +236,7 @@ class Tracking
     }
 
     /**
-     * Pro: the LinkedIn conversion a form submission counts as, if any.
+     * The LinkedIn conversion a form submission counts as, if any.
      */
     public function linkedinConversion(): ?string
     {
@@ -247,7 +246,7 @@ class Tracking
     }
 
     /**
-     * Pro: whether to remember where each visitor first came from, for their submissions.
+     * Whether to remember where each visitor first came from, for their submissions.
      */
     public function attribution(): bool
     {

@@ -6,15 +6,15 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\User;
 use Statamic\Fields\Blueprint as BlueprintObject;
 
 /**
- * Tools → SEO → Features (Pro): a switch per module, for whoever may change
+ * Tools → SEO → Features: a switch per module, for whoever may change
  * the addon's settings. What's off is off from the next request, or, in a
  * process that boots once (Octane, a queue worker), once it restarts:
  * Features::apply() runs at boot, before the routes and listeners register,
@@ -78,6 +78,6 @@ class FeaturesController
 
     private function authorize(): void
     {
-        abort_unless(Edition::pro() && User::current()?->can('editSettings', Addon::get(Edition::PACKAGE)), 403);
+        abort_unless(User::current()?->can('editSettings', Addon::get(Package::NAME)), 403);
     }
 }

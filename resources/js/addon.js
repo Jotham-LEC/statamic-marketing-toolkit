@@ -7,7 +7,6 @@ import SeoWidget from './components/SeoWidget.vue';
 import Features from './pages/Features.vue';
 import NotFound from './pages/NotFound.vue';
 import Overview from './pages/Overview.vue';
-import ProOnly from './pages/ProOnly.vue';
 import RedirectForm from './pages/RedirectForm.vue';
 import Report from './pages/Report.vue';
 import Reports from './pages/Reports.vue';
@@ -58,8 +57,8 @@ function confirmRedirect(payload) {
     const axios = useAxios();
     const reference = referenceFor(payload);
 
-    // Automatic redirects are Pro: the free edition has nothing to ask.
-    if (!reference || !config.get('marketingToolkit')?.pro) return Promise.resolve();
+    // Automatic redirects switched off: nothing to ask.
+    if (!reference || !config.get('marketingToolkit')?.automaticRedirects) return Promise.resolve();
 
     return axios
         .post(cp_url('marketing-toolkit/redirects/check'), { reference, values: payload.values })
@@ -108,7 +107,6 @@ Statamic.booting(() => {
     inertia.register('marketing-toolkit::Reports', Reports);
     inertia.register('marketing-toolkit::Report', Report);
     inertia.register('marketing-toolkit::SearchConsole', SearchConsole);
-    inertia.register('marketing-toolkit::ProOnly', ProOnly);
     inertia.register('marketing-toolkit::Features', Features);
 
     router.on('navigate', (event) => {

@@ -70,8 +70,7 @@ trait BuildsSitemap
 
     /**
      * The sites one sitemap lists: the current one, and the others on its
-     * domain (languages under /fr/, /de/). A domain serves one sitemap. In
-     * Free, the default site only.
+     * domain (languages under /fr/, /de/). A domain serves one sitemap.
      *
      * @return list<string>
      */
@@ -80,10 +79,7 @@ trait BuildsSitemap
         $host = fn ($site) => strtolower((string) parse_url((string) $site->absoluteUrl(), PHP_URL_HOST));
         $current = $host(Site::current());
 
-        // Free lists the default site alone (several sites are Pro).
-        $sites = Sites::multiple() ? Site::all() : collect([Site::default()]);
-
-        return $sites->filter(fn ($site) => $host($site) === $current)->map->handle()->values()->all();
+        return Site::all()->filter(fn ($site) => $host($site) === $current)->map->handle()->values()->all();
     }
 
     /**

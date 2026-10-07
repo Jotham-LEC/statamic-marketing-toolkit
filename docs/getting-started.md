@@ -4,56 +4,12 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 
 ## What you need
 
-- **Statamic 6.34+** (Core is enough) on **PHP 8.3+**, with the PHP extensions in [the README's requirements](../README.md#requirements). Several sites and languages need Statamic Pro, as Statamic itself does, and Marketing Toolkit Pro; see [Several sites and languages](developers.md#several-sites-and-languages).
-- **PHP's `imagick` extension** for the generated share cards (Marketing Toolkit Pro). Without it the cards (and their tests) fail and favicons are drawn with `gd`, from a PNG or JPEG only; everything else works.
+- **Statamic 6.34+** (Core is enough) on **PHP 8.3+**, with the PHP extensions in [the README's requirements](../README.md#requirements). Several sites and languages need Statamic Pro, as Statamic itself does; see [Several sites and languages](developers.md#several-sites-and-languages).
+- **PHP's `imagick` extension** for the generated share cards. Without it the cards (and their tests) fail and favicons are drawn with `gd`, from a PNG or JPEG only; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
-- **For Pro, a licence** for the live site, from the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit). Local and staging sites don't need one.
 
-## The editions
-
-Marketing Toolkit comes as **Free** and **Pro**. Pro is $39 per site. A licence covers every release of one major version (all of 1.x, for example), and one bought during 0.x also covers 1.x. A new major version needs a new licence.
-
-| | Free | Pro |
-|---|:---:|:---:|
-| **SEO** | | |
-| Titles, descriptions, Open Graph and X cards, structured data (JSON-LD) | ✓ | ✓ |
-| Live Google and social preview as you type | ✓ | ✓ |
-| Sitemap, robots.txt, llms.txt and ads.txt | ✓ | ✓ |
-| IndexNow: Bing and others told of every change | ✓ | ✓ |
-| Share cards generated for every page | | ✓ |
-| **Score and reports** | | |
-| Every page scored out of 100, with a report, on a schedule | | ✓ |
-| Google Search Console numbers per page | | ✓ |
-| Dashboard widget | | ✓ |
-| **Redirects and 404s** | | |
-| Redirects by hand, with wildcards and 410s | ✓ | ✓ |
-| A redirect added when a page's address changes | | ✓ |
-| The 404 log: the pages people couldn't find | | ✓ |
-| CSV import and export of redirects | | ✓ |
-| **Tracking and consent** | | |
-| Google Tag Manager, Analytics 4, PostHog, Meta Pixel and LinkedIn tags | ✓ | ✓ |
-| Google Consent Mode v2, by region | | ✓ |
-| Consent for Meta, LinkedIn and PostHog without GTM | | ✓ |
-| **Leads and campaigns** | | |
-| Form submissions sent to your tools as leads, with where they came from | | ✓ |
-| Campaign links with UTM tags | | ✓ |
-| **Sites and languages** | | |
-| Several sites and languages, with hreflang | Default site only: no hreflang, and the sitemap, robots.txt and icons on its domain alone ([details](developers.md#several-sites-and-languages)) | ✓ |
-| **For developers** | | |
-| Favicons and web app manifest from one image | ✓ | ✓ |
-| Any value overridden in code (`SiteSeo`, `Tracking`) | ✓ | ✓ |
-| Switch off the modules a site doesn't use | In `config/marketing-toolkit.php` | Also in the control panel |
-
-To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
-
-```php
-'addons' => [
-    'jotham-lec/statamic-marketing-toolkit' => 'pro',
-],
-```
-
-In Free, Pro's screens aren't there and Tools → SEO shows a card for each of them instead. The tables Pro fills (reports, the 404 log, Search Console's numbers) stay in the database either way, so switching back and forth loses nothing.
+Everything is included: Marketing Toolkit is free and open source, with no editions and no licence key.
 
 ## 1. Install the package
 
@@ -125,7 +81,7 @@ All the parameters are in [developers.md](developers.md#the-tag).
 
 In the control panel, open **Globals → SEO & brand**: separator, default description and share image, who publishes the site (organisation, local business or person), tracking IDs and Consent Mode, verification codes, robots.txt lines, humans.txt and the share-card colours. [editors.md](editors.md#seo--brand) explains each field.
 
-## 5. Add the dashboard widget (optional, Pro)
+## 5. Add the dashboard widget (optional)
 
 In `config/statamic/cp.php`:
 
@@ -143,13 +99,13 @@ Super users see everything. For other roles, tick the SEO permissions under **Us
 
 | Permission | Lets them |
 |---|---|
-| `view marketing toolkit` | open Tools → SEO; with Pro, the reports, the 404 log, the Search Console screen and the widget |
-| `manage marketing toolkit redirects` | create, edit and delete redirects; with Pro, import and export them, and answer the "add a redirect?" question when saving |
-| `run marketing toolkit reports` | start a report (Pro) |
+| `view marketing toolkit` | open Tools → SEO, the reports, the 404 log, the Search Console screen and the widget |
+| `manage marketing toolkit redirects` | create, edit and delete redirects, import and export them, and answer the "add a redirect?" question when saving |
+| `run marketing toolkit reports` | start a report |
 
 The search and share preview needs no SEO permission, only access to the entry.
 
-## 7. Schedule reports (optional, Pro)
+## 7. Schedule reports (optional)
 
 Reports can run daily or weekly (Tools → SEO → Report settings → Running). That needs Laravel's scheduler, as for any scheduled task:
 
@@ -160,11 +116,11 @@ Reports can run daily or weekly (Tools → SEO → Report settings → Running).
 ## Check that it worked
 
 - View a page's source: one `<title>`, a description, `<link rel="canonical">`, `og:` and `twitter:` tags, and a `<script type="application/ld+json">`.
-- Open `/sitemap.xml` and `/robots.txt`; with Pro, `/og.png` (the home page's share card).
+- Open `/sitemap.xml` and `/robots.txt`, and `/og.png` (the home page's share card).
 - Edit an entry: the SEO tab shows the Google result and the share cards, and they change as you type.
 - With several languages: a translated page's source has a `<link rel="alternate" hreflang="…">` for each language, and the sitemap an `<xhtml:link>` for each.
-- With Pro: visit a page that doesn't exist, then **Tools → SEO → 404s**: the path is listed. (Visit it in a browser; `curl` counts as a bot and isn't logged.)
-- With Pro: **Tools → SEO → Reports → Run report.** A few hundred pages take under a minute.
+- Visit a page that doesn't exist, then **Tools → SEO → 404s**: the path is listed. (Visit it in a browser; `curl` counts as a bot and isn't logged.)
+- **Tools → SEO → Reports → Run report.** A few hundred pages take under a minute.
 
 If something doesn't, see [troubleshooting.md](troubleshooting.md).
 

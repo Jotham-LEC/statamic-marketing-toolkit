@@ -5,7 +5,6 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
@@ -20,15 +19,15 @@ class TextFileController
 
     public function llms(SiteSeo $seo): Response
     {
-        // Off in the config or under Features; Free: the default site's domain only.
-        throw_unless(config('marketing-toolkit.llms_txt.enabled') && Sites::served(), NotFoundHttpException::class);
+        // Off in the config or under Features.
+        throw_unless(config('marketing-toolkit.llms_txt.enabled'), NotFoundHttpException::class);
 
         return $this->text(Cache::rememberForever(self::llmsCacheKey(Site::current()->handle()), fn () => $seo->llmsTxt()));
     }
 
     public function ads(SiteSeo $seo): Response
     {
-        throw_unless(config('marketing-toolkit.ads_txt.enabled') && Sites::served(), NotFoundHttpException::class);
+        throw_unless(config('marketing-toolkit.ads_txt.enabled'), NotFoundHttpException::class);
 
         $text = $seo->adsTxt();
         throw_if($text === null, NotFoundHttpException::class);

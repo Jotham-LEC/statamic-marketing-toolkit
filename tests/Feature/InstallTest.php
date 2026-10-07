@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use JothamLec\MarketingToolkit\UpdateScripts\AddNewBrandFields;
 use Statamic\Facades\Blueprint;
@@ -70,7 +70,7 @@ test('after an update, the new fields are added without running anything', funct
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => [
         'brand' => ['display' => 'Brand', 'sections' => [['fields' => [['handle' => 'default_image', 'field' => ['type' => 'assets', 'container' => 'assets']]]]]],
     ]])->save();
-    $script = new AddNewBrandFields(Edition::PACKAGE);
+    $script = new AddNewBrandFields(Package::NAME);
 
     expect($script->shouldUpdate('0.20.0', '0.19.0'))->toBeTrue();
     $script->update();

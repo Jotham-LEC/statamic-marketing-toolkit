@@ -5,6 +5,7 @@
 From a developer-experience audit: one set of names, a fresh install that works the first time, cached routes that follow the Features switches, a faster `<head>`, and one way to do each thing.
 
 ### Upgrading
+- **Free and open source.** Marketing Toolkit is now MIT-licensed with no editions: everything that was Pro (several sites and hreflang, Consent Mode, leads, campaign links, Search Console, reports, share cards, automatic 301s, the 404 log, redirect CSV, Features and the widget) is in every install. Remove the addon's line from `config/statamic/editions.php` if you added one.
 - **The `seo` names are now `marketing-toolkit` and `mt`.** `config/marketing-toolkit.php`, the `marketing-toolkit::` fieldset, views and translations, `/cp/marketing-toolkit`, the permissions `view marketing toolkit`, `manage marketing toolkit redirects` and `run marketing toolkit reports`; the tags `<s:mt:head />`, `<s:mt:body />`, `<s:mt:meta />` (`{{ mt:head }}`…), the commands `mt:install`, `mt:report` and `mt:search-console`, the tables `mt_*`, route names `mt.*`, `MT_*` in `.env` and the widget `'type' => 'mt'`. **`composer update` renames them in the site's files** (blueprint imports, templates, the widget, `config/seo.php`, published translations, roles' permissions): commit what it lists. **`php artisan migrate` renames the tables** and moves an uploaded Search Console key. The `SEO_*` `.env` names are read until 1.0. What to check by hand: [upgrading.md](docs/upgrading.md#from-019-the-seo-names). The entries' `seo` fields and the `seo` global set keep their names: they are content.
 - **Put `<s:mt:head />` after `<meta charset>` and the viewport**, not first in the `<head>`. Browsers look for the charset in the first 1024 bytes, and with tracking tags it ended up several thousand bytes in.
 - **Delete `public/robots.txt` and `public/favicon.ico`** if they came with Statamic: the web server answered with them, so the addon's robots.txt (with its `Sitemap:` line and the control panel rule) and icons never showed. `php please mt:install` names such files and offers to delete them.
@@ -16,7 +17,7 @@ From a developer-experience audit: one set of names, a fresh install that works 
 ### Fixed
 - **Cached routes follow the Features switches.** A module off when `php artisan route:cache` (or `optimize`) ran kept answering 404 after it was switched back on. The sitemap, robots.txt, llms.txt, ads.txt, IndexNow key, icon and share-card routes are always registered; each answers 404 while its module is off.
 - **The meta tags take about a quarter of the time** on every page that isn't statically cached (75 ms → 18 ms on a test machine): the logo, default image, icon and card picture in SEO & brand are found from their stored path, instead of building every field of the set to read them.
-- `mt:install` refuses an asset container or a tab that doesn't exist, naming the ones that do; `--forms` adds nothing in Free and says leads are Pro; a rerun with nothing to add says so; filled-in defaults are named by their labels.
+- `mt:install` refuses an asset container or a tab that doesn't exist, naming the ones that do; a rerun with nothing to add says so; filled-in defaults are named by their labels.
 
 ### Changed
 - `mt:install` offers to enable an existing SEO & brand on the sites it's missing from.

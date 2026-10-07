@@ -2,7 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Reports;
 
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 
 /**
@@ -75,7 +75,7 @@ class ReportSettings
     private function saved(): array
     {
         try {
-            return Addon::get(Edition::PACKAGE)?->settings()->all() ?? [];
+            return Addon::get(Package::NAME)?->settings()->all() ?? [];
         } catch (\Throwable) {
             // Before Statamic has booted the addon (an early config read).
             return [];

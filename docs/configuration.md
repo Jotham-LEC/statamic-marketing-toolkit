@@ -3,7 +3,7 @@
 Two places, by who changes what:
 
 - **`config/marketing-toolkit.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=marketing-toolkit-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them. A file published by 0.19 or earlier (as config/seo.php, which the update moves) keeps working: its `robots_txt`, `llms_txt` and `ads_txt` switches and its old tracking keys (`gtm`, `ga4`, `meta_pixel`, `linkedin`) are read under their new names.
-- **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit, Pro): report settings an editor may want to change.
+- **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit): report settings an editor may want to change.
 
 The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
 
@@ -24,7 +24,7 @@ To change how a value is worked out, extend `SiteSeo` and bind your class in a s
 | `title.max` | `60` | With **Add the site name to page titles** on, `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
 | `description.length` | `160` | A description taken from the page is cut to this, on a word, `…` included. |
 
-These two shape what the site prints. The report's title and description checks, and the counters in the entry's preview, have their own limits under **Report settings** (Pro), for editors to change; the defaults are the same, 60 and 160, so a generated title or description passes its check.
+These two shape what the site prints. The report's title and description checks, and the counters in the entry's preview, have their own limits under **Report settings**, for editors to change; the defaults are the same, 60 and 160, so a generated title or description passes its check.
 
 ### Collections
 
@@ -108,9 +108,9 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 | Key | Default | |
 |---|---|---|
 | `redirects.enabled` | `true` | Applies the rules under Tools → SEO → Redirects. |
-| `redirects.automatic` | `true` | Adds a 301 when published content moves (slug, date, place in a tree). Pro: always off in Free. |
+| `redirects.automatic` | `true` | Adds a 301 when published content moves (slug, date, place in a tree). |
 | `redirects.case_sensitive` | `true` | `false` matches a redirect's From in any letter case, accents and other alphabets included: `/ABOUT-US` and `/About-Us` as `/about-us`, `/CAFÉ` as `/café`. What a `*` matched keeps the visitor's case. Two redirects whose From differs only in case are then refused as the same address, and a CSV row updates the redirect with that From in any case. For a site moved off one whose addresses worked in any case (Wix, IIS). |
-| `not_found.enabled` | `true` | Logs 404s. Pro: always off in Free. |
+| `not_found.enabled` | `true` | Logs 404s. |
 | `not_found.max_rows` | `1000` | Most paths kept, give or take a tenth: the log is trimmed now and then, not on every new path. One-off misses (one hit, no page linking there) go first, then the least recently seen, so a flood of made-up addresses can't push out real broken links. |
 | `not_found.ignore_user_agents` | bots, crawlers, curl, wget… | Not logged when the user agent contains one of these (any case). |
 | `not_found.ignore_paths` | `*.php`, `/wp-*`, `/.env*`, `/.git*`… | Not logged when the path matches one (`*` matches anything). Scanner probes, mostly. |
@@ -118,7 +118,7 @@ The sitemap lists only canonical addresses: it leaves out drafts, redirect entri
 
 ### Languages (hreflang)
 
-With several sites (Statamic Pro and Marketing Toolkit Pro), a page links to itself in each other language: a `<link rel="alternate" hreflang>` tag per language in the `<head>`, an `og:locale:alternate` for each, and the same links as `<xhtml:link>` in the sitemap. The languages of one page are its entry's origin and the entries localized from it, or a term on each site of its taxonomy that has entries there. A version that is a draft, noindexed, left out of the sitemap or canonical elsewhere is left out; a page that is one of those itself gets no tags. The code is the site's language (`fr`), or its full locale (`en-GB`, `en-US`) where two sites share a language.
+With several sites (Statamic Pro), a page links to itself in each other language: a `<link rel="alternate" hreflang>` tag per language in the `<head>`, an `og:locale:alternate` for each, and the same links as `<xhtml:link>` in the sitemap. The languages of one page are its entry's origin and the entries localized from it, or a term on each site of its taxonomy that has entries there. A version that is a draft, noindexed, left out of the sitemap or canonical elsewhere is left out; a page that is one of those itself gets no tags. The code is the site's language (`fr`), or its full locale (`en-GB`, `en-US`) where two sites share a language.
 
 | Key | Default | |
 |---|---|---|
@@ -134,7 +134,7 @@ A sitemap lists every site on its domain: languages under `/fr/` are in `example
 | `indexnow.enabled` | `true` | When published content is saved, goes live on schedule or is deleted, its address is sent to IndexNow (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
 | `indexnow.key` | `null` (`MT_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
 
-### Google Search Console (Pro)
+### Google Search Console
 
 Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until there is a key and a property.
 
@@ -159,23 +159,19 @@ Setting it up:
 
 | Key | Default | |
 |---|---|---|
-| `og.enabled` | `true` | Generated cards at `/og.png` (home) and `/og/{uri}.png`. Pro: always off in Free. |
+| `og.enabled` | `true` | Generated cards at `/og.png` (home) and `/og/{uri}.png`. |
 | `og.templates` | `['default' => DefaultTemplate::class]` | Card designs by key; see [developers.md](developers.md#add-a-share-card-template). |
 | `og.max_age` | 30 days | `Cache-Control` max-age of the card images. |
 
 Uploaded share images are cropped to 1200×630 and served as JPEG; for another size, override `imageWidth()` and `imageHeight()` in your `SiteSeo` subclass.
 
-## Features (Pro)
+## Features
 
 **Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot: its addresses answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted. Its routes stay registered, so cached routes (`php artisan route:cache`, `optimize`) follow a switch without being cached again.
 
 Since the switches apply at boot, a process that boots once and serves many requests or jobs (Laravel Octane, a queue worker, Horizon) picks up a change when it restarts: run `php artisan octane:reload` or `php artisan queue:restart` after switching a module on or off. A PHP-FPM site picks it up from the next request.
 
-Each switch sets the matching key below to off, whatever `config/marketing-toolkit.php` says. A module `config/marketing-toolkit.php` already switches off shows off on the screen, locked, with "Off in config/marketing-toolkit.php": a switch can't turn it back on. In Free, the screen isn't there and every module follows `config/marketing-toolkit.php`.
-
-## Editions
-
-`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/marketing-toolkit.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the reports and their settings, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
+Each switch sets the matching key below to off, whatever `config/marketing-toolkit.php` says. A module `config/marketing-toolkit.php` already switches off shows off on the screen, locked, with "Off in config/marketing-toolkit.php": a switch can't turn it back on.
 
 ## Tracking
 
@@ -191,7 +187,7 @@ Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (
 | `tracking.linkedin_partner_id` | `MT_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
 | `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
-| `leads.enabled` | | `true` (Pro). Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads-pro). |
+| `leads.enabled` | | `true`. Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads). |
 
 An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed; Tools → SEO says which one, and where it is set. Consent Mode is set in the global only.
 
@@ -212,7 +208,7 @@ A file of the same name in `public/` wins over either.
 
 From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg` (an SVG upload, as it is), `/apple-touch-icon.png` (180 px, on the icon background), `/icon-192.png`, `/icon-512.png` and `/site.webmanifest` (the site's name, short name and colours). They're made once per version of the image and colours, kept in `storage/app/marketing-toolkit/favicons`, made again when SEO & brand is saved, and served without a session or cookie. A file of the same name in `public/` wins, so delete old ones there. Drawing SVG needs PHP's Imagick; with GD alone an SVG gives `/favicon.svg` and the manifest, so upload a PNG on such hosts.
 
-## Report settings (Pro)
+## Report settings
 
 **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit), saved as YAML in `resources/addons/marketing-toolkit.yaml` (or wherever your site stores addon settings). On a site where the production control panel is where content lives, keep that file out of deploys, or store addon settings in the database, so a deploy doesn't overwrite them.
 
@@ -240,9 +236,9 @@ The Search Console property is kept here too (`search_console_property`, and `se
 
 | Permission | |
 |---|---|
-| `view marketing toolkit` | Tools → SEO; with Pro, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
-| `manage marketing toolkit redirects` | Create, edit and delete redirects; with Pro, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
-| `run marketing toolkit reports` | Start a report (Pro). |
+| `view marketing toolkit` | Tools → SEO, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
+| `manage marketing toolkit redirects` | Create, edit and delete redirects, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
+| `run marketing toolkit reports` | Start a report. |
 
 ## Commands
 
@@ -250,9 +246,9 @@ The Search Console property is kept here too (`search_console_property`, and `se
 |---|---|
 | `php please mt:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (the home page's description, the robots.txt rule). Run again, it adds what is missing, such as the fields a newer version brings (in the tabs the blueprint still has), and never overwrites a value. With several sites, offers to enable an existing set on the sites it's missing from. Names any file in `public/` that would be served instead of the addon's, and offers to delete it. |
 | `php please mt:install --tab=shop` | Adds a whole tab the blueprint doesn't have (`shop`, `publisher`…). |
-| `php please mt:install --forms` (Pro) | Adds the lead source fields to every form; see [tracking.md](tracking.md#leads-pro). |
-| `php please mt:search-console [--site=]` (Pro) | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
-| `php please mt:report [--site=]` (Pro) | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |
+| `php please mt:install --forms` | Adds the lead source fields to every form; see [tracking.md](tracking.md#leads). |
+| `php please mt:search-console [--site=]` | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
+| `php please mt:report [--site=]` | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |
 
 ## What it sends where
 
@@ -261,8 +257,8 @@ The addon sends nothing to its author: no licence check, no usage numbers, no up
 | When | From | To | What is sent |
 |---|---|---|---|
 | Published content is saved, goes live or is deleted (IndexNow on, production only) | The server | `https://api.indexnow.org/indexnow` | The site's host, the IndexNow key, where the key file is, and the changed addresses. |
-| A Search Console check or import (Pro, with a key and a property) | The server | `https://oauth2.googleapis.com/token`, then `https://www.googleapis.com/webmasters/v3/sites/…` | A token request signed with the service account key (its email, the read-only Search Console scope, an expiry; the private key itself never leaves the server); then the property, and for an import the date range and which rows. |
-| A report runs with **Check external links** on (Pro, off unless switched on in the report settings) | The server | The sites the pages link to | A `HEAD` request (a `GET` where `HEAD` is refused) for each linked address, at most 50 a page, each answer kept for a day. Addresses on this machine or a private network are never asked. |
-| A visitor opens a page, with a tracking ID set, in the environments in `tracking.environments` (production unless changed), never in Live Preview | The visitor's browser | Google Tag Manager and Google Analytics (`googletagmanager.com`), the Meta Pixel (`connect.facebook.net`, `facebook.com`), LinkedIn (`snap.licdn.com`, `px.ads.linkedin.com`), PostHog (your `tracking.posthog_host`) | Whatever each tool's own script collects, and with leads on (Pro), a lead event when a form is sent. How each behaves before consent: [tracking.md](tracking.md#meta-linkedin-and-posthog-without-gtm-pro). |
+| A Search Console check or import (with a key and a property) | The server | `https://oauth2.googleapis.com/token`, then `https://www.googleapis.com/webmasters/v3/sites/…` | A token request signed with the service account key (its email, the read-only Search Console scope, an expiry; the private key itself never leaves the server); then the property, and for an import the date range and which rows. |
+| A report runs with **Check external links** on (off unless switched on in the report settings) | The server | The sites the pages link to | A `HEAD` request (a `GET` where `HEAD` is refused) for each linked address, at most 50 a page, each answer kept for a day. Addresses on this machine or a private network are never asked. |
+| A visitor opens a page, with a tracking ID set, in the environments in `tracking.environments` (production unless changed), never in Live Preview | The visitor's browser | Google Tag Manager and Google Analytics (`googletagmanager.com`), the Meta Pixel (`connect.facebook.net`, `facebook.com`), LinkedIn (`snap.licdn.com`, `px.ads.linkedin.com`), PostHog (your `tracking.posthog_host`) | Whatever each tool's own script collects, and with leads on, a lead event when a form is sent. How each behaves before consent: [tracking.md](tracking.md#meta-linkedin-and-posthog-without-gtm). |
 
 Reports render pages and check internal links inside the application, without a request over the network.

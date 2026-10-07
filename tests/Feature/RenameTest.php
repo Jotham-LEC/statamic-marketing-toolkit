@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\UpdateScripts\RenameFromSeo;
 use Statamic\Facades\Role;
 
@@ -29,7 +29,7 @@ test('the update script renames the seo names in the site\'s own files and roles
         }
         Role::make('editor')->permissions(['access cp', 'view seo', 'manage seo redirects'])->save();
 
-        $script = new RenameFromSeo(Edition::PACKAGE);
+        $script = new RenameFromSeo(Package::NAME);
         expect($script->shouldUpdate('0.20.0', '0.19.0'))->toBeTrue();
         $script->update();
 

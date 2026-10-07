@@ -3,7 +3,7 @@
 namespace JothamLec\MarketingToolkit\Redirects;
 
 /**
- * A campaign link (Pro): a short address on the site, like /go/linkedin,
+ * A campaign link: a short address on the site, like /go/linkedin,
  * that redirects to a page with UTM tags, so the campaign shows in
  * Analytics and in each lead's source. The tags live in the redirect's
  * target; the redirect counts the clicks.

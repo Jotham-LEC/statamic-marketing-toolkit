@@ -2,7 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Cp;
 
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\CP\Navigation\Nav;
 use Statamic\CP\Navigation\NavItem;
 use Statamic\Facades\Addon;
@@ -31,17 +31,16 @@ class Navigation
     {
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in(Site::selected()->handle());
 
-        $addon = Addon::get(Edition::PACKAGE);
-        $pro = Edition::pro();
+        $addon = Addon::get(Package::NAME);
 
         return array_values(array_filter([
-            $pro ? $nav->item(__('marketing-toolkit::cp.nav.reports'))->route('mt.reports.index')->can('view marketing toolkit') : null,
+            $nav->item(__('marketing-toolkit::cp.nav.reports'))->route('mt.reports.index')->can('view marketing toolkit'),
             $nav->item(__('marketing-toolkit::cp.nav.redirects'))->route('mt.redirects.index')->can('manage marketing toolkit redirects'),
-            $pro ? $nav->item(__('marketing-toolkit::cp.nav.not_found'))->route('mt.404s.index')->can('view marketing toolkit') : null,
-            $pro ? $nav->item(__('marketing-toolkit::cp.nav.search_console'))->route('mt.search-console.index')->can('view marketing toolkit') : null,
+            $nav->item(__('marketing-toolkit::cp.nav.not_found'))->route('mt.404s.index')->can('view marketing toolkit'),
+            $nav->item(__('marketing-toolkit::cp.nav.search_console'))->route('mt.search-console.index')->can('view marketing toolkit'),
             $variables ? $nav->item(__('marketing-toolkit::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
-            $pro && $addon?->hasSettingsBlueprint() ? $nav->item(__('marketing-toolkit::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon) : null,
-            $pro ? $nav->item(__('marketing-toolkit::cp.nav.features'))->route('mt.features.index')->can('editSettings', $addon) : null,
+            $nav->item(__('marketing-toolkit::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon),
+            $nav->item(__('marketing-toolkit::cp.nav.features'))->route('mt.features.index')->can('editSettings', $addon),
         ]));
     }
 }

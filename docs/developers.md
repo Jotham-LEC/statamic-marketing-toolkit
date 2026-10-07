@@ -31,7 +31,7 @@ final readonly class Context
 |---|---|
 | `<title>` | SEO title as typed → the title (with **Add the site name to page titles** on: `{title}{separator}{site}` if it fits `marketing-toolkit.title.max`) → site name on home. `· Page N` past page 1, in the page's language |
 | description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 160 on a word (`marketing-toolkit.description.length`) |
-| share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** (Pro) → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
+| share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
 | canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
 | robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
 | hreflang | the page's other languages that are published and listed, with `x-default`: `alternates()`, `localizations()`, `hreflangCodes()`, `xDefaultSite()` |
@@ -179,22 +179,14 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 
 ## Several sites and languages
 
-Several sites are Pro. On a multi-site install, Free looks after the default site only:
-
-- Pages on every site keep their meta tags and structured data, but there is no hreflang.
-- The sitemap lists the default site's pages alone (not its other languages, even under `/fr/` on the same domain).
-- The sitemap, robots.txt, llms.txt, ads.txt and icons are served on the default site's domain only: another site's domain answers 404 for them, and its pages print no icon links. IndexNow sends only the default site's domain.
-- Redirects apply on every site; a rule can't name one.
-- Tools → SEO shows the default site, with a card for what Pro adds.
-
 With Statamic Pro and more than one site, whether separate brands on their own domains or languages under `/fr/` or on their own domains, each site gets its own:
 
 - **Brand values**: `mt:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
-- **Sitemap and robots.txt** per domain: a sitemap lists every site on its domain, each URL with its other languages. **Share cards** (Pro) and the **IndexNow key** on the site's own domain; IndexNow gets one request per domain.
+- **Sitemap and robots.txt** per domain: a sitemap lists every site on its domain, each URL with its other languages. **Share cards** and the **IndexNow key** on the site's own domain; IndexNow gets one request per domain.
 - **hreflang**: a page's localizations link to each other; see [configuration.md](configuration.md#languages-hreflang).
-- **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** (Pro) on the site of the content that moved.
-- **404 log** and **reports** (Pro), one report per site (`mt:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
-- **Search Console property** (Pro): one key, a property per site (set up from Tools → SEO → Search Console with the site selected, or a map in config).
+- **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** on the site of the content that moved.
+- **404 log** and **reports**, one report per site (`mt:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
+- **Search Console property**: one key, a property per site (set up from Tools → SEO → Search Console with the site selected, or a map in config).
 
 The SEO fields are `localizable`, so each language keeps its own values.
 
@@ -215,7 +207,7 @@ Two names, by one rule: `marketing-toolkit`, the addon's slug, wherever Statamic
 
 | Name | Where |
 |---|---|
-| `jotham-lec/statamic-marketing-toolkit` | The Composer package, and its key in `config/statamic/editions.php` |
+| `jotham-lec/statamic-marketing-toolkit` | The Composer package |
 | `JothamLec\MarketingToolkit\…` | PHP classes |
 | `marketing-toolkit` | `config/marketing-toolkit.php` (`--tag=marketing-toolkit-config`); the `marketing-toolkit::` views, translations (`--tag=marketing-toolkit-translations`) and fieldset (`marketing-toolkit::seo`); the addon's settings (`resources/addons/marketing-toolkit.yaml`); the control panel's addresses (`/cp/marketing-toolkit`), scripts (`--tag=marketing-toolkit`, `public/vendor/statamic-marketing-toolkit`) and permissions (`view marketing toolkit`, `manage marketing toolkit redirects`, `run marketing toolkit reports`); its files in `storage/app/marketing-toolkit` and `storage/app/private/marketing-toolkit` |
 | `mt` | The tags (`<s:mt:head />`, `{{ mt:head }}`), the commands (`mt:install`, `mt:report`, `mt:search-console`), the tables (`mt_*`), route names (`mt.*`), `.env` (`MT_*`), the widget (`'type' => 'mt'`), the fieldtype (`mt_preview`), and in the browser `window.mtConversion()`, `window.mtConsent()` and the `mt_source` and `mt_conversion` cookies |

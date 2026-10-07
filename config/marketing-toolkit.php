@@ -266,7 +266,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Leads (Pro)
+    | Leads
     |--------------------------------------------------------------------------
     |
     | Form submissions sent to your tools as leads, and where each lead came
@@ -297,7 +297,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Reports (Pro)
+    | Reports
     |--------------------------------------------------------------------------
     |
     | Which checks a report runs, their thresholds and its schedule are set

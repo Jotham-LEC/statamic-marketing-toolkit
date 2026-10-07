@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\UpdateScripts\KeepSiteNameInTitles;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
@@ -332,7 +332,7 @@ describe('taxonomies', function () {
  * panel the new toggle showed off there, and the next save dropped it.
  */
 test('the update script turns the toggle on where a separator is saved, and leaves a choice alone', function () {
-    $script = new KeepSiteNameInTitles(Edition::PACKAGE);
+    $script = new KeepSiteNameInTitles(Package::NAME);
     seoGlobal(['title_separator' => '|']);
     $script->update();
     expect(GlobalSet::findByHandle('seo')->in('default')->get('title_site_name'))->toBeTrue();

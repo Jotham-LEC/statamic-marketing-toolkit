@@ -13,7 +13,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\ServiceProvider;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
 
 beforeEach(function () {
@@ -73,7 +73,7 @@ test('saving the report settings keeps the properties set up on the Search Conso
     $this->actingAs(cpUser(super: true));
     $this->postJson(cp_route('mt.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
 
-    $addon = Addon::get(Edition::PACKAGE);
+    $addon = Addon::get(Package::NAME);
     $values = collect($addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess()->values())->all();
 
     $this->patchJson(cp_route('addons.settings.update', $addon->slug()), $values)->assertOk();
@@ -91,7 +91,7 @@ test('an uploaded key is kept privately and connects with a saved property', fun
     $path = (new Connection)->keyPath();
 
     expect(substr(sprintf('%o', fileperms($path)), -4))->toBe('0600')
-        ->and(Addon::get(Edition::PACKAGE)->settings()->get(Connection::SETTING))->toBe('sc-domain:example.test');
+        ->and(Addon::get(Package::NAME)->settings()->get(Connection::SETTING))->toBe('sc-domain:example.test');
 
     // A later request boots with what was saved.
     config(['marketing-toolkit.search_console.credentials' => null, 'marketing-toolkit.search_console.property' => null]);

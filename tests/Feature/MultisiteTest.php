@@ -17,7 +17,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Blueprint;
@@ -542,7 +542,7 @@ describe('Search Console', function () {
         $this->postJson(cp_route('mt.search-console.property'), ['property' => 'sc-domain:cothink.test'])->assertOk();
         $this->postJson(cp_route('mt.search-console.import'))->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 2 pages.']);
 
-        $settings = Addon::get(Edition::PACKAGE)->settings();
+        $settings = Addon::get(Package::NAME)->settings();
 
         expect($settings->get(Connection::SITES_SETTING))->toBe(['cothinking' => 'sc-domain:cothink.test'])
             ->and($settings->get(Connection::SETTING))->toBeNull()

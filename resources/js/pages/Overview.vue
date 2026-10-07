@@ -2,22 +2,18 @@
 import { numberFormatter } from '@statamic/cms/api';
 import { Head } from '@statamic/cms/inertia';
 import { Alert, Button, Card, Description, Header, Heading, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
-import ProCard from '../components/ProCard.vue';
 import Gauge from '../components/Gauge.vue';
 import When from '../components/When.vue';
 
 defineProps({
     siteName: { type: String, required: true },
-    upgradeUrl: { type: String, required: true },
     global: { type: Object, required: true },
-    // Pro's panels: null in the free edition, which shows what Pro adds instead.
     report: { type: Object, default: null },
     redirects: { type: Object, default: null },
     notFound: { type: Object, default: null },
     search: { type: Object, default: null },
     searchConsole: { type: Object, default: null },
     files: { type: Array, required: true },
-    severalSites: { type: Boolean, default: false },
     tracking: { type: Object, required: true },
 });
 </script>
@@ -35,8 +31,6 @@ defineProps({
             </div>
             <Button v-if="tracking.url" :href="tracking.url" :text="__('marketing-toolkit::cp.tracking.edit')" />
         </Card>
-
-        <Alert v-if="severalSites" variant="warning" icon="alert-warning-exclamation-mark" :text="__('marketing-toolkit::cp.pro.sites.free')" :live="false" />
 
         <div class="grid gap-6 md:grid-cols-2">
             <Card v-if="report" class="flex flex-col gap-3 p-4">
@@ -136,8 +130,6 @@ defineProps({
             </div>
             <Button :href="searchConsole.url" :text="__('marketing-toolkit::cp.overview.search.connect')" icon-append="arrow-right" />
         </Card>
-
-        <ProCard v-if="!report" :url="upgradeUrl" :several-sites="severalSites" />
 
         <Card class="space-y-2 p-4">
             <Heading size="lg">{{ __('marketing-toolkit::cp.tracking.title') }}</Heading>
