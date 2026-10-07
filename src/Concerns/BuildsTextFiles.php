@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Concerns;
 use Illuminate\Support\Collection;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Facades\Entry as Entries;
@@ -29,7 +30,9 @@ trait BuildsTextFiles
      * /llms.txt (llmstxt.org): the site's name and description, then, per
      * collection the sitemap lists, its pages as Markdown links with their
      * descriptions, the most recently changed first. For AI assistants that
-     * read a site's summary before its pages.
+     * read a site's summary before its pages. llms.txt is only read at a
+     * domain's root, so, like the sitemap, it lists every site on the domain:
+     * a site under a folder (/fr/) gets its own sections, named after it.
      *
      * @api
      */
@@ -40,6 +43,25 @@ trait BuildsTextFiles
         if ($description = $this->settings->string('default_description')) {
             $lines = [...$lines, '> '.Text::plain($description), ''];
         }
+
+        $sites = $this->sitemapSites();
+
+        foreach ($sites as $site) {
+            $lines = [...$lines, ...Sites::as($site, fn () => $this->llmsSections(count($sites) > 1))];
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * The current site's sections of llms.txt, each named with the site when
+     * the domain has several.
+     *
+     * @return list<string>
+     */
+    protected function llmsSections(bool $named): array
+    {
+        $lines = [];
 
         foreach ($this->llmsCollections() as $collection) {
             $entries = Entries::query()
@@ -55,7 +77,7 @@ trait BuildsTextFiles
                 continue;
             }
 
-            $lines[] = '## '.$collection->title();
+            $lines[] = '## '.$collection->title().($named ? ' ('.Site::current()->name().')' : '');
             $lines[] = '';
 
             foreach ($entries as $entry) {
@@ -70,7 +92,7 @@ trait BuildsTextFiles
             $lines[] = '';
         }
 
-        return implode("\n", $lines);
+        return $lines;
     }
 
     /**

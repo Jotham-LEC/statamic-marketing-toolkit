@@ -198,7 +198,7 @@ An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is ne
 
 | Key | Default | |
 |---|---|---|
-| `llms_txt.enabled` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Cached until content changes, like the sitemap. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
+| `llms_txt.enabled` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Like the sitemap, it lists every site on the domain, so sites under a folder (`/fr/`) get their own sections. Cached until content or Brand changes. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
 | `ads_txt.enabled` | `true` | `/ads.txt`: the lines in **Marketing → Settings → Crawlers → ads.txt**; a 404 while that's empty. |
 
 A file of the same name in `public/` wins over either.

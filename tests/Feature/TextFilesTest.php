@@ -21,6 +21,17 @@ test('llms.txt lists each collection\'s pages with their descriptions, without h
         ->not->toContain('hidden');
 });
 
+test('llms.txt at the domain\'s root lists the sites in its folders too', function () {
+    multilang();
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    entryOn('fr', 'pages', 'a-propos');
+
+    $text = $this->get('https://example.test/llms.txt')->assertOk()->getContent();
+
+    expect($text)->toContain('https://example.test/about')->toContain('https://example.test/fr/a-propos')->toContain('## Pages (');
+});
+
 test('llms.txt is forgotten when Brand is saved', function () {
     seoGlobal(['default_description' => 'We make gardens.']);
     $this->get('https://example.test/llms.txt')->assertSee('We make gardens.');
