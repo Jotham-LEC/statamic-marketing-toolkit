@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased
+
+From a developer-experience audit: a fresh install that works the first time, cached routes that follow the Features switches, a faster `<head>`, and one way to do each thing.
+
+### Upgrading
+- **Put `<s:seo:head />` after `<meta charset>` and the viewport**, not first in the `<head>`. Browsers look for the charset in the first 1024 bytes, and with tracking tags it ended up several thousand bytes in.
+- **Delete `public/robots.txt` and `public/favicon.ico`** if they came with Statamic: the web server answered with them, so the addon's robots.txt (with its `Sitemap:` line and the control panel rule) and icons never showed. `php please seo:install` names such files and offers to delete them.
+- **`seo:install --fields` is gone.** The fields a new version brings are added to SEO & brand by an update script on `composer update`, and by any rerun of `seo:install`. Commit the blueprint it changes.
+- **Override `SiteSeo` by binding your subclass** in a service provider, `$this->app->bind(SiteSeo::class, App\Seo::class)`, as for `Tracking`. `'class'` in `config/seo.php` still works until 1.0, and is no longer in the published file.
+- `config/seo.php` keys: `robots_txt`, `llms_txt` and `ads_txt` are now `robots_txt.enabled` and so on, like every other switch; `tracking.gtm`, `ga4`, `meta_pixel` and `linkedin` are now `gtm_id`, `ga4_id`, `meta_pixel_id` and `linkedin_partner_id`, each the field's handle and `SEO_` + the key in `.env`. A file published with the old keys keeps working. The `.env` names don't change.
+- **Generated descriptions are cut at 160 characters** (`seo.description.length`, was 155), the report's own limit, so a generated description passes its check. The SEO fieldset's title and description no longer have a character limit of their own: the preview's counters, with the report's limits, are the guide.
+
+### Fixed
+- **Cached routes follow the Features switches.** A module off when `php artisan route:cache` (or `optimize`) ran kept answering 404 after it was switched back on. The sitemap, robots.txt, llms.txt, ads.txt, IndexNow key, icon and share-card routes are always registered; each answers 404 while its module is off.
+- **The meta tags take about a quarter of the time** on every page that isn't statically cached (75 ms → 18 ms on a test machine): the logo, default image, icon and card picture in SEO & brand are found from their stored path, instead of building every field of the set to read them.
+- `seo:install` refuses an asset container or a tab that doesn't exist, naming the ones that do; `--forms` adds nothing in Free and says leads are Pro; a rerun with nothing to add says so; filled-in defaults are named by their labels.
+
+### Changed
+- `seo:install` offers to enable an existing SEO & brand on the sites it's missing from.
+- Tools → SEO says which tracking ID is set but isn't an ID (and so isn't printed), and where it is set; an ID from a `Tracking` subclass is no longer labelled "set in .env"; the GTM warning says to clear IDs wherever they are set.
+- Tools → SEO marks a file in `public/` that is served instead of the addon's.
+- In Free, a Pro screen shows what Pro adds instead of a 404.
+- The daily Search Console import is in the schedule (and `schedule:list`) only once Search Console is set up.
+
+### Developers
+- The `SiteSeo` methods docs/developers.md lists are marked `@api`: their names and signatures change only in a major version. The others are internal.
+- Changes to sites' content and settings are update scripts (`src/UpdateScripts`), not migrations: the 0.18.3 title-toggle migration is now the `KeepSiteNameInTitles` update script, so `php artisan migrate` on a server no longer writes content files.
+- docs/developers.md has a table of the addon's names (`seo`, `marketing-toolkit`, `mt`). Working on the addon moved to CONTRIBUTING.md, with how to run one test.
+- `phpunit.xml` sets `APP_ENV=production`, as the tests always ran; CI runs `composer validate --strict`.
+
 ## 0.19.0 – 2026-10-07
 
 Fixes from a second audit, a licence, and the requirements stated and tested.

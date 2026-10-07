@@ -241,15 +241,17 @@ test('on several sites, someone who may only view SEO sees whether the sites the
         ->where('sites', [['name' => 'CoThinking', 'property' => null, 'connected' => true, 'selected' => true]]));
 });
 
-test('the daily import runs once it is set up, however that was done', function () {
-    $schedule = new Schedule;
-    (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
-    $event = collect($schedule->events())->first(fn ($event) => str_contains((string) $event->command, 'seo:search-console'));
+test('the daily import is scheduled once it is set up, however that was done', function () {
+    $scheduled = function () {
+        $schedule = new Schedule;
+        (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
 
-    expect($event)->not->toBeNull()
-        ->and($event->filtersPass(app()))->toBeFalse();
+        return collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'seo:search-console'));
+    };
+
+    expect($scheduled())->toBeFalse();
 
     config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
 
-    expect($event->filtersPass(app()))->toBeTrue();
+    expect($scheduled())->toBeTrue();
 });

@@ -8,6 +8,8 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
 
 ```blade
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <s:seo:head />
     …
 </head>
@@ -15,7 +17,7 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
     <s:seo:body />
 ```
 
-`seo:head` prints, in this order:
+`<meta charset>` comes first, since browsers look for it in the first 1024 bytes; everything else as high as it can go. `seo:head` prints, in this order:
 
 1. `window.dataLayer` and `gtag()`, and the Consent Mode defaults, when Consent Mode is on.
 2. The consent bridge, when Consent Mode is on and PostHog, the Meta Pixel or LinkedIn load directly (see below).

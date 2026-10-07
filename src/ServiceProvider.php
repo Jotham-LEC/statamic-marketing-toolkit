@@ -101,7 +101,9 @@ class ServiceProvider extends AddonServiceProvider
         // Merged here rather than in Statamic's bootConfig(), which would name the file after the slug.
         $this->mergeConfigFrom(__DIR__.'/../config/seo.php', 'seo');
 
-        $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class')));
+        // A site binds its subclass in its own service provider, which registers after this one.
+        // `seo.class` still works until 1.0.
+        $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class') ?? SiteSeo::class));
 
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
@@ -113,7 +115,8 @@ class ServiceProvider extends AddonServiceProvider
     /**
      * The site's config/seo.php over the addon's, merged at every depth
      * (Support\Config) rather than Laravel's one level, so a site states only
-     * what it changes, even inside `og` or `robots`.
+     * what it changes, even inside `og` or `robots`. Keys renamed since the
+     * site published its copy are read under their new names.
      */
     protected function mergeConfigFrom($path, $key)
     {
@@ -122,7 +125,7 @@ class ServiceProvider extends AddonServiceProvider
         }
 
         $config = $this->app->make('config');
-        $config->set($key, Config::merge(require $path, (array) $config->get($key, [])));
+        $config->set($key, Config::merge(require $path, Config::upgrade((array) $config->get($key, []))));
     }
 
     public function boot()
@@ -152,7 +155,7 @@ class ServiceProvider extends AddonServiceProvider
     protected function leaveOutUnused(): void
     {
         $this->unused = array_keys(array_filter([
-            FlushSitemap::class => ! config('seo.sitemap.enabled') && ! config('seo.llms_txt'),
+            FlushSitemap::class => ! config('seo.sitemap.enabled') && ! config('seo.llms_txt.enabled'),
             SubmitToIndexNow::class => ! config('seo.indexnow.enabled'),
             RemakeFavicons::class => ! config('seo.favicons.enabled'),
             AttributeSubmission::class => ! config('seo.leads.enabled'),
@@ -255,6 +258,11 @@ class ServiceProvider extends AddonServiceProvider
     protected function bootSchedule()
     {
         if ($this->app->runningConsoleCommand(['schedule:run', 'schedule:work', 'schedule:test', 'schedule:list', 'schedule:finish'])) {
+            // A key set up in the control panel, which bootAddon() would only apply after this.
+            if (Edition::pro()) {
+                Connection::apply();
+            }
+
             parent::bootSchedule();
         }
 
@@ -287,9 +295,9 @@ class ServiceProvider extends AddonServiceProvider
             $event?->withoutOverlapping()->runInBackground();
         }
 
-        // Search Console's numbers, daily, once it is set up. Asked when the
-        // schedule runs: a key set up in the control panel is read later in boot.
-        $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping()
-            ->when(fn () => app(SearchConsoleClient::class)->configuredForAnySite());
+        // Search Console's numbers, daily, once it is set up (in .env or the control panel).
+        if (app(SearchConsoleClient::class)->configuredForAnySite()) {
+            $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping();
+        }
     }
 }

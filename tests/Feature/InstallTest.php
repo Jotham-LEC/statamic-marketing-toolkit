@@ -1,9 +1,12 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
+use JothamLec\MarketingToolkit\Support\Edition;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
+use JothamLec\MarketingToolkit\UpdateScripts\AddNewBrandFields;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\YAML;
@@ -50,20 +53,68 @@ test('the separator gets a space on each side however it was typed', function (?
     'empty' => [null, 'About · Acme'],
 ]);
 
-test('--fields adds what a newer version brings, in the tabs the site kept', function () {
+test('a rerun adds what a newer version brings, in the tabs the site kept', function () {
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => [
         'brand' => ['display' => 'Brand', 'sections' => [['fields' => [['handle' => 'title_separator', 'field' => ['type' => 'text']]]]]],
         'publisher' => ['display' => 'Publisher', 'sections' => [['fields' => [['handle' => 'publisher_type', 'field' => ['type' => 'select']]]]]],
     ]])->save();
 
     $this->artisan('statamic:seo:install')->assertSuccessful();
-    expect(Blueprint::find('globals.seo')->fields()->all()->keys())->not->toContain('street_address');
-
-    $this->artisan('statamic:seo:install', ['--fields' => true])->assertSuccessful();
     $keys = Blueprint::find('globals.seo')->fields()->all()->keys();
 
     expect($keys)->toContain('site_alternate_name', 'street_address', 'opening_hours', 'publisher_type')
         ->not->toContain('og_background', 'google_verification');
+});
+
+test('after an update, the new fields are added without running anything', function () {
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => [
+        'brand' => ['display' => 'Brand', 'sections' => [['fields' => [['handle' => 'default_image', 'field' => ['type' => 'assets', 'container' => 'assets']]]]]],
+    ]])->save();
+    $script = new AddNewBrandFields(Edition::PACKAGE);
+
+    expect($script->shouldUpdate('0.20.0', '0.19.0'))->toBeTrue();
+    $script->update();
+
+    $fields = Blueprint::find('globals.seo')->fields()->all();
+    expect($fields->keys())->toContain('title_site_name', 'favicon')->not->toContain('publisher_type')
+        ->and($fields->get('favicon')->get('container'))->toBe('assets');
+});
+
+test('a rerun with nothing to add says so', function () {
+    $this->artisan('statamic:seo:install')->assertSuccessful();
+
+    $this->artisan('statamic:seo:install')->expectsOutputToContain('Already installed')->assertSuccessful();
+});
+
+test('a container or tab that doesn\'t exist is refused, naming the ones that do', function () {
+    $this->artisan('statamic:seo:install', ['--container' => 'missing'])->expectsOutputToContain('The containers: assets.')->assertFailed();
+    $this->artisan('statamic:seo:install', ['--tab' => ['nope']])->expectsOutputToContain('The tabs: brand')->assertFailed();
+
+    expect(Blueprint::find('globals.seo'))->toBeNull();
+});
+
+test('the defaults it fills in are named as the control panel shows them', function () {
+    $this->artisan('statamic:seo:install')->expectsOutputToContain(__('seo::fields.brand.robots_disallow.display'))->assertSuccessful();
+});
+
+test('files in public/ that would be served instead of the addon\'s are named, and deleted when asked', function () {
+    File::put(public_path('robots.txt'), "User-agent: *\nDisallow:\n");
+    File::put(public_path('favicon.ico'), '');
+
+    try {
+        $this->artisan('statamic:seo:install')
+            ->expectsOutputToContain('public/robots.txt, public/favicon.ico')
+            ->expectsConfirmation('Delete them, so the addon serves its own?', 'no')
+            ->assertSuccessful();
+        expect(public_path('robots.txt'))->toBeFile();
+
+        $this->artisan('statamic:seo:install')
+            ->expectsConfirmation('Delete them, so the addon serves its own?', 'yes')
+            ->assertSuccessful();
+        expect(public_path('robots.txt'))->not->toBeFile()->and(public_path('favicon.ico'))->not->toBeFile();
+    } finally {
+        File::delete([public_path('robots.txt'), public_path('favicon.ico')]);
+    }
 });
 
 test('--tab adds a whole tab a site asks for', function () {

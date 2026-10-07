@@ -22,14 +22,12 @@ fields:
           field:
             type: text
             display: 'seo::fields.seo.title.display'
-            character_limit: 70
             instructions: 'seo::fields.seo.title.instructions'
         -
           handle: description
           field:
             type: textarea
             display: 'seo::fields.seo.description.display'
-            character_limit: 160
             instructions: 'seo::fields.seo.description.instructions'
         -
           handle: image

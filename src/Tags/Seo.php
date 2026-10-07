@@ -10,7 +10,7 @@ use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
 
 /**
- * `<s:seo:head />` at the top of the <head> and `<s:seo:body />` right after
+ * `<s:seo:head />` in the <head>, after <meta charset>, and `<s:seo:body />` right after
  * <body> (`{{ seo:head }}`, `{{ seo:body }}` in Antlers): everything the
  * addon adds to a page. The head is the Consent Mode defaults and tracking
  * tags, which must come before anything else that loads Google's tags, then

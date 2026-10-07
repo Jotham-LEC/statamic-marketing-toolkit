@@ -12,13 +12,14 @@ use Statamic\Contracts\Entries\Entry;
 /**
  * The page's meta tags: title, description, share image, canonical, robots
  * and the Open Graph extras. Part of SiteSeo's override surface: a project
- * overrides these methods on its SiteSeo subclass (config `seo.class`), not
+ * overrides these methods on its SiteSeo subclass (bound in its place), not
  * on the trait, which only splits the class into readable parts.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait BuildsMeta
 {
+    /** @api */
     public function meta(Context $context): Meta
     {
         $canonical = $this->canonical($context);
@@ -52,6 +53,7 @@ trait BuildsMeta
     |--------------------------------------------------------------------------
     */
 
+    /** @api */
     public function title(Context $context): string
     {
         $site = $this->settings->siteName();
@@ -84,11 +86,13 @@ trait BuildsMeta
         return (mb_strlen($full.$suffix) <= (int) config('seo.title.max') ? $full : $title).$suffix;
     }
 
+    /** @api */
     public function ogTitle(Context $context): string
     {
         return $context->override('title') ?? $context->seo()['title'] ?? $this->contentTitle($context) ?? $this->settings->siteName();
     }
 
+    /** @api */
     public function description(Context $context): ?string
     {
         // The meta tags and the JSON-LD nodes each ask; the body is read once per page.
@@ -107,6 +111,8 @@ trait BuildsMeta
      * the collection names, the generated card, then the site default.
      *
      * @return array{url: string, width: int, height: int, alt: ?string}|null
+     *
+     * @api
      */
     public function image(Context $context): ?array
     {
@@ -178,6 +184,8 @@ trait BuildsMeta
      * Where search engines should send the ranking: an override, the original
      * a republished piece points at, else this page (with `?page=N` past the
      * first page). `false` as an override prints no canonical at all.
+     *
+     * @api
      */
     public function canonical(Context $context): ?string
     {
@@ -205,6 +213,7 @@ trait BuildsMeta
         return $context->page() > 1 ? $url.'?page='.$context->page() : $url;
     }
 
+    /** @api */
     public function robots(Context $context): string
     {
         $seo = $context->seo();
@@ -223,6 +232,8 @@ trait BuildsMeta
      * The default rules, with the page's own snippet limit: `nosnippet` keeps
      * its text out of results and of Google's AI Overviews and AI Mode; a
      * maximum length caps what is quoted.
+     *
+     * @api
      */
     protected function snippetRules(Context $context): string
     {
@@ -246,6 +257,8 @@ trait BuildsMeta
      * Whether search engines are kept off this copy of the site: every page
      * noindexed and robots.txt disallowing all, unless APP_ENV is production
      * (config `seo.robots.noindex_outside_production`).
+     *
+     * @api
      */
     protected function hiddenOutsideProduction(): bool
     {
@@ -255,6 +268,8 @@ trait BuildsMeta
     /**
      * Site-wide reasons to keep a page out of the index. Override to add your
      * own (an empty taxonomy listing, a thank-you page).
+     *
+     * @api
      */
     public function shouldNoindex(Context $context): bool
     {
@@ -283,6 +298,7 @@ trait BuildsMeta
     |--------------------------------------------------------------------------
     */
 
+    /** @api */
     public function ogType(Context $context): string
     {
         return $context->override('og_type')

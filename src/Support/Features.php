@@ -18,9 +18,9 @@ final class Features
     /** Module => the config key that switches it on. */
     public const array MODULES = [
         'sitemap' => 'seo.sitemap.enabled',
-        'robots_txt' => 'seo.robots_txt',
-        'llms_txt' => 'seo.llms_txt',
-        'ads_txt' => 'seo.ads_txt',
+        'robots_txt' => 'seo.robots_txt.enabled',
+        'llms_txt' => 'seo.llms_txt.enabled',
+        'ads_txt' => 'seo.ads_txt.enabled',
         'hreflang' => 'seo.hreflang.enabled',
         'indexnow' => 'seo.indexnow.enabled',
         'share_cards' => 'seo.og.enabled',

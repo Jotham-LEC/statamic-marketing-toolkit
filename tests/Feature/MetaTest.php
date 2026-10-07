@@ -3,7 +3,8 @@
 use Illuminate\Http\Request;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
-use JothamLec\MarketingToolkit\Support\TitleSiteName;
+use JothamLec\MarketingToolkit\Support\Edition;
+use JothamLec\MarketingToolkit\UpdateScripts\KeepSiteNameInTitles;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
@@ -330,16 +331,27 @@ describe('taxonomies', function () {
  * Before the toggle, a saved separator meant the site name; in the control
  * panel the new toggle showed off there, and the next save dropped it.
  */
-test('the migration turns the toggle on where a separator is saved, and leaves a choice alone', function () {
+test('the update script turns the toggle on where a separator is saved, and leaves a choice alone', function () {
+    $script = new KeepSiteNameInTitles(Edition::PACKAGE);
     seoGlobal(['title_separator' => '|']);
-    TitleSiteName::keep();
+    $script->update();
     expect(GlobalSet::findByHandle('seo')->in('default')->get('title_site_name'))->toBeTrue();
 
     seoGlobal(['title_separator' => '|', 'title_site_name' => false]);
-    TitleSiteName::keep();
+    $script->update();
     expect(GlobalSet::findByHandle('seo')->in('default')->get('title_site_name'))->toBeFalse();
 
     seoGlobal(['default_description' => 'The default.']);
-    TitleSiteName::keep();
+    $script->update();
     expect(GlobalSet::findByHandle('seo')->in('default')->data()->has('title_site_name'))->toBeFalse();
+});
+
+test('a brand image is found from its path and the field\'s container, and nothing when empty', function () {
+    AssetContainer::find('assets')->disk()->put('brand.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    seoGlobal(['default_image' => ['brand.png'], 'publisher_logo' => 'assets::brand.png']);
+    $settings = app(SiteSeo::class)->settings();
+
+    expect($settings->asset('default_image')?->id())->toBe('assets::brand.png')
+        ->and($settings->asset('publisher_logo')?->id())->toBe('assets::brand.png')
+        ->and($settings->asset('favicon'))->toBeNull();
 });

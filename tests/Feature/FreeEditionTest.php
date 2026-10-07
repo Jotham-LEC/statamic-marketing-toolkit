@@ -47,7 +47,15 @@ test('no generated share card: og:image falls back to the brand\'s default image
     $this->get('https://example.test/og.png')->assertNotFound();
 });
 
-test('Pro\'s control panel screens are not found', function (string $method, string $route, array $parameters = []) {
+test('Pro\'s control panel screens show what Pro adds', function (string $route) {
+    $this->actingAs(cpUser(super: true));
+
+    $this->get(cp_route($route))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('seo::ProOnly', false)
+        ->where('upgradeUrl', Edition::marketplaceUrl()));
+})->with(['seo.reports.index', 'seo.404s.index', 'seo.search-console.index', 'seo.features.index']);
+
+test('Pro\'s control panel requests are not found', function (string $method, string $route, array $parameters = []) {
     $this->actingAs(cpUser(super: true));
 
     $this->json($method, cp_route($route, $parameters))->assertNotFound();
@@ -203,6 +211,20 @@ test('favicons are made from the brand\'s icon', function () {
     expect(renderAt('/', '<s:seo:head />'))->toContain('rel="apple-touch-icon"');
 });
 
+test('seo:install --forms adds no lead source fields: they are Pro', function () {
+    // Forms and their blueprints are files that outlive a test: start without them, and leave none.
+    $clean = fn () => [Blueprint::find('forms.free_quote')?->delete(), Form::find('free_quote')?->delete()];
+    $clean();
+    Form::make('free_quote')->title('Quote')->save();
+
+    try {
+        $this->artisan('statamic:seo:install', ['--forms' => true])->expectsOutputToContain('Leads are a Pro feature')->assertSuccessful();
+        expect(Blueprint::find('forms.free_quote')?->fields()->all()->keys() ?? collect())->not->toContain('utm_source');
+    } finally {
+        $clean();
+    }
+});
+
 test('no lead source and no conversions: they are Pro', function () {
     seoGlobal(['gtm_id' => 'GTM-ABC1234']);
     $form = Form::make('contact')->title('Contact');
@@ -243,7 +265,7 @@ test('the Features screen is Pro: saved switches are ignored', function () {
         $this->actingAs(cpUser(super: true));
 
         expect(config('seo.sitemap.enabled'))->toBeTrue();
-        $this->get(cp_route('seo.features.index'))->assertNotFound();
+        $this->get(cp_route('seo.features.index'))->assertInertia(fn (AssertableInertia $page) => $page->component('seo::ProOnly', false));
     } finally {
         File::delete(resource_path('addons/marketing-toolkit.yaml'));
     }

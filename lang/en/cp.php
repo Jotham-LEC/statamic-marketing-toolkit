@@ -94,6 +94,7 @@ return [
         ],
         'files' => [
             'title' => 'What the site serves',
+            'public' => 'served from public/: the web server answers with that file, not the addon’s. Delete it to use the addon’s.',
             'sitemap' => 'Sitemap',
             'robots' => 'robots.txt',
             'llms' => 'llms.txt',
@@ -275,7 +276,9 @@ return [
         'from_env' => 'set in .env',
         'consent' => 'Consent Mode is on.',
         'overlap_title' => 'Move these tags into Google Tag Manager',
-        'overlap' => 'Google Tag Manager is set, and so are :tools. If GTM loads them too, every visit counts twice: add them as tags in GTM, then clear their IDs here.',
+        'overlap' => 'Google Tag Manager is set, and so are :tools. If GTM loads them too, every visit counts twice: add them as tags in GTM, then clear their IDs where they are set (the Tracking tab of Brand & defaults, or .env).',
+        'invalid' => ':name: “:value” in :where isn’t an ID, so it isn’t on the site.',
+        'where_global' => 'Brand & defaults → Tracking',
         'overlap_toast' => 'Saved. Google Tag Manager is set, and so is another tracking tool: move it into GTM, or every visit may count twice.',
         'edit' => 'Edit tracking',
     ],

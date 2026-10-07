@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit;
 use JothamLec\MarketingToolkit\Support\Assets;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Globals\Variables;
+use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
@@ -63,9 +64,50 @@ class Settings
             ->all();
     }
 
+    /**
+     * The asset a field holds, found from the stored path and the field's
+     * container. Augmenting the value instead would build every field of the
+     * set first, tens of milliseconds on each page.
+     */
     public function asset(string $key): ?Asset
     {
-        return Assets::from($this->variables()?->augmentedValue($key));
+        $variables = $this->variables();
+        $value = $variables?->value($key);
+        $path = is_array($value) ? collect($value)->first() : $value;
+
+        if (! is_string($path) || $path === '') {
+            return null;
+        }
+
+        if (str_contains($path, '::')) {
+            return Assets::from($path);
+        }
+
+        $container = $this->container($key);
+
+        // A field the blueprint doesn't name a container for (imported): augmented, which finds it.
+        return Assets::from($container === null ? $variables->augmentedValue($key) : $container.'::'.$path);
+    }
+
+    /**
+     * The asset container an assets field of the set's blueprint names, read
+     * from the blueprint as saved (an imported field isn't looked into).
+     */
+    private function container(string $key): ?string
+    {
+        $tabs = Blueprint::find('globals.'.config('seo.global'))?->contents()['tabs'] ?? [];
+
+        foreach ($tabs as $tab) {
+            foreach ($tab['sections'] ?? [] as $section) {
+                foreach ($section['fields'] ?? [] as $field) {
+                    if (($field['handle'] ?? null) === $key && is_string($field['field']['container'] ?? null)) {
+                        return $field['field']['container'];
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

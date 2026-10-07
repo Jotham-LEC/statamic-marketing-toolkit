@@ -3,7 +3,10 @@
 namespace JothamLec\MarketingToolkit\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
+use JothamLec\MarketingToolkit\Favicons\Favicons;
+use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
@@ -19,27 +22,55 @@ use Statamic\Structures\Page;
  * `php please seo:install`: creates the "SEO & brand" global set and its
  * blueprint through Statamic's API, so editors can fill in the title
  * separator, defaults, publisher, verification codes, robots.txt and the
- * share-card colours in the control panel. Safe to rerun: it adds nothing
- * that already exists.
+ * share-card colours in the control panel. Safe to rerun: it adds what is
+ * missing (the fields a newer version brings too) and changes nothing else.
  */
 class Install extends Command
 {
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:install {--container= : Asset container for the logo and default image} {--fields : Add fields a newer version brings to an existing blueprint} {--tab=* : Add these tabs (e.g. shop) to an existing blueprint} {--forms : Add the lead source fields (Pro) to every form}';
+    protected $signature = 'statamic:seo:install
+        {--container= : Asset container for the logo, share image and icon (else the first one)}
+        {--tab=* : Add these tabs the blueprint doesn\'t have, e.g. shop}
+        {--forms : Add the lead source fields to every form (Pro)}';
 
-    protected $description = 'Create the SEO & brand global set';
+    protected $description = 'Create the SEO & brand global set, or add what a newer version brings';
+
+    /** Files the addon serves, by the config switch that turns each on. A file of the same name in public/ wins. */
+    private const array SERVED = [
+        'robots.txt' => 'seo.robots_txt.enabled',
+        'llms.txt' => 'seo.llms_txt.enabled',
+        'ads.txt' => 'seo.ads_txt.enabled',
+    ];
 
     public function handle(): int
     {
         $handle = (string) config('seo.global');
-        $container = $this->option('container') ?? AssetContainer::all()->first()?->handle();
+        $containers = AssetContainer::all()->map->handle()->values()->all();
+        $container = $this->option('container') ?? ($containers[0] ?? null);
 
         if (! $container) {
             $this->components->error('Create an asset container first, or pass --container.');
 
             return self::FAILURE;
         }
+
+        if (! in_array($container, $containers, true)) {
+            $this->components->error("There is no asset container [{$container}]. The containers: ".implode(', ', $containers).'.');
+
+            return self::FAILURE;
+        }
+
+        $tabs = (array) $this->option('tab');
+        $unknown = array_diff($tabs, array_keys(self::tabs($container)));
+
+        if ($unknown !== []) {
+            $this->components->error('No tab ['.implode(', ', $unknown).']. The tabs: '.implode(', ', array_keys(self::tabs($container))).'.');
+
+            return self::FAILURE;
+        }
+
+        $changed = false;
 
         if (! Blueprint::find("globals.{$handle}")) {
             Blueprint::make($handle)
@@ -48,21 +79,25 @@ class Install extends Command
                 ->save();
 
             $this->components->info("Blueprint globals.{$handle} created.");
+            $changed = true;
         } else {
             $blueprint = Blueprint::find("globals.{$handle}");
-            $added = [
-                ...$this->addTabs($blueprint, (array) $this->option('tab'), $container),
-                ...($this->option('fields') ? $this->addMissingFields($blueprint, $container) : []),
-            ];
+            $added = [...$this->addTabs($blueprint, $tabs, $container), ...self::addMissingFields($blueprint, $container)];
 
             if ($added !== []) {
                 $this->components->info('Added: '.implode(', ', $added).'.');
+                $changed = true;
             }
         }
 
         if ($this->option('forms')) {
-            $forms = Attribution::addToForms();
-            $this->components->info($forms === [] ? 'Every form has the lead source fields.' : 'Lead source fields added to: '.implode(', ', $forms).'.');
+            if (! Edition::pro()) {
+                $this->components->warn('Leads are a Pro feature: no fields were added to the forms.');
+            } else {
+                $forms = Attribution::addToForms();
+                $this->components->info($forms === [] ? 'Every form has the lead source fields.' : 'Lead source fields added to: '.implode(', ', $forms).'.');
+                $changed = $changed || $forms !== [];
+            }
         }
 
         if (! GlobalSet::findByHandle($handle)) {
@@ -76,22 +111,83 @@ class Install extends Command
             $set->save();
 
             $this->components->info("Global set [{$handle}] created.");
+            $changed = true;
         }
 
         $set = GlobalSet::findByHandle($handle);
-        $missing = Site::all()->map->handle()->diff($set->sites())->values();
-
-        if (Site::multiEnabled() && $missing->isNotEmpty()) {
-            $this->components->warn("Global set [{$handle}] isn't enabled on: {$missing->implode(', ')}. Those sites use the addon's defaults until it is (Globals → SEO & brand → Sites).");
-        }
+        $changed = $this->enableOnEverySite($set) || $changed;
 
         $filled = $this->fillDefaults($set);
 
         if ($filled !== []) {
-            $this->components->info('Defaults filled in: '.implode(', ', $filled).'. Change them under Globals → SEO & brand.');
+            $this->components->info('Filled in: '.implode(', ', $filled).'. Change them under Globals → SEO & brand.');
+            $changed = true;
+        }
+
+        $changed = $this->checkPublicFiles() || $changed;
+
+        if (! $changed) {
+            $this->components->info('Already installed: nothing to add.');
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * A set that exists but isn't on every site: enabled there when asked
+     * (each taking what it leaves empty from the default site), else named.
+     */
+    private function enableOnEverySite(GlobalSetContract $set): bool
+    {
+        $missing = Site::all()->map->handle()->diff($set->sites())->values();
+
+        if (! Site::multiEnabled() || $missing->isEmpty()) {
+            return false;
+        }
+
+        if ($this->input->isInteractive() && $this->confirm("SEO & brand isn't enabled on: {$missing->implode(', ')}. Enable it there, taking what each leaves empty from the default site?", true)) {
+            $set->sites([...$set->origins()->all(), ...$missing->mapWithKeys(fn (string $site) => [$site => Site::default()->handle()])->all()])->save();
+            $this->components->info("Enabled on: {$missing->implode(', ')}.");
+
+            return true;
+        }
+
+        $this->components->warn("Global set [{$set->handle()}] isn't enabled on: {$missing->implode(', ')}. Those sites use the addon's defaults until it is (Globals → SEO & brand → Sites).");
+
+        return false;
+    }
+
+    /**
+     * Files in public/ that the web server answers with instead of the
+     * addon's (a new Statamic site has a robots.txt and an empty
+     * favicon.ico): named, and deleted when asked.
+     */
+    private function checkPublicFiles(): bool
+    {
+        $files = [
+            ...array_keys(array_filter(self::SERVED, fn (string $key) => config($key))),
+            ...(config('seo.favicons.enabled') ? array_keys(Favicons::FILES) : []),
+        ];
+        $found = array_values(array_filter($files, fn (string $file) => is_file(public_path($file))));
+
+        if ($found === []) {
+            return false;
+        }
+
+        $list = implode(', ', array_map(fn (string $file) => "public/{$file}", $found));
+        $this->components->warn("The web server serves {$list} instead of the addon's own. Delete them to use the addon's (its icons are made from the icon in SEO & brand).");
+
+        if (! $this->input->isInteractive() || ! $this->confirm('Delete them, so the addon serves its own?', false)) {
+            return false;
+        }
+
+        foreach ($found as $file) {
+            File::delete(public_path($file));
+        }
+
+        $this->components->info("Deleted {$list}.");
+
+        return true;
     }
 
     /**
@@ -120,11 +216,12 @@ class Install extends Command
     /**
      * Adds to an existing blueprint the fields it lacks, each in its tab and
      * section as a fresh install has them. A tab the site removed stays
-     * removed: only tabs the blueprint still has receive fields.
+     * removed: only tabs the blueprint still has receive fields. Also run by
+     * the AddNewBrandFields update script after each update.
      *
      * @return list<string> the fields added
      */
-    private function addMissingFields(BlueprintContents $blueprint, string $container): array
+    public static function addMissingFields(BlueprintContents $blueprint, string $container): array
     {
         $contents = $blueprint->contents();
         $existing = $blueprint->fields()->all()->keys()->all();
@@ -193,10 +290,37 @@ class Install extends Command
             }
 
             $variables->save();
-            $filled = [...$filled, ...array_keys($defaults)];
+            $filled = [...$filled, ...array_map(fn (string $field) => self::label($field), array_keys($defaults))];
         }
 
         return array_values(array_unique($filled));
+    }
+
+    /**
+     * A field's label, as the control panel shows it.
+     */
+    private static function label(string $handle): string
+    {
+        foreach (self::tabs('') as $tab) {
+            foreach ($tab['sections'] as $section) {
+                foreach ($section['fields'] as $field) {
+                    if ($field['handle'] === $handle) {
+                        return (string) __($field['field']['display'] ?? $handle);
+                    }
+                }
+            }
+        }
+
+        return $handle;
+    }
+
+    /**
+     * The asset container the blueprint's first assets field uses: where
+     * fields added later point too.
+     */
+    public static function containerOf(BlueprintContents $blueprint): ?string
+    {
+        return $blueprint->fields()->all()->first(fn ($field) => $field->type() === 'assets' && $field->get('container'))?->get('container');
     }
 
     /**

@@ -11,3 +11,4 @@
 /vite.config.js export-ignore
 /resources/js export-ignore
 /resources/css export-ignore
+/CONTRIBUTING.md export-ignore

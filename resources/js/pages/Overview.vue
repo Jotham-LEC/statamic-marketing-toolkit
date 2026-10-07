@@ -141,6 +141,7 @@ defineProps({
 
         <Card class="space-y-2 p-4">
             <Heading size="lg">{{ __('seo::cp.tracking.title') }}</Heading>
+            <Alert v-for="message in tracking.invalid" :key="message" variant="warning" :text="message" :live="false" />
             <Description v-if="!tracking.tools.length">{{ __('seo::cp.tracking.none') }}</Description>
             <template v-else>
                 <ul class="space-y-1 text-sm">
@@ -160,6 +161,7 @@ defineProps({
                 <li v-for="file in files" :key="file.label">
                     {{ file.label }}:
                     <a :href="file.url" target="_blank" rel="noopener" class="font-mono text-xs underline">{{ file.url }}</a>
+                    <span v-if="file.public" class="ml-1 text-xs text-amber-700 dark:text-amber-400">{{ __('seo::cp.overview.files.public') }}</span>
                 </li>
             </ul>
         </Card>

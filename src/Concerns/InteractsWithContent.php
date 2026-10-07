@@ -20,8 +20,7 @@ use Statamic\Fields\Value;
 /**
  * The helpers the rules share: settings, collection rules, reading fields
  * and images, and the site's address. Part of SiteSeo's override surface: a
- * project overrides these methods on its SiteSeo subclass (config
- * `seo.class`), not on the trait, which only splits the class into readable
+ * project overrides these methods on its SiteSeo subclass (bound in its place), not on the trait, which only splits the class into readable
  * parts.
  *
  * @phpstan-require-extends SiteSeo
@@ -34,6 +33,7 @@ trait InteractsWithContent
     |--------------------------------------------------------------------------
     */
 
+    /** @api */
     public function settings(): Settings
     {
         return $this->settings;
@@ -42,6 +42,8 @@ trait InteractsWithContent
     /**
      * A key of this page's rules: its collection's (config `seo.collections`),
      * or for a term, its taxonomy's (`seo.taxonomies`).
+     *
+     * @api
      */
     public function contentConfig(Context $context, string $key, mixed $default = null): mixed
     {
@@ -56,6 +58,8 @@ trait InteractsWithContent
 
     /**
      * A key of this entry's collection settings (config `seo.collections`).
+     *
+     * @api
      */
     public function collectionConfig(Context $context, string $key, mixed $default = null): mixed
     {
@@ -227,12 +231,15 @@ trait InteractsWithContent
     /**
      * The share image's size, 1200×630 as Facebook, LinkedIn and X expect.
      * Override both for another.
+     *
+     * @api
      */
     protected function imageWidth(): int
     {
         return 1200;
     }
 
+    /** @api */
     protected function imageHeight(): int
     {
         return 630;
@@ -250,6 +257,8 @@ trait InteractsWithContent
 
     /**
      * A site-relative URL made absolute against the current site's address.
+     *
+     * @api
      */
     public function absolute(string $url): string
     {

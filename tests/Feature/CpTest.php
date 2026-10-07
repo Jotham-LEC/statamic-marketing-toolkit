@@ -34,7 +34,7 @@ test('Tools → SEO opens the overview and links to the brand global', function 
             ->component('seo::Overview', false)
             ->where('siteName', 'Acme')
             ->where('global.exists', true)
-            ->where('files.0', ['label' => 'Sitemap', 'url' => 'https://example.test/sitemap.xml'])
+            ->where('files.0', ['label' => 'Sitemap', 'url' => 'https://example.test/sitemap.xml', 'public' => false])
             ->where('global.separator', null)
             ->where('report.latest', null)
             ->where('redirects.active', 0)
@@ -154,3 +154,16 @@ class TestAddonSettings extends Model
 
     protected $casts = ['settings' => 'array'];
 }
+
+test('the overview marks a file public/ serves instead of the addon\'s', function () {
+    seoGlobal([]);
+    File::put(public_path('robots.txt'), "User-agent: *\nDisallow:\n");
+
+    try {
+        $this->actingAs(cpUser(super: true))->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('files.0.public', false)
+            ->where('files.1', ['label' => 'robots.txt', 'url' => 'https://example.test/robots.txt', 'public' => true]));
+    } finally {
+        File::delete(public_path('robots.txt'));
+    }
+});

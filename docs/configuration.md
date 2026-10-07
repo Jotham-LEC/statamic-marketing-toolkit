@@ -2,26 +2,29 @@
 
 Two places, by who changes what:
 
-- **`config/seo.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=seo-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them.
+- **`config/seo.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=seo-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them. A file published by 0.19 or earlier keeps working: its `robots_txt`, `llms_txt` and `ads_txt` switches and its old tracking keys (`gtm`, `ga4`, `meta_pixel`, `linkedin`) are read under their new names.
 - **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit, Pro): report settings an editor may want to change.
 
 The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
 
 ## config/seo.php
 
-### Rules class
+### Brand global
 
 | Key | Default | |
 |---|---|---|
-| `class` | `JothamLec\MarketingToolkit\SiteSeo` | The class that works out every value. Extend it to change one rule; see [developers.md](developers.md#change-a-rule-siteseo). |
 | `global` | `'seo'` | Handle of the brand global set. |
+
+To change how a value is worked out, extend `SiteSeo` and bind your class in a service provider; see [developers.md](developers.md#change-a-rule-siteseo). (`class` in this file, the way before, still works until 1.0.)
 
 ### Titles and descriptions
 
 | Key | Default | |
 |---|---|---|
 | `title.max` | `60` | With **Add the site name to page titles** on, `{title}{separator}{site name}` is used only if it fits; otherwise the title alone. |
-| `description.length` | `155` | A description taken from the page is cut to this, on a word. |
+| `description.length` | `160` | A description taken from the page is cut to this, on a word, `…` included. |
+
+These two shape what the site prints. The report's title and description checks, and the counters in the entry's preview, have their own limits under **Report settings** (Pro), for editors to change; the defaults are the same, 60 and 160, so a generated title or description passes its check.
 
 ### Collections
 
@@ -96,7 +99,7 @@ Terms are listed in the sitemap (and checked by reports) when their taxonomy is 
 | `sitemap.exclude_collections` | `[]` | Left out even when `collections` is `null`. |
 | `sitemap.taxonomies` | `[]` | Taxonomies whose terms are listed (only terms with published entries). Reports check these terms too. |
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
-| `robots_txt` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins. |
+| `robots_txt.enabled` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins: the web server answers with it first. A new Statamic site has one; delete it (`seo:install` offers to). |
 
 The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `seo.sitemap` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
@@ -148,7 +151,7 @@ Setting it up:
 1. In [Google Cloud](https://console.cloud.google.com/), create a project (or use one), enable the **Google Search Console API**, and create a **service account** with a **JSON key**.
 2. In [Search Console](https://search.google.com/search-console), open the property → Settings → Users and permissions, and add the service account's email (`…@….iam.gserviceaccount.com`) as a **Restricted** user.
 3. Put the key on the server (outside the web root) and set `SEO_SEARCH_CONSOLE_CREDENTIALS=/path/to/key.json` and `SEO_SEARCH_CONSOLE_PROPERTY` in `.env`.
-4. Run `php please seo:search-console` once (or Import now on Tools → SEO → Search Console); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running).
+4. Run `php please seo:search-console` once (or Import now on Tools → SEO → Search Console); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running). It is in the schedule (`php artisan schedule:list`) once a key and a property are set.
 
 **Can't create a key, or Google says it is disabled?** New Google Cloud projects often have service account keys blocked by an organization policy, `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation). A key that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable); the check on the Search Console screen says when Google reports a disabled key or account.
 
@@ -164,7 +167,7 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 ## Features (Pro)
 
-**Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot, before anything registers: its routes answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted.
+**Tools → SEO → Features** has a switch per module, for whoever may change the addon's settings: the sitemap, robots.txt, llms.txt, hreflang, IndexNow, generated share cards, redirects, redirects when a page moves, the 404 log, scheduled reports, tracking and Consent Mode, leads, favicons and ads.txt. What's off is saved in the addon settings (`features_off`) and set off in the config at boot: its addresses answer 404, and its listeners and middleware aren't loaded, so it costs nothing on a request. Nothing it saved is deleted. Its routes stay registered, so cached routes (`php artisan route:cache`, `optimize`) follow a switch without being cached again.
 
 Since the switches apply at boot, a process that boots once and serves many requests or jobs (Laravel Octane, a queue worker, Horizon) picks up a change when it restarts: run `php artisan octane:reload` or `php artisan queue:restart` after switching a module on or off. A PHP-FPM site picks it up from the next request.
 
@@ -176,28 +179,28 @@ Each switch sets the matching key below to off, whatever `config/seo.php` says. 
 
 ## Tracking
 
-Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (and shows as "set in .env" on Tools → SEO). See [tracking.md](tracking.md).
+Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (and shows as "set in .env" on Tools → SEO). Each key is the field's handle in the Tracking tab, and in `.env` it is `SEO_` and the key in capitals. See [tracking.md](tracking.md).
 
 | Key | `.env` | |
 |---|---|---|
-| `tracking.gtm` | `SEO_GTM_ID` | Google Tag Manager container, `GTM-XXXXXXX`. |
-| `tracking.ga4` | `SEO_GA4_ID` | Google Analytics 4 measurement ID, `G-XXXXXXXXXX`. |
+| `tracking.gtm_id` | `SEO_GTM_ID` | Google Tag Manager container, `GTM-XXXXXXX`. |
+| `tracking.ga4_id` | `SEO_GA4_ID` | Google Analytics 4 measurement ID, `G-XXXXXXXXXX`. |
 | `tracking.posthog_key` | `SEO_POSTHOG_KEY` | PostHog project API key, `phc_…`. |
 | `tracking.posthog_host` | `SEO_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. |
-| `tracking.meta_pixel` | `SEO_META_PIXEL_ID` | Meta Pixel ID (digits). |
-| `tracking.linkedin` | `SEO_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
+| `tracking.meta_pixel_id` | `SEO_META_PIXEL_ID` | Meta Pixel ID (digits). |
+| `tracking.linkedin_partner_id` | `SEO_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
 | `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
 | `leads.enabled` | | `true` (Pro). Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads-pro). |
 
-An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed. Consent Mode is set in the global only.
+An ID that doesn't look like one (`GTM-` and letters or digits, and so on) is never printed; Tools → SEO says which one, and where it is set. Consent Mode is set in the global only.
 
 ## llms.txt and ads.txt
 
 | Key | Default | |
 |---|---|---|
-| `llms_txt` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Cached until content changes, like the sitemap. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
-| `ads_txt` | `true` | `/ads.txt`: the lines in **SEO & brand → Crawlers → ads.txt**; a 404 while that's empty. |
+| `llms_txt.enabled` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Cached until content changes, like the sitemap. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
+| `ads_txt.enabled` | `true` | `/ads.txt`: the lines in **SEO & brand → Crawlers → ads.txt**; a 404 while that's empty. |
 
 A file of the same name in `public/` wins over either.
 
@@ -245,8 +248,9 @@ The Search Console property is kept here too (`search_console_property`, and `se
 
 | Command | |
 |---|---|
-| `php please seo:install [--container=] [--fields] [--tab=shop]` | `--fields` adds to an existing SEO & brand blueprint the fields a newer version brings, in the tabs it still has; `--tab` adds a whole tab it doesn't have (`shop`, `publisher`…). |
-| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (separator, the home page's description, the robots.txt rule). Never overwrites a value. |
+| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (the home page's description, the robots.txt rule). Run again, it adds what is missing, such as the fields a newer version brings (in the tabs the blueprint still has), and never overwrites a value. With several sites, offers to enable an existing set on the sites it's missing from. Names any file in `public/` that would be served instead of the addon's, and offers to delete it. |
+| `php please seo:install --tab=shop` | Adds a whole tab the blueprint doesn't have (`shop`, `publisher`…). |
+| `php please seo:install --forms` (Pro) | Adds the lead source fields to every form; see [tracking.md](tracking.md#leads-pro). |
 | `php please seo:search-console [--site=]` (Pro) | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
 | `php please seo:report [--site=]` (Pro) | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |
 

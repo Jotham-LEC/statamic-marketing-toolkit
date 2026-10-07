@@ -76,11 +76,16 @@ class OverviewController
             'severalSites' => Sites::installed() && ! $pro,
             'files' => collect([
                 __('seo::cp.overview.files.sitemap') => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
-                __('seo::cp.overview.files.robots') => config('seo.robots_txt') ? 'robots.txt' : null,
-                __('seo::cp.overview.files.llms') => config('seo.llms_txt') ? 'llms.txt' : null,
+                __('seo::cp.overview.files.robots') => config('seo.robots_txt.enabled') ? 'robots.txt' : null,
+                __('seo::cp.overview.files.llms') => config('seo.llms_txt.enabled') ? 'llms.txt' : null,
                 __('seo::cp.overview.files.favicon') => config('seo.favicons.enabled') && app(Favicons::class)->version() ? 'site.webmanifest' : null,
                 __('seo::cp.overview.files.card') => config('seo.og.enabled') ? 'og.png' : null,
-            ])->filter()->map(fn ($path, $label) => ['label' => $label, 'url' => $seo->absolute($path)])->values(),
+            ])->filter()->map(fn ($path, $label) => [
+                'label' => $label,
+                'url' => $seo->absolute($path),
+                // The web server answers with this file instead of the addon's.
+                'public' => file_exists(public_path($path)),
+            ])->values(),
         ]);
     }
 
@@ -92,14 +97,21 @@ class OverviewController
     private function tracking(?string $url): array
     {
         $tracking = app(Tracking::class);
-        $fromConfig = $tracking->fromConfig();
+        // From .env when the config holds it; an ID a Tracking subclass returns comes from code.
+        $fromEnv = fn (string $tracker, string $id) => strcasecmp(trim((string) config('seo.tracking.'.Tracking::FIELDS[$tracker])), $id) === 0;
 
         return [
             'tools' => collect($tracking->ids())->filter()->map(fn (string $id, string $tracker) => [
                 'name' => __('seo::cp.tracking.names.'.$tracker),
                 'id' => $id,
-                'from_env' => $fromConfig[$tracker],
+                'from_env' => $fromEnv($tracker, $id),
             ])->values()->all(),
+            // Set, but not an ID, so never printed: where to fix it.
+            'invalid' => collect($tracking->invalid())->map(fn (string $value, string $tracker) => __('seo::cp.tracking.invalid', [
+                'name' => __('seo::cp.tracking.names.'.$tracker),
+                'value' => $value,
+                'where' => $fromEnv($tracker, $value) ? 'SEO_'.strtoupper(Tracking::FIELDS[$tracker]) : __('seo::cp.tracking.where_global'),
+            ]))->values()->all(),
             'consent' => $tracking->consent() !== null,
             'overlap' => $tracking->besideGtm(),
             'url' => $url,

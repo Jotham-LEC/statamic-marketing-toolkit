@@ -46,15 +46,19 @@ test('install puts the brand global on every site, the others inheriting from th
         ->and($set->in('cothinking')->value('default_description'))->toBe('We make things.');
 });
 
-test('install leaves an existing set\'s sites alone and says which it is missing', function () {
+test('install names the sites an existing set is missing, and enables it there when asked', function () {
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => []])->save();
     GlobalSet::make('seo')->title('SEO & brand')->sites(['default' => null])->save();
+    $question = 'SEO & brand isn\'t enabled on: cothinking. Enable it there, taking what each leaves empty from the default site?';
 
-    $this->artisan('statamic:seo:install')
-        ->expectsOutputToContain('cothinking')
-        ->assertSuccessful();
-
+    $this->artisan('statamic:seo:install')->expectsConfirmation($question, 'no')->expectsOutputToContain('Those sites use the addon\'s defaults')->assertSuccessful();
     expect(GlobalSet::findByHandle('seo')->sites()->all())->toBe(['default']);
+
+    $this->artisan('statamic:seo:install', ['--no-interaction' => true])->expectsOutputToContain('cothinking')->assertSuccessful();
+    expect(GlobalSet::findByHandle('seo')->sites()->all())->toBe(['default']);
+
+    $this->artisan('statamic:seo:install')->expectsConfirmation($question, 'yes')->assertSuccessful();
+    expect(GlobalSet::findByHandle('seo')->origins()->all())->toBe(['default' => null, 'cothinking' => 'default']);
 });
 
 test('a site reads its own brand values, and what it leaves empty from its origin', function () {

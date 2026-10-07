@@ -14,7 +14,7 @@ use Statamic\Sites\Site as SiteObject;
 /**
  * A page's other languages, for hreflang and og:locale. Part of SiteSeo's
  * override surface: a project overrides these methods on its SiteSeo
- * subclass (config `seo.class`), not on the trait, which only splits the
+ * subclass (bound in its place), not on the trait, which only splits the
  * class into readable parts.
  *
  * @phpstan-require-extends SiteSeo
@@ -35,6 +35,8 @@ trait ResolvesAlternates
      * elsewhere, a listing past its first page.
      *
      * @return array<string, string>
+     *
+     * @api
      */
     public function alternates(Context $context): array
     {
@@ -98,6 +100,8 @@ trait ResolvesAlternates
      * and those canonical elsewhere are left out, as from the sitemap.
      *
      * @return array<string, Entry|Term> site handle => content
+     *
+     * @api
      */
     public function localizations(Entry|Term $content): array
     {
@@ -125,6 +129,8 @@ trait ResolvesAlternates
      * locale (`en-GB`, `en-US`) where two sites share a language.
      *
      * @return array<string, string> site handle => code
+     *
+     * @api
      */
     public function hreflangCodes(): array
     {
@@ -139,6 +145,8 @@ trait ResolvesAlternates
     /**
      * The site whose version is `x-default`: the default site, another named
      * in `seo.hreflang.x_default`, or none (false).
+     *
+     * @api
      */
     public function xDefaultSite(): ?string
     {

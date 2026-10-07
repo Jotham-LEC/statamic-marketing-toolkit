@@ -18,7 +18,7 @@ class OgImageController
 {
     public function __invoke(Generator $generator, ?string $path = null): Response
     {
-        // A cached route can outlive the setting (or the edition).
+        // Off in the config, under Features, or in Free.
         throw_unless(config('seo.og.enabled'), NotFoundHttpException::class);
 
         $entry = Entry::findByUri('/'.trim((string) $path, '/'), Site::current()->handle());

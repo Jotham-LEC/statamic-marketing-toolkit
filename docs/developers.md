@@ -30,7 +30,7 @@ final readonly class Context
 | Value | Order |
 |---|---|
 | `<title>` | SEO title as typed → the title (with **Add the site name to page titles** on: `{title}{separator}{site}` if it fits `seo.title.max`) → site name on home. `· Page N` past page 1, in the page's language |
-| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 155 on a word |
+| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 160 on a word (`seo.description.length`) |
 | share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** (Pro) → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
 | canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
 | robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
@@ -41,7 +41,7 @@ Empty fields count as unset.
 
 ## Change a rule: SiteSeo
 
-Extend the class, override the methods you need, and point `seo.class` at it:
+Extend the class, override the methods you need, and bind your class in its place in a service provider, as for any Laravel class:
 
 ```php
 // app/Seo.php
@@ -69,11 +69,13 @@ class Seo extends SiteSeo
 ```
 
 ```php
-// config/seo.php
-'class' => App\Seo::class,
+// app/Providers/AppServiceProvider.php, in register()
+$this->app->bind(\JothamLec\MarketingToolkit\SiteSeo::class, \App\Seo::class);
 ```
 
-Config can't hold closures (`config:cache` can't serialise them), which is why rules live in a class.
+(`'class' => App\Seo::class` in `config/seo.php`, the way before, still works until 1.0.)
+
+The methods below are the API, marked `@api` in the source: their names and signatures change only in a major version. Other methods, public or protected, are internal and may change in any release; if you need one, open an issue.
 
 The methods you're most likely to override:
 
@@ -207,6 +209,18 @@ cp -r lang/vendor/seo/en lang/vendor/seo/fr
 
 The control panel uses the user's language preference; "Page N" uses each site's language. A report shows its checks in the reader's language: results are stored as keys and translated when shown.
 
+## Names
+
+The addon began as Co-SEO, and its SEO names stayed when it became Marketing Toolkit, so sites built on it kept working. What carries which name:
+
+| Name | Where |
+|---|---|
+| `jotham-lec/statamic-marketing-toolkit` | The Composer package, and its key in `config/statamic/editions.php` |
+| `JothamLec\MarketingToolkit\…` | PHP classes |
+| `marketing-toolkit` | The addon's slug: its settings (`resources/addons/marketing-toolkit.yaml`), the publish tag of the control panel's scripts and their folder (`public/vendor/statamic-marketing-toolkit`), the favicons in `storage/app/marketing-toolkit` |
+| `seo` | Everything else: `config/seo.php` and `--tag=seo-config`, the tags (`<s:seo:head />`), the commands (`seo:install`), the `seo::` fieldset, views and translations, the **SEO & brand** global (`seo`), the tables (`seo_*`), routes (`seo.*`), control panel addresses (`/cp/seo`), permissions (`view seo`), `SEO_*` in `.env` |
+| `mt` | What the browser sees: `window.mtConversion()` and `window.mtConsent()`, the `mt_source` and `mt_conversion` cookies |
+
 ## How the pieces fit
 
 | Piece | Where |
@@ -218,30 +232,4 @@ The control panel uses the user's language preference; "Page N" uses each site's
 | Control panel | `routes/cp.php`, `Http/Controllers/CP`, Vue in `resources/js` (built with Vite to `resources/dist`) |
 | Reports | `Reports/` (Runner, Renderer, HtmlInspector, LinkChecker, Rules), `Commands/Report.php` |
 
-## Working on the addon
-
-```bash
-composer install && npm install
-npm run build      # Vue → resources/dist/build; commit the build, sites don't run npm
-composer test      # Pest, in parallel (about a minute); the share-card tests skip without PHP's imagick extension
-composer lint      # Pint; `vendor/bin/pint` fixes what it finds
-composer analyse   # Larastan, level 5, with the 1 GB it needs; phpstan.neon says why each ignored error is ignored
-```
-
-Tests run as production with an `array` cache that serializes, and render pages through `tests/fixtures/views`. Statamic matches the site by its absolute URL, so request front-end pages as `https://example.test/…`.
-
-The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`; not in parallel, as the processes would share the database). GitHub Actions runs all of this on every push: PHP 8.3 on the oldest versions composer.json allows, PHP 8.4 on the newest, Postgres, and without Imagick.
-
-Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses the `JothamLec\MarketingToolkit\Tests\FreeEdition` trait: `uses(FreeEdition::class)`.
-
-Database and data changes:
-
-- Migrations that have shipped stay as they are: never rename, move or edit one, since sites have already run it.
-- A new migration is named with the day it is written (`php artisan make:migration` does this), so it runs after the ones before it.
-- A change to sites' content or settings (globals, blueprints, addon settings), rather than to a table, is an update script (a subclass of Statamic's `UpdateScript`) in `src/UpdateScripts/`, which Statamic finds there and runs once on `composer update` (or `php please updates:run`).
-
-Release:
-
-1. Note the change in [CHANGELOG.md](../CHANGELOG.md).
-2. `npm run build` and commit `resources/dist`.
-3. `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`. Sites update with `composer update jotham-lec/statamic-marketing-toolkit`; the Marketplace picks the tag up from Packagist.
+Working on the addon itself (tests, builds, releases): see [CONTRIBUTING.md](../CONTRIBUTING.md).

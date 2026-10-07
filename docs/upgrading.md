@@ -38,10 +38,10 @@ A site without this line runs as Free. Since Co-SEO 0.17 that leaves out the rep
 
 
 - The control panel's scripts are published to `public/vendor/statamic-marketing-toolkit`. Their publish tag is now `marketing-toolkit`: `php artisan vendor:publish --tag=marketing-toolkit --force`.
-- PHP classes moved from `JothamLec\Seo\…` to `JothamLec\MarketingToolkit\…`. Only a site that overrides `SiteSeo` (`'class'` in `config/seo.php`) or extends a share-card template needs to change its `use` lines.
+- PHP classes moved from `JothamLec\Seo\…` to `JothamLec\MarketingToolkit\…`. Only a site that overrides `SiteSeo` or extends a share-card template needs to change its `use` lines.
 
 ## 5. Use the new modules
 
-- **Tracking and Consent Mode**: run `php please seo:install --fields --tab=tracking`, swap `<s:seo:meta />` for `<s:seo:head />` at the top of the `<head>`, add `<s:seo:body />` right after `<body>`, then move the site's tracking IDs into the **Tracking** tab (or `.env`) and delete its own snippets, or each visit counts twice. See [tracking.md](tracking.md).
-- **Favicons**: upload the icon in **SEO & brand → Brand → Icon** (after `seo:install --fields`), then delete the old `favicon.ico`, `apple-touch-icon.png` and `site.webmanifest` from `public/` and their `<link>` tags from the layout; files in `public/` win over the generated ones.
+- **Tracking and Consent Mode**: run `php please seo:install --tab=tracking`, swap `<s:seo:meta />` for `<s:seo:head />` (right after `<meta charset>` and the viewport), add `<s:seo:body />` right after `<body>`, then move the site's tracking IDs into the **Tracking** tab (or `.env`) and delete its own snippets, or each visit counts twice. See [tracking.md](tracking.md).
+- **Favicons**: upload the icon in **SEO & brand → Brand → Icon** (after `seo:install`), then delete the old `favicon.ico`, `apple-touch-icon.png` and `site.webmanifest` from `public/` and their `<link>` tags from the layout; files in `public/` win over the generated ones.
 - **Leads (Pro)**: run `php please seo:install --forms` to add the lead source fields to every form. A site that sends its own lead events (from Livewire forms, say) should call `window.mtConversion('form-handle')` instead, or leave **Send form submissions as leads** off.

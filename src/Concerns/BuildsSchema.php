@@ -17,8 +17,7 @@ use Statamic\Structures\Page;
 
 /**
  * The JSON-LD @graph and each node in it. Part of SiteSeo's override
- * surface: a project overrides these methods on its SiteSeo subclass (config
- * `seo.class`), not on the trait, which only splits the class into readable
+ * surface: a project overrides these methods on its SiteSeo subclass (bound in its place), not on the trait, which only splits the class into readable
  * parts.
  *
  * @phpstan-require-extends SiteSeo
@@ -35,6 +34,8 @@ trait BuildsSchema
      * One @graph per page. Nodes point at each other by @id.
      *
      * @return list<array<string, mixed>>
+     *
+     * @api
      */
     public function graph(Context $context): array
     {
@@ -55,6 +56,8 @@ trait BuildsSchema
      * The site, with its alternate name (Google's site names) when set.
      *
      * @return array<string, mixed>
+     *
+     * @api
      */
     public function websiteNode(): array
     {
@@ -74,6 +77,8 @@ trait BuildsSchema
      * EducationalOrganization…), with only the properties those types accept.
      *
      * @return array<string, mixed>
+     *
+     * @api
      */
     public function publisherNode(): array
     {
@@ -173,6 +178,8 @@ trait BuildsSchema
      * types typed in, or a single type saved before it allowed several.
      *
      * @return list<string>
+     *
+     * @api
      */
     public function publisherTypes(): array
     {
@@ -250,6 +257,8 @@ trait BuildsSchema
 
     /**
      * @return array<string, mixed>|null
+     *
+     * @api
      */
     public function webPageNode(Context $context): ?array
     {
@@ -281,6 +290,8 @@ trait BuildsSchema
      * publisher.
      *
      * @return array<string, mixed>
+     *
+     * @api
      */
     public function profileEntity(Context $context): array
     {
@@ -297,6 +308,8 @@ trait BuildsSchema
      * Home, then each published ancestor that is a page of its own, then this page.
      *
      * @return array<string, mixed>|null
+     *
+     * @api
      */
     public function breadcrumbNode(Context $context): ?array
     {
@@ -337,6 +350,8 @@ trait BuildsSchema
 
     /**
      * @return array<string, mixed>|null
+     *
+     * @api
      */
     public function articleNode(Context $context): ?array
     {
@@ -366,6 +381,8 @@ trait BuildsSchema
      * (16:9, 4:3, 1:1), else the share image.
      *
      * @return list<string>
+     *
+     * @api
      */
     public function articleImages(Context $context): array
     {
@@ -388,6 +405,8 @@ trait BuildsSchema
      * is none, and the publisher stands as the author.
      *
      * @return list<array<string, mixed>>
+     *
+     * @api
      */
     public function authors(Context $context): array
     {
@@ -414,6 +433,8 @@ trait BuildsSchema
      * Left out without a price above zero, which Google requires.
      *
      * @return array<string, mixed>|null
+     *
+     * @api
      */
     public function productNode(Context $context): ?array
     {
@@ -490,6 +511,8 @@ trait BuildsSchema
      * shows them.
      *
      * @return array<string, mixed>|null
+     *
+     * @api
      */
     public function faqNode(Context $context): ?array
     {
@@ -519,6 +542,8 @@ trait BuildsSchema
      * breaking the page. Developers add theirs in extraNodes().
      *
      * @return list<array<string, mixed>>
+     *
+     * @api
      */
     public function customNodes(Context $context): array
     {
@@ -539,6 +564,8 @@ trait BuildsSchema
      * JSON-LD comes from customNodes().
      *
      * @return list<array<string, mixed>>
+     *
+     * @api
      */
     public function extraNodes(Context $context): array
     {

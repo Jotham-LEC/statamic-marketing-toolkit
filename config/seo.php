@@ -1,23 +1,8 @@
 <?php
 
 use JothamLec\MarketingToolkit\Og\DefaultTemplate;
-use JothamLec\MarketingToolkit\SiteSeo;
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Rules class
-    |--------------------------------------------------------------------------
-    |
-    | Every value the addon prints is worked out by one method on this class.
-    | Extend JothamLec\MarketingToolkit\SiteSeo in the project and override a method to
-    | change one rule (an extra JSON-LD node, a noindex condition, more
-    | sitemap URLs) without touching the rest.
-    |
-    */
-
-    'class' => SiteSeo::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -36,12 +21,15 @@ return [
     'title' => [
         // With "Add the site name to page titles" on (SEO & brand), the title
         // becomes "{title}{separator}{site name}" only when the result fits.
+        // The report's title check uses its own limit; the defaults match.
         'max' => 60,
     ],
 
     'description' => [
-        // A description taken from the page is cut to this, on a word.
-        'length' => 155,
+        // A description taken from the page is cut to this, on a word. The
+        // report's checks and the preview's counters use their own limits
+        // (Tools → SEO → Report settings); the defaults match.
+        'length' => 160,
     ],
 
     /*
@@ -128,13 +116,19 @@ return [
         'per_page' => 1000,
     ],
 
-    'robots_txt' => true,
+    'robots_txt' => [
+        'enabled' => true,
+    ],
 
     // /llms.txt: the site's pages as a Markdown list for AI assistants (llmstxt.org).
-    'llms_txt' => true,
+    'llms_txt' => [
+        'enabled' => true,
+    ],
 
     // /ads.txt: the lines in SEO & brand → Crawlers, when there are any.
-    'ads_txt' => true,
+    'ads_txt' => [
+        'enabled' => true,
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -260,12 +254,13 @@ return [
     'tracking' => [
         'enabled' => true,
         'environments' => ['production'],
-        'gtm' => env('SEO_GTM_ID'),
-        'ga4' => env('SEO_GA4_ID'),
+        // Each key is the field's handle in the Tracking tab, and SEO_ + the key in .env.
+        'gtm_id' => env('SEO_GTM_ID'),
+        'ga4_id' => env('SEO_GA4_ID'),
         'posthog_key' => env('SEO_POSTHOG_KEY'),
         'posthog_host' => env('SEO_POSTHOG_HOST'),
-        'meta_pixel' => env('SEO_META_PIXEL_ID'),
-        'linkedin' => env('SEO_LINKEDIN_PARTNER_ID'),
+        'meta_pixel_id' => env('SEO_META_PIXEL_ID'),
+        'linkedin_partner_id' => env('SEO_LINKEDIN_PARTNER_ID'),
     ],
 
     /*

@@ -11,14 +11,14 @@ use Statamic\Exceptions\NotFoundHttpException;
 /**
  * /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
  * /icon-512.png and /site.webmanifest, made from the brand's icon. A file in
- * public/ of the same name wins: the route isn't registered.
+ * public/ of the same name wins: the web server serves it first.
  */
 class FaviconController
 {
     public function __invoke(Request $request, Favicons $favicons): Response
     {
         $name = ltrim($request->getPathInfo(), '/');
-        // Off (Tools → SEO → Features) after the routes were cached; Free: the default site's domain only.
+        // Off in the config or under Features; Free: the default site's domain only.
         throw_unless(config('seo.favicons.enabled') && Sites::served(), NotFoundHttpException::class);
 
         $bytes = $favicons->file($name);

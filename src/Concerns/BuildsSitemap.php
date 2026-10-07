@@ -12,7 +12,7 @@ use Statamic\Facades\Site;
 
 /**
  * The URLs the sitemap lists. Part of SiteSeo's override surface: a project
- * overrides these methods on its SiteSeo subclass (config `seo.class`), not
+ * overrides these methods on its SiteSeo subclass (bound in its place), not
  * on the trait, which only splits the class into readable parts.
  *
  * @phpstan-require-extends SiteSeo
@@ -45,12 +45,15 @@ trait BuildsSitemap
      * URLs that are not entries or terms (controller pages). Empty by default.
      *
      * @return list<array{loc: string, lastmod: ?string}>
+     *
+     * @api
      */
     public function additionalSitemapUrls(): array
     {
         return [];
     }
 
+    /** @api */
     public function inSitemap(Entry|Term $content): bool
     {
         $seo = $content->get('seo');
@@ -135,6 +138,8 @@ trait BuildsSitemap
      * their terms in a `terms` field), or to count only some entries. Only
      * the current site's entries count (Statamic counts every site's): the
      * sitemap and a report each ask on the site they are of.
+     *
+     * @api
      */
     public function termHasEntries(Term $term): bool
     {

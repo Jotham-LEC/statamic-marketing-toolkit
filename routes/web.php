@@ -31,37 +31,20 @@ Route::withoutMiddleware([
 ])
     ->name('seo.')
     ->group(function () {
-        if (config('seo.sitemap.enabled')) {
-            Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
-            Route::get('sitemap_{page}.xml', [SitemapController::class, 'page'])->whereNumber('page')->name('sitemap.page');
+        // Registered whatever the config says, so cached routes follow a module switched on
+        // or off later: each controller answers 404 while its module is off. A file of the
+        // same name in public/ wins, since the web server serves it before Laravel runs.
+        Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+        Route::get('sitemap_{page}.xml', [SitemapController::class, 'page'])->whereNumber('page')->name('sitemap.page');
+        Route::get('robots.txt', RobotsController::class)->name('robots');
+        Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
+        Route::get('llms.txt', [TextFileController::class, 'llms'])->name('llms');
+        Route::get('ads.txt', [TextFileController::class, 'ads'])->name('ads');
+
+        foreach (array_keys(Favicons::FILES) as $file) {
+            Route::get($file, FaviconController::class)->name('favicons.'.$file);
         }
 
-        if (config('seo.robots_txt') && ! file_exists(public_path('robots.txt'))) {
-            Route::get('robots.txt', RobotsController::class)->name('robots');
-        }
-
-        if (config('seo.indexnow.enabled')) {
-            Route::get(app(IndexNow::class)->key().'.txt', IndexNowKeyController::class)->name('indexnow.key');
-        }
-
-        if (config('seo.llms_txt') && ! file_exists(public_path('llms.txt'))) {
-            Route::get('llms.txt', [TextFileController::class, 'llms'])->name('llms');
-        }
-
-        if (config('seo.ads_txt') && ! file_exists(public_path('ads.txt'))) {
-            Route::get('ads.txt', [TextFileController::class, 'ads'])->name('ads');
-        }
-
-        if (config('seo.favicons.enabled')) {
-            foreach (array_keys(Favicons::FILES) as $file) {
-                if (! file_exists(public_path($file))) {
-                    Route::get($file, FaviconController::class)->name('favicons.'.$file);
-                }
-            }
-        }
-
-        if (config('seo.og.enabled')) {
-            Route::get('og.png', OgImageController::class)->name('og.home');
-            Route::get('og/{path}.png', OgImageController::class)->where('path', '.*')->name('og');
-        }
+        Route::get('og.png', OgImageController::class)->name('og.home');
+        Route::get('og/{path}.png', OgImageController::class)->where('path', '.*')->name('og');
     });

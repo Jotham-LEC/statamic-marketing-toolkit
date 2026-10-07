@@ -68,6 +68,8 @@ jobs:
           extensions: curl, dom, gd, imagick, mbstring, openssl
           coverage: none
 
+      - run: composer validate --strict --no-check-lock
+
       - uses: ramsey/composer-install@v3
 
       - run: composer lint

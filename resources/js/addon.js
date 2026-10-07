@@ -7,6 +7,7 @@ import SeoWidget from './components/SeoWidget.vue';
 import Features from './pages/Features.vue';
 import NotFound from './pages/NotFound.vue';
 import Overview from './pages/Overview.vue';
+import ProOnly from './pages/ProOnly.vue';
 import RedirectForm from './pages/RedirectForm.vue';
 import Report from './pages/Report.vue';
 import Reports from './pages/Reports.vue';
@@ -107,6 +108,7 @@ Statamic.booting(() => {
     inertia.register('seo::Reports', Reports);
     inertia.register('seo::Report', Report);
     inertia.register('seo::SearchConsole', SearchConsole);
+    inertia.register('seo::ProOnly', ProOnly);
     inertia.register('seo::Features', Features);
 
     router.on('navigate', (event) => {

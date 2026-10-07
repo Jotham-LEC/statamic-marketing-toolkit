@@ -13,9 +13,14 @@ use WeakMap;
 
 /**
  * The rules. Each public method works out one value for one page; a project
- * extends this class (config `seo.class`) and overrides only the rules it
- * needs to change. Every method receives the Context, so a rule can look at
- * the entry, the term, the request and the template's overrides.
+ * extends this class, binds its subclass in its place in a service provider
+ * (`$this->app->bind(SiteSeo::class, Seo::class)`), and overrides only the
+ * rules it needs to change. Every method receives the Context, so a rule can
+ * look at the entry, the term, the request and the template's overrides.
+ *
+ * The methods marked `@api` (those docs/developers.md lists) keep their
+ * names and signatures until the next major version; the others are
+ * internal and may change in any release.
  */
 class SiteSeo
 {

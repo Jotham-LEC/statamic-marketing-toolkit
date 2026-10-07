@@ -64,13 +64,17 @@ php please seo:install                       # the "SEO & brand" global set
 php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to change the defaults
 ```
 
-`seo:install` uses the first asset container for the logo and default image; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing. With several sites it creates the set on each, the others taking what they leave empty from the default site; a set that already exists must be enabled on each site by hand (the command names the sites it is missing).
+`seo:install` uses the first asset container for the logo, default image and icon; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing: it adds only what is missing, such as the fields a newer version brings. With several sites it creates the set on each, the others taking what they leave empty from the default site; for a set that already exists, it offers to enable it on the sites it's missing from.
+
+**A new Statamic site has a `public/robots.txt` and an empty `public/favicon.ico`.** The web server answers with those files before the addon sees the request, so the addon's robots.txt (with its `Sitemap:` line) and icons never show. `seo:install` names them and offers to delete them; Tools → SEO marks them too. The same goes for `llms.txt`, `ads.txt` and the other icon files.
 
 The control panel's scripts and styles are published to `public/vendor/statamic-marketing-toolkit` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 
 ## 2. Add the SEO fields to your blueprints
 
-In each blueprint whose pages should have SEO fields (usually every collection with a route), add the fieldset where you want it, typically on its own tab:
+In each blueprint whose pages should have SEO fields (usually every collection with a route), add the fieldset where you want it, typically on its own tab. In the control panel: **Blueprints**, the collection's blueprint, **Add Tab** "SEO", then **Link Fieldset** and choose **SEO**. A new Statamic site's Pages collection has no blueprint file yet; opening it there creates one.
+
+Or in the blueprint's YAML (`resources/blueprints/collections/{collection}/{blueprint}.yaml`), as a tab beside the ones it has:
 
 ```yaml
 tabs:
@@ -89,10 +93,12 @@ Already have your own `seo` group with `title`, `description` and `canonical`? T
 
 ## 3. Print the tags in your layout
 
-In the layout, remove your own `<title>`, description, canonical, Open Graph and JSON-LD tags, and any Google Tag Manager, Google Analytics, PostHog, Meta Pixel or LinkedIn snippets. Then add one tag at the very top of the `<head>` and one right after `<body>`:
+In the layout, remove your own `<title>`, description, canonical, Open Graph and JSON-LD tags, and any Google Tag Manager, Google Analytics, PostHog, Meta Pixel or LinkedIn snippets. Then add one tag in the `<head>`, right after `<meta charset>` and the viewport, and one right after `<body>`:
 
 ```blade
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <s:seo:head />
     …
 </head>
@@ -101,6 +107,8 @@ In the layout, remove your own `<title>`, description, canonical, Open Graph and
 ```
 
 or in Antlers, `{{ seo:head }}` and `{{ seo:body }}`.
+
+`<meta charset>` must come first: browsers look for it in the first 1024 bytes, and the tracking scripts alone can take several thousand.
 
 `seo:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `seo:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:seo:meta />` instead of `seo:head`, as before.
 
@@ -159,3 +167,12 @@ Reports can run daily or weekly (Tools → SEO → Report settings → Running).
 - With Pro: **Tools → SEO → Reports → Run report.** A few hundred pages take under a minute.
 
 If something doesn't, see [troubleshooting.md](troubleshooting.md).
+
+## After every update
+
+```bash
+composer update jotham-lec/statamic-marketing-toolkit
+php artisan migrate
+```
+
+Statamic runs the addon's update scripts on `composer update` (or `php please updates:run`): they add the fields a new version brings to SEO & brand, and make any change it needs to your settings. Commit the files they change (the blueprint in `resources/blueprints/globals`, the global set in `content/globals`). The control panel's scripts are republished at the same time. [CHANGELOG.md](../CHANGELOG.md) says what each version needs beyond that, under **Upgrading**.

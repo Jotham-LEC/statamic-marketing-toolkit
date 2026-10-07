@@ -90,7 +90,13 @@ test('past the page size the sitemap becomes an index of numbered pages', functi
     $this->get('/sitemap_99999999999999999999.xml')->assertNotFound();
 });
 
-test('a project adds URLs that are not entries', function () {
+test('a project adds URLs that are not entries, from its subclass bound in a service provider', function () {
+    app()->bind(SiteSeo::class, SitemapWithExtras::class);
+
+    expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe(['https://example.test/contact']);
+});
+
+test('a subclass named in config/seo.php still works', function () {
     config(['seo.class' => SitemapWithExtras::class]);
 
     expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe(['https://example.test/contact']);

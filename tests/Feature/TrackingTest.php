@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Vite;
 use Inertia\Testing\AssertableInertia;
+use JothamLec\MarketingToolkit\Support\Config;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
@@ -50,10 +51,23 @@ test('no tags until an ID is set; then each prints in the head, and GTM\'s noscr
 
 test('.env wins over the control panel', function () {
     seoGlobal(['gtm_id' => 'GTM-FROMCP1', 'ga4_id' => 'G-FROMCP123']);
-    config(['seo.tracking.gtm' => 'GTM-FROMENV']);
+    config(['seo.tracking.gtm_id' => 'GTM-FROMENV']);
 
     expect(app(Tracking::class)->ids())->toMatchArray(['gtm' => 'GTM-FROMENV', 'ga4' => 'G-FROMCP123'])
         ->and(app(Tracking::class)->fromConfig())->toMatchArray(['gtm' => true, 'ga4' => false]);
+});
+
+test('a config/seo.php published with the old tracking keys keeps working', function () {
+    expect(Config::upgrade(['tracking' => ['gtm' => 'GTM-OLDKEY1', 'linkedin' => '1234567', 'ga4_id' => 'G-NEWKEY123', 'ga4' => 'G-OLDKEY123'], 'robots_txt' => false]))
+        ->toBe(['tracking' => ['ga4_id' => 'G-NEWKEY123', 'gtm_id' => 'GTM-OLDKEY1', 'linkedin_partner_id' => '1234567'], 'robots_txt' => ['enabled' => false]]);
+});
+
+test('an ID that is set but isn\'t one is reported, not printed', function () {
+    seoGlobal(['ga4_id' => 'UA-12345-1']);
+    config(['seo.tracking.gtm_id' => 'GTM-AB1']);
+
+    expect(app(Tracking::class)->invalid())->toBe(['gtm' => 'GTM-AB1', 'ga4' => 'UA-12345-1'])
+        ->and(collect(app(Tracking::class)->ids())->filter()->all())->toBe([]);
 });
 
 test('an ID that doesn\'t look like one is never printed', function (string $field, string $value) {
@@ -143,6 +157,31 @@ test('the CP warns when GTM is set beside another tracker, on the overview', fun
     seoGlobal(['ga4_id' => 'G-ABCDE12345']);
     expect(app(Tracking::class)->besideGtm())->toBe([]);
 });
+
+test('the overview says where an ID comes from, and which set ones aren\'t IDs', function () {
+    seoGlobal(['ga4_id' => 'UA-12345-1', 'meta_pixel_id' => '123456789012']);
+    config(['seo.tracking.gtm_id' => 'GTM-AB1', 'seo.tracking.linkedin_partner_id' => '1234567']);
+    app()->bind(Tracking::class, LinkedInFromCode::class);
+    $this->actingAs(cpUser(super: true));
+
+    $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('tracking.tools', [
+            ['name' => 'Meta Pixel', 'id' => '123456789012', 'from_env' => false],
+            ['name' => 'LinkedIn Insight Tag', 'id' => '7654321', 'from_env' => false],
+        ])
+        ->where('tracking.invalid', [
+            'Google Tag Manager: “GTM-AB1” in SEO_GTM_ID isn’t an ID, so it isn’t on the site.',
+            'Google Analytics 4: “UA-12345-1” in Brand & defaults → Tracking isn’t an ID, so it isn’t on the site.',
+        ]));
+});
+
+class LinkedInFromCode extends Tracking
+{
+    public function ids(): array
+    {
+        return [...parent::ids(), 'linkedin' => '7654321'];
+    }
+}
 
 test('the Tracking tab shows its warning through a custom condition, and validates IDs', function () {
     seoGlobal([]);

@@ -12,8 +12,7 @@ use Statamic\Facades\Site;
 
 /**
  * llms.txt, ads.txt and robots.txt. Part of SiteSeo's override surface: a
- * project overrides these methods on its SiteSeo subclass (config
- * `seo.class`), not on the trait, which only splits the class into readable
+ * project overrides these methods on its SiteSeo subclass (bound in its place), not on the trait, which only splits the class into readable
  * parts.
  *
  * @phpstan-require-extends SiteSeo
@@ -31,6 +30,8 @@ trait BuildsTextFiles
      * collection the sitemap lists, its pages as Markdown links with their
      * descriptions, the most recently changed first. For AI assistants that
      * read a site's summary before its pages.
+     *
+     * @api
      */
     public function llmsTxt(): string
     {
@@ -84,6 +85,7 @@ trait BuildsTextFiles
             ->values();
     }
 
+    /** @api */
     protected function llmsPerCollection(): int
     {
         return 100;
@@ -105,6 +107,7 @@ trait BuildsTextFiles
     |--------------------------------------------------------------------------
     */
 
+    /** @api */
     public function robotsTxt(): string
     {
         if ($this->hiddenOutsideProduction()) {

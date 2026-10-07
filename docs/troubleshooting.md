@@ -19,6 +19,16 @@ New Google Cloud projects often block service account keys with the organization
 
 the-og draws cards with Imagick. Install PHP's `imagick` extension (on NixOS, add `all.imagick` to the PHP `buildEnv` extensions). Uploaded share images don't need it; only generated cards do.
 
+### robots.txt has no Sitemap line, or the favicon is blank
+
+A file in `public/` (`robots.txt`, `favicon.ico`, `llms.txt`, `ads.txt`, the other icons) is served by the web server before the addon sees the request. A new Statamic site comes with a `public/robots.txt` and an empty `public/favicon.ico`. Delete them; `php please seo:install` names them and offers to, and Tools → SEO marks them under **What the site serves**.
+
+### A tracking tag doesn't load
+
+- Tags load only in `seo.tracking.environments` (production) and never in Live Preview.
+- An ID that doesn't look like one (`GTM-AB1`, a `UA-` property) is never printed. Tools → SEO says which one and where it is set.
+- After switching **Tracking** on under Features, restart Octane or the queue workers if the site runs them.
+
 ### The SEO screens are unstyled or blank
 
 The built assets weren't published. Run `php artisan vendor:publish --tag=marketing-toolkit --force`, then reload without cache. Statamic republishes them on `composer update`.

@@ -39,7 +39,7 @@ On a multi-site install, Free looks after the default site alone: every site's p
 - **Several sites and languages**, with hreflang.
 - **Feature toggles** and a dashboard widget in the control panel.
 
-Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. A licence covers every release of one major version, and one bought during 0.x also covers 1.x; a new major version needs a new licence. Local and staging sites don't need one. Switch editions at any time; nothing you set up is lost. See [the editions](docs/getting-started.md#the-editions) for the full comparison.
+Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.com/addons/jothamlec/marketing-toolkit) and set in `config/statamic/editions.php`. A licence covers every release of one major version, and one bought during 0.x also covers 1.x; a new major version needs a new licence. Local and staging sites don't need one. Switch editions at any time; nothing you set up is lost. See [the editions](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/getting-started.md#the-editions) for the full comparison.
 
 ## Requirements
 
@@ -54,8 +54,8 @@ Pro is **$39 per site**, bought on the [Statamic Marketplace](https://statamic.c
 
 ## Documentation
 
-[Getting started](docs/getting-started.md) · [For editors](docs/editors.md) · [Tracking and Consent Mode](docs/tracking.md) · [Configuration](docs/configuration.md) · [For developers](docs/developers.md) · [Troubleshooting](docs/troubleshooting.md) · [Upgrading from Co-SEO](docs/upgrading.md) · [Changelog](CHANGELOG.md)
+[Getting started](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/getting-started.md) · [For editors](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/editors.md) · [Tracking and Consent Mode](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/tracking.md) · [Configuration](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/configuration.md) · [For developers](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/developers.md) · [Troubleshooting](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/troubleshooting.md) · [Upgrading from Co-SEO](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/upgrading.md) · [Changelog](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/CHANGELOG.md)
 
 ## Licence and support
 
-Marketing Toolkit is a commercial addon by CoThinking; see [the licence](LICENSE.md) for what it allows and the third-party software it uses. Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).
+Marketing Toolkit is a commercial addon by CoThinking; see [the licence](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/LICENSE.md) for what it allows and the third-party software it uses. Questions and bug reports: [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).

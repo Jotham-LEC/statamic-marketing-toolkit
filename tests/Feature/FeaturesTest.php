@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Routing\RouteCollection;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
 use JothamLec\MarketingToolkit\ServiceProvider;
@@ -57,13 +59,26 @@ test('a module that is off is off in the config, and its pages answer 404 even w
 
     expect(config('seo.sitemap.enabled'))->toBeFalse()
         ->and(config('seo.favicons.enabled'))->toBeFalse()
-        ->and(config('seo.robots_txt'))->toBeTrue();
+        ->and(config('seo.robots_txt.enabled'))->toBeTrue();
 
     // Registered when the app booted, as with `php artisan route:cache`: the controller says no.
     $this->get('https://example.test/sitemap.xml')->assertNotFound();
     $this->get('https://example.test/llms.txt')->assertNotFound();
     $this->get('https://example.test/robots.txt')->assertOk();
     expect(renderAt('/', '<s:seo:head />'))->not->toContain('gtm.js');
+});
+
+test('the public routes are registered with their module off, so cached routes answer once it is back on', function () {
+    config(['seo.sitemap.enabled' => false, 'seo.robots_txt.enabled' => false, 'seo.llms_txt.enabled' => false, 'seo.favicons.enabled' => false, 'seo.og.enabled' => false]);
+    app('router')->setRoutes(new RouteCollection);
+    require __DIR__.'/../../routes/web.php';
+    app('router')->getRoutes()->refreshNameLookups();
+
+    expect(collect(['seo.sitemap', 'seo.robots', 'seo.llms', 'seo.ads', 'seo.og.home', 'seo.indexnow.key', 'seo.favicons.favicon.ico'])->reject(fn ($name) => Route::has($name))->all())->toBe([]);
+    $this->get('https://example.test/sitemap.xml')->assertNotFound();
+
+    config(['seo.sitemap.enabled' => true]);
+    $this->get('https://example.test/sitemap.xml')->assertOk();
 });
 
 test('listeners and middleware of modules that are off aren\'t registered', function () {

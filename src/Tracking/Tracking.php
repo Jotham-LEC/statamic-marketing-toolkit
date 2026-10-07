@@ -26,13 +26,16 @@ class Tracking
         'linkedin' => '/^\d{3,12}$/',
     ];
 
-    /** Tracker => its config key and its field in the global. */
+    /**
+     * Tracker => its key: the field's handle in the global's Tracking tab, the
+     * key under `seo.tracking`, and in .env SEO_ followed by the key in capitals.
+     */
     public const array FIELDS = [
-        'gtm' => ['gtm', 'gtm_id'],
-        'ga4' => ['ga4', 'ga4_id'],
-        'posthog' => ['posthog_key', 'posthog_key'],
-        'meta' => ['meta_pixel', 'meta_pixel_id'],
-        'linkedin' => ['linkedin', 'linkedin_partner_id'],
+        'gtm' => 'gtm_id',
+        'ga4' => 'ga4_id',
+        'posthog' => 'posthog_key',
+        'meta' => 'meta_pixel_id',
+        'linkedin' => 'linkedin_partner_id',
     ];
 
     /** The four Consent Mode v2 signals. */
@@ -68,15 +71,18 @@ class Tracking
      */
     public function ids(): array
     {
-        $ids = [];
+        return collect($this->entered())->map(fn (?string $id, string $tracker) => $id !== null && preg_match(self::PATTERNS[$tracker], $id) ? $id : null)->all();
+    }
 
-        foreach (self::FIELDS as $tracker => [$config, $field]) {
-            $id = trim((string) (config('seo.tracking.'.$config) ?: $this->settings->string($field)));
-            $id = in_array($tracker, ['gtm', 'ga4'], true) ? strtoupper($id) : $id;
-            $ids[$tracker] = preg_match(self::PATTERNS[$tracker], $id) ? $id : null;
-        }
-
-        return $ids;
+    /**
+     * Trackers with something entered that isn't an ID, and so isn't printed:
+     * tracker => what was entered.
+     *
+     * @return array<string, string>
+     */
+    public function invalid(): array
+    {
+        return array_diff_key(array_filter($this->entered(), fn (?string $id) => $id !== null), array_filter($this->ids()));
     }
 
     /**
@@ -87,7 +93,21 @@ class Tracking
      */
     public function fromConfig(): array
     {
-        return collect(self::FIELDS)->map(fn (array $keys) => filled(config('seo.tracking.'.$keys[0])))->all();
+        return collect(self::FIELDS)->map(fn (string $key) => filled(config('seo.tracking.'.$key)))->all();
+    }
+
+    /**
+     * What each tracker has, from the config or else the global, tidied but not checked.
+     *
+     * @return array<string, ?string>
+     */
+    protected function entered(): array
+    {
+        return collect(self::FIELDS)->map(function (string $key, string $tracker) {
+            $id = trim((string) (config('seo.tracking.'.$key) ?: $this->settings->string($key)));
+
+            return $id === '' ? null : (in_array($tracker, ['gtm', 'ga4'], true) ? strtoupper($id) : $id);
+        })->all();
     }
 
     /**
@@ -160,7 +180,7 @@ class Tracking
     }
 
     /**
-     * What goes at the top of the <head>: Consent Mode defaults, then the tags.
+     * What goes high in the <head>, after <meta charset>: Consent Mode defaults, then the tags.
      */
     public function head(): string
     {
