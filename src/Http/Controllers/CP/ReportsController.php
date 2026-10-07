@@ -151,8 +151,10 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        if ($report->isRunning() && ! RunReportStep::usesWorker() && User::current()?->can('run marketing toolkit reports')) {
-            $report = $runner->step($report);
+        // Without a worker, whoever may run reports moves it on; with one, a step
+        // whose worker died is queued again once the report has stood still.
+        if ($report->isRunning() && User::current()?->can('run marketing toolkit reports')) {
+            RunReportStep::usesWorker() ? $runner->resumeIfStalled($report) : $report = $runner->step($report);
         }
 
         return $this->summary($report);

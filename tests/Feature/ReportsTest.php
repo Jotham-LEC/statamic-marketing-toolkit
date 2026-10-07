@@ -446,6 +446,33 @@ test('a report on a queue worker that stood still with no step running is queued
     expect($report->refresh()->status)->toBe(Report::DONE);
 });
 
+function stalledReportOnAWorker(): Report
+{
+    config(['queue.default' => 'database', 'queue.connections.database.driver' => 'database']);
+    Queue::fake();
+    entryIn('pages', 'about');
+    $report = app(Runner::class)->start();
+    $report->forceFill(['updated_at' => now()->subMinutes(20)])->saveQuietly();
+
+    return $report;
+}
+
+test('watching a stalled report on a queue worker queues its step again', function () {
+    $report = stalledReportOnAWorker();
+
+    $this->actingAs(cpUser(['access cp', 'view marketing toolkit', 'run marketing toolkit reports']));
+    $this->postJson(cp_route('mt.reports.progress', $report))->assertOk();
+    Queue::assertPushed(RunReportStep::class, 1);
+});
+
+test('someone who may only view reports doesn\'t queue a stalled step', function () {
+    $report = stalledReportOnAWorker();
+
+    $this->actingAs(cpUser(['access cp', 'view marketing toolkit']));
+    $this->postJson(cp_route('mt.reports.progress', $report))->assertOk();
+    Queue::assertNotPushed(RunReportStep::class);
+});
+
 function reportOnAboutAndATerm(): array
 {
     Taxonomy::make('topics')->save();
