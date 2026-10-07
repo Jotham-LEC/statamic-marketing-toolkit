@@ -284,6 +284,15 @@ test('a page saved after the report says its score may have changed', function (
     toolbarFor('/about')->assertJsonPath('seo.messages.0', 'This page was saved on October 3, 2026, after the report of October 1, 2026, so its score may have changed.');
 });
 
+test('a page saved later on the day of the report says when each happened', function () {
+    $entry = Entry::findByUri('/about');
+    reportWith($entry, finished: '2026-10-01 09:15:00');
+    $entry->set('updated_at', Carbon\Carbon::parse('2026-10-01 16:40:00')->timestamp)->saveQuietly();
+    $this->actingAs(cpUser(super: true));
+
+    toolbarFor('/about')->assertJsonPath('seo.messages.0', 'This page was saved on October 1, 2026 4:40 PM, after the report of October 1, 2026 9:15 AM, so its score may have changed.');
+});
+
 test('a page not in the report, a page every check passes, and a noindex page', function () {
     $this->actingAs(cpUser(super: true));
     $report = reportWith(entryIn('pages', 'contact'), score: 100);

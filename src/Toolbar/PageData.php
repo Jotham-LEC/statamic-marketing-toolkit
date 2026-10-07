@@ -177,8 +177,10 @@ class PageData
 
         $finished = $report->finished_at ?? $report->updated_at;
         $saved = $this->content?->lastModified();
+        // Saved on the day of the report: the times say which came first.
+        $sameDay = $saved && $saved->isSameDay($finished);
         $messages = [$saved && $saved->gt($finished)
-            ? __('marketing-toolkit::toolbar.seo.changed', ['saved' => $this->date($saved), 'date' => $this->date($finished)])
+            ? __('marketing-toolkit::toolbar.seo.changed', ['saved' => $this->date($saved, $sameDay), 'date' => $this->date($finished, $sameDay)])
             : __('marketing-toolkit::toolbar.seo.date', ['date' => $this->date($finished)])];
 
         if ($row->facts()->noindex()) {
@@ -515,9 +517,9 @@ class PageData
         return cp_route('mt.toolbar.go', ['site' => $site ?? $this->site->handle(), 'to' => $to]);
     }
 
-    private function date(CarbonInterface $date): string
+    private function date(CarbonInterface $date, bool $time = false): string
     {
-        return $date->locale($this->locale())->isoFormat('LL');
+        return $date->locale($this->locale())->isoFormat($time ? 'LLL' : 'LL');
     }
 
     private function locale(): string
