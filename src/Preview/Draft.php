@@ -34,6 +34,9 @@ class Draft
         abort_unless($blueprint instanceof BlueprintObject, 422, 'Unknown blueprint.');
 
         $site = Site::get((string) $request->input('site')) ?? Site::default();
+        // The form's site gives the preview its site's values. Statamic's term
+        // policy doesn't ask about the site, so it is asked here for every form.
+        Gate::authorize('view', $site);
         $values = (array) $request->input('values', []);
         $data = Arr::except($blueprint->fields()->addValues($values)->process()->values()->all(), self::PROPERTIES);
         $slug = is_string($values['slug'] ?? null) && $values['slug'] !== '' ? $values['slug'] : null;
@@ -63,7 +66,8 @@ class Draft
             $entry = clone $existing;
             $entry->data($existing->data()->merge($data));
         } else {
-            Gate::authorize('create', [EntryContract::class, $collection]);
+            // With the site, so the policy also asks whether they may work on it.
+            Gate::authorize('create', [EntryContract::class, $collection, Site::get($site)]);
 
             $entry = Entry::make()->collection($collection)->locale($site)->data($data)->slug('slug');
 
@@ -94,7 +98,7 @@ class Draft
             Gate::authorize('view', $existing);
             $data = [...$existing->data()->all(), ...$data];
         } else {
-            Gate::authorize('create', [TermContract::class, $taxonomy]);
+            Gate::authorize('create', [TermContract::class, $taxonomy, Site::get($site)]);
         }
 
         // A fresh term, so the stored one (and Statamic's cache of it) is never touched.

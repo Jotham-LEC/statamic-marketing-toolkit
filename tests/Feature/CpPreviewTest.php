@@ -151,6 +151,31 @@ test('an editor of the collection gets the preview without any SEO permission', 
     previewOf('collections.pages.page', ['title' => 'New'])->assertOk();
 });
 
+test('a new entry or term is only previewed on a site its editor may work on', function () {
+    multisite();
+    Taxonomy::findByHandle('topics')->sites(['default', 'cothinking'])->save();
+    $this->actingAs(cpUser(['create pages entries', 'create topics terms', 'access default site']));
+
+    foreach (['collections.pages.page', 'taxonomies.topics.topic'] as $blueprint) {
+        $preview = fn (string $site) => $this->postJson(cp_route('mt.preview.meta'), ['blueprint' => $blueprint, 'site' => $site, 'values' => ['title' => 'New']]);
+
+        $preview('default')->assertOk();
+        $preview('cothinking')->assertForbidden();
+    }
+});
+
+test('a saved term is only previewed on a site its editor may work on', function () {
+    multisite();
+    Taxonomy::findByHandle('topics')->sites(['default', 'cothinking'])->save();
+    $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
+    $this->actingAs(cpUser(['view topics terms', 'access default site']));
+
+    $preview = fn (string $site) => $this->postJson(cp_route('mt.preview.meta'), ['blueprint' => 'taxonomies.topics.topic', 'reference' => $term->in($site)->reference(), 'site' => $site, 'values' => ['title' => 'Gardens']]);
+
+    $preview('default')->assertOk();
+    $preview('cothinking')->assertForbidden();
+});
+
 test('a blueprint that is not an entry or term has no preview', function () {
     $this->actingAs(cpUser(super: true));
 
