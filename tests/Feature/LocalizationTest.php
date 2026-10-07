@@ -55,3 +55,25 @@ test('a path from the domain\'s root stays on the root, not under the language\'
         ->and(app(SiteSeo::class)->absolute('card.jpg'))->toBe('https://example.test/fr/card.jpg')
         ->and(nodeOf($meta, 'WebSite')['url'])->toBe('https://example.test/fr/');
 });
+
+test('a share card of a site under a folder is on the domain\'s root, and shows that site\'s page', function () {
+    seoGlobal([]);
+    $about = entryIn('pages', 'about', ['title' => 'About us']);
+    translationOf($about, 'fr', 'a-propos', ['title' => 'À propos']);
+    entryIn('home', 'home');
+    translationOf(Entry::findByUri('/', 'default'), 'fr', 'accueil');
+    $seo = app(SiteSeo::class);
+
+    // The card's path mirrors the page's: /fr/a-propos → /og/fr/a-propos.png.
+    expect($seo->generatedImageUrl(Entry::findByUri('/a-propos', 'fr')))->toStartWith('https://example.test/og/fr/a-propos.png?v=')
+        ->and($seo->generatedImageUrl(Entry::findByUri('/', 'fr')))->toStartWith('https://example.test/og/fr.png?v=')
+        ->and($seo->generatedImageUrl($about))->toStartWith('https://example.test/og/about.png?v=')
+        ->and($seo->generatedImageUrl(translationOf($about, 'de', 'uber-uns')))->toStartWith('https://de.example.test/og/uber-uns.png?v=');
+
+    $this->get('https://example.test/og/fr/a-propos.png')->assertOk();
+    $this->get('https://example.test/og/fr.png')->assertOk();
+    $this->get('https://de.example.test/og/uber-uns.png')->assertOk();
+    // The French page isn't on the default site, nor the English one under /fr/.
+    $this->get('https://example.test/og/a-propos.png')->assertNotFound();
+    $this->get('https://example.test/og/fr/about.png')->assertNotFound();
+})->skip(! extension_loaded('imagick'), 'Share cards need PHP\'s imagick extension.');

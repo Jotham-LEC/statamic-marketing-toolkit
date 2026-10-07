@@ -167,7 +167,7 @@ Register it and choose where it's used:
 'collections' => ['essays' => ['og_template' => 'essay']],
 ```
 
-Cards are cached per entry, last-modified time, template, version and text, and served from `/og.png` and `/og/{uri}.png` without cookies, so a CDN can cache them.
+Cards are cached per entry, last-modified time, template, version and text, and served from `/og.png` and `/og/{path}.png` (the page's path from the domain's root, so `/og/fr/a-propos.png` for `/fr/a-propos`) without cookies, so a CDN can cache them.
 
 ## Redirects, 404s and reports from code
 
