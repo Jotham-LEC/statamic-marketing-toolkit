@@ -124,6 +124,7 @@ return [
             'the_email' => 'the key’s email address',
             'copy_email' => 'Copy the email address',
             'copied' => 'Copied',
+            'copy_failed' => 'The browser didn’t allow copying, so select the email address and copy it yourself.',
             'step_property' => 'Name the property.',
             'step_property_body' => 'Type it the way Search Console names it, which is :domain for a domain or :prefix for an address prefix.',
             'save' => 'Save',
