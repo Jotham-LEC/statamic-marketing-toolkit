@@ -69,6 +69,8 @@ class OverviewController
             'searchConsole' => ['url' => cp_route('mt.search-console.index')],
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($tracking && $user->can('edit', $tracking) ? $tracking->editUrl() : null),
+            // On, but nothing to draw them with (Og\Generator::available()): said, so a missing card isn't a mystery.
+            'cardsUnavailable' => config('marketing-toolkit.og.enabled') && ! app(Generator::class)->available(),
             // From the domain's root, where the web server and the addon's routes serve them, also for a site under a folder.
             'files' => collect([
                 __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? '/sitemap.xml' : null,

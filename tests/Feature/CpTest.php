@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\Support\LegacySettings;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
@@ -47,6 +48,22 @@ test('the Marketing section, between Fields and Tools, opens the overview and li
             ->where('redirects.active', 0)
             ->where('notFound.paths', 0)
             ->where('notFound.url', cp_route('mt.404s.index')));
+});
+
+test('the overview says when share cards are on but can\'t be drawn', function () {
+    seoGlobal([]);
+    $this->actingAs(cpUser(super: true));
+    app()->instance(Generator::class, new class extends Generator
+    {
+        public function available(): bool
+        {
+            return false;
+        }
+    });
+
+    $this->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->where('cardsUnavailable', true)
+        ->where('files', fn ($files) => collect($files)->doesntContain('label', 'Home page share card')));
 });
 
 test('the overview leaves out redirects for someone who cannot manage them', function () {

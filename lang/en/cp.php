@@ -79,6 +79,7 @@ return [
             'llms' => 'llms.txt',
             'favicon' => 'Web app manifest',
             'card' => 'Home page share card',
+            'no_cards' => 'Share cards are on, but this server can’t draw them: they need the Imagick PHP extension. Until it’s installed, pages use their own image or the default one from Brand.',
         ],
     ],
 

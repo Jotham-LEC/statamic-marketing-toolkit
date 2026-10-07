@@ -19,6 +19,7 @@ defineProps({
     search: { type: Object, default: null },
     searchConsole: { type: Object, default: null },
     files: { type: Array, required: true },
+    cardsUnavailable: { type: Boolean, default: false },
     tracking: { type: Object, required: true },
 });
 </script>
@@ -165,6 +166,7 @@ defineProps({
                     <span v-if="file.public" class="ml-1 text-xs text-amber-700 dark:text-amber-400">{{ __('marketing-toolkit::cp.overview.files.public') }}</span>
                 </li>
             </ul>
+            <p v-if="cardsUnavailable" role="status" class="text-sm text-amber-700 dark:text-amber-400">{{ __('marketing-toolkit::cp.overview.files.no_cards') }}</p>
         </Card>
     </div>
 </template>
