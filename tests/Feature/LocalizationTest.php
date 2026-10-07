@@ -4,6 +4,7 @@ use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\AssetContainer;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 
 beforeEach(fn () => multilang());
@@ -77,3 +78,14 @@ test('a share card of a site under a folder is on the domain\'s root, and shows 
     $this->get('https://example.test/og/a-propos.png')->assertNotFound();
     $this->get('https://example.test/og/fr/about.png')->assertNotFound();
 })->skip(! extension_loaded('imagick'), 'Share cards need PHP\'s imagick extension.');
+
+test('the breadcrumbs of a page under a folder (/fr/) name its ancestors on its own site', function () {
+    Collection::make('services')->routes('services/{slug}')->sites(['default', 'fr', 'uk', 'de'])->save();
+    translationOf(entryIn('pages', 'services', ['title' => 'Services']), 'fr', 'services', ['title' => 'Prestations']);
+    $web = entryOn('fr', 'services', 'web', ['title' => 'Sites web']);
+
+    $crumbs = nodeOf(metaFor($web, '/fr/services/web'), 'BreadcrumbList')['itemListElement'];
+
+    expect(collect($crumbs)->pluck('name')->all())->toBe(['Acme', 'Prestations', 'Sites web'])
+        ->and(collect($crumbs)->pluck('item')->all())->toBe(['https://example.test/fr/', 'https://example.test/fr/services', 'https://example.test/fr/services/web']);
+});
