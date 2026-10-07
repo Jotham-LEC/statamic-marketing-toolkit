@@ -9,7 +9,7 @@ use Throwable;
  * The modules, each switched on by one config key. Pro: a site can switch
  * them off under Tools → SEO → Features, kept in the addon settings
  * (`features_off`). Free: Pro's modules are off, and the rest run as
- * config/seo.php says. A module that's off is set off in the config at boot,
+ * config/marketing-toolkit.php says. A module that's off is set off in the config at boot,
  * before the routes, listeners and middleware register, so it costs nothing
  * on a request.
  */
@@ -17,20 +17,20 @@ final class Features
 {
     /** Module => the config key that switches it on. */
     public const array MODULES = [
-        'sitemap' => 'seo.sitemap.enabled',
-        'robots_txt' => 'seo.robots_txt.enabled',
-        'llms_txt' => 'seo.llms_txt.enabled',
-        'ads_txt' => 'seo.ads_txt.enabled',
-        'hreflang' => 'seo.hreflang.enabled',
-        'indexnow' => 'seo.indexnow.enabled',
-        'share_cards' => 'seo.og.enabled',
-        'redirects' => 'seo.redirects.enabled',
-        'automatic_redirects' => 'seo.redirects.automatic',
-        'not_found' => 'seo.not_found.enabled',
-        'reports' => 'seo.reports.enabled',
-        'tracking' => 'seo.tracking.enabled',
-        'leads' => 'seo.leads.enabled',
-        'favicons' => 'seo.favicons.enabled',
+        'sitemap' => 'marketing-toolkit.sitemap.enabled',
+        'robots_txt' => 'marketing-toolkit.robots_txt.enabled',
+        'llms_txt' => 'marketing-toolkit.llms_txt.enabled',
+        'ads_txt' => 'marketing-toolkit.ads_txt.enabled',
+        'hreflang' => 'marketing-toolkit.hreflang.enabled',
+        'indexnow' => 'marketing-toolkit.indexnow.enabled',
+        'share_cards' => 'marketing-toolkit.og.enabled',
+        'redirects' => 'marketing-toolkit.redirects.enabled',
+        'automatic_redirects' => 'marketing-toolkit.redirects.automatic',
+        'not_found' => 'marketing-toolkit.not_found.enabled',
+        'reports' => 'marketing-toolkit.reports.enabled',
+        'tracking' => 'marketing-toolkit.tracking.enabled',
+        'leads' => 'marketing-toolkit.leads.enabled',
+        'favicons' => 'marketing-toolkit.favicons.enabled',
     ];
 
     /** The modules only Pro has. Their data stays in the database, ready for an upgrade. */
@@ -58,7 +58,7 @@ final class Features
     }
 
     /**
-     * The modules config/seo.php switches off, rather than this screen: shown
+     * The modules config/marketing-toolkit.php switches off, rather than this screen: shown
      * off there, and locked, since a switch can't turn them back on.
      *
      * @return list<string>

@@ -10,7 +10,7 @@ use Statamic\Facades\Form;
 /**
  * Where a lead came from, the first time they reached the site: the UTM
  * tags of the address they landed on, the page that sent them, and that
- * landing page. A script in <s:seo:head /> keeps them in the `mt_source`
+ * landing page. A script in <s:mt:head /> keeps them in the `mt_source`
  * cookie for 90 days; a form submission copies them into its own fields, so
  * the control panel and the exports show them beside the message.
  */
@@ -71,7 +71,7 @@ class Attribution
     }
 
     /**
-     * The fields `php please seo:install --forms` adds to each form: hidden
+     * The fields `php please mt:install --forms` adds to each form: hidden
      * on the site, listed in the control panel.
      *
      * @return list<array{handle: string, field: array<string, mixed>}>
@@ -80,7 +80,7 @@ class Attribution
     {
         return array_map(fn (string $field) => ['handle' => $field, 'field' => [
             'type' => 'hidden',
-            'display' => 'seo::fields.attribution.'.$field,
+            'display' => 'marketing-toolkit::fields.attribution.'.$field,
             'listable' => 'hidden',
         ]], array_keys(self::FIELDS));
     }
@@ -105,7 +105,7 @@ class Attribution
 
             $contents = $blueprint->contents();
             $contents['tabs'] ??= ['main' => ['sections' => [['fields' => []]]]];
-            $contents['tabs']['attribution'] = ['display' => 'seo::fields.attribution.tab', 'sections' => [['fields' => [
+            $contents['tabs']['attribution'] = ['display' => 'marketing-toolkit::fields.attribution.tab', 'sections' => [['fields' => [
                 ...($contents['tabs']['attribution']['sections'][0]['fields'] ?? []),
                 ...$missing,
             ]]]];

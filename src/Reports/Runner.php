@@ -61,7 +61,7 @@ class Runner
     {
         $site = Sites::scope($site ?? Site::current()->handle());
 
-        return Cache::lock('seo:reports:start'.($site === null ? '' : ':'.$site), 120)
+        return Cache::lock('mt:reports:start'.($site === null ? '' : ':'.$site), 120)
             ->block(30, fn () => Sites::as($site, fn () => $this->startOrJoin($settings, $site)));
     }
 
@@ -73,7 +73,7 @@ class Runner
             return $running;
         }
 
-        $running?->update(['status' => Report::FAILED, 'error' => 'seo::reports.messages.stopped', 'finished_at' => now()]);
+        $running?->update(['status' => Report::FAILED, 'error' => 'marketing-toolkit::reports.messages.stopped', 'finished_at' => now()]);
 
         $settings ??= app(ReportSettings::class);
         $sitemap = $this->seo->sitemapUrls()->pluck('loc')->flip();
@@ -106,7 +106,7 @@ class Runner
             return $report;
         }
 
-        return Cache::lock('seo:reports:step:'.$report->id, 600)
+        return Cache::lock('mt:reports:step:'.$report->id, 600)
             // Read again once the lock is held: a step that just ended may have finished it.
             ->get(fn () => $report->refresh()->isRunning() ? Sites::as($report->site, fn () => $this->stepInSite($report)) : $report)
             ?: $report->refresh();
@@ -120,7 +120,7 @@ class Runner
             $content = $this->content($page);
 
             if ($content === null) {
-                $facts = new PageFacts(status: 404, error: 'seo::reports.messages.page_deleted');
+                $facts = new PageFacts(status: 404, error: 'marketing-toolkit::reports.messages.page_deleted');
             } else {
                 $rendered = $this->renderer->render($content);
                 $facts = $rendered['status'] === 200 && $rendered['error'] === null
@@ -207,7 +207,7 @@ class Runner
 
             if (! $facts->rendered()) {
                 $counts['errors']++;
-                $result = $facts->error !== null ? Result::fail($facts->error) : Result::fail('seo::reports.messages.status', ['status' => $facts->status]);
+                $result = $facts->error !== null ? Result::fail($facts->error) : Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]);
                 $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
                 $scores[] = 0;
 
@@ -283,7 +283,7 @@ class Runner
             ->collect()
             ->sortBy('url');
 
-        $terms = collect((array) config('seo.sitemap.taxonomies'))
+        $terms = collect((array) config('marketing-toolkit.sitemap.taxonomies'))
             ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
             ->map(fn ($term) => $term->in($site))
             ->filter(fn ($term) => $term?->url() && $this->seo->termHasEntries($term))

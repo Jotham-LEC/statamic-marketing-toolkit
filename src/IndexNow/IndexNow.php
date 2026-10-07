@@ -25,16 +25,16 @@ class IndexNow
 
     public function enabled(): bool
     {
-        return (bool) config('seo.indexnow.enabled') && app()->isProduction();
+        return (bool) config('marketing-toolkit.indexnow.enabled') && app()->isProduction();
     }
 
     /**
-     * The site's key: config `seo.indexnow.key`, else one derived from the app
+     * The site's key: config `marketing-toolkit.indexnow.key`, else one derived from the app
      * key, so it stays the same across deploys without setting anything.
      */
     public function key(): string
     {
-        $key = config('seo.indexnow.key');
+        $key = config('marketing-toolkit.indexnow.key');
 
         return is_string($key) && preg_match('/^[A-Za-z0-9-]{8,128}$/', $key) ? $key : substr(hash('sha256', config('app.key').'|indexnow'), 0, 32);
     }

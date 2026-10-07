@@ -11,7 +11,9 @@ use Statamic\Fields\Fieldtype;
  */
 class SeoPreview extends Fieldtype
 {
-    protected static $title = 'seo::fields.seo.seo_preview.title';
+    protected static $handle = 'mt_preview';
+
+    protected static $title = 'marketing-toolkit::fields.seo.seo_preview.title';
 
     protected $categories = ['special'];
 
@@ -21,15 +23,15 @@ class SeoPreview extends Fieldtype
 
         return [
             'urls' => [
-                'meta' => cp_route('seo.preview.meta'),
-                'card' => cp_route('seo.preview.card'),
+                'meta' => cp_route('mt.preview.meta'),
+                'card' => cp_route('mt.preview.card'),
             ],
             // The report's thresholds (Tools → Addons → SEO), so the counters and the reports agree.
             'limits' => [
                 'title' => [$settings->int('title_min'), $settings->int('title_max')],
                 'description' => [$settings->int('description_min'), $settings->int('description_max')],
             ],
-            'og' => (bool) config('seo.og.enabled'),
+            'og' => (bool) config('marketing-toolkit.og.enabled'),
         ];
     }
 

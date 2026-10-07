@@ -29,8 +29,8 @@ function sourceCookie(array $values): string
 test('install adds the lead source fields to every form, once', function () {
     contactForm(withSource: false);
 
-    $this->artisan('statamic:seo:install', ['--forms' => true])->expectsOutputToContain('Lead source fields added to: contact.')->assertSuccessful();
-    $this->artisan('statamic:seo:install', ['--forms' => true])->expectsOutputToContain('Every form has the lead source fields.');
+    $this->artisan('statamic:mt:install', ['--forms' => true])->expectsOutputToContain('Lead source fields added to: contact.')->assertSuccessful();
+    $this->artisan('statamic:mt:install', ['--forms' => true])->expectsOutputToContain('Every form has the lead source fields.');
 
     $fields = Form::find('contact')->blueprint()->fields()->all();
     expect($fields->keys()->all())->toBe(['email', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'referrer', 'landing_page'])
@@ -76,7 +76,7 @@ test('turned off in SEO & brand: no source saved, no conversion', function () {
 
 test('the head sends a lead to each tool set, and remembers where visitors first came from', function () {
     seoGlobal(['gtm_id' => 'GTM-ABC1234', 'ga4_id' => 'G-ABCDE12345', 'posthog_key' => 'phc_abcdefghijklmnopqrstuvwxyz0123', 'meta_pixel_id' => '123456789012', 'linkedin_partner_id' => '1234567', 'linkedin_conversion_id' => '7654321', 'attribution' => true]);
-    $head = renderAt('/', '<s:seo:head />');
+    $head = renderAt('/', '<s:mt:head />');
 
     expect($head)->toContain('w.mtConversion=function(form){')
         ->toContain("w.dataLayer.push({event:'generate_lead',form_name:form});")
@@ -92,14 +92,14 @@ test('the head sends a lead to each tool set, and remembers where visitors first
 test('with Consent Mode, the source is remembered once analytics is granted', function () {
     seoGlobal(['consent_mode' => true, 'attribution' => true]);
 
-    expect(renderAt('/', '<s:seo:head />'))->toContain('w.mtConsent=function')
+    expect(renderAt('/', '<s:mt:head />'))->toContain('w.mtConsent=function')
         ->toContain("mtConsent(function(s){if(s.analytics_storage==='granted')save();});");
 });
 
 test('no tool set: no conversion script; lead source only once it is turned on', function () {
     seoGlobal([]);
-    expect(renderAt('/', '<s:seo:head />'))->not->toContain('mtConversion')->not->toContain('mt_source=');
+    expect(renderAt('/', '<s:mt:head />'))->not->toContain('mtConversion')->not->toContain('mt_source=');
 
     seoGlobal(['attribution' => true]);
-    expect(renderAt('/', '<s:seo:head />'))->toContain('mt_source=');
+    expect(renderAt('/', '<s:mt:head />'))->toContain('mt_source=');
 });

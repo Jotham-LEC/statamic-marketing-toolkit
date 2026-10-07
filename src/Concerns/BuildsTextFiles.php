@@ -131,9 +131,9 @@ trait BuildsTextFiles
             $lines[] = trim($extra);
         }
 
-        if (config('seo.sitemap.enabled')) {
+        if (config('marketing-toolkit.sitemap.enabled')) {
             $lines[] = '';
-            $lines[] = 'Sitemap: '.$this->absolute(route('seo.sitemap', [], false));
+            $lines[] = 'Sitemap: '.$this->absolute(route('mt.sitemap', [], false));
         }
 
         return implode("\n", $lines)."\n";

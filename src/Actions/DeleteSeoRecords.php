@@ -25,7 +25,7 @@ class DeleteSeoRecords extends Action
 
     public function authorize($user, $item)
     {
-        return $user->can('manage seo redirects');
+        return $user->can('manage marketing toolkit redirects');
     }
 
     public function buttonText()
@@ -37,7 +37,7 @@ class DeleteSeoRecords extends Action
     public function confirmationText()
     {
         // The CP picks the singular or plural part.
-        return __('seo::cp.actions.delete_confirm');
+        return __('marketing-toolkit::cp.actions.delete_confirm');
     }
 
     public function run($items, $values)

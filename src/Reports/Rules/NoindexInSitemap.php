@@ -26,7 +26,7 @@ class NoindexInSitemap extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return $page->noindex() && $page->inSitemap
-            ? Result::fail('seo::reports.messages.noindex_in_sitemap')
+            ? Result::fail('marketing-toolkit::reports.messages.noindex_in_sitemap')
             : Result::pass();
     }
 }

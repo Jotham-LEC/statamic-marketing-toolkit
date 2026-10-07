@@ -29,8 +29,8 @@ final readonly class Context
 
 | Value | Order |
 |---|---|
-| `<title>` | SEO title as typed → the title (with **Add the site name to page titles** on: `{title}{separator}{site}` if it fits `seo.title.max`) → site name on home. `· Page N` past page 1, in the page's language |
-| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 160 on a word (`seo.description.length`) |
+| `<title>` | SEO title as typed → the title (with **Add the site name to page titles** on: `{title}{separator}{site}` if it fits `marketing-toolkit.title.max`) → site name on home. `· Page N` past page 1, in the page's language |
+| description | SEO description → `description` field → `description_fields` → first paragraph of `content` → global default. Cut to 160 on a word (`marketing-toolkit.description.length`) |
 | share image | template `image` → SEO share image → `image_fields` (a field in a Replicator's sets too) → **generated card** (Pro) → global default image. Uploads are cropped to 1200×630 JPEG through Glide |
 | canonical | template `canonical` (`false` for none) → SEO canonical (a piece first published elsewhere) → the page, with `?page=N` |
 | robots | noindex when: SEO noindex, not production, a `noindex_params` query, a `noindex_routes` route, a 4xx status, or your `shouldNoindex()` |
@@ -73,7 +73,7 @@ class Seo extends SiteSeo
 $this->app->bind(\JothamLec\MarketingToolkit\SiteSeo::class, \App\Seo::class);
 ```
 
-(`'class' => App\Seo::class` in `config/seo.php`, the way before, still works until 1.0.)
+(`'class' => App\Seo::class` in `config/marketing-toolkit.php`, the way before, still works until 1.0.)
 
 The methods below are the API, marked `@api` in the source: their names and signatures change only in a major version. Other methods, public or protected, are internal and may change in any release; if you need one, open an issue.
 
@@ -87,9 +87,9 @@ The methods you're most likely to override:
 | `image(Context)` | `['url', 'width', 'height', 'alt']` or `null`: override, uploaded image, `image_fields`, generated card, default image. |
 | `canonical(Context)` | The canonical URL, or `null` for none. |
 | `robots(Context)` | The robots meta content. |
-| `snippetRules(Context)` | The robots content after any `nofollow`: `seo.robots.default` with the page's **No snippet** or **Snippet length** applied. |
+| `snippetRules(Context)` | The robots content after any `nofollow`: `marketing-toolkit.robots.default` with the page's **No snippet** or **Snippet length** applied. |
 | `shouldNoindex(Context)` | Extra reasons to noindex (an empty listing, a thank-you page). Return `parent::shouldNoindex($context) || …`. |
-| `hiddenOutsideProduction()` | Whether this copy of the site is kept out of search engines (every page noindexed, robots.txt disallowing all): `seo.robots.noindex_outside_production` unless `APP_ENV=production`. |
+| `hiddenOutsideProduction()` | Whether this copy of the site is kept out of search engines (every page noindexed, robots.txt disallowing all): `marketing-toolkit.robots.noindex_outside_production` unless `APP_ENV=production`. |
 | `ogType(Context)` | og:type. |
 | `graph(Context)` | Every JSON-LD node. Usually you override one of the node methods instead. |
 | `publisherTypes()`, `profileEntity(Context)`, `authors(Context)`, `articleImages(Context)` | The publisher's schema.org types; who a ProfilePage is about; an Article's authors; its images in three shapes. |
@@ -105,7 +105,7 @@ Helpers available in a subclass: `settings()` (the brand global, with `string()`
 
 ## The tag
 
-`<s:seo:head />` (Antlers: `{{ seo:head }}`) prints the Consent Mode defaults, the tracking tags and the meta tags; `<s:seo:meta />` prints the meta tags alone; `<s:seo:body />` prints the tracking tags' `<noscript>` fallbacks. They read the entry or term from the view's `page`. Parameters of `seo:head` and `seo:meta`:
+`<s:mt:head />` (Antlers: `{{ mt:head }}`) prints the Consent Mode defaults, the tracking tags and the meta tags; `<s:mt:meta />` prints the meta tags alone; `<s:mt:body />` prints the tracking tags' `<noscript>` fallbacks. They read the entry or term from the view's `page`. Parameters of `mt:head` and `mt:meta`:
 
 | Parameter | |
 |---|---|
@@ -189,37 +189,38 @@ Several sites are Pro. On a multi-site install, Free looks after the default sit
 
 With Statamic Pro and more than one site, whether separate brands on their own domains or languages under `/fr/` or on their own domains, each site gets its own:
 
-- **Brand values**: `seo:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
+- **Brand values**: `mt:install` puts SEO & brand on every site, each other site taking what it leaves empty from the default site's. A set that already exists isn't changed: enable it on each site under **Globals → SEO & brand** (or the set's `sites`), else that site uses the addon's defaults.
 - **Sitemap and robots.txt** per domain: a sitemap lists every site on its domain, each URL with its other languages. **Share cards** (Pro) and the **IndexNow key** on the site's own domain; IndexNow gets one request per domain.
 - **hreflang**: a page's localizations link to each other; see [configuration.md](configuration.md#languages-hreflang).
 - **Redirects** for one site or for every site (a site's own wins from the same address), and **automatic 301s** (Pro) on the site of the content that moved.
-- **404 log** and **reports** (Pro), one report per site (`seo:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
+- **404 log** and **reports** (Pro), one report per site (`mt:report` reports on each in turn, or `--site=`). Tools → SEO, its screens and the dashboard widget show the site selected in the control panel.
 - **Search Console property** (Pro): one key, a property per site (set up from Tools → SEO → Search Console with the site selected, or a map in config).
 
 The SEO fields are `localizable`, so each language keeps its own values.
 
 ## Translating the control panel
 
-Every word the addon shows in the control panel, and the "Page N" it adds to titles, is in `lang/en/*.php` under the `seo::` namespace (`cp.php`, `fields.php`, `reports.php`, `validation.php`, `frontend.php`). To translate, publish them and copy the folder:
+Every word the addon shows in the control panel, and the "Page N" it adds to titles, is in `lang/en/*.php` under the `marketing-toolkit::` namespace (`cp.php`, `fields.php`, `reports.php`, `validation.php`, `frontend.php`). To translate, publish them and copy the folder:
 
 ```bash
-php artisan vendor:publish --tag=seo-translations   # lang/vendor/seo/en
-cp -r lang/vendor/seo/en lang/vendor/seo/fr
+php artisan vendor:publish --tag=marketing-toolkit-translations   # lang/vendor/marketing-toolkit/en
+cp -r lang/vendor/marketing-toolkit/en lang/vendor/marketing-toolkit/fr
 ```
 
 The control panel uses the user's language preference; "Page N" uses each site's language. A report shows its checks in the reader's language: results are stored as keys and translated when shown.
 
 ## Names
 
-The addon began as Co-SEO, and its SEO names stayed when it became Marketing Toolkit, so sites built on it kept working. What carries which name:
+Two names, by one rule: `marketing-toolkit`, the addon's slug, wherever Statamic names a thing after the slug; `mt` wherever you type a short handle.
 
 | Name | Where |
 |---|---|
 | `jotham-lec/statamic-marketing-toolkit` | The Composer package, and its key in `config/statamic/editions.php` |
 | `JothamLec\MarketingToolkit\…` | PHP classes |
-| `marketing-toolkit` | The addon's slug: its settings (`resources/addons/marketing-toolkit.yaml`), the publish tag of the control panel's scripts and their folder (`public/vendor/statamic-marketing-toolkit`), the favicons in `storage/app/marketing-toolkit` |
-| `seo` | Everything else: `config/seo.php` and `--tag=seo-config`, the tags (`<s:seo:head />`), the commands (`seo:install`), the `seo::` fieldset, views and translations, the **SEO & brand** global (`seo`), the tables (`seo_*`), routes (`seo.*`), control panel addresses (`/cp/seo`), permissions (`view seo`), `SEO_*` in `.env` |
-| `mt` | What the browser sees: `window.mtConversion()` and `window.mtConsent()`, the `mt_source` and `mt_conversion` cookies |
+| `marketing-toolkit` | `config/marketing-toolkit.php` (`--tag=marketing-toolkit-config`); the `marketing-toolkit::` views, translations (`--tag=marketing-toolkit-translations`) and fieldset (`marketing-toolkit::seo`); the addon's settings (`resources/addons/marketing-toolkit.yaml`); the control panel's addresses (`/cp/marketing-toolkit`), scripts (`--tag=marketing-toolkit`, `public/vendor/statamic-marketing-toolkit`) and permissions (`view marketing toolkit`, `manage marketing toolkit redirects`, `run marketing toolkit reports`); its files in `storage/app/marketing-toolkit` and `storage/app/private/marketing-toolkit` |
+| `mt` | The tags (`<s:mt:head />`, `{{ mt:head }}`), the commands (`mt:install`, `mt:report`, `mt:search-console`), the tables (`mt_*`), route names (`mt.*`), `.env` (`MT_*`), the widget (`'type' => 'mt'`), the fieldtype (`mt_preview`), and in the browser `window.mtConversion()`, `window.mtConsent()` and the `mt_source` and `mt_conversion` cookies |
+
+`seo` is left only where it is content about SEO: the SEO fields' `seo` group in each entry, the `seo` fieldset, and the **SEO & brand** global set's handle (`seo`, `marketing-toolkit.global`). Up to 0.19 everything above was `seo`; [upgrading.md](upgrading.md) says how a site moves.
 
 ## How the pieces fit
 

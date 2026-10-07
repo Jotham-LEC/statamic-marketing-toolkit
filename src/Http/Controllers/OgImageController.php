@@ -19,7 +19,7 @@ class OgImageController
     public function __invoke(Generator $generator, ?string $path = null): Response
     {
         // Off in the config, under Features, or in Free.
-        throw_unless(config('seo.og.enabled'), NotFoundHttpException::class);
+        throw_unless(config('marketing-toolkit.og.enabled'), NotFoundHttpException::class);
 
         $entry = Entry::findByUri('/'.trim((string) $path, '/'), Site::current()->handle());
         $entry = $entry instanceof Page ? $entry->entry() : $entry;
@@ -28,7 +28,7 @@ class OgImageController
 
         return new Response($generator->png($entry), 200, [
             'Content-Type' => 'image/png',
-            'Cache-Control' => 'public, max-age='.(int) config('seo.og.max_age'),
+            'Cache-Control' => 'public, max-age='.(int) config('marketing-toolkit.og.max_age'),
         ]);
     }
 }

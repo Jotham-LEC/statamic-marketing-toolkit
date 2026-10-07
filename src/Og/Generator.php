@@ -25,7 +25,7 @@ class Generator
         $template = $this->template($entry);
 
         $key = implode(':', [
-            'seo:og',
+            'mt:og',
             $entry->id(),
             $entry->lastModified()->timestamp,
             $template::class,
@@ -35,7 +35,7 @@ class Generator
 
         return Cache::remember(
             $key,
-            (int) config('seo.og.max_age'),
+            (int) config('marketing-toolkit.og.max_age'),
             fn () => $template->image($card)->toString(),
         );
     }
@@ -73,14 +73,14 @@ class Generator
 
     public function template(Entry $entry): Template
     {
-        $key = config("seo.collections.{$entry->collectionHandle()}.og_template") ?? 'default';
+        $key = config("marketing-toolkit.collections.{$entry->collectionHandle()}.og_template") ?? 'default';
 
         // A key that names no template falls back to the default rather than
         // breaking the image; a missing default is a setup error.
-        $class = config("seo.og.templates.{$key}") ?? config('seo.og.templates.default');
+        $class = config("marketing-toolkit.og.templates.{$key}") ?? config('marketing-toolkit.og.templates.default');
 
         if (! is_string($class) || ! is_subclass_of($class, Template::class)) {
-            throw new InvalidArgumentException('No share-card template is registered as [default] in seo.og.templates.');
+            throw new InvalidArgumentException('No share-card template is registered as [default] in marketing-toolkit.og.templates.');
         }
 
         return app($class);

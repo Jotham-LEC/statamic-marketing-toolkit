@@ -9,7 +9,7 @@ use JothamLec\MarketingToolkit\Reports\Runner;
 use Statamic\Facades\YAML;
 
 /**
- * Every `seo::` key the addon's PHP, Vue and YAML name.
+ * Every `marketing-toolkit::` key the addon's PHP, Vue and YAML name.
  *
  * @return list<string>
  */
@@ -27,7 +27,7 @@ function translationKeysUsed(): array
 
     return $files->flatMap(function ($file) {
         // Quoted in PHP and Vue, bare in YAML.
-        preg_match_all('/(?<![\w:])seo::[a-z_]+(?:\.[a-z0-9_]+)+/', $file->getContents(), $matches);
+        preg_match_all('/(?<![\w:])marketing-toolkit::[a-z_]+(?:\.[a-z0-9_]+)+/', $file->getContents(), $matches);
 
         return $matches[0];
     })->unique()->sort()->values()->all();
@@ -44,11 +44,11 @@ test('every key the code and blueprints use is in lang/en', function () {
 test('lang/en has no key left unused', function () {
     $used = translationKeysUsed();
     $defined = collect(File::files(__DIR__.'/../../lang/en'))
-        ->flatMap(fn ($file) => array_keys(Arr::dot(['seo::'.$file->getFilenameWithoutExtension() => require $file->getPathname()])))
+        ->flatMap(fn ($file) => array_keys(Arr::dot(['marketing-toolkit::'.$file->getFilenameWithoutExtension() => require $file->getPathname()])))
         ->all();
 
     // Built from parts at run time: a rule's handle, a report check's message, a Pro feature.
-    $dynamic = fn (string $key) => str_starts_with($key, 'seo::reports.') || preg_match('/^seo::cp\.pro\.(sites|reports|not_found|search_console)\.(title|body)$/', $key) || str_starts_with($key, 'seo::cp.tracking.names.') || str_starts_with($key, 'seo::fields.attribution.') || str_starts_with($key, 'seo::cp.features.');
+    $dynamic = fn (string $key) => str_starts_with($key, 'marketing-toolkit::reports.') || preg_match('/^marketing-toolkit::cp\.pro\.(sites|reports|not_found|search_console)\.(title|body)$/', $key) || str_starts_with($key, 'marketing-toolkit::cp.tracking.names.') || str_starts_with($key, 'marketing-toolkit::fields.attribution.') || str_starts_with($key, 'marketing-toolkit::cp.features.');
 
     expect(array_values(array_filter($defined, fn (string $key) => ! in_array($key, $used, true) && ! $dynamic($key))))->toBe([]);
 });
@@ -63,23 +63,23 @@ test('no screen shows a raw translation key', function () {
     $report = app(Runner::class)->runToEnd(app(Runner::class)->start());
 
     $screens = [
-        cp_route('seo.index'),
-        cp_route('seo.redirects.index'),
-        cp_route('seo.redirects.listing'),
-        cp_route('seo.redirects.create'),
-        cp_route('seo.redirects.edit', $redirect),
-        cp_route('seo.404s.index'),
-        cp_route('seo.404s.listing'),
-        cp_route('seo.reports.index'),
-        cp_route('seo.reports.show', $report),
-        cp_route('seo.reports.pages', $report),
-        cp_route('seo.search-console.index'),
+        cp_route('mt.index'),
+        cp_route('mt.redirects.index'),
+        cp_route('mt.redirects.listing'),
+        cp_route('mt.redirects.create'),
+        cp_route('mt.redirects.edit', $redirect),
+        cp_route('mt.404s.index'),
+        cp_route('mt.404s.listing'),
+        cp_route('mt.reports.index'),
+        cp_route('mt.reports.show', $report),
+        cp_route('mt.reports.pages', $report),
+        cp_route('mt.search-console.index'),
     ];
 
     foreach ($screens as $url) {
         $response = $this->get($url, ['X-Inertia' => 'true', 'Accept' => 'application/json'])->assertOk();
 
-        expect($response->getContent())->not->toContain('seo::', $url);
+        expect($response->getContent())->not->toContain('marketing-toolkit::', $url);
     }
 });
 
@@ -89,20 +89,20 @@ test('a control panel screen, a nav item and an error message come out in the us
         'cp.overview.files.sitemap' => 'XX Sitemap',
         'cp.nav.redirects' => 'XX Redirects',
         'cp.search_console.messages.add_first' => 'XX Add the key first.',
-    ], 'xx', 'seo');
+    ], 'xx', 'marketing-toolkit');
     app()->setLocale('xx');
 
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.index'))->assertInertia(fn ($page) => $page->where('files.0.label', 'XX Sitemap'));
-    $this->postJson(cp_route('seo.search-console.check'))->assertJson(['ok' => false, 'message' => 'XX Add the key first.']);
+    $this->get(cp_route('mt.index'))->assertInertia(fn ($page) => $page->where('files.0.label', 'XX Sitemap'));
+    $this->postJson(cp_route('mt.search-console.check'))->assertJson(['ok' => false, 'message' => 'XX Add the key first.']);
 
     expect(collect(toolsNav()->get('SEO')->resolveChildren()->children())->map->display()->all())->toContain('XX Redirects');
 });
 
 test('"Page N" is in the page\'s own language', function () {
     multilang();
-    app('translator')->addLines(['frontend.page' => 'Page :n (fr)'], 'fr', 'seo');
+    app('translator')->addLines(['frontend.page' => 'Page :n (fr)'], 'fr', 'marketing-toolkit');
     $french = translationOf(entryIn('pages', 'essays'), 'fr', 'essais');
 
     expect(metaFor($french, '/fr/essais?page=2')->title)->toEndWith('Page 2 (fr)');
@@ -117,5 +117,5 @@ test('the fieldset and settings blueprint name keys, not English', function () {
         ->values());
 
     expect($displays)->not->toBeEmpty()
-        ->and($displays->reject(fn ($value) => str_starts_with((string) $value, 'seo::'))->values()->all())->toBe([]);
+        ->and($displays->reject(fn ($value) => str_starts_with((string) $value, 'marketing-toolkit::'))->values()->all())->toBe([]);
 });

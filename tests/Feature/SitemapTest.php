@@ -70,13 +70,13 @@ test('a collection given a new route, or sitemap settings changed by a deploy, r
 
     expect($this->get('/sitemap.xml')->getContent())->toContain('about</loc>');
 
-    config(['seo.sitemap.exclude_collections' => ['essays']]);
+    config(['marketing-toolkit.sitemap.exclude_collections' => ['essays']]);
 
     expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->not->toContain('https://example.test/essays/first');
 });
 
 test('past the page size the sitemap becomes an index of numbered pages', function () {
-    config(['seo.sitemap.per_page' => 2]);
+    config(['marketing-toolkit.sitemap.per_page' => 2]);
     collect(['a', 'b', 'c'])->each(fn ($slug) => entryIn('pages', $slug));
 
     expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe([
@@ -96,8 +96,8 @@ test('a project adds URLs that are not entries, from its subclass bound in a ser
     expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe(['https://example.test/contact']);
 });
 
-test('a subclass named in config/seo.php still works', function () {
-    config(['seo.class' => SitemapWithExtras::class]);
+test('a subclass named in config/marketing-toolkit.php still works', function () {
+    config(['marketing-toolkit.class' => SitemapWithExtras::class]);
 
     expect(sitemapLocs($this->get('/sitemap.xml')->getContent()))->toBe(['https://example.test/contact']);
 });
@@ -158,7 +158,7 @@ test('more entries than one read takes are all listed, once each', function () {
 test('a project decides which terms have entries, for the sitemap and the reports alike', function () {
     // Statamic counts no entries for a taxonomy that isn't attached to their collection.
     Taxonomy::make('topics')->save();
-    config(['seo.sitemap.taxonomies' => ['topics'], 'seo.class' => TermsWithEntries::class]);
+    config(['marketing-toolkit.sitemap.taxonomies' => ['topics'], 'marketing-toolkit.class' => TermsWithEntries::class]);
     tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens']))->save();
     tap(Term::make()->taxonomy('topics')->slug('empty')->data(['title' => 'Empty']))->save();
 

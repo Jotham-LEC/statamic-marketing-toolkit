@@ -17,7 +17,7 @@ use JothamLec\MarketingToolkit\Support\Edition;
 use Statamic\Facades\Addon;
 
 beforeEach(function () {
-    config(['seo.search_console' => ['credentials' => null, 'property' => null, 'days' => 28]]);
+    config(['marketing-toolkit.search_console' => ['credentials' => null, 'property' => null, 'days' => 28]]);
     File::delete((new Connection)->keyPath());
 });
 
@@ -45,33 +45,33 @@ function fakeGoogle(int $status = 200, array $body = ['siteUrl' => 'sc-domain:ex
 }
 
 test('its own screen offers the steps to whoever may change the addon\'s settings, with the site\'s domain suggested', function () {
-    $this->actingAs(cpUser(super: true))->get(cp_route('seo.search-console.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-        ->component('seo::SearchConsole')
+    $this->actingAs(cpUser(super: true))->get(cp_route('mt.search-console.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('marketing-toolkit::SearchConsole')
         ->where('setup.configured', false)
         ->where('setup.can_set_up', true)
         ->where('setup.suggested_property', 'sc-domain:example.test')
-        ->where('setup.urls.key', cp_route('seo.search-console.key'))
+        ->where('setup.urls.key', cp_route('mt.search-console.key'))
         ->where('setup.guides', ['key_policy' => Connection::KEY_POLICY, 'keys' => Connection::KEYS_GUIDE])
         ->where('imported', ['fetched_at' => null, 'pages' => 0])
         ->where('sites', []));
 });
 
 test('the overview links to that screen rather than holding the steps', function () {
-    $this->actingAs(cpUser(super: true))->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->actingAs(cpUser(super: true))->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('search', null)
-        ->where('searchConsole', ['url' => cp_route('seo.search-console.index')])
+        ->where('searchConsole', ['url' => cp_route('mt.search-console.index')])
         ->missing('searchSetup'));
 });
 
 test('someone who may only view SEO is told it isn\'t connected, without the steps', function () {
-    $this->actingAs(cpUser(['view seo']))->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->actingAs(cpUser(['view marketing toolkit']))->get(cp_route('mt.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('setup.can_set_up', false)
         ->where('setup.urls', null));
 });
 
 test('saving the report settings keeps the properties set up on the Search Console screen', function () {
     $this->actingAs(cpUser(super: true));
-    $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
+    $this->postJson(cp_route('mt.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
 
     $addon = Addon::get(Edition::PACKAGE);
     $values = collect($addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess()->values())->all();
@@ -84,9 +84,9 @@ test('saving the report settings keeps the properties set up on the Search Conso
 test('an uploaded key is kept privately and connects with a saved property', function () {
     $this->actingAs(cpUser(super: true));
 
-    $this->post(cp_route('seo.search-console.key'), ['file' => UploadedFile::fake()->createWithContent('key.json', googleKey())])
+    $this->post(cp_route('mt.search-console.key'), ['file' => UploadedFile::fake()->createWithContent('key.json', googleKey())])
         ->assertOk()->assertJson(['email' => 'seo@project.iam.gserviceaccount.com']);
-    $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
+    $this->postJson(cp_route('mt.search-console.property'), ['property' => 'sc-domain:example.test'])->assertOk();
 
     $path = (new Connection)->keyPath();
 
@@ -94,13 +94,13 @@ test('an uploaded key is kept privately and connects with a saved property', fun
         ->and(Addon::get(Edition::PACKAGE)->settings()->get(Connection::SETTING))->toBe('sc-domain:example.test');
 
     // A later request boots with what was saved.
-    config(['seo.search_console.credentials' => null, 'seo.search_console.property' => null]);
+    config(['marketing-toolkit.search_console.credentials' => null, 'marketing-toolkit.search_console.property' => null]);
     Connection::apply();
 
-    expect(config('seo.search_console.credentials'))->toBe($path)
+    expect(config('marketing-toolkit.search_console.credentials'))->toBe($path)
         ->and(app(Client::class)->configured())->toBeTrue();
 
-    $this->deleteJson(cp_route('seo.search-console.key.forget'))->assertOk();
+    $this->deleteJson(cp_route('mt.search-console.key.forget'))->assertOk();
 
     expect(File::exists($path))->toBeFalse();
 });
@@ -108,7 +108,7 @@ test('an uploaded key is kept privately and connects with a saved property', fun
 test('an uploaded key is encrypted on disk, and one saved before that still reads', function () {
     $connection = new Connection;
     $key = googleKey();
-    config(['seo.search_console.credentials' => $connection->keyPath()]);
+    config(['marketing-toolkit.search_console.credentials' => $connection->keyPath()]);
 
     $connection->saveKey($key);
 
@@ -129,7 +129,7 @@ test('the encrypted key is what signs the requests to Google', function () {
     ]);
     $connection = new Connection;
     $connection->saveKey(googleKey());
-    config(['seo.search_console.credentials' => $connection->keyPath(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => $connection->keyPath(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
 
     expect(app(Client::class)->site()['permissionLevel'])->toBe('siteFullUser');
 
@@ -138,10 +138,10 @@ test('the encrypted key is what signs the requests to Google', function () {
 });
 
 test('a check that fails before Google answers is logged, and says where to look', function () {
-    config(['seo.search_console.credentials' => '{"not": "a key"}', 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => '{"not": "a key"}', 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
     Exceptions::fake();
 
-    expect((new Connection)->check(app(Client::class)))->toBe(['ok' => false, 'message' => __('seo::cp.search_console.messages.unexpected')]);
+    expect((new Connection)->check(app(Client::class)))->toBe(['ok' => false, 'message' => __('marketing-toolkit::cp.search_console.messages.unexpected')]);
 
     Exceptions::assertReported(RuntimeException::class);
 });
@@ -149,45 +149,45 @@ test('a check that fails before Google answers is logged, and says where to look
 test('what isn\'t a key or a property is refused, saying what to give instead', function () {
     $this->actingAs(cpUser(super: true));
 
-    $this->postJson(cp_route('seo.search-console.key'), ['key' => '{"client_email": "x@y.z"}'])
+    $this->postJson(cp_route('mt.search-console.key'), ['key' => '{"client_email": "x@y.z"}'])
         ->assertUnprocessable()->assertJsonValidationErrors(['key' => 'service account key']);
 
     $markup = json_decode(googleKey(), true);
     $markup['client_email'] = '<img src=x onerror=alert(1)>';
-    $this->postJson(cp_route('seo.search-console.key'), ['key' => json_encode($markup)])
+    $this->postJson(cp_route('mt.search-console.key'), ['key' => json_encode($markup)])
         ->assertUnprocessable()->assertJsonValidationErrors(['key' => 'service account key']);
-    $this->postJson(cp_route('seo.search-console.property'), ['property' => 'example.test'])
+    $this->postJson(cp_route('mt.search-console.property'), ['property' => 'example.test'])
         ->assertUnprocessable()->assertJsonValidationErrors(['property' => 'sc-domain:example.com']);
 
     expect(File::exists((new Connection)->keyPath()))->toBeFalse();
 });
 
 test('values in .env win and can\'t be changed from the control panel', function () {
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'https://example.test/']);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'https://example.test/']);
     $this->actingAs(cpUser(super: true));
 
-    $this->postJson(cp_route('seo.search-console.key'), ['key' => googleKey()])->assertStatus(409);
-    $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:example.test'])->assertStatus(409);
+    $this->postJson(cp_route('mt.search-console.key'), ['key' => googleKey()])->assertStatus(409);
+    $this->postJson(cp_route('mt.search-console.property'), ['property' => 'sc-domain:example.test'])->assertStatus(409);
 
-    $this->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('setup.key_source', 'env')
         ->where('setup.property_source', 'env')
         ->where('setup.email', 'seo@project.iam.gserviceaccount.com'));
 });
 
 test('only whoever may change the addon\'s settings can set it up', function () {
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
-    $this->postJson(cp_route('seo.search-console.key'), ['key' => googleKey()])->assertForbidden();
-    $this->postJson(cp_route('seo.search-console.check'))->assertForbidden();
-    $this->postJson(cp_route('seo.search-console.import'))->assertForbidden();
+    $this->postJson(cp_route('mt.search-console.key'), ['key' => googleKey()])->assertForbidden();
+    $this->postJson(cp_route('mt.search-console.check'))->assertForbidden();
+    $this->postJson(cp_route('mt.search-console.import'))->assertForbidden();
 });
 
 test('checking the connection says what to fix in Google\'s words turned into steps', function (int $status, array $body, string $says) {
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
     fakeGoogle($status, $body);
 
-    $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.check'))
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.check'))
         ->assertOk()->assertJson(['ok' => $status === 200])->assertJsonPath('message', fn (string $message) => str_contains($message, $says));
 })->with([
     'connected' => [200, ['siteUrl' => 'sc-domain:example.test', 'permissionLevel' => 'siteRestrictedUser'], 'Connected'],
@@ -197,19 +197,19 @@ test('checking the connection says what to fix in Google\'s words turned into st
 ]);
 
 test('a key Google has disabled gets its own explanation, with the guide', function () {
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
     Http::fake(['oauth2.googleapis.com/token' => Http::response(['error' => 'invalid_grant', 'error_description' => 'Invalid grant: account disabled'], 400)]);
 
-    $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.check'))
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.check'))
         ->assertOk()->assertJson(['ok' => false])
         ->assertJsonPath('message', fn (string $message) => str_contains($message, 'is disabled') && str_contains($message, 'https://docs.cloud.google.com/iam/docs/keys-disable-enable'));
 });
 
 test('importing from the control panel brings in the numbers', function () {
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
     fakeGoogle();
 
-    $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.import'))
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.import'))
         ->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 1 page.']);
 
     expect(SearchStat::query()->sum('clicks'))->toEqual(3);
@@ -220,10 +220,10 @@ test('a failed import from the control panel is reported, and the editor told wh
     Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$logged) {
         $logged[] = $event->context['exception'] ?? null;
     });
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
     fakeGoogle(404, ['error' => ['code' => 404, 'message' => 'Not found']]);
 
-    $this->actingAs(cpUser(super: true))->postJson(cp_route('seo.search-console.import'))
+    $this->actingAs(cpUser(super: true))->postJson(cp_route('mt.search-console.import'))
         ->assertOk()->assertJson(['ok' => false])->assertJsonPath('message', fn (string $message) => str_contains($message, 'has no property'));
 
     // Reported through Statamic's control panel handler, which logs it.
@@ -232,10 +232,10 @@ test('a failed import from the control panel is reported, and the editor told wh
 
 test('on several sites, someone who may only view SEO sees whether the sites they work on are connected, not their properties', function () {
     multisite();
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => ['cothinking' => 'sc-domain:cothink.test']]);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => ['cothinking' => 'sc-domain:cothink.test']]);
     session(['statamic.cp.selected-site' => 'cothinking']);
 
-    $this->actingAs(cpUser(['view seo', 'access cothinking site']))->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->actingAs(cpUser(['view marketing toolkit', 'access cothinking site']))->get(cp_route('mt.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('setup.configured', true)
         ->where('setup.property', null)
         ->where('sites', [['name' => 'CoThinking', 'property' => null, 'connected' => true, 'selected' => true]]));
@@ -246,12 +246,12 @@ test('the daily import is scheduled once it is set up, however that was done', f
         $schedule = new Schedule;
         (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
 
-        return collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'seo:search-console'));
+        return collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'mt:search-console'));
     };
 
     expect($scheduled())->toBeFalse();
 
-    config(['seo.search_console.credentials' => googleKey(), 'seo.search_console.property' => 'sc-domain:example.test']);
+    config(['marketing-toolkit.search_console.credentials' => googleKey(), 'marketing-toolkit.search_console.property' => 'sc-domain:example.test']);
 
     expect($scheduled())->toBeTrue();
 });

@@ -11,12 +11,12 @@ use Statamic\Tokens\Handlers\LivePreview;
 
 function trackingHead(): string
 {
-    return renderAt('/', '<s:seo:head />');
+    return renderAt('/', '<s:mt:head />');
 }
 
 function trackingBody(): string
 {
-    return renderAt('/', '<s:seo:body />');
+    return renderAt('/', '<s:mt:body />');
 }
 
 test('no tags until an ID is set; then each prints in the head, and GTM\'s noscript in the body', function () {
@@ -51,20 +51,20 @@ test('no tags until an ID is set; then each prints in the head, and GTM\'s noscr
 
 test('.env wins over the control panel', function () {
     seoGlobal(['gtm_id' => 'GTM-FROMCP1', 'ga4_id' => 'G-FROMCP123']);
-    config(['seo.tracking.gtm_id' => 'GTM-FROMENV']);
+    config(['marketing-toolkit.tracking.gtm_id' => 'GTM-FROMENV']);
 
     expect(app(Tracking::class)->ids())->toMatchArray(['gtm' => 'GTM-FROMENV', 'ga4' => 'G-FROMCP123'])
         ->and(app(Tracking::class)->fromConfig())->toMatchArray(['gtm' => true, 'ga4' => false]);
 });
 
-test('a config/seo.php published with the old tracking keys keeps working', function () {
+test('a config/marketing-toolkit.php published with the old tracking keys keeps working', function () {
     expect(Config::upgrade(['tracking' => ['gtm' => 'GTM-OLDKEY1', 'linkedin' => '1234567', 'ga4_id' => 'G-NEWKEY123', 'ga4' => 'G-OLDKEY123'], 'robots_txt' => false]))
         ->toBe(['tracking' => ['ga4_id' => 'G-NEWKEY123', 'gtm_id' => 'GTM-OLDKEY1', 'linkedin_partner_id' => '1234567'], 'robots_txt' => ['enabled' => false]]);
 });
 
 test('an ID that is set but isn\'t one is reported, not printed', function () {
     seoGlobal(['ga4_id' => 'UA-12345-1']);
-    config(['seo.tracking.gtm_id' => 'GTM-AB1']);
+    config(['marketing-toolkit.tracking.gtm_id' => 'GTM-AB1']);
 
     expect(app(Tracking::class)->invalid())->toBe(['gtm' => 'GTM-AB1', 'ga4' => 'UA-12345-1'])
         ->and(collect(app(Tracking::class)->ids())->filter()->all())->toBe([]);
@@ -95,13 +95,13 @@ test('nothing prints outside production, or in Live Preview', function () {
     $this->app['env'] = 'local';
     expect(trackingHead())->not->toContain('gtm.js')->and(trackingBody())->toBe('');
 
-    config(['seo.tracking.environments' => ['production', 'local']]);
+    config(['marketing-toolkit.tracking.environments' => ['production', 'local']]);
     expect(trackingHead())->toContain('gtm.js');
 
     $this->app['env'] = 'production';
     $token = Token::make(null, LivePreview::class);
     $token->save();
-    expect(renderAt('/?token='.$token->token(), '<s:seo:head />'))->not->toContain('gtm.js')
+    expect(renderAt('/?token='.$token->token(), '<s:mt:head />'))->not->toContain('gtm.js')
         ->and(request()->isLivePreview())->toBeTrue();
 });
 
@@ -149,7 +149,7 @@ test('the CP warns when GTM is set beside another tracker, on the overview', fun
 
     expect(app(Tracking::class)->besideGtm())->toBe(['Google Analytics 4', 'Meta Pixel']);
 
-    $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('tracking.overlap', ['Google Analytics 4', 'Meta Pixel'])
         ->where('tracking.tools.0', ['name' => 'Google Tag Manager', 'id' => 'GTM-ABC1234', 'from_env' => false])
         ->where('tracking.consent', false));
@@ -160,17 +160,17 @@ test('the CP warns when GTM is set beside another tracker, on the overview', fun
 
 test('the overview says where an ID comes from, and which set ones aren\'t IDs', function () {
     seoGlobal(['ga4_id' => 'UA-12345-1', 'meta_pixel_id' => '123456789012']);
-    config(['seo.tracking.gtm_id' => 'GTM-AB1', 'seo.tracking.linkedin_partner_id' => '1234567']);
+    config(['marketing-toolkit.tracking.gtm_id' => 'GTM-AB1', 'marketing-toolkit.tracking.linkedin_partner_id' => '1234567']);
     app()->bind(Tracking::class, LinkedInFromCode::class);
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('tracking.tools', [
             ['name' => 'Meta Pixel', 'id' => '123456789012', 'from_env' => false],
             ['name' => 'LinkedIn Insight Tag', 'id' => '7654321', 'from_env' => false],
         ])
         ->where('tracking.invalid', [
-            'Google Tag Manager: “GTM-AB1” in SEO_GTM_ID isn’t an ID, so it isn’t on the site.',
+            'Google Tag Manager: “GTM-AB1” in MT_GTM_ID isn’t an ID, so it isn’t on the site.',
             'Google Analytics 4: “UA-12345-1” in Brand & defaults → Tracking isn’t an ID, so it isn’t on the site.',
         ]));
 });
@@ -187,7 +187,7 @@ test('the Tracking tab shows its warning through a custom condition, and validat
     seoGlobal([]);
     $fields = Blueprint::find('globals.seo')->fields();
 
-    expect($fields->get('tracking_overlap')->config()['if'])->toBe('seoTrackingOverlap')
+    expect($fields->get('tracking_overlap')->config()['if'])->toBe('mtTrackingOverlap')
         ->and($fields->get('gtm_id')->rules()['gtm_id'])->toContain('regex:/^GTM-[A-Z0-9]{4,12}$/i');
 
     $this->actingAs(cpUser(super: true))
@@ -208,7 +208,7 @@ test('a CSP nonce is added to every script', function () {
 test('install adds the Tracking tab to an existing blueprint on request', function () {
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => []]]]]])->save();
 
-    $this->artisan('statamic:seo:install', ['--tab' => ['tracking']])->assertSuccessful();
+    $this->artisan('statamic:mt:install', ['--tab' => ['tracking']])->assertSuccessful();
 
     expect(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('gtm_id', 'consent_mode', 'consent_regions');
 });

@@ -44,7 +44,7 @@ test('the card says the title and description, or the editor\'s card text instea
 });
 
 test('the template comes from the collection, else the default', function () {
-    config(['seo.og.templates.quiet' => QuietTemplate::class, 'seo.collections.essays.og_template' => 'quiet']);
+    config(['marketing-toolkit.og.templates.quiet' => QuietTemplate::class, 'marketing-toolkit.collections.essays.og_template' => 'quiet']);
     $generator = app(Generator::class);
 
     expect($generator->template(entryIn('pages', 'about')))->toBeInstanceOf(DefaultTemplate::class)
@@ -52,11 +52,11 @@ test('the template comes from the collection, else the default', function () {
 });
 
 test('a template key that names nothing falls back to the default; a missing default is a setup error', function () {
-    config(['seo.collections.pages.og_template' => 'nope']);
+    config(['marketing-toolkit.collections.pages.og_template' => 'nope']);
 
     expect(app(Generator::class)->template(entryIn('pages', 'odd')))->toBeInstanceOf(DefaultTemplate::class);
 
-    config(['seo.og.templates' => []]);
+    config(['marketing-toolkit.og.templates' => []]);
 
     app(Generator::class)->template(entryIn('pages', 'odder'));
 })->throws(InvalidArgumentException::class, 'No share-card template is registered as [default]');
@@ -64,7 +64,7 @@ test('a template key that names nothing falls back to the default; a missing def
 test('an uploaded share image replaces the card in the meta tags', function () {
     Blueprint::make('page')->setNamespace('collections.pages')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
         ['handle' => 'title', 'field' => ['type' => 'text']],
-        ['import' => 'seo::seo'],
+        ['import' => 'marketing-toolkit::seo'],
     ]]]]]])->save();
     AssetContainer::find('assets')->disk()->put('share.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
     $entry = entryIn('pages', 'about', ['seo' => ['image' => 'share.png']]);
@@ -77,7 +77,7 @@ test('an uploaded share image replaces the card in the meta tags', function () {
 test('an uploaded share image is served at the size the meta tags give, cropped on its focal point', function (?string $focus) {
     Blueprint::make('page')->setNamespace('collections.pages')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
         ['handle' => 'title', 'field' => ['type' => 'text']],
-        ['import' => 'seo::seo'],
+        ['import' => 'marketing-toolkit::seo'],
     ]]]]]])->save();
     $container = AssetContainer::find('assets');
     $container->disk()->put('share.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
@@ -93,7 +93,7 @@ test('an uploaded share image is served at the size the meta tags give, cropped 
 })->with(['no focal point' => null, 'a focal point' => '20-70-1']);
 
 test('cards can be turned off, leaving the site default', function () {
-    config(['seo.og.enabled' => false]);
+    config(['marketing-toolkit.og.enabled' => false]);
 
     expect(metaFor(entryIn('pages', 'about'))->image)->toBeNull();
 });
@@ -111,7 +111,7 @@ test('a field that takes several photos gives its first as the share image', fun
         ['handle' => 'title', 'field' => ['type' => 'text']],
         ['handle' => 'photos', 'field' => ['type' => 'assets', 'container' => 'assets']],
     ]]]]]])->save();
-    config(['seo.collections.pages.image_fields' => ['photos']]);
+    config(['marketing-toolkit.collections.pages.image_fields' => ['photos']]);
     $disk = AssetContainer::find('assets')->disk();
     $disk->put('first.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
     $disk->put('second.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
@@ -122,7 +122,7 @@ test('a field that takes several photos gives its first as the share image', fun
 });
 
 test('a brand image field that takes several files gives its first', function () {
-    config(['seo.og.enabled' => false]);
+    config(['marketing-toolkit.og.enabled' => false]);
     Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['brand' => ['sections' => [['fields' => [
         ['handle' => 'default_image', 'field' => ['type' => 'assets', 'container' => 'assets']],
     ]]]]]])->save();

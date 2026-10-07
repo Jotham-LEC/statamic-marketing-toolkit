@@ -28,6 +28,6 @@ class ExternalLinks extends Rule
             return Result::pass();
         }
 
-        return Result::fail('seo::reports.messages.external_links_broken', ['links' => $this->listed($page->brokenExternalLinks, 5, paths: false)]);
+        return Result::fail('marketing-toolkit::reports.messages.external_links_broken', ['links' => $this->listed($page->brokenExternalLinks, 5, paths: false)]);
     }
 }

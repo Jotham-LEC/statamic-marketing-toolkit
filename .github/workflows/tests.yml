@@ -29,7 +29,7 @@ jobs:
         image: ${{ matrix.db == 'pgsql' && 'postgres:16' || '' }}
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: seo_test
+          POSTGRES_DB: mt_test
         ports: ['5432:5432']
         options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
 
@@ -52,7 +52,7 @@ jobs:
       - name: Tests
         run: vendor/bin/pest --display-warnings --fail-on-warning ${{ matrix.db == 'sqlite' && '--parallel' || '' }}
         env:
-          SEO_TEST_DB: ${{ matrix.db == 'pgsql' && 'pgsql' || '' }}
+          MT_TEST_DB: ${{ matrix.db == 'pgsql' && 'pgsql' || '' }}
           DB_USERNAME: postgres
           DB_PASSWORD: postgres
 

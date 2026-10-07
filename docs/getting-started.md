@@ -43,7 +43,7 @@ Marketing Toolkit comes as **Free** and **Pro**. Pro is $39 per site. A licence 
 | **For developers** | | |
 | Favicons and web app manifest from one image | ✓ | ✓ |
 | Any value overridden in code (`SiteSeo`, `Tracking`) | ✓ | ✓ |
-| Switch off the modules a site doesn't use | In `config/seo.php` | Also in the control panel |
+| Switch off the modules a site doesn't use | In `config/marketing-toolkit.php` | Also in the control panel |
 
 To run Pro, buy it on the Marketplace and set it in `config/statamic/editions.php`:
 
@@ -59,14 +59,14 @@ In Free, Pro's screens aren't there and Tools → SEO shows a card for each of t
 
 ```bash
 composer require jotham-lec/statamic-marketing-toolkit
-php artisan migrate                          # seo_redirects, seo_404s, seo_reports, seo_report_pages, seo_search_stats
-php please seo:install                       # the "SEO & brand" global set
-php artisan vendor:publish --tag=seo-config  # optional: config/seo.php, to change the defaults
+php artisan migrate                          # mt_redirects, mt_404s, mt_reports, mt_report_pages, mt_search_stats
+php please mt:install                       # the "SEO & brand" global set
+php artisan vendor:publish --tag=marketing-toolkit-config  # optional: config/marketing-toolkit.php, to change the defaults
 ```
 
-`seo:install` uses the first asset container for the logo, default image and icon; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing: it adds only what is missing, such as the fields a newer version brings. With several sites it creates the set on each, the others taking what they leave empty from the default site; for a set that already exists, it offers to enable it on the sites it's missing from.
+`mt:install` uses the first asset container for the logo, default image and icon; pass `--container=handle` to choose another. It also fills the empty brand fields with what the site already uses (the home page's description, the control panel kept out of robots.txt), so they show in the control panel ready to change. Running it again overwrites nothing: it adds only what is missing, such as the fields a newer version brings. With several sites it creates the set on each, the others taking what they leave empty from the default site; for a set that already exists, it offers to enable it on the sites it's missing from.
 
-**A new Statamic site has a `public/robots.txt` and an empty `public/favicon.ico`.** The web server answers with those files before the addon sees the request, so the addon's robots.txt (with its `Sitemap:` line) and icons never show. `seo:install` names them and offers to delete them; Tools → SEO marks them too. The same goes for `llms.txt`, `ads.txt` and the other icon files.
+**A new Statamic site has a `public/robots.txt` and an empty `public/favicon.ico`.** The web server answers with those files before the addon sees the request, so the addon's robots.txt (with its `Sitemap:` line) and icons never show. `mt:install` names them and offers to delete them; Tools → SEO marks them too. The same goes for `llms.txt`, `ads.txt` and the other icon files.
 
 The control panel's scripts and styles are published to `public/vendor/statamic-marketing-toolkit` when Composer installs or updates the package. If the SEO screens look unstyled, publish them yourself: `php artisan vendor:publish --tag=marketing-toolkit --force`.
 
@@ -84,12 +84,12 @@ tabs:
       -
         fields:
           -
-            import: seo::seo
+            import: marketing-toolkit::seo
 ```
 
 This adds the **search and share preview** and one `seo` group: title, description, share image, card title and subtitle, canonical URL, noindex, nofollow, no snippet, snippet length, "in sitemap" and extra JSON-LD. Every field is optional; empty means "use the default". See [What each value falls back to](developers.md#what-each-value-falls-back-to). On a site in several languages, each language has its own values.
 
-Already have your own `seo` group with `title`, `description` and `canonical`? Those keys are read as they are, so swapping your fieldset for `seo::seo` keeps existing data.
+Already have your own `seo` group with `title`, `description` and `canonical`? Those keys are read as they are, so swapping your fieldset for `marketing-toolkit::seo` keeps existing data.
 
 ## 3. Print the tags in your layout
 
@@ -99,24 +99,24 @@ In the layout, remove your own `<title>`, description, canonical, Open Graph and
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <s:seo:head />
+    <s:mt:head />
     …
 </head>
 <body>
-    <s:seo:body />
+    <s:mt:body />
 ```
 
-or in Antlers, `{{ seo:head }}` and `{{ seo:body }}`.
+or in Antlers, `{{ mt:head }}` and `{{ mt:body }}`.
 
 `<meta charset>` must come first: browsers look for it in the first 1024 bytes, and the tracking scripts alone can take several thousand.
 
-`seo:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `seo:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:seo:meta />` instead of `seo:head`, as before.
+`mt:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `mt:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:mt:meta />` instead of `mt:head`, as before.
 
 Pages that aren't Statamic entries (a controller page, a 404 view) pass what they know to either:
 
 ```blade
-<s:seo:head title="Contact" description="Write to us." />
-<s:seo:head :canonical="false" status="404" />
+<s:mt:head title="Contact" description="Write to us." />
+<s:mt:head :canonical="false" status="404" />
 ```
 
 All the parameters are in [developers.md](developers.md#the-tag).
@@ -131,11 +131,11 @@ In `config/statamic/cp.php`:
 
 ```php
 'widgets' => [
-    ['type' => 'seo', 'width' => 100],
+    ['type' => 'mt', 'width' => 100],
 ],
 ```
 
-It shows the latest report's score and the most recent 404s, to people with the `view seo` permission.
+It shows the latest report's score and the most recent 404s, to people with the `view marketing toolkit` permission.
 
 ## 6. Give people access
 
@@ -143,9 +143,9 @@ Super users see everything. For other roles, tick the SEO permissions under **Us
 
 | Permission | Lets them |
 |---|---|
-| `view seo` | open Tools → SEO; with Pro, the reports, the 404 log, the Search Console screen and the widget |
-| `manage seo redirects` | create, edit and delete redirects; with Pro, import and export them, and answer the "add a redirect?" question when saving |
-| `run seo reports` | start a report (Pro) |
+| `view marketing toolkit` | open Tools → SEO; with Pro, the reports, the 404 log, the Search Console screen and the widget |
+| `manage marketing toolkit redirects` | create, edit and delete redirects; with Pro, import and export them, and answer the "add a redirect?" question when saving |
+| `run marketing toolkit reports` | start a report (Pro) |
 
 The search and share preview needs no SEO permission, only access to the entry.
 

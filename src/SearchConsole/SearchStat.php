@@ -24,7 +24,7 @@ use JothamLec\MarketingToolkit\Support\Sites;
  */
 class SearchStat extends Model
 {
-    protected $table = 'seo_search_stats';
+    protected $table = 'mt_search_stats';
 
     public $timestamps = false;
 

@@ -89,7 +89,7 @@ describe('IndexNow', function () {
         app()->terminate();
 
         $this->app['env'] = 'production';
-        config(['seo.indexnow.enabled' => false]);
+        config(['marketing-toolkit.indexnow.enabled' => false]);
         entryIn('pages', 'contact');
         app()->terminate();
 

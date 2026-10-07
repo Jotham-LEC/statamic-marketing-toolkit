@@ -8,7 +8,7 @@ use Statamic\Facades\Site;
 
 /**
  * Replaces the stored numbers with Search Console's for the last
- * `seo.search_console.days` days, one row per page. On a multi-site install,
+ * `marketing-toolkit.search_console.days` days, one row per page. On a multi-site install,
  * a site's own rows from its own property, keeping only its own pages (a
  * property may be shared by every site, and sites may share a domain, one
  * under another's path).
@@ -29,7 +29,7 @@ class Importer
         $site ??= Site::current()->handle();
         $stored = Sites::scope($site);
         $to = now('America/Los_Angeles')->toDateString(); // Search Console's dates are Pacific time.
-        $from = now('America/Los_Angeles')->subDays(max(1, (int) config('seo.search_console.days')) - 1)->toDateString();
+        $from = now('America/Los_Angeles')->subDays(max(1, (int) config('marketing-toolkit.search_console.days')) - 1)->toDateString();
         $rows = $this->client->pages($from, $to, $site);
         $now = now();
 

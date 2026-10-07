@@ -24,6 +24,6 @@ class DescriptionUnique extends Rule
 
         return $others === []
             ? Result::pass()
-            : Result::fail('seo::reports.messages.description_same', ['pages' => $this->listed($others)]);
+            : Result::fail('marketing-toolkit::reports.messages.description_same', ['pages' => $this->listed($others)]);
     }
 }

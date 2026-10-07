@@ -12,16 +12,16 @@ use Statamic\Facades\Site;
 use Throwable;
 
 /**
- * `php please seo:search-console`: fetches each page's clicks, impressions,
+ * `php please mt:search-console`: fetches each page's clicks, impressions,
  * click-through rate and position from Google Search Console. The schedule
- * runs it daily once `seo.search_console` is set up. On a multi-site install
+ * runs it daily once `marketing-toolkit.search_console` is set up. On a multi-site install
  * it imports each site that has a property, or only `--site`.
  */
 class SearchConsole extends Command
 {
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:search-console {--site= : The handle of one site to import (default: every site with a property)}';
+    protected $signature = 'statamic:mt:search-console {--site= : The handle of one site to import (default: every site with a property)}';
 
     protected $description = 'Import page numbers from Google Search Console';
 
@@ -42,7 +42,7 @@ class SearchConsole extends Command
         };
 
         if ($sites === [] || ! collect($sites)->every(fn (string $site) => $client->configured($site))) {
-            $this->components->error('Set SEO_SEARCH_CONSOLE_CREDENTIALS and SEO_SEARCH_CONSOLE_PROPERTY first, or connect it under Tools → SEO (docs/configuration.md).');
+            $this->components->error('Set MT_SEARCH_CONSOLE_CREDENTIALS and MT_SEARCH_CONSOLE_PROPERTY first, or connect it under Tools → SEO (docs/configuration.md).');
 
             return self::FAILURE;
         }

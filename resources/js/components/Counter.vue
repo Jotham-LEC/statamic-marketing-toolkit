@@ -19,9 +19,9 @@ const state = computed(() => {
 const hint = computed(() => {
     const [min, max] = props.limits;
 
-    return { short: __('seo::cp.preview.under', { min }), long: __('seo::cp.preview.over', { max }), good: `${min}–${max}` }[state.value];
+    return { short: __('marketing-toolkit::cp.preview.under', { min }), long: __('marketing-toolkit::cp.preview.over', { max }), good: `${min}–${max}` }[state.value];
 });
-const tooltip = computed(() => __n('seo::cp.preview.count', length.value, { label: props.label, count: length.value, min: props.limits[0], max: props.limits[1] }));
+const tooltip = computed(() => __n('marketing-toolkit::cp.preview.count', length.value, { label: props.label, count: length.value, min: props.limits[0], max: props.limits[1] }));
 </script>
 
 <template>

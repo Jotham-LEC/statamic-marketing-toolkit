@@ -43,20 +43,14 @@ use Statamic\Statamic;
 class ServiceProvider extends AddonServiceProvider
 {
     /*
-     * The SEO module keeps the names it had as Co-SEO (addon slug `seo`):
-     * `seo::` views, translations, fieldsets and blueprints, and
-     * config/seo.php, so sites that import `seo::seo` or call `__('seo::…')`
-     * don't change. Statamic would name them after the slug.
+     * Views, translations, fieldsets and blueprints are all `marketing-toolkit::`,
+     * the addon's slug, as Statamic names the last three; it names views
+     * after the package unless told.
      */
-    protected $viewNamespace = 'seo';
+    protected $viewNamespace = 'marketing-toolkit';
 
-    protected $fieldsetNamespace = 'seo';
-
-    protected $blueprintNamespace = 'seo';
-
+    /** Merged in register() instead (see mergeConfigFrom), before anything boots that reads it. */
     protected $config = false;
-
-    protected $translations = false;
 
     protected $vite = [
         'input' => ['resources/js/addon.js', 'resources/css/addon.css'],
@@ -98,12 +92,12 @@ class ServiceProvider extends AddonServiceProvider
     {
         parent::register();
 
-        // Merged here rather than in Statamic's bootConfig(), which would name the file after the slug.
-        $this->mergeConfigFrom(__DIR__.'/../config/seo.php', 'seo');
+        // Here rather than in Statamic's bootConfig(), which runs after the Features switches read it.
+        $this->mergeConfigFrom(__DIR__.'/../config/marketing-toolkit.php', 'marketing-toolkit');
 
         // A site binds its subclass in its own service provider, which registers after this one.
-        // `seo.class` still works until 1.0.
-        $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('seo.class') ?? SiteSeo::class));
+        // `marketing-toolkit.class` still works until 1.0.
+        $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('marketing-toolkit.class') ?? SiteSeo::class));
 
         // One instance, so what it learns while content saves is still there once it has saved.
         $this->app->singleton(RedirectChangedUris::class);
@@ -113,7 +107,7 @@ class ServiceProvider extends AddonServiceProvider
     }
 
     /**
-     * The site's config/seo.php over the addon's, merged at every depth
+     * The site's config/marketing-toolkit.php over the addon's, merged at every depth
      * (Support\Config) rather than Laravel's one level, so a site states only
      * what it changes, even inside `og` or `robots`. Keys renamed since the
      * site published its copy are read under their new names.
@@ -155,13 +149,13 @@ class ServiceProvider extends AddonServiceProvider
     protected function leaveOutUnused(): void
     {
         $this->unused = array_keys(array_filter([
-            FlushSitemap::class => ! config('seo.sitemap.enabled') && ! config('seo.llms_txt.enabled'),
-            SubmitToIndexNow::class => ! config('seo.indexnow.enabled'),
-            RemakeFavicons::class => ! config('seo.favicons.enabled'),
-            AttributeSubmission::class => ! config('seo.leads.enabled'),
-            CountConversion::class => ! config('seo.leads.enabled'),
-            RedirectChangedUris::class => ! config('seo.redirects.automatic'),
-            HandleMissing::class => ! config('seo.redirects.enabled') && ! config('seo.not_found.enabled'),
+            FlushSitemap::class => ! config('marketing-toolkit.sitemap.enabled') && ! config('marketing-toolkit.llms_txt.enabled'),
+            SubmitToIndexNow::class => ! config('marketing-toolkit.indexnow.enabled'),
+            RemakeFavicons::class => ! config('marketing-toolkit.favicons.enabled'),
+            AttributeSubmission::class => ! config('marketing-toolkit.leads.enabled'),
+            CountConversion::class => ! config('marketing-toolkit.leads.enabled'),
+            RedirectChangedUris::class => ! config('marketing-toolkit.redirects.automatic'),
+            HandleMissing::class => ! config('marketing-toolkit.redirects.enabled') && ! config('marketing-toolkit.not_found.enabled'),
         ]));
 
         $this->listen = array_filter(array_map(fn (array $listeners) => array_values(array_diff($listeners, $this->unused)), $this->listen));
@@ -191,7 +185,7 @@ class ServiceProvider extends AddonServiceProvider
 
     public function bootAddon(): void
     {
-        $this->bootSeoNames();
+        $this->publishes([__DIR__.'/../config/marketing-toolkit.php' => config_path('marketing-toolkit.php')], 'marketing-toolkit-config');
 
         // Written and read by the page's own script: left as plain text.
         EncryptCookies::except([Attribution::COOKIE, CountConversion::COOKIE]);
@@ -213,36 +207,23 @@ class ServiceProvider extends AddonServiceProvider
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-        Permission::extend(fn () => Permission::group('seo', __('seo::cp.seo'), function () {
-            Permission::register('view seo')->label(__(Edition::pro() ? 'seo::cp.permissions.view' : 'seo::cp.permissions.view_free'));
-            Permission::register('manage seo redirects')->label(__('seo::cp.permissions.redirects'));
+        Permission::extend(fn () => Permission::group('marketing-toolkit', __('marketing-toolkit::cp.permissions.group'), function () {
+            Permission::register('view marketing toolkit')->label(__(Edition::pro() ? 'marketing-toolkit::cp.permissions.view' : 'marketing-toolkit::cp.permissions.view_free'));
+            Permission::register('manage marketing toolkit redirects')->label(__('marketing-toolkit::cp.permissions.redirects'));
 
             if (Edition::pro()) {
-                Permission::register('run seo reports')->label(__('seo::cp.permissions.reports'));
+                Permission::register('run marketing toolkit reports')->label(__('marketing-toolkit::cp.permissions.reports'));
             }
         }));
 
         Navigation::register();
 
-        Statamic::provideToScript(['seo' => [
+        Statamic::provideToScript(['marketingToolkit' => [
             'pro' => Edition::pro(),
-            'global' => (string) config('seo.global'),
+            'global' => (string) config('marketing-toolkit.global'),
             // Trackers set in .env, which the Tracking tab's warning counts as well.
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
         ]]);
-    }
-
-    /**
-     * config/seo.php and the `seo::` translations, under the names the SEO
-     * module has always had (see the namespaces above). The addon settings
-     * Co-SEO saved under its old name are copied over by a migration.
-     */
-    protected function bootSeoNames(): void
-    {
-        $this->publishes([__DIR__.'/../config/seo.php' => config_path('seo.php')], 'seo-config');
-
-        $this->loadTranslationsFrom(__DIR__.'/../lang', 'seo');
-        $this->publishes([__DIR__.'/../lang' => $this->app->langPath('vendor/seo')], 'seo-translations');
     }
 
     /**
@@ -277,14 +258,14 @@ class ServiceProvider extends AddonServiceProvider
         }
 
         $settings = app(ReportSettings::class);
-        // Off under Features (or in config/seo.php): reports run only by hand.
-        $schedules = config('seo.reports.enabled') ? $settings->get('schedule') : 'off';
+        // Off under Features (or in config/marketing-toolkit.php): reports run only by hand.
+        $schedules = config('marketing-toolkit.reports.enabled') ? $settings->get('schedule') : 'off';
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);
 
         // One run per site on a multi-site install, each with its own overlap lock.
         foreach (Sites::multiple() ? Sites::handles() : [null] as $site) {
-            $command = $site === null ? 'statamic:seo:report' : 'statamic:seo:report --site='.$site;
+            $command = $site === null ? 'statamic:mt:report' : 'statamic:mt:report --site='.$site;
 
             $event = match ($schedules) {
                 'daily' => $schedule->command($command)->dailyAt($time),
@@ -297,7 +278,7 @@ class ServiceProvider extends AddonServiceProvider
 
         // Search Console's numbers, daily, once it is set up (in .env or the control panel).
         if (app(SearchConsoleClient::class)->configuredForAnySite()) {
-            $schedule->command('statamic:seo:search-console')->dailyAt('04:30')->withoutOverlapping();
+            $schedule->command('statamic:mt:search-console')->dailyAt('04:30')->withoutOverlapping();
         }
     }
 }

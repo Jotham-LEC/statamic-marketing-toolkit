@@ -29,7 +29,7 @@ Route::withoutMiddleware([
     'Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken',
     'App\\Http\\Middleware\\VerifyCsrfToken',
 ])
-    ->name('seo.')
+    ->name('mt.')
     ->group(function () {
         // Registered whatever the config says, so cached routes follow a module switched on
         // or off later: each controller answers 404 while its module is off. A file of the

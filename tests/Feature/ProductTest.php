@@ -11,7 +11,7 @@ beforeEach(function () {
         ['handle' => 'in_stock', 'field' => ['type' => 'toggle']],
         ['handle' => 'code', 'field' => ['type' => 'text']],
     ]]]]]])->save();
-    config(['seo.collections.baskets.product' => ['price_field' => 'price', 'availability_field' => 'in_stock', 'sku_field' => 'code', 'brand' => 'Acme']]);
+    config(['marketing-toolkit.collections.baskets.product' => ['price_field' => 'price', 'availability_field' => 'in_stock', 'sku_field' => 'code', 'brand' => 'Acme']]);
 });
 
 test('a product has its price in the shop\'s currency, availability, SKU and brand', function () {

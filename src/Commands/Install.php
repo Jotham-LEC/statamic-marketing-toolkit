@@ -19,7 +19,7 @@ use Statamic\Fields\Blueprint as BlueprintContents;
 use Statamic\Structures\Page;
 
 /**
- * `php please seo:install`: creates the "SEO & brand" global set and its
+ * `php please mt:install`: creates the "SEO & brand" global set and its
  * blueprint through Statamic's API, so editors can fill in the title
  * separator, defaults, publisher, verification codes, robots.txt and the
  * share-card colours in the control panel. Safe to rerun: it adds what is
@@ -29,7 +29,7 @@ class Install extends Command
 {
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:install
+    protected $signature = 'statamic:mt:install
         {--container= : Asset container for the logo, share image and icon (else the first one)}
         {--tab=* : Add these tabs the blueprint doesn\'t have, e.g. shop}
         {--forms : Add the lead source fields to every form (Pro)}';
@@ -38,14 +38,14 @@ class Install extends Command
 
     /** Files the addon serves, by the config switch that turns each on. A file of the same name in public/ wins. */
     private const array SERVED = [
-        'robots.txt' => 'seo.robots_txt.enabled',
-        'llms.txt' => 'seo.llms_txt.enabled',
-        'ads.txt' => 'seo.ads_txt.enabled',
+        'robots.txt' => 'marketing-toolkit.robots_txt.enabled',
+        'llms.txt' => 'marketing-toolkit.llms_txt.enabled',
+        'ads.txt' => 'marketing-toolkit.ads_txt.enabled',
     ];
 
     public function handle(): int
     {
-        $handle = (string) config('seo.global');
+        $handle = (string) config('marketing-toolkit.global');
         $containers = AssetContainer::all()->map->handle()->values()->all();
         $container = $this->option('container') ?? ($containers[0] ?? null);
 
@@ -166,7 +166,7 @@ class Install extends Command
     {
         $files = [
             ...array_keys(array_filter(self::SERVED, fn (string $key) => config($key))),
-            ...(config('seo.favicons.enabled') ? array_keys(Favicons::FILES) : []),
+            ...(config('marketing-toolkit.favicons.enabled') ? array_keys(Favicons::FILES) : []),
         ];
         $found = array_values(array_filter($files, fn (string $file) => is_file(public_path($file))));
 

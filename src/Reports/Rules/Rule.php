@@ -24,7 +24,7 @@ abstract class Rule
      */
     public function label(): string
     {
-        return 'seo::reports.rules.'.static::handle();
+        return 'marketing-toolkit::reports.rules.'.static::handle();
     }
 
     abstract public function weight(): int;
@@ -53,6 +53,6 @@ abstract class Rule
         $list = implode(', ', array_slice($items, 0, $show));
         $more = count($items) - $show;
 
-        return $more > 0 ? ['message' => 'seo::reports.messages.and_more', 'params' => ['list' => $list, 'count' => $more]] : $list;
+        return $more > 0 ? ['message' => 'marketing-toolkit::reports.messages.and_more', 'params' => ['list' => $list, 'count' => $more]] : $list;
     }
 }

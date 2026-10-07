@@ -167,7 +167,7 @@ function entryOn(string $site, string $collection, string $slug, array $data = [
 
 /**
  * Renders Blade as if for a request to $uri (a path on the default site, or
- * a full address): what a layout's <s:seo:meta /> prints.
+ * a full address): what a layout's <s:mt:meta /> prints.
  *
  * @param  array<string, mixed>  $data
  */

@@ -42,12 +42,12 @@ class OverviewController
 
     private function render(SiteSeo $seo, Client $searchConsole, UserContract $user, string $site): Response
     {
-        $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in($site);
+        $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
         $addon = Addon::get(Edition::PACKAGE);
         $pro = Edition::pro();
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
-        return Inertia::render('seo::Overview', [
+        return Inertia::render('marketing-toolkit::Overview', [
             'siteName' => $seo->settings()->siteName(),
             'upgradeUrl' => Edition::marketplaceUrl(),
             'global' => [
@@ -58,28 +58,28 @@ class OverviewController
             ],
             // Pro's panels are null in the free edition, which shows what they would add instead.
             'report' => $pro ? $this->report($user, $addon, $site) : null,
-            'redirects' => $user->can('manage seo redirects') ? [
+            'redirects' => $user->can('manage marketing toolkit redirects') ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
-                'url' => cp_route('seo.redirects.index'),
+                'url' => cp_route('mt.redirects.index'),
             ] : null,
             'notFound' => $pro ? [
                 'paths' => MissingPath::query()->shownOn($site)->count(),
                 'recent' => MissingPath::recent($site),
-                'url' => cp_route('seo.404s.index'),
+                'url' => cp_route('mt.404s.index'),
             ] : null,
             'search' => $pro ? $this->search($searchConsole, $site) : null,
-            'searchConsole' => $pro ? ['url' => cp_route('seo.search-console.index')] : null,
+            'searchConsole' => $pro ? ['url' => cp_route('mt.search-console.index')] : null,
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($variables && $user->can('edit', $variables) ? $variables->editUrl() : null),
             // Free on a multi-site install: what Pro adds there.
             'severalSites' => Sites::installed() && ! $pro,
             'files' => collect([
-                __('seo::cp.overview.files.sitemap') => config('seo.sitemap.enabled') ? 'sitemap.xml' : null,
-                __('seo::cp.overview.files.robots') => config('seo.robots_txt.enabled') ? 'robots.txt' : null,
-                __('seo::cp.overview.files.llms') => config('seo.llms_txt.enabled') ? 'llms.txt' : null,
-                __('seo::cp.overview.files.favicon') => config('seo.favicons.enabled') && app(Favicons::class)->version() ? 'site.webmanifest' : null,
-                __('seo::cp.overview.files.card') => config('seo.og.enabled') ? 'og.png' : null,
+                __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? 'sitemap.xml' : null,
+                __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? 'robots.txt' : null,
+                __('marketing-toolkit::cp.overview.files.llms') => config('marketing-toolkit.llms_txt.enabled') ? 'llms.txt' : null,
+                __('marketing-toolkit::cp.overview.files.favicon') => config('marketing-toolkit.favicons.enabled') && app(Favicons::class)->version() ? 'site.webmanifest' : null,
+                __('marketing-toolkit::cp.overview.files.card') => config('marketing-toolkit.og.enabled') ? 'og.png' : null,
             ])->filter()->map(fn ($path, $label) => [
                 'label' => $label,
                 'url' => $seo->absolute($path),
@@ -98,19 +98,19 @@ class OverviewController
     {
         $tracking = app(Tracking::class);
         // From .env when the config holds it; an ID a Tracking subclass returns comes from code.
-        $fromEnv = fn (string $tracker, string $id) => strcasecmp(trim((string) config('seo.tracking.'.Tracking::FIELDS[$tracker])), $id) === 0;
+        $fromEnv = fn (string $tracker, string $id) => strcasecmp(trim((string) config('marketing-toolkit.tracking.'.Tracking::FIELDS[$tracker])), $id) === 0;
 
         return [
             'tools' => collect($tracking->ids())->filter()->map(fn (string $id, string $tracker) => [
-                'name' => __('seo::cp.tracking.names.'.$tracker),
+                'name' => __('marketing-toolkit::cp.tracking.names.'.$tracker),
                 'id' => $id,
                 'from_env' => $fromEnv($tracker, $id),
             ])->values()->all(),
             // Set, but not an ID, so never printed: where to fix it.
-            'invalid' => collect($tracking->invalid())->map(fn (string $value, string $tracker) => __('seo::cp.tracking.invalid', [
-                'name' => __('seo::cp.tracking.names.'.$tracker),
+            'invalid' => collect($tracking->invalid())->map(fn (string $value, string $tracker) => __('marketing-toolkit::cp.tracking.invalid', [
+                'name' => __('marketing-toolkit::cp.tracking.names.'.$tracker),
                 'value' => $value,
-                'where' => $fromEnv($tracker, $value) ? 'SEO_'.strtoupper(Tracking::FIELDS[$tracker]) : __('seo::cp.tracking.where_global'),
+                'where' => $fromEnv($tracker, $value) ? 'MT_'.strtoupper(Tracking::FIELDS[$tracker]) : __('marketing-toolkit::cp.tracking.where_global'),
             ]))->values()->all(),
             'consent' => $tracking->consent() !== null,
             'overlap' => $tracking->besideGtm(),
@@ -130,7 +130,7 @@ class OverviewController
                 'score' => (int) $latest->score,
                 'pages' => $latest->scoredPages(),
                 'finished_at' => $latest->finished_at?->toIso8601String(),
-                'url' => cp_route('seo.reports.show', $latest),
+                'url' => cp_route('mt.reports.show', $latest),
                 // The checks most pages fail, beside the gauge.
                 'checks' => collect($latest->summary['rules'] ?? [])
                     ->filter(fn (array $rule) => ($rule['fail'] ?? 0) > 0)
@@ -140,7 +140,7 @@ class OverviewController
                     ->values()
                     ->all(),
             ],
-            'url' => cp_route('seo.reports.index'),
+            'url' => cp_route('mt.reports.index'),
             'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? $addon->settingsUrl() : null,
         ];
     }

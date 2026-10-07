@@ -12,16 +12,16 @@ defineProps({
 </script>
 
 <template>
-    <Head :title="__('seo::cp.not_found.title')" />
+    <Head :title="__('marketing-toolkit::cp.not_found.title')" />
 
-    <Header :title="__('seo::cp.not_found.title')" icon="alert-warning-exclamation-mark" />
+    <Header :title="__('marketing-toolkit::cp.not_found.title')" icon="alert-warning-exclamation-mark" />
 
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
         <template v-if="enabled">
-            {{ __('seo::cp.not_found.intro', { max: maxRows }) }}
-            {{ __('seo::cp.not_found.create') }}
+            {{ __('marketing-toolkit::cp.not_found.intro', { max: maxRows }) }}
+            {{ __('marketing-toolkit::cp.not_found.create') }}
         </template>
-        <span v-else v-html="__('seo::cp.not_found.off', { setting: '<code>seo.not_found.enabled</code>' })" />
+        <span v-else v-html="__('marketing-toolkit::cp.not_found.off', { setting: '<code>marketing-toolkit.not_found.enabled</code>' })" />
     </p>
 
     <Listing
@@ -30,7 +30,7 @@ defineProps({
         :action-context="{ type: '404s' }"
         sort-column="last_seen_at"
         sort-direction="desc"
-        preferences-prefix="seo.404s"
+        preferences-prefix="mt.404s"
         :allow-presets="false"
     >
         <template #cell-path="{ row }">

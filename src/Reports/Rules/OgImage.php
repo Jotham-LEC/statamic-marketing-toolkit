@@ -21,7 +21,7 @@ class OgImage extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return $page->ogImage === null
-            ? Result::fail('seo::reports.messages.og_image_missing')
+            ? Result::fail('marketing-toolkit::reports.messages.og_image_missing')
             : Result::pass();
     }
 }

@@ -6,7 +6,7 @@ The addon is running as Free. If you bought Pro, set it in `config/statamic/edit
 
 ### No hreflang tags, or a language is missing from them
 
-- hreflang needs several sites (Statamic Pro, `multisite` on), Marketing Toolkit Pro and `seo.hreflang.enabled`.
+- hreflang needs several sites (Statamic Pro, `multisite` on), Marketing Toolkit Pro and `marketing-toolkit.hreflang.enabled`.
 - The pages must be linked: a translation is an entry **localized** from another (it has an `origin`), not a separate entry with the same title.
 - A version that is a draft, noindexed, left out of the sitemap or canonical elsewhere is left out. If the page you're looking at is one of those, it gets no tags at all.
 - Page 2 and later of a listing, and error pages, get none.
@@ -21,11 +21,11 @@ the-og draws cards with Imagick. Install PHP's `imagick` extension (on NixOS, ad
 
 ### robots.txt has no Sitemap line, or the favicon is blank
 
-A file in `public/` (`robots.txt`, `favicon.ico`, `llms.txt`, `ads.txt`, the other icons) is served by the web server before the addon sees the request. A new Statamic site comes with a `public/robots.txt` and an empty `public/favicon.ico`. Delete them; `php please seo:install` names them and offers to, and Tools → SEO marks them under **What the site serves**.
+A file in `public/` (`robots.txt`, `favicon.ico`, `llms.txt`, `ads.txt`, the other icons) is served by the web server before the addon sees the request. A new Statamic site comes with a `public/robots.txt` and an empty `public/favicon.ico`. Delete them; `php please mt:install` names them and offers to, and Tools → SEO marks them under **What the site serves**.
 
 ### A tracking tag doesn't load
 
-- Tags load only in `seo.tracking.environments` (production) and never in Live Preview.
+- Tags load only in `marketing-toolkit.tracking.environments` (production) and never in Live Preview.
 - An ID that doesn't look like one (`GTM-AB1`, a `UA-` property) is never printed. Tools → SEO says which one and where it is set.
 - After switching **Tracking** on under Features, restart Octane or the queue workers if the site runs them.
 
@@ -37,7 +37,7 @@ The built assets weren't published. Run `php artisan vendor:publish --tag=market
 
 - Is the cache store `array`? Automatic redirects compare the entry with the copy loaded before it was edited, and the `array` store returns the same object, so nothing looks changed. Use `file`, `redis` or `database`.
 - Only **published** entries get one: a draft has no public address to protect.
-- `seo.redirects.automatic` and `seo.redirects.enabled` must be `true`, and the addon must be Pro: Free adds no automatic redirects.
+- `marketing-toolkit.redirects.automatic` and `marketing-toolkit.redirects.enabled` must be `true`, and the addon must be Pro: Free adds no automatic redirects.
 - Did someone answer "Don't add" in the save dialog? That skips it for that save.
 
 ### A redirect doesn't apply
@@ -46,16 +46,16 @@ Redirects only apply to addresses that would be a 404. If a page exists at the s
 
 ### Nothing appears in the 404 log
 
-Requests from bots and tools are left out on purpose, including `curl` and `wget`; try a browser. Paths like `*.php` and `/wp-*` are ignored too (`seo.not_found.ignore_paths`). The log only sees requests that reach Statamic: a 404 answered by the web server (a missing file under `/build`, for example) never gets there.
+Requests from bots and tools are left out on purpose, including `curl` and `wget`; try a browser. Paths like `*.php` and `/wp-*` are ignored too (`marketing-toolkit.not_found.ignore_paths`). The log only sees requests that reach Statamic: a 404 answered by the web server (a missing file under `/build`, for example) never gets there.
 
 ### Every page says noindex
 
-That's `seo.robots.noindex_outside_production`: unless `APP_ENV=production`, every page is noindexed so test copies stay out of search results. Reports ignore it while they run, so a report on a local copy still means something.
+That's `marketing-toolkit.robots.noindex_outside_production`: unless `APP_ENV=production`, every page is noindexed so test copies stay out of search results. Reports ignore it while they run, so a report on a local copy still means something.
 
 ### A report stays at 0 pages, or a step times out
 
 - **With a queue worker** (`QUEUE_CONNECTION` other than `sync`), is the worker running? The CP queues one job per step.
-- **Without one**, the report advances while its screen is open, one step per progress request. Keep the tab open, or run `php please seo:report` in a terminal.
+- **Without one**, the report advances while its screen is open, one step per progress request. Keep the tab open, or run `php please mt:report` in a terminal.
 - If a step times out, lower **Pages per step** (Tools → SEO → Report settings → Running).
 - A report that stops moving for 30 minutes is marked failed when the next one starts.
 

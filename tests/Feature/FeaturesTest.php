@@ -22,33 +22,33 @@ function rebootFeatures(): void
 test('the Features screen saves what is off, for whoever may change the addon\'s settings', function () {
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.features.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
-        ->component('seo::Features', false)
+    $this->get(cp_route('mt.features.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('marketing-toolkit::Features', false)
         ->where('values.sitemap', true)
         ->where('blueprint.tabs.0.sections.2.fields.0.handle', 'tracking'));
 
-    $this->postJson(cp_route('seo.features.update'), [...array_fill_keys(array_keys(Features::MODULES), true), 'sitemap' => false, 'tracking' => false])->assertOk();
+    $this->postJson(cp_route('mt.features.update'), [...array_fill_keys(array_keys(Features::MODULES), true), 'sitemap' => false, 'tracking' => false])->assertOk();
 
     expect(Features::off())->toBe(['sitemap', 'tracking'])
         ->and(Addon::get(Edition::PACKAGE)->settings()->get('features_off'))->toBe(['sitemap', 'tracking']);
 
-    $this->get(cp_route('seo.features.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('values.sitemap', false)->where('values.robots_txt', true));
+    $this->get(cp_route('mt.features.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('values.sitemap', false)->where('values.robots_txt', true));
 });
 
 test('a module the request leaves out keeps its state', function () {
     Features::save(['tracking']);
     $this->actingAs(cpUser(super: true));
 
-    $this->postJson(cp_route('seo.features.update'), ['not_found' => false])->assertOk();
+    $this->postJson(cp_route('mt.features.update'), ['not_found' => false])->assertOk();
 
     expect(Features::off())->toBe(['not_found', 'tracking']);
 });
 
 test('someone who may not change the addon\'s settings can\'t open it, or see it in the nav', function () {
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
-    $this->get(cp_route('seo.features.index'))->assertForbidden();
-    $this->postJson(cp_route('seo.features.update'), ['sitemap' => false])->assertForbidden();
+    $this->get(cp_route('mt.features.index'))->assertForbidden();
+    $this->postJson(cp_route('mt.features.update'), ['sitemap' => false])->assertForbidden();
     expect(collect(toolsNav()->get('SEO')->resolveChildren()->children())->map->display()->all())->not->toContain('Features');
 });
 
@@ -57,27 +57,27 @@ test('a module that is off is off in the config, and its pages answer 404 even w
     rebootFeatures();
     seoGlobal(['gtm_id' => 'GTM-ABC1234']);
 
-    expect(config('seo.sitemap.enabled'))->toBeFalse()
-        ->and(config('seo.favicons.enabled'))->toBeFalse()
-        ->and(config('seo.robots_txt.enabled'))->toBeTrue();
+    expect(config('marketing-toolkit.sitemap.enabled'))->toBeFalse()
+        ->and(config('marketing-toolkit.favicons.enabled'))->toBeFalse()
+        ->and(config('marketing-toolkit.robots_txt.enabled'))->toBeTrue();
 
     // Registered when the app booted, as with `php artisan route:cache`: the controller says no.
     $this->get('https://example.test/sitemap.xml')->assertNotFound();
     $this->get('https://example.test/llms.txt')->assertNotFound();
     $this->get('https://example.test/robots.txt')->assertOk();
-    expect(renderAt('/', '<s:seo:head />'))->not->toContain('gtm.js');
+    expect(renderAt('/', '<s:mt:head />'))->not->toContain('gtm.js');
 });
 
 test('the public routes are registered with their module off, so cached routes answer once it is back on', function () {
-    config(['seo.sitemap.enabled' => false, 'seo.robots_txt.enabled' => false, 'seo.llms_txt.enabled' => false, 'seo.favicons.enabled' => false, 'seo.og.enabled' => false]);
+    config(['marketing-toolkit.sitemap.enabled' => false, 'marketing-toolkit.robots_txt.enabled' => false, 'marketing-toolkit.llms_txt.enabled' => false, 'marketing-toolkit.favicons.enabled' => false, 'marketing-toolkit.og.enabled' => false]);
     app('router')->setRoutes(new RouteCollection);
     require __DIR__.'/../../routes/web.php';
     app('router')->getRoutes()->refreshNameLookups();
 
-    expect(collect(['seo.sitemap', 'seo.robots', 'seo.llms', 'seo.ads', 'seo.og.home', 'seo.indexnow.key', 'seo.favicons.favicon.ico'])->reject(fn ($name) => Route::has($name))->all())->toBe([]);
+    expect(collect(['mt.sitemap', 'mt.robots', 'mt.llms', 'mt.ads', 'mt.og.home', 'mt.indexnow.key', 'mt.favicons.favicon.ico'])->reject(fn ($name) => Route::has($name))->all())->toBe([]);
     $this->get('https://example.test/sitemap.xml')->assertNotFound();
 
-    config(['seo.sitemap.enabled' => true]);
+    config(['marketing-toolkit.sitemap.enabled' => true]);
     $this->get('https://example.test/sitemap.xml')->assertOk();
 });
 
@@ -96,19 +96,19 @@ test('listeners and middleware of modules that are off aren\'t registered', func
         ->and((fn () => $this->subscribe)->call($provider))->toBe([]);
 });
 
-test('a module config/seo.php switches off shows off, locked, and a save leaves it be', function () {
-    config(['seo.indexnow.enabled' => false]);
+test('a module config/marketing-toolkit.php switches off shows off, locked, and a save leaves it be', function () {
+    config(['marketing-toolkit.indexnow.enabled' => false]);
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.features.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.features.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('values.indexnow', false)
         ->where('values.sitemap', true)
         ->where('blueprint.tabs.0.sections.0.fields.4.handle', 'indexnow')
         ->where('blueprint.tabs.0.sections.0.fields.4.visibility', 'read_only')
-        ->where('blueprint.tabs.0.sections.0.fields.4.instructions', 'Tells Bing and others when a page changes. Off in config/seo.php.'));
+        ->where('blueprint.tabs.0.sections.0.fields.4.instructions', 'Tells Bing and others when a page changes. Off in config/marketing-toolkit.php.'));
 
     // Turning it on here can't override the config; turning it off here would only be saved twice.
-    $this->postJson(cp_route('seo.features.update'), ['indexnow' => true, 'sitemap' => false])->assertOk();
+    $this->postJson(cp_route('mt.features.update'), ['indexnow' => true, 'sitemap' => false])->assertOk();
 
     expect(Features::off())->toBe(['sitemap'])
         ->and(Features::offInConfig())->toBe(['indexnow']);

@@ -14,7 +14,7 @@ class CreateRedirect extends Action
 
     public static function title()
     {
-        return __('seo::cp.redirects.create');
+        return __('marketing-toolkit::cp.redirects.create');
     }
 
     public function visibleTo($item)
@@ -29,13 +29,13 @@ class CreateRedirect extends Action
 
     public function authorize($user, $item)
     {
-        return $user->can('manage seo redirects');
+        return $user->can('manage marketing toolkit redirects');
     }
 
     public function redirect($items, $values)
     {
         // On the site the visitor missed it on.
-        return cp_route('seo.redirects.create', array_filter(['source' => $items->first()->path, 'site' => $items->first()->site]));
+        return cp_route('mt.redirects.create', array_filter(['source' => $items->first()->path, 'site' => $items->first()->site]));
     }
 
     public function run($items, $values)

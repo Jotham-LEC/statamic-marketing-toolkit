@@ -19,6 +19,7 @@ return [
     ],
 
     'permissions' => [
+        'group' => 'Marketing Toolkit',
         'view' => 'View SEO overview, reports and 404s',
         'view_free' => 'View SEO overview',
         'redirects' => 'Manage redirects',
@@ -134,7 +135,7 @@ return [
             'key_enable' => 'enabled again',
             'key_added' => 'Key added',
             'remove' => 'Remove',
-            'env_key_invalid' => 'SEO_SEARCH_CONSOLE_CREDENTIALS in .env is not a service account key, or the file it names can’t be read.',
+            'env_key_invalid' => 'MT_SEARCH_CONSOLE_CREDENTIALS in .env is not a service account key, or the file it names can’t be read.',
             'upload' => 'Upload the key file',
             'paste' => 'Or paste its contents',
             'save_key' => 'Save the key',
@@ -158,8 +159,8 @@ return [
             'add_first' => 'Add the key and the property first.',
             'connected' => 'Connected: the key can read :property.',
             'imported' => 'Imported :count page.|Imported :count pages.',
-            'key_in_env' => 'The key is set in .env (SEO_SEARCH_CONSOLE_CREDENTIALS).',
-            'property_in_env' => 'The property is set in .env (SEO_SEARCH_CONSOLE_PROPERTY).',
+            'key_in_env' => 'The key is set in .env (MT_SEARCH_CONSOLE_CREDENTIALS).',
+            'property_in_env' => 'The property is set in .env (MT_SEARCH_CONSOLE_PROPERTY).',
             'not_a_key' => 'That is not a service account key: download one as JSON from Google Cloud → IAM & Admin → Service accounts → Keys.',
             'property_format' => 'Type it as Search Console names it: sc-domain:example.com, or https://example.com/ with the slash at the end.',
             'key_disabled' => 'Google says this key, or its service account, is disabled. Enable it in Google Cloud, then check again: :url',
@@ -237,7 +238,7 @@ return [
     'features' => [
         'title' => 'Features',
         'intro' => 'Switch off what this site doesn’t use. A feature that’s off isn’t loaded at all, so it costs nothing on any page. Nothing you set up is lost: switch it back on and it’s there.',
-        'off_in_config' => 'Off in config/seo.php.',
+        'off_in_config' => 'Off in config/marketing-toolkit.php.',
         'groups' => [
             'search' => 'Search engines',
             'redirects' => 'Redirects and broken links',

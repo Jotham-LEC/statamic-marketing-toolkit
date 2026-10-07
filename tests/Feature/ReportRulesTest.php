@@ -233,10 +233,10 @@ test('a result keeps a translation key and its parameters, and reads as English'
     $site = new SiteFacts(new ReportSettings(['title_min' => 10, 'title_max' => 20]));
     $result = app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'Short'), $site);
 
-    expect($result->toArray())->toBe(['status' => 'warn', 'message' => 'seo::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 10, 'max' => 20]])
+    expect($result->toArray())->toBe(['status' => 'warn', 'message' => 'marketing-toolkit::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 10, 'max' => 20]])
         ->and(resultText($result))->toBe('5 characters; aim for 10–20. Short titles waste the space search results give them.')
         ->and(resultText(app(TitleLength::class)->check('https://example.test/page', new PageFacts(title: 'A'), $site)))->toStartWith('1 character;')
-        ->and(app(OgImage::class)->check('https://example.test/page', new PageFacts, $site)->toArray())->toBe(['status' => 'fail', 'message' => 'seo::reports.messages.og_image_missing']);
+        ->and(app(OgImage::class)->check('https://example.test/page', new PageFacts, $site)->toArray())->toBe(['status' => 'fail', 'message' => 'marketing-toolkit::reports.messages.og_image_missing']);
 });
 
 test('a long list of pages ends with how many more there are', function () {

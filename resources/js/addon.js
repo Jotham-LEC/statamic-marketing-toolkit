@@ -59,15 +59,15 @@ function confirmRedirect(payload) {
     const reference = referenceFor(payload);
 
     // Automatic redirects are Pro: the free edition has nothing to ask.
-    if (!reference || !config.get('seo')?.pro) return Promise.resolve();
+    if (!reference || !config.get('marketingToolkit')?.pro) return Promise.resolve();
 
     return axios
-        .post(cp_url('seo/redirects/check'), { reference, values: payload.values })
+        .post(cp_url('marketing-toolkit/redirects/check'), { reference, values: payload.values })
         .then(({ data }) => {
             if (!data.changes) return;
 
             return new Promise((resolve, reject) => {
-                const modal = components.append('seo-redirect-confirm', { props: { from: data.from, to: data.to } });
+                const modal = components.append('mt-redirect-confirm', { props: { from: data.from, to: data.to } });
                 // The first answer counts: a double click doesn't answer twice.
                 let settled = false;
                 const settle = () => {
@@ -78,7 +78,7 @@ function confirmRedirect(payload) {
                 };
                 const answer = (create) => {
                     // A failed answer leaves the default: the redirect is added.
-                    if (settle()) axios.post(cp_url('seo/redirects/choice'), { reference, create }).then(resolve, resolve);
+                    if (settle()) axios.post(cp_url('marketing-toolkit/redirects/choice'), { reference, create }).then(resolve, resolve);
                 };
 
                 modal.on('add', () => answer(true));
@@ -88,7 +88,7 @@ function confirmRedirect(payload) {
                 // else it reports as "Something went wrong".
                 modal.on('cancel', () => {
                     if (!settle()) return;
-                    toast.info(__('seo::cp.confirm.not_saved'));
+                    toast.info(__('marketing-toolkit::cp.confirm.not_saved'));
                     reject(new PipelineStopped());
                 });
             });
@@ -98,18 +98,18 @@ function confirmRedirect(payload) {
 }
 
 Statamic.booting(() => {
-    components.register('seo_preview-fieldtype', SeoPreviewFieldtype);
-    components.register('seo-widget', SeoWidget);
-    components.register('seo-redirect-confirm', RedirectConfirm);
-    inertia.register('seo::Overview', Overview);
-    inertia.register('seo::Redirects', Redirects);
-    inertia.register('seo::RedirectForm', RedirectForm);
-    inertia.register('seo::NotFound', NotFound);
-    inertia.register('seo::Reports', Reports);
-    inertia.register('seo::Report', Report);
-    inertia.register('seo::SearchConsole', SearchConsole);
-    inertia.register('seo::ProOnly', ProOnly);
-    inertia.register('seo::Features', Features);
+    components.register('mt_preview-fieldtype', SeoPreviewFieldtype);
+    components.register('mt-widget', SeoWidget);
+    components.register('mt-redirect-confirm', RedirectConfirm);
+    inertia.register('marketing-toolkit::Overview', Overview);
+    inertia.register('marketing-toolkit::Redirects', Redirects);
+    inertia.register('marketing-toolkit::RedirectForm', RedirectForm);
+    inertia.register('marketing-toolkit::NotFound', NotFound);
+    inertia.register('marketing-toolkit::Reports', Reports);
+    inertia.register('marketing-toolkit::Report', Report);
+    inertia.register('marketing-toolkit::SearchConsole', SearchConsole);
+    inertia.register('marketing-toolkit::ProOnly', ProOnly);
+    inertia.register('marketing-toolkit::Features', Features);
 
     router.on('navigate', (event) => {
         page = event.detail.page;
@@ -120,11 +120,11 @@ Statamic.booting(() => {
     }
 
     // The Tracking tab's warning, as its fields change, and a toast when the brand global is saved.
-    conditions.add('seoTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
+    conditions.add('mtTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
 
     hooks.on('global-set.saving', (resolve, reject, payload) => {
-        if (payload?.globalSet === config.get('seo')?.global && trackingOverlaps(payload.values)) {
-            setTimeout(() => toast.info(__('seo::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
+        if (payload?.globalSet === config.get('marketingToolkit')?.global && trackingOverlaps(payload.values)) {
+            setTimeout(() => toast.info(__('marketing-toolkit::cp.tracking.overlap_toast'), { duration: 10000 }), 500);
         }
 
         resolve();
@@ -136,7 +136,7 @@ Statamic.booting(() => {
  * if GTM loads that tracker too, each visit counts twice.
  */
 function trackingOverlaps(values) {
-    const env = config.get('seo')?.trackingFromConfig ?? {};
+    const env = config.get('marketingToolkit')?.trackingFromConfig ?? {};
     const set = (tracker, field) => Boolean(env[tracker] || String(values?.[field] ?? '').trim());
     const others = [
         ['ga4', 'ga4_id'],

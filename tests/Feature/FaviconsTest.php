@@ -25,7 +25,7 @@ test('without an icon there are no icon files or links', function () {
 
     $this->get('https://example.test/favicon.ico')->assertNotFound();
     $this->get('https://example.test/site.webmanifest')->assertNotFound();
-    expect(renderAt('/', '<s:seo:head />'))->not->toContain('rel="icon"');
+    expect(renderAt('/', '<s:mt:head />'))->not->toContain('rel="icon"');
 });
 
 test('a PNG makes favicon.ico, the touch icon, two manifest icons and the manifest, served without a session', function () {
@@ -52,13 +52,13 @@ test('a PNG makes favicon.ico, the touch icon, two manifest icons and the manife
     ]);
 
     $version = app(Favicons::class)->version();
-    expect(renderAt('/', '<s:seo:head />'))
+    expect(renderAt('/', '<s:mt:head />'))
         ->toContain('<link rel="icon" href="/favicon.ico?v='.$version.'" sizes="32x32">')
         ->toContain('<link rel="apple-touch-icon" href="/apple-touch-icon.png?v='.$version.'">')
         ->toContain('<link rel="manifest" href="/site.webmanifest?v='.$version.'">')
         ->toContain('<meta name="theme-color" content="#112233">')
-        ->and(renderAt('/', '<s:seo:meta />'))->not->toContain('rel="icon"')
-        ->and(renderAt('/', '<s:seo:favicons />'))->toContain('rel="apple-touch-icon"');
+        ->and(renderAt('/', '<s:mt:meta />'))->not->toContain('rel="icon"')
+        ->and(renderAt('/', '<s:mt:favicons />'))->toContain('rel="apple-touch-icon"');
 });
 
 test('an SVG is served as it is, unable to run script, and drawn as the PNGs with Imagick', function () {
@@ -69,7 +69,7 @@ test('an SVG is served as it is, unable to run script, and drawn as the PNGs wit
         ->assertHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
         ->assertContent(ICON_SVG);
 
-    expect(renderAt('/', '<s:seo:favicons />'))->toContain('type="image/svg+xml"');
+    expect(renderAt('/', '<s:mt:favicons />'))->toContain('type="image/svg+xml"');
 
     if (extension_loaded('imagick')) {
         expect(pngSize($this->get('https://example.test/icon-512.png')->assertOk()->getContent()))->toBe([512, 512]);
@@ -94,7 +94,7 @@ test('without Imagick, GD draws a PNG, and an SVG becomes favicon.svg alone', fu
     $this->get('https://example.test/favicon.svg')->assertOk();
     $this->get('https://example.test/favicon.ico')->assertNotFound();
     $this->get('https://example.test/site.webmanifest')->assertOk()->assertJsonPath('icons.0.src', '/favicon.svg');
-    expect(renderAt('/', '<s:seo:favicons />'))->not->toContain('apple-touch-icon')->toContain('rel="manifest"');
+    expect(renderAt('/', '<s:mt:favicons />'))->not->toContain('apple-touch-icon')->toContain('rel="manifest"');
 });
 
 test('saving SEO & brand makes the icons again, under a new version', function () {

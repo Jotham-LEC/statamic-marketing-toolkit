@@ -12,13 +12,13 @@ use Statamic\Facades\Site;
 
 /**
  * /sitemap.xml: every published page search engines should index. Up to
- * `seo.sitemap.per_page` URLs it is one <urlset>; past that it becomes an
+ * `marketing-toolkit.sitemap.per_page` URLs it is one <urlset>; past that it becomes an
  * index of /sitemap_{n}.xml. Cached until an entry, term, tree, collection
  * or taxonomy is saved (JothamLec\MarketingToolkit\Listeners\FlushSitemap).
  */
 class SitemapController
 {
-    public const string CACHE_KEY = 'seo:sitemap';
+    public const string CACHE_KEY = 'mt:sitemap';
 
     public function index(): Response
     {
@@ -26,13 +26,13 @@ class SitemapController
         $perPage = $this->perPage();
 
         if ($urls->count() <= $perPage) {
-            return $this->xml(view('seo::sitemap', ['urls' => $urls])->render());
+            return $this->xml(view('marketing-toolkit::sitemap', ['urls' => $urls])->render());
         }
 
         $pages = range(1, (int) ceil($urls->count() / $perPage));
 
-        return $this->xml(view('seo::sitemap-index', [
-            'pages' => array_map(fn (int $page) => app(SiteSeo::class)->absolute(route('seo.sitemap.page', ['page' => $page], false)), $pages),
+        return $this->xml(view('marketing-toolkit::sitemap-index', [
+            'pages' => array_map(fn (int $page) => app(SiteSeo::class)->absolute(route('mt.sitemap.page', ['page' => $page], false)), $pages),
         ])->render());
     }
 
@@ -45,7 +45,7 @@ class SitemapController
 
         throw_if($chunk->isEmpty(), NotFoundHttpException::class);
 
-        return $this->xml(view('seo::sitemap', ['urls' => $chunk])->render());
+        return $this->xml(view('marketing-toolkit::sitemap', ['urls' => $chunk])->render());
     }
 
     /**
@@ -54,23 +54,23 @@ class SitemapController
     private function urls(): Collection
     {
         // Off in the config or under Features; Free: the default site's domain only.
-        throw_unless(config('seo.sitemap.enabled') && Sites::served(), NotFoundHttpException::class);
+        throw_unless(config('marketing-toolkit.sitemap.enabled') && Sites::served(), NotFoundHttpException::class);
 
         return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
     }
 
     /**
-     * Per site, and per `seo.sitemap` settings, so a deploy that changes
+     * Per site, and per `marketing-toolkit.sitemap` settings, so a deploy that changes
      * them doesn't serve the old list until the next save.
      */
     public static function cacheKey(string $site): string
     {
-        return self::CACHE_KEY.':'.$site.':'.md5(serialize(config('seo.sitemap')));
+        return self::CACHE_KEY.':'.$site.':'.md5(serialize(config('marketing-toolkit.sitemap')));
     }
 
     private function perPage(): int
     {
-        return max(1, (int) config('seo.sitemap.per_page'));
+        return max(1, (int) config('marketing-toolkit.sitemap.per_page'));
     }
 
     private function xml(string $body): Response

@@ -21,8 +21,8 @@ class JsonLd extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return match (true) {
-            $page->jsonLdErrors !== [] => Result::fail('seo::reports.messages.json_ld_invalid', ['errors' => implode('; ', $page->jsonLdErrors)]),
-            $page->jsonLd === 0 => Result::warn('seo::reports.messages.json_ld_missing'),
+            $page->jsonLdErrors !== [] => Result::fail('marketing-toolkit::reports.messages.json_ld_invalid', ['errors' => implode('; ', $page->jsonLdErrors)]),
+            $page->jsonLd === 0 => Result::warn('marketing-toolkit::reports.messages.json_ld_missing'),
             default => Result::pass(),
         };
     }

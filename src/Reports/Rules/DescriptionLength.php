@@ -21,16 +21,16 @@ class DescriptionLength extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->description === null) {
-            return Result::fail('seo::reports.messages.description_missing');
+            return Result::fail('marketing-toolkit::reports.messages.description_missing');
         }
 
         $length = mb_strlen($page->description);
         [$min, $max] = [$site->settings->int('description_min'), $site->settings->int('description_max')];
 
         return match (true) {
-            $length < $min => Result::warn('seo::reports.messages.description_short', ['count' => $length, 'min' => $min, 'max' => $max]),
-            $length > $max => Result::warn('seo::reports.messages.description_long', ['count' => $length, 'min' => $min, 'max' => $max]),
-            default => Result::pass('seo::reports.messages.characters', ['count' => $length]),
+            $length < $min => Result::warn('marketing-toolkit::reports.messages.description_short', ['count' => $length, 'min' => $min, 'max' => $max]),
+            $length > $max => Result::warn('marketing-toolkit::reports.messages.description_long', ['count' => $length, 'min' => $min, 'max' => $max]),
+            default => Result::pass('marketing-toolkit::reports.messages.characters', ['count' => $length]),
         };
     }
 }

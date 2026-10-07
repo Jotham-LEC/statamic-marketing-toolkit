@@ -202,7 +202,7 @@ class RedirectChangedUris
 
     private function enabled(): bool
     {
-        return (bool) config('seo.redirects.enabled') && (bool) config('seo.redirects.automatic');
+        return (bool) config('marketing-toolkit.redirects.enabled') && (bool) config('marketing-toolkit.redirects.automatic');
     }
 
     private function entryUri(EntryContract $entry): ?string

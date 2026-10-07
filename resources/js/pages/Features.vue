@@ -11,11 +11,11 @@ defineProps({
 </script>
 
 <template>
-    <Head :title="__('seo::cp.features.title')" />
+    <Head :title="__('marketing-toolkit::cp.features.title')" />
 
     <div class="max-w-page mx-auto">
         <PublishForm
-            :title="__('seo::cp.features.title')"
+            :title="__('marketing-toolkit::cp.features.title')"
             icon="settings"
             :blueprint="blueprint"
             :initial-values="values"

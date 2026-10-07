@@ -15,8 +15,8 @@ use Statamic\Facades\YAML;
 beforeEach(fn () => Blueprint::find('globals.seo')?->delete());
 
 test('creates the SEO & brand global set and its blueprint, once', function () {
-    $this->artisan('statamic:seo:install')->assertSuccessful();
-    $this->artisan('statamic:seo:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
 
     expect(GlobalSet::findByHandle('seo')?->title())->toBe('SEO & brand')
         ->and(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('title_site_name', 'title_separator', 'publisher_type', 'og_background', 'robots_extra');
@@ -25,7 +25,7 @@ test('creates the SEO & brand global set and its blueprint, once', function () {
 test('fills each empty brand field with what the site uses, so editors can see and change it', function () {
     entryIn('home', 'home', ['description' => 'We make things.']);
 
-    $this->artisan('statamic:seo:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
 
     expect(GlobalSet::findByHandle('seo')->in('default')->data()->all())->toMatchArray([
         'default_description' => 'We make things.',
@@ -36,7 +36,7 @@ test('fills each empty brand field with what the site uses, so editors can see a
 test('never overwrites a value an editor has set', function () {
     seoGlobal(['title_separator' => '|']);
 
-    $this->artisan('statamic:seo:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
 
     expect(GlobalSet::findByHandle('seo')->in('default')->data()->all())
         ->toMatchArray(['title_separator' => '|', 'robots_disallow' => ['/cp/']])
@@ -59,7 +59,7 @@ test('a rerun adds what a newer version brings, in the tabs the site kept', func
         'publisher' => ['display' => 'Publisher', 'sections' => [['fields' => [['handle' => 'publisher_type', 'field' => ['type' => 'select']]]]]],
     ]])->save();
 
-    $this->artisan('statamic:seo:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
     $keys = Blueprint::find('globals.seo')->fields()->all()->keys();
 
     expect($keys)->toContain('site_alternate_name', 'street_address', 'opening_hours', 'publisher_type')
@@ -81,20 +81,20 @@ test('after an update, the new fields are added without running anything', funct
 });
 
 test('a rerun with nothing to add says so', function () {
-    $this->artisan('statamic:seo:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
 
-    $this->artisan('statamic:seo:install')->expectsOutputToContain('Already installed')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->expectsOutputToContain('Already installed')->assertSuccessful();
 });
 
 test('a container or tab that doesn\'t exist is refused, naming the ones that do', function () {
-    $this->artisan('statamic:seo:install', ['--container' => 'missing'])->expectsOutputToContain('The containers: assets.')->assertFailed();
-    $this->artisan('statamic:seo:install', ['--tab' => ['nope']])->expectsOutputToContain('The tabs: brand')->assertFailed();
+    $this->artisan('statamic:mt:install', ['--container' => 'missing'])->expectsOutputToContain('The containers: assets.')->assertFailed();
+    $this->artisan('statamic:mt:install', ['--tab' => ['nope']])->expectsOutputToContain('The tabs: brand')->assertFailed();
 
     expect(Blueprint::find('globals.seo'))->toBeNull();
 });
 
 test('the defaults it fills in are named as the control panel shows them', function () {
-    $this->artisan('statamic:seo:install')->expectsOutputToContain(__('seo::fields.brand.robots_disallow.display'))->assertSuccessful();
+    $this->artisan('statamic:mt:install')->expectsOutputToContain(__('marketing-toolkit::fields.brand.robots_disallow.display'))->assertSuccessful();
 });
 
 test('files in public/ that would be served instead of the addon\'s are named, and deleted when asked', function () {
@@ -102,13 +102,13 @@ test('files in public/ that would be served instead of the addon\'s are named, a
     File::put(public_path('favicon.ico'), '');
 
     try {
-        $this->artisan('statamic:seo:install')
+        $this->artisan('statamic:mt:install')
             ->expectsOutputToContain('public/robots.txt, public/favicon.ico')
             ->expectsConfirmation('Delete them, so the addon serves its own?', 'no')
             ->assertSuccessful();
         expect(public_path('robots.txt'))->toBeFile();
 
-        $this->artisan('statamic:seo:install')
+        $this->artisan('statamic:mt:install')
             ->expectsConfirmation('Delete them, so the addon serves its own?', 'yes')
             ->assertSuccessful();
         expect(public_path('robots.txt'))->not->toBeFile()->and(public_path('favicon.ico'))->not->toBeFile();
@@ -122,7 +122,7 @@ test('--tab adds a whole tab a site asks for', function () {
         'brand' => ['display' => 'Brand', 'sections' => [['fields' => [['handle' => 'title_separator', 'field' => ['type' => 'text']]]]]],
     ]])->save();
 
-    $this->artisan('statamic:seo:install', ['--tab' => ['shop']])->assertSuccessful();
+    $this->artisan('statamic:mt:install', ['--tab' => ['shop']])->assertSuccessful();
 
     expect(Blueprint::find('globals.seo')->fields()->all()->keys())->toContain('currency', 'shipping_rates', 'return_category')
         ->not->toContain('publisher_type');
@@ -144,7 +144,7 @@ test('every label and help the blueprints name is in lang/en/fields.php', functi
     $keys = [];
 
     array_walk_recursive($blueprints, function ($value) use (&$keys) {
-        if (is_string($value) && str_starts_with($value, 'seo::')) {
+        if (is_string($value) && str_starts_with($value, 'marketing-toolkit::')) {
             $keys[] = $value;
         }
     });
@@ -157,7 +157,7 @@ test('the brand blueprint shows in the control panel user\'s language', function
     app('translator')->addLines([
         'fields.brand.title_separator.display' => 'Séparateur de titre',
         'fields.brand.tabs.brand' => 'Marque',
-    ], 'xx', 'seo');
+    ], 'xx', 'marketing-toolkit');
     app()->setLocale('xx');
 
     $blueprint = Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => Install::tabs('assets')]);
@@ -165,7 +165,7 @@ test('the brand blueprint shows in the control panel user\'s language', function
 
     // Statamic passes the label through __() wherever it shows it: the publish
     // form (in Vue), listing columns and validation messages.
-    expect($field->display())->toBe('seo::fields.brand.title_separator.display')
+    expect($field->display())->toBe('marketing-toolkit::fields.brand.title_separator.display')
         ->and(__($field->display()))->toBe('Séparateur de titre')
         ->and($field->validationAttributes())->toBe(['title_separator' => 'Séparateur de titre'])
         ->and(__($blueprint->tabs()->get('brand')->display()))->toBe('Marque')

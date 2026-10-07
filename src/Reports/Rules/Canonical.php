@@ -21,15 +21,15 @@ class Canonical extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->canonical === null) {
-            return Result::fail('seo::reports.messages.canonical_missing');
+            return Result::fail('marketing-toolkit::reports.messages.canonical_missing');
         }
 
         if (! preg_match('#^https?://#i', $page->canonical)) {
-            return Result::fail('seo::reports.messages.canonical_relative', ['url' => $page->canonical]);
+            return Result::fail('marketing-toolkit::reports.messages.canonical_relative', ['url' => $page->canonical]);
         }
 
         if (rtrim($page->canonical, '/') !== rtrim($url, '/')) {
-            return Result::pass('seo::reports.messages.canonical_elsewhere', ['url' => $page->canonical]);
+            return Result::pass('marketing-toolkit::reports.messages.canonical_elsewhere', ['url' => $page->canonical]);
         }
 
         return Result::pass();

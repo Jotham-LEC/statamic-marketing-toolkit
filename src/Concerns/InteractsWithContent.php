@@ -40,8 +40,8 @@ trait InteractsWithContent
     }
 
     /**
-     * A key of this page's rules: its collection's (config `seo.collections`),
-     * or for a term, its taxonomy's (`seo.taxonomies`).
+     * A key of this page's rules: its collection's (config `marketing-toolkit.collections`),
+     * or for a term, its taxonomy's (`marketing-toolkit.taxonomies`).
      *
      * @api
      */
@@ -53,11 +53,11 @@ trait InteractsWithContent
 
         $handle = $context->term?->taxonomyHandle();
 
-        return $handle ? config("seo.taxonomies.{$handle}.{$key}", $default) : $default;
+        return $handle ? config("marketing-toolkit.taxonomies.{$handle}.{$key}", $default) : $default;
     }
 
     /**
-     * A key of this entry's collection settings (config `seo.collections`).
+     * A key of this entry's collection settings (config `marketing-toolkit.collections`).
      *
      * @api
      */
@@ -65,7 +65,7 @@ trait InteractsWithContent
     {
         $handle = $context->entry?->collectionHandle();
 
-        return $handle ? config("seo.collections.{$handle}.{$key}", $default) : $default;
+        return $handle ? config("marketing-toolkit.collections.{$handle}.{$key}", $default) : $default;
     }
 
     protected function contentTitle(Context $context): ?string

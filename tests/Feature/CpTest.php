@@ -13,9 +13,9 @@ use Statamic\Facades\Permission;
 use Statamic\Widgets\VueComponent;
 
 test('the addon registers its permissions in an SEO group', function () {
-    $permissions = Permission::boot()->all()->filter(fn ($permission) => $permission->group() === 'seo')->map->value()->values()->all();
+    $permissions = Permission::boot()->all()->filter(fn ($permission) => $permission->group() === 'marketing-toolkit')->map->value()->values()->all();
 
-    expect($permissions)->toBe(['view seo', 'manage seo redirects', 'run seo reports']);
+    expect($permissions)->toBe(['view marketing toolkit', 'manage marketing toolkit redirects', 'run marketing toolkit reports']);
 });
 
 test('Tools → SEO opens the overview and links to the brand global', function () {
@@ -25,13 +25,13 @@ test('Tools → SEO opens the overview and links to the brand global', function 
     $seo = toolsNav()->get('SEO');
 
     expect($seo)->not->toBeNull()
-        ->and($seo->url())->toBe(cp_route('seo.index'))
+        ->and($seo->url())->toBe(cp_route('mt.index'))
         ->and(collect($seo->resolveChildren()->children())->map->display()->all())->toBe(['Reports', 'Redirects', '404s', 'Search Console', 'Brand & defaults', 'Report settings', 'Features']);
 
-    $this->get(cp_route('seo.index'))
+    $this->get(cp_route('mt.index'))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->component('seo::Overview', false)
+            ->component('marketing-toolkit::Overview', false)
             ->where('siteName', 'Acme')
             ->where('global.exists', true)
             ->where('files.0', ['label' => 'Sitemap', 'url' => 'https://example.test/sitemap.xml', 'public' => false])
@@ -39,48 +39,48 @@ test('Tools → SEO opens the overview and links to the brand global', function 
             ->where('report.latest', null)
             ->where('redirects.active', 0)
             ->where('notFound.paths', 0)
-            ->where('notFound.url', cp_route('seo.404s.index')));
+            ->where('notFound.url', cp_route('mt.404s.index')));
 });
 
 test('the overview leaves out redirects for someone who cannot manage them', function () {
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
-    $this->get(cp_route('seo.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('redirects', null));
+    $this->get(cp_route('mt.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('redirects', null));
 });
 
 test('without the global the overview says so', function () {
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.index'))
+    $this->get(cp_route('mt.index'))
         ->assertInertia(fn (AssertableInertia $page) => $page->where('global.exists', false)->where('global.url', null));
 });
 
-test('SEO is hidden from people without "view seo"', function () {
+test('SEO is hidden from people without "view marketing toolkit"', function () {
     $this->actingAs(cpUser());
 
     expect(toolsNav()->has('SEO'))->toBeFalse();
-    $this->get(cp_route('seo.index'))->assertRedirect(cp_route('index'))->assertSessionHas('error');
-    $this->getJson(cp_route('seo.index'))->assertForbidden();
+    $this->get(cp_route('mt.index'))->assertRedirect(cp_route('index'))->assertSessionHas('error');
+    $this->getJson(cp_route('mt.index'))->assertForbidden();
 
-    foreach (['seo.404s.index', 'seo.reports.index', 'seo.search-console.index'] as $route) {
+    foreach (['mt.404s.index', 'mt.reports.index', 'mt.search-console.index'] as $route) {
         $this->getJson(cp_route($route))->assertForbidden();
     }
 });
 
 test('the dashboard widget shows its empty states until reports and 404s exist', function () {
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
     $component = (new SeoWidget)->component();
 
     expect($component)->toBeInstanceOf(VueComponent::class)
         ->and($component->toArray())->toBe([
-            'name' => 'seo-widget',
-            'props' => ['title' => 'SEO', 'report' => null, 'notFound' => [], 'url' => cp_route('seo.index'), 'notFoundUrl' => cp_route('seo.404s.index')],
+            'name' => 'mt-widget',
+            'props' => ['title' => 'SEO', 'report' => null, 'notFound' => [], 'url' => cp_route('mt.index'), 'notFoundUrl' => cp_route('mt.404s.index')],
         ]);
 });
 
 test('the dashboard widget lists the most recent 404s', function () {
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
     foreach (['/a', '/b', '/c', '/d', '/e', '/f'] as $i => $path) {
         MissingPath::query()->create(['path' => $path, 'hits' => $i + 1, 'first_seen_at' => now(), 'last_seen_at' => now()->addMinutes($i)]);
@@ -89,7 +89,7 @@ test('the dashboard widget lists the most recent 404s', function () {
     expect(collect((new SeoWidget)->component()->toArray()['props']['notFound'])->pluck('path')->all())->toBe(['/f', '/e', '/d', '/c', '/b']);
 });
 
-test('the dashboard widget is left out for people without "view seo"', function () {
+test('the dashboard widget is left out for people without "view marketing toolkit"', function () {
     $this->actingAs(cpUser());
 
     expect((new SeoWidget)->component())->toBeNull();
@@ -104,10 +104,10 @@ test('the addon finds itself under the package name in composer.json', function 
 });
 
 test('the SEO names stay as they were under Co-SEO', function () {
-    expect(config('seo.global'))->toBe('seo')
-        ->and(__('seo::cp.seo'))->toBe('SEO')
-        ->and(Fieldset::find('seo::seo'))->not->toBeNull()
-        ->and(view()->exists('seo::meta'))->toBeTrue();
+    expect(config('marketing-toolkit.global'))->toBe('seo')
+        ->and(__('marketing-toolkit::cp.seo'))->toBe('SEO')
+        ->and(Fieldset::find('marketing-toolkit::seo'))->not->toBeNull()
+        ->and(view()->exists('marketing-toolkit::meta'))->toBeTrue();
 });
 
 test('Co-SEO\'s addon settings are carried over once, under the new slug', function () {
@@ -160,7 +160,7 @@ test('the overview marks a file public/ serves instead of the addon\'s', functio
     File::put(public_path('robots.txt'), "User-agent: *\nDisallow:\n");
 
     try {
-        $this->actingAs(cpUser(super: true))->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        $this->actingAs(cpUser(super: true))->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('files.0.public', false)
             ->where('files.1', ['label' => 'robots.txt', 'url' => 'https://example.test/robots.txt', 'public' => true]));
     } finally {

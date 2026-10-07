@@ -24,10 +24,10 @@ class RequirePro
 
         abort_unless($request->isMethod('GET') && ! $request->expectsJson(), 404);
 
-        return Inertia::render('seo::ProOnly', [
+        return Inertia::render('marketing-toolkit::ProOnly', [
             'upgradeUrl' => Edition::marketplaceUrl(),
             'severalSites' => Sites::installed(),
-            'overviewUrl' => cp_route('seo.index'),
+            'overviewUrl' => cp_route('mt.index'),
         ])->toResponse($request);
     }
 }

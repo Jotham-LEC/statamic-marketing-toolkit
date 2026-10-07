@@ -3,7 +3,7 @@
 namespace JothamLec\MarketingToolkit\Support;
 
 /**
- * Merges a site's config/seo.php into the addon's defaults. Laravel's own
+ * Merges a site's config/marketing-toolkit.php into the addon's defaults. Laravel's own
  * merge is one level deep, so a site that set `og.templates` alone lost
  * `og.enabled` and the cards with it. Here keyed arrays merge at every depth,
  * while a list (ignore_paths, sitemap collections) or a value replaces the
@@ -36,7 +36,7 @@ final class Config
     public const array SWITCHES = ['robots_txt', 'llms_txt', 'ads_txt'];
 
     /**
-     * A config/seo.php published up to 0.19, in today's keys, so it keeps
+     * A config file published up to 0.19 (then config/seo.php), in today's keys, so it keeps
      * working as it was. Today's key wins where a site has both.
      *
      * @param  array<string, mixed>  $site

@@ -13,11 +13,11 @@ use JothamLec\MarketingToolkit\Http\Middleware\RequirePro;
 
 // Permissions are checked here (Statamic's permissions answer Laravel's Gate);
 // a controller checks only what a route can't say, such as editing the addon's settings.
-Route::name('seo.')->prefix('seo')->group(function () {
-    Route::get('/', OverviewController::class)->middleware('can:view seo')->name('index');
+Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
+    Route::get('/', OverviewController::class)->middleware('can:view marketing toolkit')->name('index');
     Route::post('preview', [PreviewController::class, 'meta'])->name('preview.meta');
 
-    Route::middleware('can:manage seo redirects')->group(function () {
+    Route::middleware('can:manage marketing toolkit redirects')->group(function () {
         Route::get('redirects', [RedirectsController::class, 'index'])->name('redirects.index');
         Route::get('redirects/listing', [RedirectsController::class, 'listing'])->name('redirects.listing');
         Route::get('redirects/create', [RedirectsController::class, 'create'])->name('redirects.create');
@@ -33,7 +33,7 @@ Route::name('seo.')->prefix('seo')->group(function () {
     Route::middleware(RequirePro::class)->group(function () {
         Route::post('preview/card', [PreviewController::class, 'card'])->name('preview.card');
 
-        Route::middleware('can:manage seo redirects')->group(function () {
+        Route::middleware('can:manage marketing toolkit redirects')->group(function () {
             Route::get('redirects/export', [RedirectsController::class, 'export'])->name('redirects.export');
             Route::post('redirects/import', [RedirectsController::class, 'import'])->name('redirects.import');
             Route::post('redirects/choice', [RedirectsController::class, 'choice'])->name('redirects.choice');
@@ -41,12 +41,12 @@ Route::name('seo.')->prefix('seo')->group(function () {
         // Asked on every save of an entry or term: answers "no change" without the permission.
         Route::post('redirects/check', [RedirectsController::class, 'check'])->name('redirects.check');
 
-        Route::middleware('can:view seo')->group(function () {
+        Route::middleware('can:view marketing toolkit')->group(function () {
             Route::get('404s', [NotFoundController::class, 'index'])->name('404s.index');
             Route::get('404s/listing', [NotFoundController::class, 'listing'])->name('404s.listing');
 
             Route::get('reports', [ReportsController::class, 'index'])->name('reports.index');
-            Route::post('reports', [ReportsController::class, 'run'])->middleware('can:run seo reports')->name('reports.run');
+            Route::post('reports', [ReportsController::class, 'run'])->middleware('can:run marketing toolkit reports')->name('reports.run');
             Route::get('reports/{report}', [ReportsController::class, 'show'])->whereNumber('report')->name('reports.show');
             Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
             Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');

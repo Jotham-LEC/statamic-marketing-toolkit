@@ -16,7 +16,7 @@ class RobotsController
     public function __invoke(): Response
     {
         // Off in the config or under Features; Free: the default site's domain only.
-        throw_unless(config('seo.robots_txt.enabled') && Sites::served(), NotFoundHttpException::class);
+        throw_unless(config('marketing-toolkit.robots_txt.enabled') && Sites::served(), NotFoundHttpException::class);
 
         return new Response(app(SiteSeo::class)->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

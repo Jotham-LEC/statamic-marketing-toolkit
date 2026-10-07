@@ -34,7 +34,7 @@ class Report extends Model
 
     public const string FAILED = 'failed';
 
-    protected $table = 'seo_reports';
+    protected $table = 'mt_reports';
 
     protected $guarded = ['id'];
 

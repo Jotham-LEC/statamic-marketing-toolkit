@@ -21,11 +21,11 @@ class BrokenLinks extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->brokenLinks !== []) {
-            return Result::fail('seo::reports.messages.links_broken', ['links' => $this->listed($page->brokenLinks, 5, paths: false)]);
+            return Result::fail('marketing-toolkit::reports.messages.links_broken', ['links' => $this->listed($page->brokenLinks, 5, paths: false)]);
         }
 
         if ($page->redirectedLinks !== []) {
-            return Result::warn('seo::reports.messages.links_redirected', ['links' => $this->listed($page->redirectedLinks, 5, paths: false)]);
+            return Result::warn('marketing-toolkit::reports.messages.links_redirected', ['links' => $this->listed($page->redirectedLinks, 5, paths: false)]);
         }
 
         return Result::pass();

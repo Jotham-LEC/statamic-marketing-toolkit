@@ -16,7 +16,7 @@ class AttributeSubmission
 {
     public function handle(FormSubmitted $event): void
     {
-        if (config('seo.leads.enabled') && app(Settings::class)->bool('attribution')) {
+        if (config('marketing-toolkit.leads.enabled') && app(Settings::class)->bool('attribution')) {
             app(Attribution::class)->apply($event->submission, request());
         }
     }

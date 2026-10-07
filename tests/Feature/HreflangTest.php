@@ -35,7 +35,7 @@ test('a page links to itself in each language, with the default site as x-defaul
     expect(metaFor($about, '/about')->alternates)->toBe($expected)
         // The French page lists the same set, itself included.
         ->and(metaFor(Entry::findByUri('/a-propos', 'fr'), '/fr/a-propos')->alternates)->toBe($expected)
-        ->and(hreflangs(renderAt('/about', '<s:seo:meta :entry="$entry" />', ['entry' => $about])))->toBe($expected);
+        ->and(hreflangs(renderAt('/about', '<s:mt:meta :entry="$entry" />', ['entry' => $about])))->toBe($expected);
 });
 
 test('the home page links to each language\'s home', function () {
@@ -51,7 +51,7 @@ test('the home page links to each language\'s home', function () {
 });
 
 test('a term links to itself on each site it has entries on', function () {
-    config(['seo.sitemap.taxonomies' => ['topics']]);
+    config(['marketing-toolkit.sitemap.taxonomies' => ['topics']]);
     Taxonomy::make('topics')->termTemplate('default')->sites(['default', 'fr', 'uk', 'de'])->save();
     Collection::findByHandle('pages')->taxonomies(['topics'])->save();
     Term::make()->taxonomy('topics')->slug('gardens')
@@ -113,13 +113,13 @@ test('sites sharing a language get full locales; x-default can name another site
         'x-default' => 'https://example.test/about',
     ]);
 
-    config(['seo.hreflang.x_default' => 'uk']);
+    config(['marketing-toolkit.hreflang.x_default' => 'uk']);
     expect(metaFor($about, '/about')->alternates['x-default'])->toBe('https://example.test/uk/about-us');
 
-    config(['seo.hreflang.x_default' => false]);
+    config(['marketing-toolkit.hreflang.x_default' => false]);
     expect(metaFor($about, '/about')->alternates)->not->toHaveKey('x-default');
 
-    config(['seo.hreflang.enabled' => false]);
+    config(['marketing-toolkit.hreflang.enabled' => false]);
     expect(metaFor($about, '/about')->alternates)->toBe([]);
 });
 
@@ -155,7 +155,7 @@ test('og:locale is the content\'s language, with the others as alternates', func
     $french = translationOf($about, 'fr', 'a-propos');
     translationOf($about, 'de', 'uber-uns');
 
-    $html = renderAt('/fr/a-propos', '<s:seo:meta :entry="$entry" />', ['entry' => $french]);
+    $html = renderAt('/fr/a-propos', '<s:mt:meta :entry="$entry" />', ['entry' => $french]);
 
     expect($html)->toContain('<meta property="og:locale" content="fr_FR">')
         ->toContain('<meta property="og:locale:alternate" content="en_US">')

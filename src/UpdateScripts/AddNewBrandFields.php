@@ -9,7 +9,7 @@ use Statamic\UpdateScripts\UpdateScript;
 
 /**
  * After each update, the SEO & brand blueprint gets the fields the new
- * version brings, in the tabs the site kept, as `seo:install` would add
+ * version brings, in the tabs the site kept, as `mt:install` would add
  * them. Statamic runs it on `composer update` (or `php please updates:run`);
  * commit the blueprint it changes.
  */
@@ -17,12 +17,12 @@ class AddNewBrandFields extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {
-        return Blueprint::find('globals.'.config('seo.global')) !== null;
+        return Blueprint::find('globals.'.config('marketing-toolkit.global')) !== null;
     }
 
     public function update()
     {
-        $blueprint = Blueprint::find('globals.'.config('seo.global'));
+        $blueprint = Blueprint::find('globals.'.config('marketing-toolkit.global'));
         $container = Install::containerOf($blueprint) ?? AssetContainer::all()->first()?->handle();
 
         if ($container === null) {

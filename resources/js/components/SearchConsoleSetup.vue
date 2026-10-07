@@ -12,7 +12,7 @@ import { useRequests } from '../util.js';
  */
 const props = defineProps({ setup: { type: Object, required: true } });
 
-const { busy, send } = useRequests(__('seo::cp.search_console.setup.failed'));
+const { busy, send } = useRequests(__('marketing-toolkit::cp.search_console.setup.failed'));
 const fileInput = ref(null);
 const pasted = ref('');
 const property = ref(props.setup.property ?? props.setup.suggested_property);
@@ -62,27 +62,27 @@ async function check() {
 
 function copyEmail() {
     navigator.clipboard?.writeText(props.setup.email);
-    toast.success(__('seo::cp.search_console.setup.copied'));
+    toast.success(__('marketing-toolkit::cp.search_console.setup.copied'));
 }
 </script>
 
 <template>
     <Card class="space-y-4 p-4">
         <div class="flex items-center gap-3">
-            <Heading size="lg">{{ __('seo::cp.search_console.setup.heading') }}</Heading>
-            <Badge v-if="setup.configured" color="green" :text="__('seo::cp.search_console.setup.set_up')" />
+            <Heading size="lg">{{ __('marketing-toolkit::cp.search_console.setup.heading') }}</Heading>
+            <Badge v-if="setup.configured" color="green" :text="__('marketing-toolkit::cp.search_console.setup.set_up')" />
         </div>
-        <Description>{{ __('seo::cp.search_console.setup.intro') }}</Description>
+        <Description>{{ __('marketing-toolkit::cp.search_console.setup.intro') }}</Description>
 
         <ol class="list-decimal space-y-5 ps-5 text-sm">
             <li class="space-y-2">
                 <p>
-                    <strong class="me-1">{{ __('seo::cp.search_console.setup.step_key') }}</strong>
+                    <strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_key') }}</strong>
                     <span
                         v-html="
-                            __('seo::cp.search_console.setup.step_key_body', {
-                                enable: link('https://console.cloud.google.com/apis/library/searchconsole.googleapis.com', __('seo::cp.search_console.setup.enable_api')),
-                                accounts: link('https://console.cloud.google.com/iam-admin/serviceaccounts', __('seo::cp.search_console.setup.service_accounts')),
+                            __('marketing-toolkit::cp.search_console.setup.step_key_body', {
+                                enable: link('https://console.cloud.google.com/apis/library/searchconsole.googleapis.com', __('marketing-toolkit::cp.search_console.setup.enable_api')),
+                                accounts: link('https://console.cloud.google.com/iam-admin/serviceaccounts', __('marketing-toolkit::cp.search_console.setup.service_accounts')),
                             })
                         "
                     />
@@ -90,70 +90,70 @@ function copyEmail() {
                 <p
                     class="text-gray-600 dark:text-gray-400"
                     v-html="
-                        __('seo::cp.search_console.setup.key_blocked', {
-                            policy: link(setup.guides.key_policy, __('seo::cp.search_console.setup.key_policy')),
-                            enable: link(setup.guides.keys, __('seo::cp.search_console.setup.key_enable')),
+                        __('marketing-toolkit::cp.search_console.setup.key_blocked', {
+                            policy: link(setup.guides.key_policy, __('marketing-toolkit::cp.search_console.setup.key_policy')),
+                            enable: link(setup.guides.keys, __('marketing-toolkit::cp.search_console.setup.key_enable')),
                         })
                     "
                 />
                 <div v-if="setup.email" class="flex flex-wrap items-center gap-2">
-                    <Badge color="green" :text="__('seo::cp.search_console.setup.key_added')" />
+                    <Badge color="green" :text="__('marketing-toolkit::cp.search_console.setup.key_added')" />
                     <span class="font-mono text-xs">{{ setup.email }}</span>
-                    <span v-if="keyFromEnv" class="text-gray-500">{{ __('seo::cp.search_console.from_env') }}</span>
-                    <Button v-else size="sm" variant="ghost" :text="__('seo::cp.search_console.setup.remove')" :loading="busy === 'forget'" @click="forgetKey" />
+                    <span v-if="keyFromEnv" class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
+                    <Button v-else size="sm" variant="ghost" :text="__('marketing-toolkit::cp.search_console.setup.remove')" :loading="busy === 'forget'" @click="forgetKey" />
                 </div>
                 <template v-else-if="keyFromEnv">
-                    <p class="text-red-600 dark:text-red-400">{{ __('seo::cp.search_console.setup.env_key_invalid') }}</p>
+                    <p class="text-red-600 dark:text-red-400">{{ __('marketing-toolkit::cp.search_console.setup.env_key_invalid') }}</p>
                 </template>
                 <div v-else class="space-y-2">
                     <input ref="fileInput" type="file" accept=".json,application/json" class="hidden" @change="uploadKey" />
-                    <Button :text="__('seo::cp.search_console.setup.upload')" variant="primary" :loading="busy === 'key'" @click="fileInput.click()" />
+                    <Button :text="__('marketing-toolkit::cp.search_console.setup.upload')" variant="primary" :loading="busy === 'key'" @click="fileInput.click()" />
                     <details class="space-y-2 text-gray-600 dark:text-gray-400">
-                        <summary class="cursor-pointer">{{ __('seo::cp.search_console.setup.paste') }}</summary>
-                        <label for="seo-search-console-key" class="sr-only">{{ __('seo::cp.search_console.setup.paste') }}</label>
-                        <Textarea id="seo-search-console-key" v-model="pasted" class="font-mono text-xs" />
-                        <Button size="sm" :text="__('seo::cp.search_console.setup.save_key')" :disabled="!pasted" :loading="busy === 'key'" @click="pasteKey" />
+                        <summary class="cursor-pointer">{{ __('marketing-toolkit::cp.search_console.setup.paste') }}</summary>
+                        <label for="mt-search-console-key" class="sr-only">{{ __('marketing-toolkit::cp.search_console.setup.paste') }}</label>
+                        <Textarea id="mt-search-console-key" v-model="pasted" class="font-mono text-xs" />
+                        <Button size="sm" :text="__('marketing-toolkit::cp.search_console.setup.save_key')" :disabled="!pasted" :loading="busy === 'key'" @click="pasteKey" />
                     </details>
-                    <p class="text-gray-500">{{ __('seo::cp.search_console.setup.stored') }}</p>
+                    <p class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.setup.stored') }}</p>
                 </div>
             </li>
 
             <li class="space-y-2">
                 <p>
-                    <strong class="me-1">{{ __('seo::cp.search_console.setup.step_users') }}</strong>
+                    <strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_users') }}</strong>
                     <span
                         v-html="
-                            __('seo::cp.search_console.setup.step_users_body', {
-                                users: link(usersUrl, __('seo::cp.search_console.setup.users_link')),
-                                email: setup.email ? code(setup.email) : __('seo::cp.search_console.setup.the_email'),
+                            __('marketing-toolkit::cp.search_console.setup.step_users_body', {
+                                users: link(usersUrl, __('marketing-toolkit::cp.search_console.setup.users_link')),
+                                email: setup.email ? code(setup.email) : __('marketing-toolkit::cp.search_console.setup.the_email'),
                             })
                         "
                     />
                 </p>
-                <Button v-if="setup.email" size="sm" variant="ghost" :text="__('seo::cp.search_console.setup.copy_email')" @click="copyEmail" />
+                <Button v-if="setup.email" size="sm" variant="ghost" :text="__('marketing-toolkit::cp.search_console.setup.copy_email')" @click="copyEmail" />
             </li>
 
             <li class="space-y-2">
                 <p>
-                    <strong class="me-1">{{ __('seo::cp.search_console.setup.step_property') }}</strong>
-                    <span v-html="__('seo::cp.search_console.setup.step_property_body', { domain: code('sc-domain:example.com'), prefix: code('https://example.com/') })" />
+                    <strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_property') }}</strong>
+                    <span v-html="__('marketing-toolkit::cp.search_console.setup.step_property_body', { domain: code('sc-domain:example.com'), prefix: code('https://example.com/') })" />
                 </p>
                 <div v-if="propertyFromEnv" class="flex items-center gap-2">
                     <span class="font-mono text-xs">{{ setup.property }}</span>
-                    <span class="text-gray-500">{{ __('seo::cp.search_console.from_env') }}</span>
+                    <span class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
                 </div>
                 <div v-else class="flex max-w-lg gap-2">
-                    <label for="seo-search-console-property" class="sr-only">{{ __('seo::cp.search_console.property') }}</label>
-                    <Input id="seo-search-console-property" v-model="property" class="font-mono" @keydown.enter.prevent="saveProperty" />
-                    <Button :text="__('seo::cp.search_console.setup.save')" :loading="busy === 'property'" :disabled="!property || property === setup.property" @click="saveProperty" />
+                    <label for="mt-search-console-property" class="sr-only">{{ __('marketing-toolkit::cp.search_console.property') }}</label>
+                    <Input id="mt-search-console-property" v-model="property" class="font-mono" @keydown.enter.prevent="saveProperty" />
+                    <Button :text="__('marketing-toolkit::cp.search_console.setup.save')" :loading="busy === 'property'" :disabled="!property || property === setup.property" @click="saveProperty" />
                 </div>
             </li>
 
             <li class="space-y-2">
-                <p><strong class="me-1">{{ __('seo::cp.search_console.setup.step_check') }}</strong>{{ __('seo::cp.search_console.setup.step_check_body') }}</p>
-                <Button :text="__('seo::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
+                <p><strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_check') }}</strong>{{ __('marketing-toolkit::cp.search_console.setup.step_check_body') }}</p>
+                <Button :text="__('marketing-toolkit::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
                 <p role="status" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
-                <p class="text-gray-500" v-html="__('seo::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />
+                <p class="text-gray-500" v-html="__('marketing-toolkit::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />
             </li>
         </ol>
     </Card>

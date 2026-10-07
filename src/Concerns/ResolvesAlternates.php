@@ -30,7 +30,7 @@ trait ResolvesAlternates
     /**
      * The same page in each language, for hreflang: code => address, with
      * `x-default` for the version shown to everyone else (config
-     * `seo.hreflang.x_default`). Empty when there is no other language to
+     * `marketing-toolkit.hreflang.x_default`). Empty when there is no other language to
      * point to, or when this isn't an address to index: noindexed, canonical
      * elsewhere, a listing past its first page.
      *
@@ -63,7 +63,7 @@ trait ResolvesAlternates
      */
     public function contentAlternates(Entry|Term $content): array
     {
-        if (! config('seo.hreflang.enabled') || ! Sites::multiple()) {
+        if (! config('marketing-toolkit.hreflang.enabled') || ! Sites::multiple()) {
             return [];
         }
 
@@ -144,13 +144,13 @@ trait ResolvesAlternates
 
     /**
      * The site whose version is `x-default`: the default site, another named
-     * in `seo.hreflang.x_default`, or none (false).
+     * in `marketing-toolkit.hreflang.x_default`, or none (false).
      *
      * @api
      */
     public function xDefaultSite(): ?string
     {
-        $site = config('seo.hreflang.x_default');
+        $site = config('marketing-toolkit.hreflang.x_default');
 
         if ($site === false) {
             return null;

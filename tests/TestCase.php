@@ -20,30 +20,39 @@ abstract class TestCase extends AddonTestCase
     protected string $addonServiceProvider = ServiceProvider::class;
 
     /**
-     * Under `pest --parallel` each process gets its own copy of Testbench's
-     * skeleton (storage, resources/addons) and its own Stache and assets
-     * folder, so processes never read or delete each other's files.
+     * Each test process gets its own copy of Testbench's skeleton (storage,
+     * resources) and its own Stache and assets folder, so processes never
+     * read or delete each other's files, and no run sees what an earlier one
+     * left behind.
      */
+    private static bool $fresh = false;
+
     public static function applicationBasePath()
     {
         $skeleton = parent::applicationBasePath();
+        // Serial runs get their own copy too, so nothing a test writes lands in vendor/.
+        $token = self::token() ?? 'serial';
 
-        if (! $token = self::token()) {
-            return $skeleton;
+        // One per checkout and process, made afresh when the process starts, so
+        // blueprints and forms a test leaves on disk don't outlive the run.
+        $vendor = dirname((string) (new ReflectionClass(ClassLoader::class))->getFileName(), 2);
+        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.md5($vendor).'-'.$token;
+        $files = new Filesystem;
+
+        if (! self::$fresh) {
+            $files->deleteDirectory($copy);
+            self::$fresh = true;
         }
 
-        // One per checkout, fresh after each composer install or update.
-        $vendor = dirname((string) (new ReflectionClass(ClassLoader::class))->getFileName(), 2);
-        $copy = sys_get_temp_dir().'/marketing-toolkit-tests/'.md5($vendor.filemtime($vendor.'/composer/installed.json')).'-'.$token;
-
         if (! is_dir($copy)) {
-            $files = new Filesystem;
             $files->ensureDirectoryExists($copy);
-            foreach (array_diff(scandir($skeleton), ['.', '..', 'storage', 'vendor']) as $item) {
+            foreach (array_diff(scandir($skeleton), ['.', '..', 'storage', 'vendor', 'resources']) as $item) {
                 is_dir($skeleton.'/'.$item)
                     ? $files->copyDirectory($skeleton.'/'.$item, $copy.'/'.$item)
                     : $files->copy($skeleton.'/'.$item, $copy.'/'.$item);
             }
+            // resources/ starts empty: what tests save there (blueprints, forms, roles) is theirs alone.
+            $files->copyDirectory($skeleton.'/resources/views', $copy.'/resources/views');
             foreach (['app/public', 'app/private', 'framework/cache', 'framework/sessions', 'framework/views', 'logs'] as $folder) {
                 $files->ensureDirectoryExists($copy.'/storage/'.$folder);
             }
@@ -95,13 +104,13 @@ abstract class TestCase extends AddonTestCase
         $app['config']->set('cache.stores.array.serialize', true);
         $app['config']->set('database.default', 'testing');
 
-        // SEO_TEST_DB=pgsql runs the suite on Postgres (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
-        if (env('SEO_TEST_DB') === 'pgsql') {
+        // MT_TEST_DB=pgsql runs the suite on Postgres (DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD).
+        if (env('MT_TEST_DB') === 'pgsql') {
             $app['config']->set('database.connections.testing', [
                 'driver' => 'pgsql',
                 'host' => env('DB_HOST', '127.0.0.1'),
                 'port' => env('DB_PORT', 5432),
-                'database' => env('DB_DATABASE', 'seo_test'),
+                'database' => env('DB_DATABASE', 'mt_test'),
                 'username' => env('DB_USERNAME', 'postgres'),
                 'password' => env('DB_PASSWORD', ''),
                 'charset' => 'utf8',

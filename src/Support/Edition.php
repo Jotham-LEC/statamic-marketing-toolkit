@@ -23,7 +23,7 @@ final class Edition
      */
     public static function pro(): bool
     {
-        return Blink::once('seo:edition', function () {
+        return Blink::once('mt:edition', function () {
             try {
                 return Addon::get(self::PACKAGE)?->edition() === 'pro';
             } catch (Throwable $exception) {

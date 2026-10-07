@@ -37,7 +37,7 @@ test('pages that exist and redirected addresses are not logged', function () {
 });
 
 test('the log keeps the most recently seen paths up to its cap', function () {
-    config(['seo.not_found.max_rows' => 3]);
+    config(['marketing-toolkit.not_found.max_rows' => 3]);
 
     foreach (['/a', '/b', '/c', '/d'] as $path) {
         $this->get($path, ['User-Agent' => 'Mozilla/5.0']);
@@ -48,7 +48,7 @@ test('the log keeps the most recently seen paths up to its cap', function () {
 });
 
 test('a flood of made-up addresses pushes out one-off misses, not links that recur or that a page points to', function () {
-    config(['seo.not_found.max_rows' => 3]);
+    config(['marketing-toolkit.not_found.max_rows' => 3]);
     $browser = ['User-Agent' => 'Mozilla/5.0'];
 
     $this->get('/linked', [...$browser, 'Referer' => 'https://example.test/news']);
@@ -64,7 +64,7 @@ test('a flood of made-up addresses pushes out one-off misses, not links that rec
 });
 
 test('only a link from one of the site\'s own pages keeps a one-off miss: any request can name another', function () {
-    config(['seo.not_found.max_rows' => 3]);
+    config(['marketing-toolkit.not_found.max_rows' => 3]);
     $browser = ['User-Agent' => 'Mozilla/5.0'];
 
     $this->get('/linked', [...$browser, 'Referer' => 'https://example.test/news']);
@@ -80,7 +80,7 @@ test('only a link from one of the site\'s own pages keeps a one-off miss: any re
 });
 
 test('logging can be turned off', function () {
-    config(['seo.not_found.enabled' => false]);
+    config(['marketing-toolkit.not_found.enabled' => false]);
 
     $this->get('/missing', ['User-Agent' => 'Mozilla/5.0']);
 
@@ -94,9 +94,9 @@ test('only a web address is kept as the referrer, so the log never links to a sc
 
     // A row written before this check is not handed to the control panel as a link.
     MissingPath::query()->create(['path' => '/older', 'referrer' => 'javascript:alert(1)', 'first_seen_at' => now(), 'last_seen_at' => now()]);
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
-    expect($this->getJson(cp_route('seo.404s.listing'))->json('data.*.referrer'))->toBe([null, null]);
+    expect($this->getJson(cp_route('mt.404s.listing'))->json('data.*.referrer'))->toBe([null, null]);
 });
 
 test('a path or referrer that is not valid UTF-8 is not logged (Postgres would refuse it)', function () {

@@ -98,7 +98,7 @@ test('the cached rules follow saves and deletes', function () {
 });
 
 test('redirects can be turned off', function () {
-    config(['seo.redirects.enabled' => false]);
+    config(['marketing-toolkit.redirects.enabled' => false]);
     rule('/old', '/new');
 
     $this->get('/old')->assertNotFound();
@@ -214,7 +214,7 @@ test('letter case counts by default', function () {
 });
 
 test('with case_sensitive off, a source matches in any letter case, and a wildcard passes on what it matched as typed', function () {
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
     rule('/about-us', '/about');
     rule('/Café', '/coffee');
     rule('/blog/*', '/essays/$1');
@@ -231,7 +231,7 @@ test('turning case_sensitive off takes effect though the rules are cached', func
     rule('/about-us', '/about');
     $this->get('/ABOUT-US')->assertNotFound();
 
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
 
     $this->get('/ABOUT-US')->assertRedirect('https://example.test/about');
 });
@@ -239,7 +239,7 @@ test('turning case_sensitive off takes effect though the rules are cached', func
 test('with case_sensitive off, a source in the very case asked for wins over one differing only in case', function () {
     rule('/Old', '/one');
     rule('/old', '/two');
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
 
     $this->get('/old')->assertRedirect('https://example.test/two');
     $this->get('/Old')->assertRedirect('https://example.test/one');
@@ -248,7 +248,7 @@ test('with case_sensitive off, a source in the very case asked for wins over one
 });
 
 test('with case_sensitive off, a source differing only in case is the same one, on the form and in a CSV import', function () {
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
     $existing = rule('/about-us', '/about');
 
     expect(Redirect::validator(['source' => '/ABOUT-US/', 'target' => '/x', 'status' => 301, 'active' => true])->errors()->first('source'))
@@ -266,7 +266,7 @@ test('with case_sensitive off, a source differing only in case is the same one, 
 });
 
 test('with case_sensitive off, a CSV import folds the stored sources once and clears the cached rules once', function () {
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
     $about = rule('/about-us', '/about');
     // Two rules differing only in case, kept from when matching heeded it.
     rule('/Old', '/one');
@@ -275,7 +275,7 @@ test('with case_sensitive off, a CSV import folds the stored sources once and cl
 
     $scans = 0;
     DB::listen(function ($query) use (&$scans) {
-        $scans += preg_match('/^select .* from "seo_redirects"( where "site" is null)? order by "id" asc$/', $query->sql);
+        $scans += preg_match('/^select .* from "mt_redirects"( where "site" is null)? order by "id" asc$/', $query->sql);
     });
 
     $result = app(Csv::class)->import("source,target,status,active\n/ABOUT-US,/company,301,1\n/new,/a,301,1\n/NEW,/b,301,1\n/old,/three,301,1\n");
@@ -286,7 +286,7 @@ test('with case_sensitive off, a CSV import folds the stored sources once and cl
         ->and($result['errors'])->toBe(['Row 5: Another redirect already starts from this address.'])
         ->and($about->fresh()->target)->toBe('/company')
         ->and(Redirect::forSource('/new')->target)->toBe('/b')
-        ->and(Cache::has('seo:redirects:default:any-case'))->toBeFalse();
+        ->and(Cache::has('mt:redirects:default:any-case'))->toBeFalse();
 });
 
 test('a CSV import clears the cached rules once, after its rows are saved', function () {
@@ -297,11 +297,11 @@ test('a CSV import clears the cached rules once, after its rows are saved', func
 
     app(Csv::class)->import("/a,/b\n/c,/d\n/e,/f\n");
 
-    expect($forgotten)->toBe([['seo:redirects:default', 3], ['seo:redirects:default:any-case', 3]]);
+    expect($forgotten)->toBe([['mt:redirects:default', 3], ['mt:redirects:default:any-case', 3]]);
 });
 
 test('a CSV import reads the redirects a fixed number of times, however many rows it has', function (bool $caseSensitive) {
-    config(['seo.redirects.case_sensitive' => $caseSensitive]);
+    config(['marketing-toolkit.redirects.case_sensitive' => $caseSensitive]);
     rule('/shop/*', '/store/$1');
     rule('/kept', '/elsewhere');
 
@@ -315,7 +315,7 @@ test('a CSV import reads the redirects a fixed number of times, however many row
 
         $count = 0;
         DB::listen(function ($query) use (&$count) {
-            $count += (int) preg_match('/^select .* from "seo_redirects"/', $query->sql);
+            $count += (int) preg_match('/^select .* from "mt_redirects"/', $query->sql);
         });
 
         expect(app(Csv::class)->import($csv)['created'])->toBe($rows);
@@ -331,14 +331,14 @@ test('a CSV cell in quotes may hold a line break, and rows are counted as record
 
     expect($result['created'])->toBe(1)
         ->and($result['errors'])->toBe([
-            'Row 2: '.__('seo::validation.redirect.control_characters'),
-            'Row 4: '.__('seo::validation.redirect.points_back'),
+            'Row 2: '.__('marketing-toolkit::validation.redirect.control_characters'),
+            'Row 4: '.__('marketing-toolkit::validation.redirect.points_back'),
         ])
         ->and(Redirect::query()->pluck('source')->all())->toBe(['/two']);
 });
 
 test('with case_sensitive off, a chain of rules that comes back in another letter case is refused', function () {
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
     $validator = fn (string $source, string $target) => Redirect::validator(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true]);
     rule('/b', '/A');
     rule('/c', '/d');
@@ -358,8 +358,8 @@ test('with case_sensitive off, a chain of rules that comes back in another lette
  */
 test('a missing address still answers 404 when the tables are missing, and the error is reported', function () {
     Exceptions::fake();
-    Schema::drop('seo_redirects');
-    Schema::drop('seo_404s');
+    Schema::drop('mt_redirects');
+    Schema::drop('mt_404s');
 
     $this->get('/nowhere')->assertNotFound();
 

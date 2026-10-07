@@ -179,6 +179,6 @@ class ExternalLinkChecker
 
     private function key(string $url): string
     {
-        return 'seo:external-link:'.md5($url);
+        return 'mt:external-link:'.md5($url);
     }
 }

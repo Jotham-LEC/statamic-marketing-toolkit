@@ -30,6 +30,6 @@ class OrphanPages extends Rule
             return Result::pass();
         }
 
-        return Result::warn('seo::reports.messages.orphan');
+        return Result::warn('marketing-toolkit::reports.messages.orphan');
     }
 }

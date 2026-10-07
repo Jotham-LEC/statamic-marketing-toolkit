@@ -5,7 +5,7 @@ namespace JothamLec\MarketingToolkit\Og;
 use SimonHamp\TheOg\Image;
 
 /**
- * A share-card design. Register templates under keys in `seo.og.templates`;
+ * A share-card design. Register templates under keys in `marketing-toolkit.og.templates`;
  * a collection picks one with `og_template`.
  * Build the card with simonhamp/the-og: its built-in layouts, or your own
  * AbstractLayout subclass for a design of your own.

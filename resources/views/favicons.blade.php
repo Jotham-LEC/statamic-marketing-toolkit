@@ -1,4 +1,4 @@
-{{-- Rendered by <s:seo:head /> and <s:seo:favicons /> (JothamLec\MarketingToolkit\Favicons\Favicons). --}}
+{{-- Rendered by <s:mt:head /> and <s:mt:favicons /> (JothamLec\MarketingToolkit\Favicons\Favicons). --}}
 @foreach ($links as $link)
 <link rel="{{ $link['rel'] }}" href="{{ $link['href'] }}"{!! isset($link['sizes']) ? ' sizes="'.e($link['sizes']).'"' : '' !!}{!! isset($link['type']) ? ' type="'.e($link['type']).'"' : '' !!}>
 @endforeach

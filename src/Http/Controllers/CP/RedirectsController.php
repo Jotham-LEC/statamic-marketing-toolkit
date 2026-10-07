@@ -32,13 +32,13 @@ class RedirectsController
 {
     public function index(): Response
     {
-        return Inertia::render('seo::Redirects', [
-            'listingUrl' => cp_route('seo.redirects.listing'),
-            'actionUrl' => cp_route('seo.actions.run'),
-            'createUrl' => cp_route('seo.redirects.create'),
+        return Inertia::render('marketing-toolkit::Redirects', [
+            'listingUrl' => cp_route('mt.redirects.listing'),
+            'actionUrl' => cp_route('mt.actions.run'),
+            'createUrl' => cp_route('mt.redirects.create'),
             // CSV in and out is Pro: the free edition shows what it would add.
-            'exportUrl' => Edition::pro() ? cp_route('seo.redirects.export') : null,
-            'importUrl' => Edition::pro() ? cp_route('seo.redirects.import') : null,
+            'exportUrl' => Edition::pro() ? cp_route('mt.redirects.export') : null,
+            'importUrl' => Edition::pro() ? cp_route('mt.redirects.import') : null,
             'upgradeUrl' => Edition::marketplaceUrl(),
         ]);
     }
@@ -56,16 +56,16 @@ class RedirectsController
             Redirect::query()->accessible(),
             $request,
             [
-                'source' => __('seo::cp.listing.from'), 'target' => __('seo::cp.listing.to'),
+                'source' => __('marketing-toolkit::cp.listing.from'), 'target' => __('marketing-toolkit::cp.listing.to'),
                 // The site column only where there is more than one.
-                ...(Sites::multiple() ? ['site' => __('seo::cp.listing.site')] : []),
-                'status' => __('seo::cp.listing.status'), 'active' => __('seo::cp.listing.active'),
-                'hits' => __('seo::cp.listing.hits'), 'last_hit_at' => __('seo::cp.listing.last_used'),
+                ...(Sites::multiple() ? ['site' => __('marketing-toolkit::cp.listing.site')] : []),
+                'status' => __('marketing-toolkit::cp.listing.status'), 'active' => __('marketing-toolkit::cp.listing.active'),
+                'hits' => __('marketing-toolkit::cp.listing.hits'), 'last_hit_at' => __('marketing-toolkit::cp.listing.last_used'),
             ],
             ['source', 'target'],
             fn (Redirect $redirect) => [
                 'id' => $redirect->id,
-                'site' => $redirect->site === null ? __('seo::cp.listing.all_sites') : ($sites[$redirect->site] ?? $redirect->site),
+                'site' => $redirect->site === null ? __('marketing-toolkit::cp.listing.all_sites') : ($sites[$redirect->site] ?? $redirect->site),
                 'source' => $redirect->source,
                 'target' => $redirect->target,
                 'status' => $redirect->status,
@@ -73,7 +73,7 @@ class RedirectsController
                 'automatic' => $redirect->automatic,
                 'hits' => $redirect->hits,
                 'last_hit_at' => $redirect->last_hit_at?->toIso8601String(),
-                'edit_url' => cp_route('seo.redirects.edit', $redirect),
+                'edit_url' => cp_route('mt.redirects.edit', $redirect),
                 'actions' => $actions,
             ],
         );
@@ -86,8 +86,8 @@ class RedirectsController
                 'source' => (string) $request->query('source', ''),
                 'site' => Sites::scope($request->query('site') === null ? null : (string) $request->query('site')),
             ]),
-            title: __('seo::cp.redirects.create'),
-            submitUrl: cp_route('seo.redirects.store'),
+            title: __('marketing-toolkit::cp.redirects.create'),
+            submitUrl: cp_route('mt.redirects.store'),
             method: 'post',
         );
     }
@@ -96,14 +96,14 @@ class RedirectsController
     {
         $redirect = Redirect::query()->create($this->validated($request));
 
-        return response()->json(['redirect' => cp_route('seo.redirects.edit', $redirect)]);
+        return response()->json(['redirect' => cp_route('mt.redirects.edit', $redirect)]);
     }
 
     public function edit(Redirect $redirect): Response
     {
         abort_unless($redirect->isAccessible(), 404);
 
-        return $this->form($redirect, title: $redirect->source, submitUrl: cp_route('seo.redirects.update', $redirect), method: 'patch');
+        return $this->form($redirect, title: $redirect->source, submitUrl: cp_route('mt.redirects.update', $redirect), method: 'patch');
     }
 
     public function update(Request $request, Redirect $redirect): JsonResponse
@@ -142,7 +142,7 @@ class RedirectsController
      */
     public function check(Request $request): array
     {
-        if (! config('seo.redirects.automatic') || ! User::current()?->can('manage seo redirects')) {
+        if (! config('marketing-toolkit.redirects.automatic') || ! User::current()?->can('manage marketing toolkit redirects')) {
             return ['changes' => false];
         }
 
@@ -233,14 +233,14 @@ class RedirectsController
             'site' => $redirect->site,
         ])->preProcess();
 
-        return Inertia::render('seo::RedirectForm', [
+        return Inertia::render('marketing-toolkit::RedirectForm', [
             'title' => $title,
             'blueprint' => $this->blueprint()->toPublishArray(),
             'values' => $fields->values()->all(),
             'meta' => $fields->meta()->all(),
             'submitUrl' => $submitUrl,
             'submitMethod' => $method,
-            'listingUrl' => cp_route('seo.redirects.index'),
+            'listingUrl' => cp_route('mt.redirects.index'),
             'stats' => $redirect->exists ? ['hits' => $redirect->hits, 'last_hit_at' => $redirect->last_hit_at?->toIso8601String(), 'automatic' => $redirect->automatic] : null,
         ]);
     }
@@ -249,8 +249,8 @@ class RedirectsController
     {
         // Pro: a campaign link's UTM tags, added to the target when saved.
         $campaign = Edition::pro() ? [[
-            'display' => __('seo::cp.redirect_form.campaign'),
-            'instructions' => __('seo::cp.redirect_form.campaign_instructions'),
+            'display' => __('marketing-toolkit::cp.redirect_form.campaign'),
+            'instructions' => __('marketing-toolkit::cp.redirect_form.campaign_instructions'),
             'collapsible' => true,
             'collapsed' => true,
             'fields' => array_map(fn (string $tag) => ['handle' => $tag, 'field' => [
@@ -260,26 +260,26 @@ class RedirectsController
 
         return Blueprint::make('seo_redirect')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'source', 'field' => [
-                'type' => 'text', 'display' => __('seo::cp.redirect_form.source'),
-                'instructions' => __('seo::cp.redirect_form.source_instructions'),
+                'type' => 'text', 'display' => __('marketing-toolkit::cp.redirect_form.source'),
+                'instructions' => __('marketing-toolkit::cp.redirect_form.source_instructions'),
             ]],
             ['handle' => 'target', 'field' => [
-                'type' => 'text', 'display' => __('seo::cp.redirect_form.target'),
-                'instructions' => __('seo::cp.redirect_form.target_instructions'),
+                'type' => 'text', 'display' => __('marketing-toolkit::cp.redirect_form.target'),
+                'instructions' => __('marketing-toolkit::cp.redirect_form.target_instructions'),
             ]],
             ['handle' => 'status', 'field' => [
-                'type' => 'button_group', 'display' => __('seo::cp.redirect_form.status'), 'width' => 66, 'default' => '301',
+                'type' => 'button_group', 'display' => __('marketing-toolkit::cp.redirect_form.status'), 'width' => 66, 'default' => '301',
                 'options' => [
-                    '301' => __('seo::cp.redirect_form.status_301'),
-                    '302' => __('seo::cp.redirect_form.status_302'),
-                    '410' => __('seo::cp.redirect_form.status_410'),
+                    '301' => __('marketing-toolkit::cp.redirect_form.status_301'),
+                    '302' => __('marketing-toolkit::cp.redirect_form.status_302'),
+                    '410' => __('marketing-toolkit::cp.redirect_form.status_410'),
                 ],
             ]],
-            ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('seo::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
+            ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('marketing-toolkit::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
             // Only where there is more than one site to choose from.
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
-                'type' => 'select', 'display' => __('seo::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => true,
-                'placeholder' => __('seo::cp.redirect_form.all_sites'), 'instructions' => __('seo::cp.redirect_form.site_instructions'),
+                'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => true,
+                'placeholder' => __('marketing-toolkit::cp.redirect_form.all_sites'), 'instructions' => __('marketing-toolkit::cp.redirect_form.site_instructions'),
             ]]] : []),
         ]], ...$campaign]]]]);
     }

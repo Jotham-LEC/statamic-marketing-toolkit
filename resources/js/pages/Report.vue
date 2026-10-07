@@ -27,10 +27,10 @@ function toggle(handle) {
 </script>
 
 <template>
-    <Head :title="__('seo::reports.cp.report', { id: report.id })" />
+    <Head :title="__('marketing-toolkit::reports.cp.report', { id: report.id })" />
 
-    <Link :href="listUrl" class="mb-2 inline-block text-sm text-gray-600 dark:text-gray-400">{{ __('seo::reports.cp.back') }}</Link>
-    <Header :title="__('seo::reports.cp.report', { id: report.id })" icon="charts-donut-graph" />
+    <Link :href="listUrl" class="mb-2 inline-block text-sm text-gray-600 dark:text-gray-400">{{ __('marketing-toolkit::reports.cp.back') }}</Link>
+    <Header :title="__('marketing-toolkit::reports.cp.report', { id: report.id })" icon="charts-donut-graph" />
 
     <Card v-if="report.status === 'running'" class="mb-6 p-4">
         <ReportProgress :report="report" @done="router.reload()" />
@@ -39,19 +39,19 @@ function toggle(handle) {
     <template v-else>
         <div class="mb-6 grid gap-4 md:grid-cols-[auto_1fr]">
             <Card class="flex flex-col items-center justify-center p-6">
-                <Gauge :value="report.score" size="lg" :label="__('seo::reports.cp.out_of')" />
+                <Gauge :value="report.score" size="lg" :label="__('marketing-toolkit::reports.cp.out_of')" />
             </Card>
             <Card class="p-4 text-sm">
                 <p>
-                    {{ __n('seo::reports.cp.scored', counts.scored, { count: counts.scored, finished }) }}
-                    <template v-if="counts.noindex"> {{ __n('seo::reports.cp.noindex', counts.noindex, { count: counts.noindex }) }}</template>
+                    {{ __n('marketing-toolkit::reports.cp.scored', counts.scored, { count: counts.scored, finished }) }}
+                    <template v-if="counts.noindex"> {{ __n('marketing-toolkit::reports.cp.noindex', counts.noindex, { count: counts.noindex }) }}</template>
                     <template v-if="counts.errors">
-                        <strong class="text-(--theme-color-danger)">{{ __n('seo::reports.cp.not_rendered', counts.errors, { count: counts.errors }) }}</strong>
-                        {{ __('seo::reports.cp.scores_zero') }}
+                        <strong class="text-(--theme-color-danger)">{{ __n('marketing-toolkit::reports.cp.not_rendered', counts.errors, { count: counts.errors }) }}</strong>
+                        {{ __('marketing-toolkit::reports.cp.scores_zero') }}
                     </template>
                 </p>
                 <p class="mt-2 text-gray-600 dark:text-gray-400">
-                    {{ __('seo::reports.cp.weights') }}
+                    {{ __('marketing-toolkit::reports.cp.weights') }}
                 </p>
             </Card>
         </div>
@@ -59,10 +59,10 @@ function toggle(handle) {
         <Card class="mb-6">
             <Table class="overflow-x-auto">
                 <TableColumns>
-                    <TableColumn>{{ __('seo::reports.cp.check') }}</TableColumn>
-                    <TableColumn>{{ __('seo::reports.cp.weight') }}</TableColumn>
-                    <TableColumn>{{ __('seo::reports.cp.failing') }}</TableColumn>
-                    <TableColumn>{{ __('seo::reports.cp.warnings') }}</TableColumn>
+                    <TableColumn>{{ __('marketing-toolkit::reports.cp.check') }}</TableColumn>
+                    <TableColumn>{{ __('marketing-toolkit::reports.cp.weight') }}</TableColumn>
+                    <TableColumn>{{ __('marketing-toolkit::reports.cp.failing') }}</TableColumn>
+                    <TableColumn>{{ __('marketing-toolkit::reports.cp.warnings') }}</TableColumn>
                 </TableColumns>
                 <TableRows>
                     <!-- The whole row filters; the button's click bubbles up to it, and is how the keyboard gets there. -->
@@ -86,20 +86,20 @@ function toggle(handle) {
 
         <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
             <template v-if="rule">
-                {{ __('seo::reports.cp.flagged_by', { check: ruleLabel }) }} <button type="button" class="underline" @click="rule = null">{{ __('seo::reports.cp.show_all') }}</button>
+                {{ __('marketing-toolkit::reports.cp.flagged_by', { check: ruleLabel }) }} <button type="button" class="underline" @click="rule = null">{{ __('marketing-toolkit::reports.cp.show_all') }}</button>
             </template>
-            <template v-else>{{ __('seo::reports.cp.all_pages') }}</template>
+            <template v-else>{{ __('marketing-toolkit::reports.cp.all_pages') }}</template>
         </p>
 
-        <Listing :key="url" :url="url" sort-column="score" sort-direction="asc" :allow-presets="false" :allow-bulk-actions="false" preferences-prefix="seo.report">
+        <Listing :key="url" :url="url" sort-column="score" sort-direction="asc" :allow-presets="false" :allow-bulk-actions="false" preferences-prefix="mt.report">
             <template #cell-score="{ row }">
                 <Score :value="row.score" />
             </template>
             <template #cell-title="{ row }">
                 <div class="flex items-center gap-2">
                     <a :href="row.url" target="_blank" rel="noopener" class="font-medium">{{ row.title }}</a>
-                    <Badge v-if="row.noindex" size="sm" :text="__('seo::reports.cp.hidden')" />
-                    <Button v-if="row.edit_url" :href="row.edit_url" :text="__('seo::reports.cp.fix')" size="sm" />
+                    <Badge v-if="row.noindex" size="sm" :text="__('marketing-toolkit::reports.cp.hidden')" />
+                    <Button v-if="row.edit_url" :href="row.edit_url" :text="__('marketing-toolkit::reports.cp.fix')" size="sm" />
                 </div>
                 <div class="font-mono text-xs text-gray-500">{{ row.path }}</div>
                 <ul v-if="row.issues.length" class="mt-1 space-y-0.5 text-xs">
@@ -109,7 +109,7 @@ function toggle(handle) {
                 </ul>
             </template>
             <template #cell-in_sitemap="{ row }">
-                <span class="text-sm">{{ row.in_sitemap ? __('seo::reports.cp.yes') : __('seo::reports.cp.no') }}</span>
+                <span class="text-sm">{{ row.in_sitemap ? __('marketing-toolkit::reports.cp.yes') : __('marketing-toolkit::reports.cp.no') }}</span>
             </template>
         </Listing>
     </template>

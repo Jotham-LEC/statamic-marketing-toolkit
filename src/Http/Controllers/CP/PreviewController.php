@@ -15,7 +15,7 @@ use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Site;
 
 /**
- * Feeds the `seo_preview` fieldtype. Both actions read the publish form's
+ * Feeds the `mt_preview` fieldtype. Both actions read the publish form's
  * current values, so the preview follows the editor's typing before the
  * entry is saved, and run them through the same SiteSeo rules the page uses.
  */
@@ -63,7 +63,7 @@ class PreviewController
     {
         $content = Draft::fromRequest($request);
 
-        abort_unless($content instanceof Entry && config('seo.og.enabled'), 404);
+        abort_unless($content instanceof Entry && config('marketing-toolkit.og.enabled'), 404);
 
         $png = Sites::as($content->locale(), fn () => $generator->template($content)->image($generator->card($content))->toString());
 

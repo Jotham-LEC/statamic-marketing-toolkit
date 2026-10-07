@@ -24,7 +24,7 @@ class AutoRedirects
         $from = Redirect::normalize($from);
         $to = Redirect::normalize($to);
 
-        if ($from === $to || ! config('seo.redirects.automatic')) {
+        if ($from === $to || ! config('marketing-toolkit.redirects.automatic')) {
             return;
         }
 
@@ -40,7 +40,7 @@ class AutoRedirects
         $from = Redirect::normalize($from);
         $to = Redirect::normalize($to);
 
-        if ($from === $to || $from === '/' || ! config('seo.redirects.automatic')) {
+        if ($from === $to || $from === '/' || ! config('marketing-toolkit.redirects.automatic')) {
             return;
         }
 
@@ -93,6 +93,6 @@ class AutoRedirects
 
     private function choiceKey(string $id): string
     {
-        return 'seo:redirect-choice:'.(User::current()?->id() ?? 'guest').':'.$id;
+        return 'mt:redirect-choice:'.(User::current()?->id() ?? 'guest').':'.$id;
     }
 }

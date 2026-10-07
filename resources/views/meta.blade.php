@@ -1,4 +1,4 @@
-{{-- Rendered by <s:seo:meta />. Every value is resolved by JothamLec\MarketingToolkit\SiteSeo; this view only prints. --}}
+{{-- Rendered by <s:mt:meta />. Every value is resolved by JothamLec\MarketingToolkit\SiteSeo; this view only prints. --}}
 <title>{{ $meta->title }}</title>
 @if ($meta->description)
 <meta name="description" content="{{ $meta->description }}">

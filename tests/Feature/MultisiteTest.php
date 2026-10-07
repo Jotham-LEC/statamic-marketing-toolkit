@@ -36,7 +36,7 @@ beforeEach(fn () => multisite());
 test('install puts the brand global on every site, the others inheriting from the default', function () {
     entryIn('home', 'home', ['description' => 'We make things.']);
 
-    $this->artisan('statamic:seo:install')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->assertSuccessful();
     $set = GlobalSet::findByHandle('seo');
 
     expect($set->origins()->all())->toBe(['default' => null, 'cothinking' => 'default'])
@@ -51,13 +51,13 @@ test('install names the sites an existing set is missing, and enables it there w
     GlobalSet::make('seo')->title('SEO & brand')->sites(['default' => null])->save();
     $question = 'SEO & brand isn\'t enabled on: cothinking. Enable it there, taking what each leaves empty from the default site?';
 
-    $this->artisan('statamic:seo:install')->expectsConfirmation($question, 'no')->expectsOutputToContain('Those sites use the addon\'s defaults')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->expectsConfirmation($question, 'no')->expectsOutputToContain('Those sites use the addon\'s defaults')->assertSuccessful();
     expect(GlobalSet::findByHandle('seo')->sites()->all())->toBe(['default']);
 
-    $this->artisan('statamic:seo:install', ['--no-interaction' => true])->expectsOutputToContain('cothinking')->assertSuccessful();
+    $this->artisan('statamic:mt:install', ['--no-interaction' => true])->expectsOutputToContain('cothinking')->assertSuccessful();
     expect(GlobalSet::findByHandle('seo')->sites()->all())->toBe(['default']);
 
-    $this->artisan('statamic:seo:install')->expectsConfirmation($question, 'yes')->assertSuccessful();
+    $this->artisan('statamic:mt:install')->expectsConfirmation($question, 'yes')->assertSuccessful();
     expect(GlobalSet::findByHandle('seo')->origins()->all())->toBe(['default' => null, 'cothinking' => 'default']);
 });
 
@@ -89,7 +89,7 @@ test('one process serves each site its own meta, whichever site it served first'
 });
 
 test('each domain\'s sitemap lists that site\'s pages and terms only', function () {
-    config(['seo.sitemap.taxonomies' => ['topics']]);
+    config(['marketing-toolkit.sitemap.taxonomies' => ['topics']]);
     Collection::make('services')->routes('services/{slug}')->sites(['cothinking'])->taxonomies(['topics'])->save();
     Taxonomy::make('topics')->termTemplate('default')->sites(['default', 'cothinking'])->save();
     Term::make()->taxonomy('topics')->slug('gardens')->dataForLocale('default', ['title' => 'Gardens'])->dataForLocale('cothinking', ['title' => 'Gardens'])->save();
@@ -159,8 +159,8 @@ describe('redirects', function () {
     });
 
     test('ignoring letter case, an address is still one per site, matched on its own site', function () {
-        config(['seo.redirects.case_sensitive' => false]);
-        $this->actingAs(cpUser(['manage seo redirects', 'access default site', 'access cothinking site']));
+        config(['marketing-toolkit.redirects.case_sensitive' => false]);
+        $this->actingAs(cpUser(['manage marketing toolkit redirects', 'access default site', 'access cothinking site']));
         Redirect::query()->create(['site' => 'cothinking', 'source' => '/About', 'target' => '/here']);
         Redirect::query()->create(['source' => '/about', 'target' => '/everywhere']);
 
@@ -176,7 +176,7 @@ describe('redirects', function () {
         $this->get('https://example.test/ABOUT')->assertRedirect('https://example.test/everywhere');
 
         $csv = "source,target,status,active,site\n/ABOUT,/updated,301,1,cothinking\n";
-        $result = $this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
+        $result = $this->post(cp_route('mt.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
 
         expect($result)->toMatchArray(['created' => 0, 'updated' => 1])
             ->and(Redirect::query()->where('site', 'cothinking')->orderBy('id')->value('target'))->toBe('/updated')
@@ -184,29 +184,29 @@ describe('redirects', function () {
     });
 
     test('the form offers the sites, and a redirect made from a site\'s 404 starts on that site', function () {
-        $this->actingAs(cpUser(['manage seo redirects', 'access default site', 'access cothinking site']));
+        $this->actingAs(cpUser(['manage marketing toolkit redirects', 'access default site', 'access cothinking site']));
 
-        $this->get(cp_route('seo.redirects.create', ['source' => '/missing', 'site' => 'cothinking']))
+        $this->get(cp_route('mt.redirects.create', ['source' => '/missing', 'site' => 'cothinking']))
             ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('values.site', 'cothinking')
                 ->where('blueprint.tabs.0.sections.0.fields.4.handle', 'site'));
 
-        $this->postJson(cp_route('seo.redirects.store'), ['site' => 'cothinking', 'source' => '/missing', 'target' => '/found', 'status' => '301', 'active' => true])->assertOk();
-        $this->postJson(cp_route('seo.redirects.store'), ['source' => '/missing', 'target' => '/found', 'status' => '301', 'active' => true])->assertOk();
+        $this->postJson(cp_route('mt.redirects.store'), ['site' => 'cothinking', 'source' => '/missing', 'target' => '/found', 'status' => '301', 'active' => true])->assertOk();
+        $this->postJson(cp_route('mt.redirects.store'), ['source' => '/missing', 'target' => '/found', 'status' => '301', 'active' => true])->assertOk();
 
         expect(Redirect::query()->orderBy('id')->pluck('site')->all())->toBe(['cothinking', null])
-            ->and($this->getJson(cp_route('seo.redirects.listing', ['sort' => 'id']))->json('meta.columns.*.field'))->toContain('site');
+            ->and($this->getJson(cp_route('mt.redirects.listing', ['sort' => 'id']))->json('meta.columns.*.field'))->toContain('site');
     });
 
     test('CSV carries each rule\'s site', function () {
-        $this->actingAs(cpUser(['manage seo redirects', 'access default site', 'access cothinking site']));
+        $this->actingAs(cpUser(['manage marketing toolkit redirects', 'access default site', 'access cothinking site']));
         Redirect::query()->create(['source' => '/one', 'target' => '/1']);
         Redirect::query()->create(['site' => 'cothinking', 'source' => '/one', 'target' => '/uno']);
 
-        expect($this->get(cp_route('seo.redirects.export'))->streamedContent())->toBe("source,target,status,active,site\n/one,/1,301,1,\n/one,/uno,301,1,cothinking\n");
+        expect($this->get(cp_route('mt.redirects.export'))->streamedContent())->toBe("source,target,status,active,site\n/one,/1,301,1,\n/one,/uno,301,1,cothinking\n");
 
         $csv = "source,target,status,active,site\n/one,/eins,301,1,cothinking\n/two,/2,301,1,cothinking\n/three,/3,301,1,nowhere\n";
-        $result = $this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
+        $result = $this->post(cp_route('mt.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
 
         expect($result)->toMatchArray(['created' => 1, 'updated' => 1])
             ->and($result['errors'])->toHaveCount(1)
@@ -218,27 +218,27 @@ describe('redirects', function () {
     });
 
     test('a user who may work on one site manages only its rules and those for every site', function () {
-        $this->actingAs(cpUser(['manage seo redirects', 'access cothinking site']));
+        $this->actingAs(cpUser(['manage marketing toolkit redirects', 'access cothinking site']));
         $theirs = Redirect::query()->create(['site' => 'cothinking', 'source' => '/theirs', 'target' => '/a']);
         $everywhere = Redirect::query()->create(['source' => '/everywhere', 'target' => '/b']);
         $other = Redirect::query()->create(['site' => 'default', 'source' => '/other', 'target' => '/c']);
         $form = fn (array $values = []) => ['source' => '/x', 'target' => '/y', 'status' => '301', 'active' => true, ...$values];
 
-        expect($this->getJson(cp_route('seo.redirects.listing', ['sort' => 'id']))->json('data.*.source'))->toEqualCanonicalizing(['/theirs', '/everywhere'])
-            ->and($this->get(cp_route('seo.redirects.export'))->streamedContent())->not->toContain('/other');
+        expect($this->getJson(cp_route('mt.redirects.listing', ['sort' => 'id']))->json('data.*.source'))->toEqualCanonicalizing(['/theirs', '/everywhere'])
+            ->and($this->get(cp_route('mt.redirects.export'))->streamedContent())->not->toContain('/other');
 
-        $this->get(cp_route('seo.redirects.edit', $other))->assertNotFound();
-        $this->patchJson(cp_route('seo.redirects.update', $other), $form(['source' => '/other']))->assertNotFound();
-        $this->postJson(cp_route('seo.redirects.store'), $form(['site' => 'default']))->assertJsonValidationErrors('site');
-        $this->patchJson(cp_route('seo.redirects.update', $everywhere), $form(['source' => '/everywhere', 'site' => 'default']))->assertJsonValidationErrors('site');
-        $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$other->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
+        $this->get(cp_route('mt.redirects.edit', $other))->assertNotFound();
+        $this->patchJson(cp_route('mt.redirects.update', $other), $form(['source' => '/other']))->assertNotFound();
+        $this->postJson(cp_route('mt.redirects.store'), $form(['site' => 'default']))->assertJsonValidationErrors('site');
+        $this->patchJson(cp_route('mt.redirects.update', $everywhere), $form(['source' => '/everywhere', 'site' => 'default']))->assertJsonValidationErrors('site');
+        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$other->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
 
-        $this->get(cp_route('seo.redirects.edit', $theirs))->assertOk();
-        $this->patchJson(cp_route('seo.redirects.update', $everywhere), $form(['source' => '/everywhere', 'target' => '/b2']))->assertOk();
-        $this->postJson(cp_route('seo.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$theirs->id, $everywhere->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
+        $this->get(cp_route('mt.redirects.edit', $theirs))->assertOk();
+        $this->patchJson(cp_route('mt.redirects.update', $everywhere), $form(['source' => '/everywhere', 'target' => '/b2']))->assertOk();
+        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$theirs->id, $everywhere->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
 
         $csv = "source,target,status,active,site\n/mine,/1,301,1,cothinking\n/not-mine,/2,301,1,default\n";
-        $result = $this->post(cp_route('seo.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
+        $result = $this->post(cp_route('mt.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
 
         expect($result)->toMatchArray(['created' => 1, 'updated' => 0])
             ->and($result['errors'])->toHaveCount(1)
@@ -311,7 +311,7 @@ describe('reports', function () {
         entryIn('pages', 'about');
         entryOn('cothinking', 'pages', 'hello');
 
-        $this->artisan('statamic:seo:report')->assertSuccessful();
+        $this->artisan('statamic:mt:report')->assertSuccessful();
 
         $reports = Report::query()->orderBy('id')->get();
 
@@ -319,8 +319,8 @@ describe('reports', function () {
             ->and($reports[0]->pages()->pluck('url')->all())->toBe(['https://example.test/about'])
             ->and($reports[1]->pages()->pluck('url')->all())->toBe(['https://cothink.test/hello']);
 
-        $this->artisan('statamic:seo:report', ['--site' => 'cothinking'])->assertSuccessful();
-        $this->artisan('statamic:seo:report', ['--site' => 'nowhere'])->assertFailed();
+        $this->artisan('statamic:mt:report', ['--site' => 'cothinking'])->assertSuccessful();
+        $this->artisan('statamic:mt:report', ['--site' => 'nowhere'])->assertFailed();
 
         expect(Report::query()->orderBy('id')->pluck('site')->all())->toBe(['default', 'cothinking', 'cothinking']);
     });
@@ -356,29 +356,29 @@ describe('reports', function () {
     test('the control panel runs and lists the selected site\'s reports', function () {
         entryOn('cothinking', 'pages', 'hello');
         Report::query()->create(['site' => 'default', 'settings' => [], 'status' => Report::DONE]);
-        $this->actingAs(cpUser(['view seo', 'run seo reports']));
+        $this->actingAs(cpUser(['view marketing toolkit', 'run marketing toolkit reports']));
         session(['statamic.cp.selected-site' => 'cothinking']);
 
-        $this->postJson(cp_route('seo.reports.run'))->assertOk();
+        $this->postJson(cp_route('mt.reports.run'))->assertOk();
 
         expect(Report::query()->latest('id')->first()->site)->toBe('cothinking');
-        $this->get(cp_route('seo.reports.index'))
+        $this->get(cp_route('mt.reports.index'))
             ->assertInertia(fn (AssertableInertia $page) => $page->has('reports', 1));
     });
 
     test('another site\'s report is not found while a site is selected, though one from before there were sites is', function () {
         $other = Report::query()->create(['site' => 'default', 'settings' => [], 'status' => Report::RUNNING, 'pages_total' => 1]);
         $older = Report::query()->create(['site' => null, 'settings' => [], 'status' => Report::DONE]);
-        $this->actingAs(cpUser(['view seo', 'run seo reports']));
+        $this->actingAs(cpUser(['view marketing toolkit', 'run marketing toolkit reports']));
         session(['statamic.cp.selected-site' => 'cothinking']);
 
-        $this->get(cp_route('seo.reports.show', $other))->assertNotFound();
-        $this->getJson(cp_route('seo.reports.pages', $other))->assertNotFound();
-        $this->postJson(cp_route('seo.reports.progress', $other))->assertNotFound();
-        $this->get(cp_route('seo.reports.show', $older))->assertOk();
+        $this->get(cp_route('mt.reports.show', $other))->assertNotFound();
+        $this->getJson(cp_route('mt.reports.pages', $other))->assertNotFound();
+        $this->postJson(cp_route('mt.reports.progress', $other))->assertNotFound();
+        $this->get(cp_route('mt.reports.show', $older))->assertOk();
 
         session(['statamic.cp.selected-site' => 'default']);
-        $this->get(cp_route('seo.reports.show', $other))->assertOk();
+        $this->get(cp_route('mt.reports.show', $other))->assertOk();
     });
 });
 
@@ -393,16 +393,16 @@ test('the 404 log keeps each site\'s misses apart, and a redirect made from one 
         ['site' => 'default', 'path' => '/missing', 'hits' => 1],
     ]);
 
-    $this->actingAs(cpUser(['view seo', 'manage seo redirects']));
+    $this->actingAs(cpUser(['view marketing toolkit', 'manage marketing toolkit redirects']));
     session(['statamic.cp.selected-site' => 'cothinking']);
-    $listing = $this->getJson(cp_route('seo.404s.listing'));
+    $listing = $this->getJson(cp_route('mt.404s.listing'));
 
     expect($listing->json('data.*.site'))->toBe(['CoThinking'])
         ->and($listing->json('meta.columns.*.field'))->toContain('site');
 
     $row = MissingPath::query()->where('site', 'cothinking')->sole();
-    $this->postJson(cp_route('seo.actions.run'), ['action' => CreateRedirect::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])
-        ->assertJsonPath('redirect', cp_route('seo.redirects.create', ['source' => '/missing', 'site' => 'cothinking']));
+    $this->postJson(cp_route('mt.actions.run'), ['action' => CreateRedirect::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])
+        ->assertJsonPath('redirect', cp_route('mt.redirects.create', ['source' => '/missing', 'site' => 'cothinking']));
 });
 
 test('the overview and the dashboard widget are of the site selected in the control panel', function () {
@@ -417,7 +417,7 @@ test('the overview and the dashboard widget are of the site selected in the cont
     $this->actingAs(cpUser(super: true));
     session(['statamic.cp.selected-site' => 'cothinking']);
 
-    $this->get(cp_route('seo.index'))->assertOk()
+    $this->get(cp_route('mt.index'))->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('siteName', 'CoThinking')
             ->where('global.separator', ' – ')
@@ -437,14 +437,14 @@ describe('the control panel preview and share cards', function () {
     beforeEach(function () {
         seoGlobal(['title_separator' => '|', 'og_background' => '#111111']);
         seoGlobal(['title_separator' => '–', 'og_background' => '#fad03a'], 'cothinking');
-        Blueprint::make('page')->setNamespace('collections.pages')->setContents(['fields' => [['handle' => 'title', 'field' => ['type' => 'text']], ['import' => 'seo::seo']]])->save();
+        Blueprint::make('page')->setNamespace('collections.pages')->setContents(['fields' => [['handle' => 'title', 'field' => ['type' => 'text']], ['import' => 'marketing-toolkit::seo']]])->save();
     });
 
     test('a page is previewed as its own site shows it, from whichever domain the control panel is on', function () {
         $this->actingAs(cpUser(super: true));
         $entry = entryOn('cothinking', 'pages', 'about');
 
-        $this->postJson(cp_route('seo.preview.meta'), ['blueprint' => 'collections.pages.page', 'reference' => $entry->reference(), 'site' => 'cothinking', 'values' => ['title' => 'About', 'slug' => 'about']])
+        $this->postJson(cp_route('mt.preview.meta'), ['blueprint' => 'collections.pages.page', 'reference' => $entry->reference(), 'site' => 'cothinking', 'values' => ['title' => 'About', 'slug' => 'about']])
             ->assertOk()
             ->assertJson([
                 'title' => 'About – CoThinking',
@@ -472,7 +472,7 @@ describe('the control panel preview and share cards', function () {
 describe('Search Console', function () {
     beforeEach(function () {
         openssl_pkey_export(openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]), $private);
-        config(['seo.search_console' => ['credentials' => json_encode(['type' => 'service_account', 'client_email' => 'seo@project.iam.gserviceaccount.com', 'private_key' => $private]), 'property' => null, 'days' => 28]]);
+        config(['marketing-toolkit.search_console' => ['credentials' => json_encode(['type' => 'service_account', 'client_email' => 'seo@project.iam.gserviceaccount.com', 'private_key' => $private]), 'property' => null, 'days' => 28]]);
 
         $row = fn (string $url, int $clicks) => ['keys' => [$url], 'clicks' => $clicks, 'impressions' => 10, 'ctr' => 0.1, 'position' => 2.0];
         Http::fake([
@@ -485,9 +485,9 @@ describe('Search Console', function () {
     afterEach(fn () => File::delete(resource_path('addons/marketing-toolkit.yaml')));
 
     test('each site imports its own property, and the overview shows the selected site\'s numbers', function () {
-        config(['seo.search_console.property' => ['default' => 'sc-domain:example.test', 'cothinking' => 'sc-domain:cothink.test']]);
+        config(['marketing-toolkit.search_console.property' => ['default' => 'sc-domain:example.test', 'cothinking' => 'sc-domain:cothink.test']]);
 
-        $this->artisan('statamic:seo:search-console')->assertSuccessful();
+        $this->artisan('statamic:mt:search-console')->assertSuccessful();
 
         expect(SearchStat::query()->orderBy('site')->orderBy('url')->get(['site', 'url', 'clicks'])->toArray())->toBe([
             ['site' => 'cothinking', 'url' => 'https://cothink.test/', 'clicks' => 7],
@@ -499,20 +499,20 @@ describe('Search Console', function () {
         $this->actingAs(cpUser(super: true));
         session(['statamic.cp.selected-site' => 'cothinking']);
 
-        $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('search.clicks', 9));
-        $this->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        $this->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page->where('search.clicks', 9));
+        $this->get(cp_route('mt.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('setup.property', 'sc-domain:cothink.test')
             ->where('setup.property_source', 'env')
             ->where('imported.pages', 2)
             ->where('sites.1', ['name' => 'CoThinking', 'property' => 'sc-domain:cothink.test', 'connected' => true, 'selected' => true]));
 
-        $this->artisan('statamic:seo:search-console', ['--site' => 'default'])->assertSuccessful();
+        $this->artisan('statamic:mt:search-console', ['--site' => 'default'])->assertSuccessful();
         expect(SearchStat::query()->count())->toBe(3);
     });
 
     test('sites on one domain, one under another\'s path, each keep their own pages of a shared property', function () {
         multilang();
-        config(['seo.search_console.property' => 'https://www.example.test/']);
+        config(['marketing-toolkit.search_console.property' => 'https://www.example.test/']);
         $row = fn (string $url, int $clicks) => ['keys' => [$url], 'clicks' => $clicks, 'impressions' => 10, 'ctr' => 0.1, 'position' => 2.0];
         Http::fake(['www.googleapis.com/webmasters/v3/sites/https%3A%2F%2Fwww.example.test%2F/searchAnalytics/query' => Http::response(['rows' => [
             $row('https://www.example.test/', 1),
@@ -524,7 +524,7 @@ describe('Search Console', function () {
             $row('https://de.example.test/uber', 7),
         ]])]);
 
-        $this->artisan('statamic:seo:search-console')->assertSuccessful();
+        $this->artisan('statamic:mt:search-console')->assertSuccessful();
 
         expect(SearchStat::query()->orderBy('clicks')->get(['site', 'clicks'])->map(fn ($stat) => [$stat->site, $stat->clicks])->all())->toBe([
             ['default', 1], ['default', 2], ['fr', 3], ['fr', 4], ['uk', 5], ['default', 6], ['de', 7],
@@ -535,12 +535,12 @@ describe('Search Console', function () {
         $this->actingAs(cpUser(super: true));
         session(['statamic.cp.selected-site' => 'cothinking']);
 
-        $this->get(cp_route('seo.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        $this->get(cp_route('mt.search-console.index'))->assertInertia(fn (AssertableInertia $page) => $page
             ->where('setup.configured', false)
             ->where('setup.suggested_property', 'sc-domain:cothink.test'));
 
-        $this->postJson(cp_route('seo.search-console.property'), ['property' => 'sc-domain:cothink.test'])->assertOk();
-        $this->postJson(cp_route('seo.search-console.import'))->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 2 pages.']);
+        $this->postJson(cp_route('mt.search-console.property'), ['property' => 'sc-domain:cothink.test'])->assertOk();
+        $this->postJson(cp_route('mt.search-console.import'))->assertOk()->assertJson(['ok' => true, 'message' => 'Imported 2 pages.']);
 
         $settings = Addon::get(Edition::PACKAGE)->settings();
 
@@ -551,7 +551,7 @@ describe('Search Console', function () {
             ->and(SearchStat::query()->pluck('site')->unique()->all())->toBe(['cothinking']);
 
         // The command imports the sites that have a property.
-        $this->artisan('statamic:seo:search-console')->assertSuccessful();
+        $this->artisan('statamic:mt:search-console')->assertSuccessful();
         Http::assertSentCount(3);
     });
 });

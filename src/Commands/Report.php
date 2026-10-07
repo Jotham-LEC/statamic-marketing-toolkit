@@ -10,7 +10,7 @@ use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Site;
 
 /**
- * `php please seo:report`: check every published page now, in this process,
+ * `php please mt:report`: check every published page now, in this process,
  * and print the scores. The scheduler runs it when reports are scheduled. On
  * a multi-site install it reports on each site in turn, or on `--site`.
  */
@@ -18,7 +18,7 @@ class Report extends Command
 {
     use RunsInPlease;
 
-    protected $signature = 'statamic:seo:report {--site= : The handle of one site to report on (default: every site)}';
+    protected $signature = 'statamic:mt:report {--site= : The handle of one site to report on (default: every site)}';
 
     protected $description = 'Check every published page against the SEO rules and score the site';
 

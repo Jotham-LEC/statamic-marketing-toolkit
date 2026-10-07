@@ -88,7 +88,7 @@ test('a manual rule into the old address follows the content too', function () {
 });
 
 test('with case_sensitive off, the rule from the old address in another case is the one updated', function () {
-    config(['seo.redirects.case_sensitive' => false]);
+    config(['marketing-toolkit.redirects.case_sensitive' => false]);
     Redirect::query()->create(['source' => '/About', 'target' => '/elsewhere']);
     $entry = reloaded(entryIn('pages', 'about'));
 
@@ -203,7 +203,7 @@ test('a renamed term without a page of its own leaves no redirect', function () 
 });
 
 test('automatic redirects can be turned off', function () {
-    config(['seo.redirects.automatic' => false]);
+    config(['marketing-toolkit.redirects.automatic' => false]);
 
     reloaded(entryIn('pages', 'a'))->slug('b')->save();
 

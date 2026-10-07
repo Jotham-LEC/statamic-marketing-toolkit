@@ -40,7 +40,7 @@ class Redirect extends Model
     /** How far a chain of rules is followed when looking for a loop. */
     private const int MAX_HOPS = 10;
 
-    protected $table = 'seo_redirects';
+    protected $table = 'mt_redirects';
 
     protected $guarded = ['id'];
 
@@ -129,7 +129,7 @@ class Redirect extends Model
      */
     public static function ignoresCase(): bool
     {
-        return ! config('seo.redirects.case_sensitive');
+        return ! config('marketing-toolkit.redirects.case_sensitive');
     }
 
     /**
@@ -200,15 +200,15 @@ class Redirect extends Model
         $site = is_string($data['site'] ?? null) && $data['site'] !== '' ? $data['site'] : null;
 
         return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId, $taken, $active, $sites ?? Sites::handles()), [
-            'source.required' => __('seo::validation.redirect.source_required'),
-            'source.starts_with' => __('seo::validation.redirect.source_starts_with'),
-            'source.not_regex' => __('seo::validation.redirect.source_query'),
-            'source.regex' => __('seo::validation.redirect.control_characters'),
-            'target.required_unless' => __('seo::validation.redirect.target_required'),
-            'target.regex' => __('seo::validation.redirect.target_format'),
-            'target.not_regex' => __('seo::validation.redirect.control_characters'),
-            'status.in' => __('seo::validation.redirect.status'),
-            'site.in' => __('seo::validation.redirect.site'),
+            'source.required' => __('marketing-toolkit::validation.redirect.source_required'),
+            'source.starts_with' => __('marketing-toolkit::validation.redirect.source_starts_with'),
+            'source.not_regex' => __('marketing-toolkit::validation.redirect.source_query'),
+            'source.regex' => __('marketing-toolkit::validation.redirect.control_characters'),
+            'target.required_unless' => __('marketing-toolkit::validation.redirect.target_required'),
+            'target.regex' => __('marketing-toolkit::validation.redirect.target_format'),
+            'target.not_regex' => __('marketing-toolkit::validation.redirect.control_characters'),
+            'status.in' => __('marketing-toolkit::validation.redirect.status'),
+            'site.in' => __('marketing-toolkit::validation.redirect.site'),
         ]);
     }
 
@@ -226,7 +226,7 @@ class Redirect extends Model
                 'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
                 function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId, $taken) {
                     if ($taken ?? self::forSource((string) $value, $ignoreId, $site)) {
-                        $fail(__('seo::validation.redirect.source_taken'));
+                        $fail(__('marketing-toolkit::validation.redirect.source_taken'));
                     }
                 },
             ],
@@ -237,10 +237,10 @@ class Redirect extends Model
                     preg_match_all('/\$(\d+)/', (string) $value, $used);
 
                     if ($used[1] !== [] && max(array_map('intval', $used[1])) > $wildcards) {
-                        $fail(__('seo::validation.redirect.target_number'));
+                        $fail(__('marketing-toolkit::validation.redirect.target_number'));
                     } elseif (preg_match('#^https?://[^/]*\$\d#i', (string) $value)) {
                         // What a visitor typed would choose the site they are sent to (`https://example.com$1` → example.com.evil.test).
-                        $fail(__('seo::validation.redirect.target_number_domain'));
+                        $fail(__('marketing-toolkit::validation.redirect.target_number_domain'));
                     } elseif ($loop = self::loop($source, (string) $value, $site, $ignoreId, $active)) {
                         $fail($loop);
                     }
@@ -267,7 +267,7 @@ class Redirect extends Model
         }
 
         if (self::pointsBack($source, $target)) {
-            return __('seo::validation.redirect.points_back');
+            return __('marketing-toolkit::validation.redirect.points_back');
         }
 
         $source = self::normalize($source);
@@ -327,8 +327,8 @@ class Redirect extends Model
 
             if (self::key($path) === self::key($source)) {
                 return $hops === 1
-                    ? __('seo::validation.redirect.loop')
-                    : __('seo::validation.redirect.loop_steps', ['steps' => $hops]);
+                    ? __('marketing-toolkit::validation.redirect.loop')
+                    : __('marketing-toolkit::validation.redirect.loop_steps', ['steps' => $hops]);
             }
         }
 

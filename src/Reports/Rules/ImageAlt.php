@@ -24,8 +24,8 @@ class ImageAlt extends Rule
 
         return match (true) {
             $missing === 0 => Result::pass(),
-            $missing * 2 > $page->images => Result::fail('seo::reports.messages.images_without_alt', ['count' => $missing, 'total' => $page->images]),
-            default => Result::warn('seo::reports.messages.images_without_alt', ['count' => $missing, 'total' => $page->images]),
+            $missing * 2 > $page->images => Result::fail('marketing-toolkit::reports.messages.images_without_alt', ['count' => $missing, 'total' => $page->images]),
+            default => Result::warn('marketing-toolkit::reports.messages.images_without_alt', ['count' => $missing, 'total' => $page->images]),
         };
     }
 }

@@ -15,11 +15,11 @@ defineProps({
 </script>
 
 <template>
-    <Head :title="__('seo::cp.seo')" />
+    <Head :title="__('marketing-toolkit::cp.seo')" />
 
     <div class="max-w-page mx-auto space-y-6">
-        <Header :title="__('seo::cp.seo')" icon="search-magnifying-glass">
-            <Button :href="overviewUrl" :text="__('seo::cp.search_console.overview')" variant="ghost" />
+        <Header :title="__('marketing-toolkit::cp.seo')" icon="search-magnifying-glass">
+            <Button :href="overviewUrl" :text="__('marketing-toolkit::cp.search_console.overview')" variant="ghost" />
         </Header>
 
         <ProCard :url="upgradeUrl" :several-sites="severalSites" />

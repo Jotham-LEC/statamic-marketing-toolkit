@@ -24,6 +24,6 @@ class TitleUnique extends Rule
 
         return $others === []
             ? Result::pass()
-            : Result::fail('seo::reports.messages.title_same', ['pages' => $this->listed($others)]);
+            : Result::fail('marketing-toolkit::reports.messages.title_same', ['pages' => $this->listed($others)]);
     }
 }

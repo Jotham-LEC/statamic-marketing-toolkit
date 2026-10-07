@@ -81,7 +81,7 @@ describe('the page', function () {
 
     test('a profile page is about someone', function () {
         seoGlobal([]);
-        config(['seo.collections.pages.page_schema' => 'ProfilePage']);
+        config(['marketing-toolkit.collections.pages.page_schema' => 'ProfilePage']);
 
         expect(nodeOf(metaFor(entryIn('pages', 'jo')), 'ProfilePage')['mainEntity'])
             ->toMatchArray(['@type' => 'Person', 'name' => 'Jo', 'url' => 'https://example.test/jo']);
@@ -98,12 +98,12 @@ describe('the page', function () {
 describe('articles', function () {
     beforeEach(function () {
         seoGlobal([]);
-        config(['seo.collections.essays.schema' => 'Article', 'seo.collections.essays.author_field' => 'authors']);
+        config(['marketing-toolkit.collections.essays.schema' => 'Article', 'marketing-toolkit.collections.essays.author_field' => 'authors']);
         Collection::make('people')->routes('people/{slug}')->save();
         Blueprint::make('essay')->setNamespace('collections.essays')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'title', 'field' => ['type' => 'text']],
             ['handle' => 'authors', 'field' => ['type' => 'entries', 'collections' => ['people']]],
-            ['import' => 'seo::seo'],
+            ['import' => 'marketing-toolkit::seo'],
         ]]]]]])->save();
     });
 
@@ -118,7 +118,7 @@ describe('articles', function () {
     });
 
     test('can be written by users', function () {
-        config(['seo.collections.essays.author_field' => 'writer']);
+        config(['marketing-toolkit.collections.essays.author_field' => 'writer']);
         Blueprint::make('essay')->setNamespace('collections.essays')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'title', 'field' => ['type' => 'text']],
             ['handle' => 'writer', 'field' => ['type' => 'users', 'max_items' => 1]],

@@ -58,7 +58,7 @@ trait BuildsMeta
     {
         $site = $this->settings->siteName();
         $suffix = $context->page() > 1
-            ? $this->settings->separator().__('seo::frontend.page', ['n' => $context->page()], $this->contentSite($context)->lang())
+            ? $this->settings->separator().__('marketing-toolkit::frontend.page', ['n' => $context->page()], $this->contentSite($context)->lang())
             : '';
 
         // The editor's SEO title is the whole <title>, as typed.
@@ -83,7 +83,7 @@ trait BuildsMeta
 
         $full = $title.$this->settings->separator().$site;
 
-        return (mb_strlen($full.$suffix) <= (int) config('seo.title.max') ? $full : $title).$suffix;
+        return (mb_strlen($full.$suffix) <= (int) config('marketing-toolkit.title.max') ? $full : $title).$suffix;
     }
 
     /** @api */
@@ -102,7 +102,7 @@ trait BuildsMeta
                 ?? $this->contentDescription($context)
                 ?? $this->settings->string('default_description');
 
-            return $text === null ? null : Text::limit(Text::plain($text), (int) config('seo.description.length'));
+            return $text === null ? null : Text::limit(Text::plain($text), (int) config('marketing-toolkit.description.length'));
         });
     }
 
@@ -163,12 +163,12 @@ trait BuildsMeta
      */
     public function generatedImageUrl(Entry $entry): ?string
     {
-        if (! config('seo.og.enabled') || $entry->status() !== 'published' || ! $entry->url()) {
+        if (! config('marketing-toolkit.og.enabled') || $entry->status() !== 'published' || ! $entry->url()) {
             return null;
         }
 
         $path = trim((string) $entry->uri(), '/');
-        $route = $path === '' ? route('seo.og.home', [], false) : route('seo.og', ['path' => $path], false);
+        $route = $path === '' ? route('mt.og.home', [], false) : route('mt.og', ['path' => $path], false);
 
         // On the entry's own site's domain, which serves its card.
         return rtrim((string) $entry->site()->absoluteUrl(), '/').'/'.ltrim($route, '/').'?v='.$entry->lastModified()->timestamp;
@@ -238,7 +238,7 @@ trait BuildsMeta
     protected function snippetRules(Context $context): string
     {
         $seo = $context->seo();
-        $rules = (string) config('seo.robots.default');
+        $rules = (string) config('marketing-toolkit.robots.default');
 
         if ($seo['nosnippet'] ?? false) {
             return trim((string) preg_replace('/max-snippet:-?\d+/', 'nosnippet', $rules)) ?: 'nosnippet';
@@ -256,13 +256,13 @@ trait BuildsMeta
     /**
      * Whether search engines are kept off this copy of the site: every page
      * noindexed and robots.txt disallowing all, unless APP_ENV is production
-     * (config `seo.robots.noindex_outside_production`).
+     * (config `marketing-toolkit.robots.noindex_outside_production`).
      *
      * @api
      */
     protected function hiddenOutsideProduction(): bool
     {
-        return config('seo.robots.noindex_outside_production') && ! app()->isProduction();
+        return config('marketing-toolkit.robots.noindex_outside_production') && ! app()->isProduction();
     }
 
     /**
@@ -281,7 +281,7 @@ trait BuildsMeta
             return true;
         }
 
-        foreach ((array) config('seo.robots.noindex_params') as $param) {
+        foreach ((array) config('marketing-toolkit.robots.noindex_params') as $param) {
             if (filled($context->request->query($param))) {
                 return true;
             }
@@ -289,7 +289,7 @@ trait BuildsMeta
 
         $route = $context->request->route()?->getName();
 
-        return $route !== null && in_array($route, (array) config('seo.robots.noindex_routes'), true);
+        return $route !== null && in_array($route, (array) config('marketing-toolkit.robots.noindex_routes'), true);
     }
 
     /*

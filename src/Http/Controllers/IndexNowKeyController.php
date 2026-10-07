@@ -13,7 +13,7 @@ class IndexNowKeyController
 {
     public function __invoke(IndexNow $indexNow): Response
     {
-        throw_unless(config('seo.indexnow.enabled'), NotFoundHttpException::class);
+        throw_unless(config('marketing-toolkit.indexnow.enabled'), NotFoundHttpException::class);
 
         return new Response($indexNow->key(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
     }

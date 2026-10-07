@@ -113,16 +113,16 @@ trait BuildsSitemap
 
     /**
      * The collections the sitemap and llms.txt list on $sites: those with a
-     * route there, all of them or those `seo.sitemap.collections` names, less
-     * `seo.sitemap.exclude_collections`.
+     * route there, all of them or those `marketing-toolkit.sitemap.collections` names, less
+     * `marketing-toolkit.sitemap.exclude_collections`.
      *
      * @param  list<string>  $sites
      * @return Collection<int, \Statamic\Contracts\Entries\Collection>
      */
     protected function sitemapCollections(array $sites): Collection
     {
-        $only = config('seo.sitemap.collections');
-        $excluded = (array) config('seo.sitemap.exclude_collections');
+        $only = config('marketing-toolkit.sitemap.collections');
+        $excluded = (array) config('marketing-toolkit.sitemap.exclude_collections');
 
         return \Statamic\Facades\Collection::all()
             ->filter(fn ($collection) => collect($sites)->contains(fn (string $site) => $collection->route($site))
@@ -152,7 +152,7 @@ trait BuildsSitemap
     protected function sitemapTerms(): Collection
     {
         // Each site's terms counted on that site: termHasEntries() asks of the current one.
-        return collect($this->sitemapSites())->flatMap(fn (string $site) => Sites::as($site, fn () => collect((array) config('seo.sitemap.taxonomies'))
+        return collect($this->sitemapSites())->flatMap(fn (string $site) => Sites::as($site, fn () => collect((array) config('marketing-toolkit.sitemap.taxonomies'))
             ->flatMap(fn (string $taxonomy): Collection => \Statamic\Facades\Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
             ->map(fn (Term $term): Term => $term->in($site))
             ->filter(fn (Term $term) => $this->inSitemap($term) && $this->termHasEntries($term))

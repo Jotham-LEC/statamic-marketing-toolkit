@@ -3,7 +3,7 @@
 /*
  * The labels and help of the addon's fields: the SEO fieldset on entries and
  * terms, the report settings (Tools → Addons → SEO) and the "SEO & brand"
- * global set that `php please seo:install` creates. Those blueprints store
+ * global set that `php please mt:install` creates. Those blueprints store
  * these keys, so each user sees them in their control panel language.
  */
 return [
@@ -66,7 +66,7 @@ return [
         ],
     ],
 
-    // The lead source fields `seo:install --forms` adds to each form (Pro).
+    // The lead source fields `mt:install --forms` adds to each form (Pro).
     'attribution' => [
         'tab' => 'Lead source',
         'utm_source' => 'Source (utm_source)',

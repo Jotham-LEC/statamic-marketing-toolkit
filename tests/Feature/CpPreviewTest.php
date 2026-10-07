@@ -16,7 +16,7 @@ beforeEach(function () {
         Blueprint::make($handle)->setNamespace($namespace)->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'title', 'field' => ['type' => 'text']],
             ['handle' => 'description', 'field' => ['type' => 'textarea']],
-            ['import' => 'seo::seo'],
+            ['import' => 'marketing-toolkit::seo'],
         ]]]]]])->save();
     }
 
@@ -26,7 +26,7 @@ beforeEach(function () {
 /**
  * @param  array<string, mixed>  $values
  */
-function previewOf(string $blueprint, array $values, ?string $reference = null, string $route = 'seo.preview.meta'): TestResponse
+function previewOf(string $blueprint, array $values, ?string $reference = null, string $route = 'mt.preview.meta'): TestResponse
 {
     return test()->postJson(cp_route($route), [
         'blueprint' => $blueprint,
@@ -42,7 +42,7 @@ test('the fieldtype is in the SEO fieldset, hands the form its routes and limits
 
     expect($fields->has('seo_preview'))->toBeTrue()
         ->and($fieldtype->preload())->toMatchArray([
-            'urls' => ['meta' => cp_route('seo.preview.meta'), 'card' => cp_route('seo.preview.card')],
+            'urls' => ['meta' => cp_route('mt.preview.meta'), 'card' => cp_route('mt.preview.card')],
             'limits' => ['title' => [30, 60], 'description' => [50, 160]],
             'og' => true,
         ])
@@ -114,7 +114,7 @@ test('the card is drawn from the form as a PNG and never cached', function () {
     $this->actingAs(cpUser(super: true));
     $entry = entryIn('pages', 'about');
 
-    $response = previewOf('collections.pages.page', ['title' => 'About', 'slug' => 'about', 'seo' => ['og_title' => 'Typed card title']], $entry->reference(), 'seo.preview.card')
+    $response = previewOf('collections.pages.page', ['title' => 'About', 'slug' => 'about', 'seo' => ['og_title' => 'Typed card title']], $entry->reference(), 'mt.preview.card')
         ->assertOk()
         ->assertHeader('Content-Type', 'image/png');
 
@@ -122,17 +122,17 @@ test('the card is drawn from the form as a PNG and never cached', function () {
 
     expect($response->headers->get('Cache-Control'))->toContain('no-store')
         ->and(getimagesizefromstring($response->getContent())[0])->toBe(1200)
-        ->and(collect($cached)->keys()->filter(fn ($key) => str_contains($key, 'seo:og')))->toBeEmpty();
+        ->and(collect($cached)->keys()->filter(fn ($key) => str_contains($key, 'mt:og')))->toBeEmpty();
 })->skip(! extension_loaded('imagick'), 'Share cards need PHP\'s imagick extension.');
 
 test('the card route has nothing to draw for a term or with cards off', function () {
     $this->actingAs(cpUser(super: true));
 
-    previewOf('taxonomies.topics.topic', ['title' => 'Ponds', 'slug' => 'ponds'], route: 'seo.preview.card')->assertNotFound();
+    previewOf('taxonomies.topics.topic', ['title' => 'Ponds', 'slug' => 'ponds'], route: 'mt.preview.card')->assertNotFound();
 
-    config(['seo.og.enabled' => false]);
+    config(['marketing-toolkit.og.enabled' => false]);
 
-    previewOf('collections.pages.page', ['title' => 'About'], route: 'seo.preview.card')->assertNotFound();
+    previewOf('collections.pages.page', ['title' => 'About'], route: 'mt.preview.card')->assertNotFound();
 });
 
 test('only people who may see the content get its preview', function () {

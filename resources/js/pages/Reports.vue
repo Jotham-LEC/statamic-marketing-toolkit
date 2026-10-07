@@ -26,7 +26,7 @@ async function run() {
     try {
         started.value = (await axios.post(props.runUrl)).data;
     } catch (error) {
-        toast.error(error.response?.data?.message ?? __('seo::reports.cp.could_not_start'));
+        toast.error(error.response?.data?.message ?? __('marketing-toolkit::reports.cp.could_not_start'));
     } finally {
         starting.value = false;
     }
@@ -39,15 +39,15 @@ function finished(report) {
 </script>
 
 <template>
-    <Head :title="__('seo::reports.cp.title')" />
+    <Head :title="__('marketing-toolkit::reports.cp.title')" />
 
-    <Header :title="__('seo::reports.cp.title')" icon="charts-donut-graph">
-        <Button v-if="settingsUrl" :text="__('seo::reports.cp.settings')" :href="settingsUrl" />
-        <Button v-if="canRun" :text="__('seo::reports.cp.run')" variant="primary" :loading="starting" :disabled="!!running" @click="run" />
+    <Header :title="__('marketing-toolkit::reports.cp.title')" icon="charts-donut-graph">
+        <Button v-if="settingsUrl" :text="__('marketing-toolkit::reports.cp.settings')" :href="settingsUrl" />
+        <Button v-if="canRun" :text="__('marketing-toolkit::reports.cp.run')" variant="primary" :loading="starting" :disabled="!!running" @click="run" />
     </Header>
 
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('seo::reports.cp.intro') }}
+        {{ __('marketing-toolkit::reports.cp.intro') }}
     </p>
 
     <Card v-if="running" class="mb-6 p-4">
@@ -57,21 +57,21 @@ function finished(report) {
     <Card v-if="reports.length">
         <Table class="overflow-x-auto">
             <TableColumns>
-                <TableColumn>{{ __('seo::reports.cp.column_report') }}</TableColumn>
-                <TableColumn>{{ __('seo::reports.cp.score') }}</TableColumn>
-                <TableColumn>{{ __('seo::reports.cp.pages') }}</TableColumn>
-                <TableColumn>{{ __('seo::reports.cp.finished') }}</TableColumn>
+                <TableColumn>{{ __('marketing-toolkit::reports.cp.column_report') }}</TableColumn>
+                <TableColumn>{{ __('marketing-toolkit::reports.cp.score') }}</TableColumn>
+                <TableColumn>{{ __('marketing-toolkit::reports.cp.pages') }}</TableColumn>
+                <TableColumn>{{ __('marketing-toolkit::reports.cp.finished') }}</TableColumn>
             </TableColumns>
             <TableRows>
                 <TableRow v-for="report in reports" :key="report.id">
                     <TableCell>
-                        <Link v-if="report.status === 'done'" :href="report.url" class="font-medium">{{ __('seo::reports.cp.report', { id: report.id }) }}</Link>
-                        <span v-else>{{ __('seo::reports.cp.report', { id: report.id }) }}</span>
+                        <Link v-if="report.status === 'done'" :href="report.url" class="font-medium">{{ __('marketing-toolkit::reports.cp.report', { id: report.id }) }}</Link>
+                        <span v-else>{{ __('marketing-toolkit::reports.cp.report', { id: report.id }) }}</span>
                     </TableCell>
                     <TableCell>
                         <Score v-if="report.status === 'done'" :value="report.score" />
-                        <Badge v-else-if="report.status === 'running'" :text="__('seo::reports.cp.running')" />
-                        <Badge v-else color="red" :text="__('seo::reports.cp.failed')" :title="report.error" />
+                        <Badge v-else-if="report.status === 'running'" :text="__('marketing-toolkit::reports.cp.running')" />
+                        <Badge v-else color="red" :text="__('marketing-toolkit::reports.cp.failed')" :title="report.error" />
                     </TableCell>
                     <TableCell class="tabular-nums">{{ report.pages_total }}</TableCell>
                     <TableCell><When :value="report.finished_at" /></TableCell>
@@ -79,5 +79,5 @@ function finished(report) {
             </TableRows>
         </Table>
     </Card>
-    <p v-else-if="!running" class="text-sm text-gray-600 dark:text-gray-400">{{ __('seo::reports.cp.none') }}<template v-if="canRun"> {{ __('seo::reports.cp.run_first') }}</template></p>
+    <p v-else-if="!running" class="text-sm text-gray-600 dark:text-gray-400">{{ __('marketing-toolkit::reports.cp.none') }}<template v-if="canRun"> {{ __('marketing-toolkit::reports.cp.run_first') }}</template></p>
 </template>

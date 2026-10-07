@@ -29,11 +29,11 @@ class Renderer
         $request = Request::create((string) $content->absoluteUrl(), 'GET', server: ['HTTP_USER_AGENT' => 'jotham-lec/statamic-marketing-toolkit report']);
         $previous = app('request');
         $cascade = app(Cascade::class);
-        $noindex = config('seo.robots.noindex_outside_production');
+        $noindex = config('marketing-toolkit.robots.noindex_outside_production');
 
         app()->instance('request', $request);
         $cascade->withRequest($request);
-        config(['seo.robots.noindex_outside_production' => false]);
+        config(['marketing-toolkit.robots.noindex_outside_production' => false]);
 
         // Outside a web request (the console, a queue worker) no middleware shares the
         // validation errors views expect; an empty bag, as ShareErrorsFromSession gives.
@@ -52,7 +52,7 @@ class Renderer
         } finally {
             app()->instance('request', $previous);
             $cascade->withRequest($previous);
-            config(['seo.robots.noindex_outside_production' => $noindex]);
+            config(['marketing-toolkit.robots.noindex_outside_production' => $noindex]);
         }
     }
 }

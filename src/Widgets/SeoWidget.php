@@ -13,22 +13,24 @@ use Statamic\Widgets\Widget;
 /**
  * The dashboard's SEO card: the latest report's score and the most recently
  * hit missing pages, of the site selected in the control panel. Add it in
- * config/statamic/cp.php: `['type' => 'seo']`.
+ * config/statamic/cp.php: `['type' => 'mt']`.
  */
 class SeoWidget extends Widget
 {
+    protected static $handle = 'mt';
+
     public function component(): ?VueComponent
     {
-        if (! User::current()?->can('view seo')) {
+        if (! User::current()?->can('view marketing toolkit')) {
             return null;
         }
 
-        return VueComponent::render('seo-widget', [
-            'title' => $this->config('title', __('seo::cp.seo')),
+        return VueComponent::render('mt-widget', [
+            'title' => $this->config('title', __('marketing-toolkit::cp.seo')),
             'report' => $this->latestReport(),
             'notFound' => $this->recentNotFound(),
-            'url' => cp_route('seo.index'),
-            'notFoundUrl' => cp_route('seo.404s.index'),
+            'url' => cp_route('mt.index'),
+            'notFoundUrl' => cp_route('mt.404s.index'),
         ]);
     }
 
@@ -37,7 +39,7 @@ class SeoWidget extends Widget
      */
     protected function latestReport(): ?array
     {
-        if (! Schema::hasTable('seo_reports')) {
+        if (! Schema::hasTable('mt_reports')) {
             return null;
         }
 
@@ -47,7 +49,7 @@ class SeoWidget extends Widget
             'score' => (int) $report->score,
             'pages' => $report->scoredPages(),
             'created_at' => $report->finished_at?->toIso8601String() ?? $report->created_at->toIso8601String(),
-            'url' => cp_route('seo.reports.show', $report),
+            'url' => cp_route('mt.reports.show', $report),
         ];
     }
 
@@ -56,7 +58,7 @@ class SeoWidget extends Widget
      */
     protected function recentNotFound(): array
     {
-        if (! Schema::hasTable('seo_404s')) {
+        if (! Schema::hasTable('mt_404s')) {
             return [];
         }
 

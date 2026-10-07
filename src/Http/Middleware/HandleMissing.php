@@ -34,14 +34,14 @@ class HandleMissing
         // added later would never apply, and the log would count one visit.
         // Each module is asked here, not only at boot (leaveOutUnused): either
         // may be off alone, and an Octane worker outlives a switch.
-        if (config('seo.redirects.enabled') || config('seo.not_found.enabled')) {
+        if (config('marketing-toolkit.redirects.enabled') || config('marketing-toolkit.not_found.enabled')) {
             $response->headers->set('X-Statamic-Uncacheable', 'true');
         }
 
         $path = $this->recorder->path($request);
         // The lookup reads the rules table. Missing (the addon installed, `migrate` not yet run) or
         // failing, it is reported and the address answers its 404 as before, not a 500.
-        $rule = config('seo.redirects.enabled') ? rescue(fn () => $this->matcher->match($path, (string) $request->getQueryString(), Site::current()->handle()), null) : null;
+        $rule = config('marketing-toolkit.redirects.enabled') ? rescue(fn () => $this->matcher->match($path, (string) $request->getQueryString(), Site::current()->handle()), null) : null;
 
         // A rule back to the address asked for would loop; the address is simply missing.
         if ($rule && $rule['target'] !== null && str_starts_with($rule['target'], '/') && Redirect::normalize($rule['target']) === $path) {
@@ -49,12 +49,12 @@ class HandleMissing
         }
 
         if ($rule === null) {
-            $request->attributes->set('seo.record_missing', $this->recorder->shouldRecord($request));
+            $request->attributes->set('mt.record_missing', $this->recorder->shouldRecord($request));
 
             return $response;
         }
 
-        $request->attributes->set('seo.redirect_hit', $rule['id']);
+        $request->attributes->set('mt.redirect_hit', $rule['id']);
 
         if ($rule['status'] === 410 || $rule['target'] === null) {
             // The site's own error page, saying the page is gone for good.
@@ -71,11 +71,11 @@ class HandleMissing
     public function terminate(Request $request, Response $response): void
     {
         // Bookkeeping after the response has gone out: a failure is reported, not thrown.
-        if ($id = $request->attributes->get('seo.redirect_hit')) {
+        if ($id = $request->attributes->get('mt.redirect_hit')) {
             rescue(fn () => Redirect::query()->whereKey($id)->increment('hits', 1, ['last_hit_at' => now()]));
         }
 
-        if ($request->attributes->get('seo.record_missing')) {
+        if ($request->attributes->get('mt.record_missing')) {
             rescue(fn () => $this->recorder->record($request));
         }
     }

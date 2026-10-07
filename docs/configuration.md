@@ -2,12 +2,12 @@
 
 Two places, by who changes what:
 
-- **`config/seo.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=seo-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them. A file published by 0.19 or earlier keeps working: its `robots_txt`, `llms_txt` and `ads_txt` switches and its old tracking keys (`gtm`, `ga4`, `meta_pixel`, `linkedin`) are read under their new names.
+- **`config/marketing-toolkit.php`**: rules that belong in code and git (which field is the description, the schema type, redirects and the 404 log). Publish it with `php artisan vendor:publish --tag=marketing-toolkit-config`; anything you leave out keeps its default, at any depth: set `og.templates` alone and `og.enabled` stays. A list you set (`not_found.ignore_paths`, `sitemap.collections`) replaces the default list; copy the defaults in if you want to add to them. A file published by 0.19 or earlier (as config/seo.php, which the update moves) keeps working: its `robots_txt`, `llms_txt` and `ads_txt` switches and its old tracking keys (`gtm`, `ga4`, `meta_pixel`, `linkedin`) are read under their new names.
 - **Tools → SEO → Report settings** (Statamic's addon settings for Marketing Toolkit, Pro): report settings an editor may want to change.
 
 The site's name is Statamic's own (Settings → Sites, else `APP_NAME`). Brand details (separator, logo, colours, verification codes) are content, edited under **Globals → SEO & brand**; see [editors.md](editors.md#seo--brand).
 
-## config/seo.php
+## config/marketing-toolkit.php
 
 ### Brand global
 
@@ -99,9 +99,9 @@ Terms are listed in the sitemap (and checked by reports) when their taxonomy is 
 | `sitemap.exclude_collections` | `[]` | Left out even when `collections` is `null`. |
 | `sitemap.taxonomies` | `[]` | Taxonomies whose terms are listed (only terms with published entries). Reports check these terms too. |
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
-| `robots_txt.enabled` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins: the web server answers with it first. A new Statamic site has one; delete it (`seo:install` offers to). |
+| `robots_txt.enabled` | `true` | Serves `/robots.txt` from the global. A real `public/robots.txt` wins: the web server answers with it first. A new Statamic site has one; delete it (`mt:install` offers to). |
 
-The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `seo.sitemap` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
+The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `marketing-toolkit.sitemap` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
 
 ### Redirects and the 404 log
 
@@ -132,26 +132,26 @@ A sitemap lists every site on its domain: languages under `/fr/` are in `example
 | Key | Default | |
 |---|---|---|
 | `indexnow.enabled` | `true` | When published content is saved, goes live on schedule or is deleted, its address is sent to IndexNow (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
-| `indexnow.key` | `null` (`SEO_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
+| `indexnow.key` | `null` (`MT_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
 
 ### Google Search Console (Pro)
 
 Clicks, impressions, click-through rate and average position per page, imported daily and shown on Tools → SEO. Off until there is a key and a property.
 
-**From the control panel**: **Tools → SEO → Search Console** walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/seo/search-console-key.json`, encrypted with `APP_KEY` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects; if `APP_KEY` changes, upload the key again), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
+**From the control panel**: **Tools → SEO → Search Console** walks whoever may change the addon's settings through it: the Google Cloud and Search Console steps with their links, uploading the key, the property (the site's domain is suggested), a check that turns Google's refusals into what to fix, and the first import. The key is kept in `storage/app/private/marketing-toolkit/search-console-key.json`, encrypted with `APP_KEY` (never in git; on a deployed site, keep `storage` between releases, as Laravel expects; if `APP_KEY` changes, upload the key again), the property as the addon setting `search_console_property`. **From `.env`**, as below; a value there wins and the control panel shows it without changing it.
 
 | Key | Default | |
 |---|---|---|
-| `search_console.credentials` | `SEO_SEARCH_CONSOLE_CREDENTIALS` | A service account's JSON key, or the path to the file. |
-| `search_console.property` | `SEO_SEARCH_CONSOLE_PROPERTY` | The property as Search Console names it: `sc-domain:example.com` for a domain property, `https://example.com/` for a URL prefix. With several sites, a string is every site's; in `config/seo.php` it can be a map, `['default' => 'sc-domain:example.com', 'shop' => 'sc-domain:shop.example']`. |
+| `search_console.credentials` | `MT_SEARCH_CONSOLE_CREDENTIALS` | A service account's JSON key, or the path to the file. |
+| `search_console.property` | `MT_SEARCH_CONSOLE_PROPERTY` | The property as Search Console names it: `sc-domain:example.com` for a domain property, `https://example.com/` for a URL prefix. With several sites, a string is every site's; in `config/marketing-toolkit.php` it can be a map, `['default' => 'sc-domain:example.com', 'shop' => 'sc-domain:shop.example']`. |
 | `search_console.days` | `28` | The period imported, ending today (Pacific time, as Search Console counts). |
 
 Setting it up:
 
 1. In [Google Cloud](https://console.cloud.google.com/), create a project (or use one), enable the **Google Search Console API**, and create a **service account** with a **JSON key**.
 2. In [Search Console](https://search.google.com/search-console), open the property → Settings → Users and permissions, and add the service account's email (`…@….iam.gserviceaccount.com`) as a **Restricted** user.
-3. Put the key on the server (outside the web root) and set `SEO_SEARCH_CONSOLE_CREDENTIALS=/path/to/key.json` and `SEO_SEARCH_CONSOLE_PROPERTY` in `.env`.
-4. Run `php please seo:search-console` once (or Import now on Tools → SEO → Search Console); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running). It is in the schedule (`php artisan schedule:list`) once a key and a property are set.
+3. Put the key on the server (outside the web root) and set `MT_SEARCH_CONSOLE_CREDENTIALS=/path/to/key.json` and `MT_SEARCH_CONSOLE_PROPERTY` in `.env`.
+4. Run `php please mt:search-console` once (or Import now on Tools → SEO → Search Console); the schedule then runs it daily at 04:30 (Laravel's scheduler must be running). It is in the schedule (`php artisan schedule:list`) once a key and a property are set.
 
 **Can't create a key, or Google says it is disabled?** New Google Cloud projects often have service account keys blocked by an organization policy, `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation). A key that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable); the check on the Search Console screen says when Google reports a disabled key or account.
 
@@ -171,24 +171,24 @@ Uploaded share images are cropped to 1200×630 and served as JPEG; for another s
 
 Since the switches apply at boot, a process that boots once and serves many requests or jobs (Laravel Octane, a queue worker, Horizon) picks up a change when it restarts: run `php artisan octane:reload` or `php artisan queue:restart` after switching a module on or off. A PHP-FPM site picks it up from the next request.
 
-Each switch sets the matching key below to off, whatever `config/seo.php` says. A module `config/seo.php` already switches off shows off on the screen, locked, with "Off in config/seo.php": a switch can't turn it back on. In Free, the screen isn't there and every module follows `config/seo.php`.
+Each switch sets the matching key below to off, whatever `config/marketing-toolkit.php` says. A module `config/marketing-toolkit.php` already switches off shows off on the screen, locked, with "Off in config/marketing-toolkit.php": a switch can't turn it back on. In Free, the screen isn't there and every module follows `config/marketing-toolkit.php`.
 
 ## Editions
 
-`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/seo.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the reports and their settings, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
+`config/statamic/editions.php`, `'addons' => ['jotham-lec/statamic-marketing-toolkit' => 'pro']`, turns on Pro. Without it the addon runs as Free, which forces `og.enabled`, `redirects.automatic` and `not_found.enabled` off whatever `config/marketing-toolkit.php` says, works with the default site alone on a multi-site install (no hreflang; a sitemap, robots.txt and IndexNow for the default site's domain only; other domains answer 404 for them), leaves out Search Console, the reports and their settings, the 404 log, CSV import and export, the widget and the Pro commands, and answers Pro's control panel addresses with a 404. Statamic's own `'pro' => true` in the same file is Statamic CMS Pro, a separate thing that several sites need.
 
 ## Tracking
 
-Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (and shows as "set in .env" on Tools → SEO). Each key is the field's handle in the Tracking tab, and in `.env` it is `SEO_` and the key in capitals. See [tracking.md](tracking.md).
+Each ID can be set in the **Tracking** tab of SEO & brand, or here, which wins (and shows as "set in .env" on Tools → SEO). Each key is the field's handle in the Tracking tab, and in `.env` it is `MT_` and the key in capitals. Every `.env` name the addon reads starts with `MT_`; the names up to 0.19, `SEO_…`, are read too until 1.0. See [tracking.md](tracking.md).
 
 | Key | `.env` | |
 |---|---|---|
-| `tracking.gtm_id` | `SEO_GTM_ID` | Google Tag Manager container, `GTM-XXXXXXX`. |
-| `tracking.ga4_id` | `SEO_GA4_ID` | Google Analytics 4 measurement ID, `G-XXXXXXXXXX`. |
-| `tracking.posthog_key` | `SEO_POSTHOG_KEY` | PostHog project API key, `phc_…`. |
-| `tracking.posthog_host` | `SEO_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. |
-| `tracking.meta_pixel_id` | `SEO_META_PIXEL_ID` | Meta Pixel ID (digits). |
-| `tracking.linkedin_partner_id` | `SEO_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
+| `tracking.gtm_id` | `MT_GTM_ID` | Google Tag Manager container, `GTM-XXXXXXX`. |
+| `tracking.ga4_id` | `MT_GA4_ID` | Google Analytics 4 measurement ID, `G-XXXXXXXXXX`. |
+| `tracking.posthog_key` | `MT_POSTHOG_KEY` | PostHog project API key, `phc_…`. |
+| `tracking.posthog_host` | `MT_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. |
+| `tracking.meta_pixel_id` | `MT_META_PIXEL_ID` | Meta Pixel ID (digits). |
+| `tracking.linkedin_partner_id` | `MT_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
 | `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |
 | `tracking.environments` | | `['production']`: the environments the tags print in. Never in Live Preview. |
 | `leads.enabled` | | `true` (Pro). Off: no form submission is sent as a lead or saved with where it came from. See [tracking.md](tracking.md#leads-pro). |
@@ -208,7 +208,7 @@ A file of the same name in `public/` wins over either.
 
 | Key | Default | |
 |---|---|---|
-| `favicons.enabled` | `true` | Make the icons from **Icon** in SEO & brand, serve them, and print their links in `<s:seo:head />` (or `<s:seo:favicons />`). |
+| `favicons.enabled` | `true` | Make the icons from **Icon** in SEO & brand, serve them, and print their links in `<s:mt:head />` (or `<s:mt:favicons />`). |
 
 From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg` (an SVG upload, as it is), `/apple-touch-icon.png` (180 px, on the icon background), `/icon-192.png`, `/icon-512.png` and `/site.webmanifest` (the site's name, short name and colours). They're made once per version of the image and colours, kept in `storage/app/marketing-toolkit/favicons`, made again when SEO & brand is saved, and served without a session or cookie. A file of the same name in `public/` wins, so delete old ones there. Drawing SVG needs PHP's Imagick; with GD alone an SVG gives `/favicon.svg` and the manifest, so upload a PNG on such hosts.
 
@@ -232,27 +232,27 @@ From one image the addon makes `/favicon.ico` (16, 32 and 48 px), `/favicon.svg`
 | Most pages per report | 0 (all) | Stops after this many pages. |
 | Pages per step | 25 | Pages one step renders. Lower it if a step times out. |
 | Reports to keep | 10 | Older reports are deleted when a new one finishes. |
-| Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. `seo.reports.enabled` (or the Features switch) off stops the schedule. |
+| Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. `marketing-toolkit.reports.enabled` (or the Features switch) off stops the schedule. |
 
-The Search Console property is kept here too (`search_console_property`, and `search_console_properties` for the other sites), but set on **Tools → SEO → Search Console**. `SEO_SEARCH_CONSOLE_PROPERTY` wins over them.
+The Search Console property is kept here too (`search_console_property`, and `search_console_properties` for the other sites), but set on **Tools → SEO → Search Console**. `MT_SEARCH_CONSOLE_PROPERTY` wins over them.
 
 ## Permissions
 
 | Permission | |
 |---|---|
-| `view seo` | Tools → SEO; with Pro, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
-| `manage seo redirects` | Create, edit and delete redirects; with Pro, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
-| `run seo reports` | Start a report (Pro). |
+| `view marketing toolkit` | Tools → SEO; with Pro, reports, the 404 log, the Search Console screen (changing the connection needs permission to change the addon's settings), the widget. |
+| `manage marketing toolkit redirects` | Create, edit and delete redirects; with Pro, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
+| `run marketing toolkit reports` | Start a report (Pro). |
 
 ## Commands
 
 | Command | |
 |---|---|
-| `php please seo:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (the home page's description, the robots.txt rule). Run again, it adds what is missing, such as the fields a newer version brings (in the tabs the blueprint still has), and never overwrites a value. With several sites, offers to enable an existing set on the sites it's missing from. Names any file in `public/` that would be served instead of the addon's, and offers to delete it. |
-| `php please seo:install --tab=shop` | Adds a whole tab the blueprint doesn't have (`shop`, `publisher`…). |
-| `php please seo:install --forms` (Pro) | Adds the lead source fields to every form; see [tracking.md](tracking.md#leads-pro). |
-| `php please seo:search-console [--site=]` (Pro) | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
-| `php please seo:report [--site=]` (Pro) | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |
+| `php please mt:install [--container=]` | Creates the SEO & brand global set and its blueprint, and fills its empty brand fields with what the site uses (the home page's description, the robots.txt rule). Run again, it adds what is missing, such as the fields a newer version brings (in the tabs the blueprint still has), and never overwrites a value. With several sites, offers to enable an existing set on the sites it's missing from. Names any file in `public/` that would be served instead of the addon's, and offers to delete it. |
+| `php please mt:install --tab=shop` | Adds a whole tab the blueprint doesn't have (`shop`, `publisher`…). |
+| `php please mt:install --forms` (Pro) | Adds the lead source fields to every form; see [tracking.md](tracking.md#leads-pro). |
+| `php please mt:search-console [--site=]` (Pro) | Imports the last period's numbers from Google Search Console. With several sites, each site that has a property, or only `--site`. |
+| `php please mt:report [--site=]` (Pro) | Runs a whole report in the terminal and prints the scores. Continues a report that's already running. With several sites, one report per site in turn, or only `--site`; the schedule runs one per site. |
 
 ## What it sends where
 

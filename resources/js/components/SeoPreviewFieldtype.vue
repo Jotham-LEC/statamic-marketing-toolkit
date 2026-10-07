@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
 
 <template>
     <div v-if="blueprint?.fqh" class="space-y-6">
-        <Description v-if="failed" class="text-(--theme-color-danger)">{{ __('seo::cp.preview.failed') }}</Description>
+        <Description v-if="failed" class="text-(--theme-color-danger)">{{ __('marketing-toolkit::cp.preview.failed') }}</Description>
 
         <!-- Until the first answer: the rules' fallbacks, the address and the image aren't known yet. -->
         <template v-if="!resolved && !failed">
@@ -110,8 +110,8 @@ onBeforeUnmount(() => {
                 <div class="mb-2 flex items-center justify-between gap-4">
                     <h3 class="text-sm font-medium">Google</h3>
                     <div class="flex gap-3 text-xs">
-                        <Counter :label="__('seo::cp.preview.title')" :text="title" :limits="meta.limits.title" />
-                        <Counter :label="__('seo::cp.preview.description')" :text="description" :limits="meta.limits.description" />
+                        <Counter :label="__('marketing-toolkit::cp.preview.title')" :text="title" :limits="meta.limits.title" />
+                        <Counter :label="__('marketing-toolkit::cp.preview.description')" :text="description" :limits="meta.limits.description" />
                     </div>
                 </div>
                 <div class="rounded-lg border border-gray-200 bg-white p-4 font-[arial,sans-serif] dark:border-gray-700 dark:bg-gray-900">
@@ -124,7 +124,7 @@ onBeforeUnmount(() => {
                     </div>
                     <p class="mt-1 max-w-[600px] truncate text-xl text-[#1a0dab] dark:text-[#99c3ff]">{{ title }}</p>
                     <p class="mt-1 line-clamp-2 max-w-[600px] text-sm text-gray-700 dark:text-gray-300">{{ description }}</p>
-                    <p v-if="noindex" class="mt-2 text-xs text-amber-700 dark:text-amber-400">{{ __('seo::cp.preview.noindex', { robots: resolved.robots }) }}</p>
+                    <p v-if="noindex" class="mt-2 text-xs text-amber-700 dark:text-amber-400">{{ __('marketing-toolkit::cp.preview.noindex', { robots: resolved.robots }) }}</p>
                 </div>
             </section>
 
@@ -134,7 +134,7 @@ onBeforeUnmount(() => {
                     <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                         <div class="relative aspect-[1200/630] bg-gray-100 dark:bg-gray-800">
                             <img v-if="image" :src="image" :alt="resolved?.image?.alt ?? ''" class="size-full object-cover" />
-                            <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? __('seo::cp.preview.drawing') : __('seo::cp.preview.no_image') }}</span>
+                            <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? __('marketing-toolkit::cp.preview.drawing') : __('marketing-toolkit::cp.preview.no_image') }}</span>
                         </div>
                         <div class="border-t border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
                             <p class="text-xs uppercase text-gray-500">{{ host }}</p>
@@ -148,11 +148,11 @@ onBeforeUnmount(() => {
                     <h3 class="mb-2 text-sm font-medium">X</h3>
                     <div class="relative aspect-[1200/630] overflow-hidden rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
                         <img v-if="image" :src="image" :alt="resolved?.image?.alt ?? ''" class="size-full object-cover" />
-                        <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? __('seo::cp.preview.drawing') : __('seo::cp.preview.no_image') }}</span>
+                        <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500">{{ cardLoading ? __('marketing-toolkit::cp.preview.drawing') : __('marketing-toolkit::cp.preview.no_image') }}</span>
                     </div>
                     <!-- The title under the picture rather than over it, where it covered the card's own text. -->
                     <p class="mt-1.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ogTitle }}</p>
-                    <p class="text-xs text-gray-500">{{ __('seo::cp.preview.from', { host }) }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
+                    <p class="text-xs text-gray-500">{{ __('marketing-toolkit::cp.preview.from', { host }) }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
                 </section>
             </div>
         </template>

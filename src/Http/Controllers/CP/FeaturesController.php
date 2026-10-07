@@ -29,11 +29,11 @@ class FeaturesController
         $blueprint = $this->blueprint(Features::offInConfig());
         $fields = $blueprint->fields()->addValues(collect(Features::MODULES)->map(fn ($config, string $module) => ! in_array($module, $off, true))->all())->preProcess();
 
-        return Inertia::render('seo::Features', [
+        return Inertia::render('marketing-toolkit::Features', [
             'blueprint' => $blueprint->toPublishArray(),
             'values' => $fields->values()->all(),
             'meta' => $fields->meta()->all(),
-            'submitUrl' => cp_route('seo.features.update'),
+            'submitUrl' => cp_route('mt.features.update'),
         ]);
     }
 
@@ -41,7 +41,7 @@ class FeaturesController
     {
         $this->authorize();
 
-        // A module the request leaves out keeps its state, as does one config/seo.php switches off.
+        // A module the request leaves out keeps its state, as does one config/marketing-toolkit.php switches off.
         $off = Features::off();
         $locked = Features::offInConfig();
         Features::save(array_values(array_filter(
@@ -53,24 +53,24 @@ class FeaturesController
     }
 
     /**
-     * @param  list<string>  $locked  the modules config/seo.php switches off
+     * @param  list<string>  $locked  the modules config/marketing-toolkit.php switches off
      */
     private function blueprint(array $locked = []): BlueprintObject
     {
         $toggle = fn (string $module) => ['handle' => $module, 'field' => [
             'type' => 'toggle',
-            'display' => __('seo::cp.features.modules.'.$module.'.display'),
-            'instructions' => __('seo::cp.features.modules.'.$module.'.instructions')
-                .(in_array($module, $locked, true) ? ' '.__('seo::cp.features.off_in_config') : ''),
+            'display' => __('marketing-toolkit::cp.features.modules.'.$module.'.display'),
+            'instructions' => __('marketing-toolkit::cp.features.modules.'.$module.'.instructions')
+                .(in_array($module, $locked, true) ? ' '.__('marketing-toolkit::cp.features.off_in_config') : ''),
             'default' => true,
             'width' => 50,
             ...(in_array($module, $locked, true) ? ['visibility' => 'read_only'] : []),
         ]];
-        $section = fn (string $group, array $modules, ?string $instructions = null) => ['display' => __('seo::cp.features.groups.'.$group), 'instructions' => $instructions, 'fields' => array_map($toggle, $modules)];
+        $section = fn (string $group, array $modules, ?string $instructions = null) => ['display' => __('marketing-toolkit::cp.features.groups.'.$group), 'instructions' => $instructions, 'fields' => array_map($toggle, $modules)];
 
         // The intro rides on the first section: PublishForm draws its own header, with no slot above the form.
         return Blueprint::make('seo_features')->setContents(['tabs' => ['main' => ['sections' => [
-            $section('search', ['sitemap', 'robots_txt', 'llms_txt', 'hreflang', 'indexnow', 'share_cards'], __('seo::cp.features.intro')),
+            $section('search', ['sitemap', 'robots_txt', 'llms_txt', 'hreflang', 'indexnow', 'share_cards'], __('marketing-toolkit::cp.features.intro')),
             $section('redirects', ['redirects', 'automatic_redirects', 'not_found', 'reports']),
             $section('marketing', ['tracking', 'leads', 'favicons', 'ads_txt']),
         ]]]]);

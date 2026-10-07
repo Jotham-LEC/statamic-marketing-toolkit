@@ -22,7 +22,7 @@ class KeepSiteNameInTitles extends UpdateScript
 
     public function update()
     {
-        foreach (GlobalSet::findByHandle((string) config('seo.global'))?->localizations() ?? [] as $variables) {
+        foreach (GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->localizations() ?? [] as $variables) {
             $data = $variables->data();
 
             if (filled($data->get('title_separator')) && ! $data->has('title_site_name')) {

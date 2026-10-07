@@ -9,7 +9,7 @@ return [
     | Brand and defaults
     |--------------------------------------------------------------------------
     |
-    | The global set editors fill in (create it with `php please seo:install`):
+    | The global set editors fill in (create it with `php please mt:install`):
     | title separator, default description and image, the publisher for
     | JSON-LD, verification codes, robots.txt lines and the OG card colours.
     | The site's name is Statamic's own (Settings → Sites, else APP_NAME).
@@ -218,7 +218,7 @@ return [
 
     'indexnow' => [
         'enabled' => true,
-        'key' => env('SEO_INDEXNOW_KEY'),
+        'key' => env('MT_INDEXNOW_KEY', env('SEO_INDEXNOW_KEY')),
     ],
 
     /*
@@ -227,15 +227,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | Clicks, impressions, CTR and position per page on Tools → SEO, imported
-    | daily (`php please seo:search-console`). `credentials` is a service
+    | daily (`php please mt:search-console`). `credentials` is a service
     | account's JSON key, or the path to it; `property` is the property as
     | Search Console names it: `sc-domain:example.com` or `https://example.com/`.
     |
     */
 
     'search_console' => [
-        'credentials' => env('SEO_SEARCH_CONSOLE_CREDENTIALS'),
-        'property' => env('SEO_SEARCH_CONSOLE_PROPERTY'),
+        'credentials' => env('MT_SEARCH_CONSOLE_CREDENTIALS', env('SEO_SEARCH_CONSOLE_CREDENTIALS')),
+        'property' => env('MT_SEARCH_CONSOLE_PROPERTY', env('SEO_SEARCH_CONSOLE_PROPERTY')),
         'days' => 28,
     ],
 
@@ -245,7 +245,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the
-    | LinkedIn Insight Tag, printed by <s:seo:head /> and <s:seo:body />. Set
+    | LinkedIn Insight Tag, printed by <s:mt:head /> and <s:mt:body />. Set
     | them in the Tracking tab of the SEO & brand global, or here (.env),
     | which wins. They print only in these environments, never in Live Preview.
     |
@@ -254,13 +254,14 @@ return [
     'tracking' => [
         'enabled' => true,
         'environments' => ['production'],
-        // Each key is the field's handle in the Tracking tab, and SEO_ + the key in .env.
-        'gtm_id' => env('SEO_GTM_ID'),
-        'ga4_id' => env('SEO_GA4_ID'),
-        'posthog_key' => env('SEO_POSTHOG_KEY'),
-        'posthog_host' => env('SEO_POSTHOG_HOST'),
-        'meta_pixel_id' => env('SEO_META_PIXEL_ID'),
-        'linkedin_partner_id' => env('SEO_LINKEDIN_PARTNER_ID'),
+        // Each key is the field's handle in the Tracking tab, and MT_ + the key in .env.
+        // (SEO_ + the key, the name up to 0.19, is read too until 1.0.)
+        'gtm_id' => env('MT_GTM_ID', env('SEO_GTM_ID')),
+        'ga4_id' => env('MT_GA4_ID', env('SEO_GA4_ID')),
+        'posthog_key' => env('MT_POSTHOG_KEY', env('SEO_POSTHOG_KEY')),
+        'posthog_host' => env('MT_POSTHOG_HOST', env('SEO_POSTHOG_HOST')),
+        'meta_pixel_id' => env('MT_META_PIXEL_ID', env('SEO_META_PIXEL_ID')),
+        'linkedin_partner_id' => env('MT_LINKEDIN_PARTNER_ID', env('SEO_LINKEDIN_PARTNER_ID')),
     ],
 
     /*
@@ -285,7 +286,7 @@ return [
     |
     | /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
     | /icon-512.png and /site.webmanifest, made from the icon in SEO & brand,
-    | and their <link> tags in <s:seo:head />. A file of the same name in
+    | and their <link> tags in <s:mt:head />. A file of the same name in
     | public/ wins.
     |
     */

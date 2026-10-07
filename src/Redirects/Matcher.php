@@ -19,7 +19,7 @@ use Statamic\Facades\URL;
  */
 class Matcher
 {
-    private const string KEY = 'seo:redirects';
+    private const string KEY = 'mt:redirects';
 
     /** Set while many rules are saved at once (an import), which flush once at the end. */
     private static bool $deferred = false;

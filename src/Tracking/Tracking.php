@@ -8,8 +8,8 @@ use JothamLec\MarketingToolkit\Support\Edition;
 
 /**
  * The tracking tags of the current site, and (Pro) its Consent Mode defaults: IDs from
- * the "Tracking" tab of the SEO & brand global, with config/seo.php (and so
- * .env) winning over it. Printed by <s:seo:head /> and <s:seo:body />, in
+ * the "Tracking" tab of the SEO & brand global, with config/marketing-toolkit.php (and so
+ * .env) winning over it. Printed by <s:mt:head /> and <s:mt:body />, in
  * production only and never in Live Preview.
  *
  * Override a method in a subclass bound in its place in the container:
@@ -28,7 +28,7 @@ class Tracking
 
     /**
      * Tracker => its key: the field's handle in the global's Tracking tab, the
-     * key under `seo.tracking`, and in .env SEO_ followed by the key in capitals.
+     * key under `marketing-toolkit.tracking`, and in .env MT_ followed by the key in capitals.
      */
     public const array FIELDS = [
         'gtm' => 'gtm_id',
@@ -54,12 +54,12 @@ class Tracking
 
     /**
      * Whether the tags print on this request: in the environments
-     * `seo.tracking.environments` lists (production), never in Live Preview.
+     * `marketing-toolkit.tracking.environments` lists (production), never in Live Preview.
      */
     public function enabled(): bool
     {
-        return config('seo.tracking.enabled')
-            && app()->environment((array) config('seo.tracking.environments'))
+        return config('marketing-toolkit.tracking.enabled')
+            && app()->environment((array) config('marketing-toolkit.tracking.environments'))
             && ! request()->isLivePreview();
     }
 
@@ -86,14 +86,14 @@ class Tracking
     }
 
     /**
-     * Which trackers come from config/seo.php (or .env), and so can't be
+     * Which trackers come from config/marketing-toolkit.php (or .env), and so can't be
      * changed in the control panel.
      *
      * @return array<string, bool>
      */
     public function fromConfig(): array
     {
-        return collect(self::FIELDS)->map(fn (string $key) => filled(config('seo.tracking.'.$key)))->all();
+        return collect(self::FIELDS)->map(fn (string $key) => filled(config('marketing-toolkit.tracking.'.$key)))->all();
     }
 
     /**
@@ -104,7 +104,7 @@ class Tracking
     protected function entered(): array
     {
         return collect(self::FIELDS)->map(function (string $key, string $tracker) {
-            $id = trim((string) (config('seo.tracking.'.$key) ?: $this->settings->string($key)));
+            $id = trim((string) (config('marketing-toolkit.tracking.'.$key) ?: $this->settings->string($key)));
 
             return $id === '' ? null : (in_array($tracker, ['gtm', 'ga4'], true) ? strtoupper($id) : $id);
         })->all();
@@ -115,7 +115,7 @@ class Tracking
      */
     public function posthogHost(): string
     {
-        $host = rtrim(trim((string) (config('seo.tracking.posthog_host') ?: $this->settings->string('posthog_host'))), '/');
+        $host = rtrim(trim((string) (config('marketing-toolkit.tracking.posthog_host') ?: $this->settings->string('posthog_host'))), '/');
 
         return preg_match('#^https://[a-z0-9.-]+(:\d+)?$#i', $host) ? $host : 'https://us.i.posthog.com';
     }
@@ -135,7 +135,7 @@ class Tracking
         }
 
         return array_map(
-            fn (string $tracker) => (string) __('seo::cp.tracking.names.'.$tracker),
+            fn (string $tracker) => (string) __('marketing-toolkit::cp.tracking.names.'.$tracker),
             array_keys(array_filter(array_diff_key($ids, ['gtm' => true]))),
         );
     }
@@ -184,7 +184,7 @@ class Tracking
      */
     public function head(): string
     {
-        return $this->enabled() ? view('seo::tracking-head', $this->viewData())->render() : '';
+        return $this->enabled() ? view('marketing-toolkit::tracking-head', $this->viewData())->render() : '';
     }
 
     /**
@@ -192,7 +192,7 @@ class Tracking
      */
     public function body(): string
     {
-        return $this->enabled() ? view('seo::tracking-body', $this->viewData())->render() : '';
+        return $this->enabled() ? view('marketing-toolkit::tracking-body', $this->viewData())->render() : '';
     }
 
     /**
@@ -233,7 +233,7 @@ class Tracking
      */
     public function conversions(): bool
     {
-        return config('seo.leads.enabled') && $this->settings->bool('conversions', true);
+        return config('marketing-toolkit.leads.enabled') && $this->settings->bool('conversions', true);
     }
 
     /**
@@ -251,7 +251,7 @@ class Tracking
      */
     public function attribution(): bool
     {
-        return config('seo.leads.enabled') && $this->settings->bool('attribution');
+        return config('marketing-toolkit.leads.enabled') && $this->settings->bool('attribution');
     }
 
     /**

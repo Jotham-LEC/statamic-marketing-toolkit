@@ -1,4 +1,4 @@
-{{-- Rendered by <s:seo:body />, right after <body>: what the tags fall back to without JavaScript. --}}
+{{-- Rendered by <s:mt:body />, right after <body>: what the tags fall back to without JavaScript. --}}
 @if ($ids['gtm'])
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ $ids['gtm'] }}" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
 @endif

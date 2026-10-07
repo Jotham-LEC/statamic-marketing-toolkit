@@ -10,25 +10,25 @@ Marketing Toolkit prints the tags of Google Tag Manager, Google Analytics 4, Pos
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <s:seo:head />
+    <s:mt:head />
     …
 </head>
 <body>
-    <s:seo:body />
+    <s:mt:body />
 ```
 
-`<meta charset>` comes first, since browsers look for it in the first 1024 bytes; everything else as high as it can go. `seo:head` prints, in this order:
+`<meta charset>` comes first, since browsers look for it in the first 1024 bytes; everything else as high as it can go. `mt:head` prints, in this order:
 
 1. `window.dataLayer` and `gtag()`, and the Consent Mode defaults, when Consent Mode is on.
 2. The consent bridge, when Consent Mode is on and PostHog, the Meta Pixel or LinkedIn load directly (see below).
 3. Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and LinkedIn, for each that has an ID.
-4. The meta tags (`<s:seo:meta />`).
+4. The meta tags (`<s:mt:meta />`).
 
-`seo:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels when Consent Mode is off. Without JavaScript nobody can answer a banner, so with Consent Mode on those pixels are left out.
+`mt:body` prints Google Tag Manager's `<noscript>` iframe, which must be in the body, and the Meta and LinkedIn `<noscript>` pixels when Consent Mode is off. Without JavaScript nobody can answer a banner, so with Consent Mode on those pixels are left out.
 
-Nothing prints outside production (`seo.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it.
+Nothing prints outside production (`marketing-toolkit.tracking.environments`) or in Live Preview. With a Content Security Policy that uses Vite's nonce (`Vite::useCspNonce()`), every script gets it.
 
-A site that prints its own meta tags (a Laravel layout that doesn't use `<s:seo:meta />`) takes the tags alone, so the page doesn't get two sets of meta tags. Put any Consent Mode defaults of your own before them:
+A site that prints its own meta tags (a Laravel layout that doesn't use `<s:mt:meta />`) takes the tags alone, so the page doesn't get two sets of meta tags. Put any Consent Mode defaults of your own before them:
 
 ```blade
 <head>
@@ -36,7 +36,7 @@ A site that prints its own meta tags (a Laravel layout that doesn't use `<s:seo:
     {!! app(\JothamLec\MarketingToolkit\Tracking\Tracking::class)->head() !!}
 </head>
 <body>
-    <s:seo:body />
+    <s:mt:body />
 ```
 
 ## One tool, one place: use Google Tag Manager
@@ -86,7 +86,7 @@ gtag('consent', 'update', {
 
 and does the same on every later page, from the answer it stored. Most banners do this for you:
 
-- **Cookiebot**: Google Consent Mode is on by default; its script sends the update. Load Cookiebot's script after `<s:seo:head />`, and turn off Cookiebot's own default command (`data-consentmode-defaults="disabled"`), since the addon sends the defaults.
+- **Cookiebot**: Google Consent Mode is on by default; its script sends the update. Load Cookiebot's script after `<s:mt:head />`, and turn off Cookiebot's own default command (`data-consentmode-defaults="disabled"`), since the addon sends the defaults.
 - **CookieYes**: turn on "Support Google Consent Mode (GCM)" in its settings. Leave its default settings off, for the same reason.
 - **Iubenda, Complianz, Usercentrics and most others** have a "Google Consent Mode v2" option that sends the update.
 - **Your own banner**: call `gtag('consent', 'update', {…})` with the visitor's choices when they answer, and again on each page load once they have.
@@ -130,7 +130,7 @@ With **Save where each lead came from** on (off by default: it sets a cookie), t
 Add the fields to every form once (it adds a **Lead source** tab of hidden fields; run it again after creating a form):
 
 ```bash
-php please seo:install --forms
+php please mt:install --forms
 ```
 
 With Consent Mode on, the cookie is written only once `analytics_storage` is granted. In the EU and the UK, that cookie needs consent: turn on Consent Mode with it. Only the first visit counts (first touch): later visits through other campaigns don't overwrite it.

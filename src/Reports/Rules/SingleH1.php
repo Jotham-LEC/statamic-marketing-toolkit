@@ -21,9 +21,9 @@ class SingleH1 extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         return match (count($page->h1s)) {
-            0 => Result::fail('seo::reports.messages.h1_missing'),
+            0 => Result::fail('marketing-toolkit::reports.messages.h1_missing'),
             1 => Result::pass(),
-            default => Result::warn('seo::reports.messages.h1_many', ['count' => count($page->h1s)]),
+            default => Result::warn('marketing-toolkit::reports.messages.h1_many', ['count' => count($page->h1s)]),
         };
     }
 }

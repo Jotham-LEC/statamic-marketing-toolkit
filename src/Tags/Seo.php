@@ -10,14 +10,14 @@ use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
 
 /**
- * `<s:seo:head />` in the <head>, after <meta charset>, and `<s:seo:body />` right after
- * <body> (`{{ seo:head }}`, `{{ seo:body }}` in Antlers): everything the
+ * `<s:mt:head />` in the <head>, after <meta charset>, and `<s:mt:body />` right after
+ * <body> (`{{ mt:head }}`, `{{ mt:body }}` in Antlers): everything the
  * addon adds to a page. The head is the Consent Mode defaults and tracking
  * tags, which must come before anything else that loads Google's tags, then
  * the meta tags, then the icons' links; the body is the tags' <noscript>
- * fallbacks. `<s:seo:favicons />` is the icons' links alone.
+ * fallbacks. `<s:mt:favicons />` is the icons' links alone.
  *
- * `<s:seo:meta />` alone is the meta tags: every tag the
+ * `<s:mt:meta />` alone is the meta tags: every tag the
  * <head> needs for the current page's SEO. It reads the entry or term from the
  * view's `page`; a page without one (a controller view, a 404) passes what it
  * knows as parameters: title, description, canonical (false for none),
@@ -25,6 +25,8 @@ use Statamic\Tags\Tags;
  */
 class Seo extends Tags
 {
+    protected static $handle = 'mt';
+
     public function head(): string
     {
         return app(Tracking::class)->head().$this->meta().$this->favicons();
@@ -36,13 +38,13 @@ class Seo extends Tags
     public function favicons(): string
     {
         // Free serves the icons on the default site's domain alone: no links to a 404 elsewhere.
-        if (! config('seo.favicons.enabled') || ! Sites::served()) {
+        if (! config('marketing-toolkit.favicons.enabled') || ! Sites::served()) {
             return '';
         }
 
         $favicons = app(Favicons::class);
 
-        return view('seo::favicons', ['links' => $favicons->links(), 'themeColor' => $favicons->themeColor()])->render();
+        return view('marketing-toolkit::favicons', ['links' => $favicons->links(), 'themeColor' => $favicons->themeColor()])->render();
     }
 
     public function body(): string
@@ -54,7 +56,7 @@ class Seo extends Tags
     {
         $meta = app(SiteSeo::class)->meta($this->context());
 
-        return view('seo::meta', ['meta' => $meta])->render();
+        return view('marketing-toolkit::meta', ['meta' => $meta])->render();
     }
 
     private function context(): Context

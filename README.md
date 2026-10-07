@@ -16,7 +16,7 @@ The marketing fundamentals for a Statamic website, in one addon: SEO with a scor
 
 ## For developers
 
-- **Statamic native**: fieldsets, globals, forms, tags and the control panel, extended through Statamic's own APIs. Two tags in the layout: `<s:seo:head />` and `<s:seo:body />`.
+- **Statamic native**: fieldsets, globals, forms, tags and the control panel, extended through Statamic's own APIs. Two tags in the layout: `<s:mt:head />` and `<s:mt:body />`.
 - **Performance first**: no front-end script unless a feature that needs one is on, files served without sessions or cookies, and caches that clear when content changes.
 - **Batteries included, no bloat**: SEO, redirects, tracking, favicons and leads in one package, with one set of brand settings.
 - **Feature toggles** *(Pro)*: switch off what a site doesn't use, and it isn't loaded at all.

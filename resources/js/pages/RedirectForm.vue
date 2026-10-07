@@ -19,8 +19,8 @@ const used = computed(() => {
     const { hits, last_hit_at } = props.stats ?? {};
 
     return last_hit_at
-        ? __n('seo::cp.redirect_form.used_last', hits, { count: hits, when: formatDate(last_hit_at) })
-        : __n('seo::cp.redirect_form.used', hits, { count: hits });
+        ? __n('marketing-toolkit::cp.redirect_form.used_last', hits, { count: hits, when: formatDate(last_hit_at) })
+        : __n('marketing-toolkit::cp.redirect_form.used', hits, { count: hits });
 });
 </script>
 
@@ -28,7 +28,7 @@ const used = computed(() => {
     <Head :title="title" />
 
     <div class="max-w-page mx-auto">
-        <Link :href="listingUrl" class="mb-2 inline-block text-sm text-gray-600 dark:text-gray-400">{{ __('seo::cp.redirect_form.back') }}</Link>
+        <Link :href="listingUrl" class="mb-2 inline-block text-sm text-gray-600 dark:text-gray-400">{{ __('marketing-toolkit::cp.redirect_form.back') }}</Link>
 
         <PublishForm
             :title="title"
@@ -42,7 +42,7 @@ const used = computed(() => {
 
         <p v-if="stats" class="mt-4 text-sm text-gray-600 dark:text-gray-400">
             {{ used }}
-            <template v-if="stats.automatic"> {{ __('seo::cp.redirect_form.automatic') }}</template>
+            <template v-if="stats.automatic"> {{ __('marketing-toolkit::cp.redirect_form.automatic') }}</template>
         </p>
     </div>
 </template>

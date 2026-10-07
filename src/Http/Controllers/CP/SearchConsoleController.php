@@ -41,7 +41,7 @@ class SearchConsoleController
         $site = Site::selected()->handle();
         $stats = fn () => SearchStat::query()->shownOn($site);
 
-        return Inertia::render('seo::SearchConsole', [
+        return Inertia::render('marketing-toolkit::SearchConsole', [
             'setup' => $this->setup($client, $site),
             'sites' => Sites::multiple() ? Site::authorized()->map(fn ($each) => [
                 'name' => (string) $each->name(),
@@ -53,7 +53,7 @@ class SearchConsoleController
                 'fetched_at' => $stats()->latest('fetched_at')->first()?->fetched_at?->toIso8601String(),
                 'pages' => $stats()->count(),
             ],
-            'overviewUrl' => cp_route('seo.index'),
+            'overviewUrl' => cp_route('mt.index'),
         ]);
     }
 
@@ -76,11 +76,11 @@ class SearchConsoleController
             'property_source' => $this->connection->propertySource($site),
             'suggested_property' => $this->connection->suggestedProperty($site),
             'urls' => $canSetUp ? [
-                'key' => cp_route('seo.search-console.key'),
-                'forget_key' => cp_route('seo.search-console.key.forget'),
-                'property' => cp_route('seo.search-console.property'),
-                'check' => cp_route('seo.search-console.check'),
-                'import' => cp_route('seo.search-console.import'),
+                'key' => cp_route('mt.search-console.key'),
+                'forget_key' => cp_route('mt.search-console.key.forget'),
+                'property' => cp_route('mt.search-console.property'),
+                'check' => cp_route('mt.search-console.check'),
+                'import' => cp_route('mt.search-console.import'),
             ] : null,
             'guides' => ['key_policy' => Connection::KEY_POLICY, 'keys' => Connection::KEYS_GUIDE],
         ];
@@ -91,14 +91,14 @@ class SearchConsoleController
         $this->authorize();
 
         if ($this->connection->keySource() === 'env') {
-            abort(409, __('seo::cp.search_console.messages.key_in_env'));
+            abort(409, __('marketing-toolkit::cp.search_console.messages.key_in_env'));
         }
 
         $request->validate(['key' => ['required_without:file', 'nullable', 'string'], 'file' => ['required_without:key', 'nullable', 'file', 'max:16']]);
         $json = $request->hasFile('file') ? (string) $request->file('file')->get() : (string) $request->input('key');
 
         if (Connection::parseKey($json) === null) {
-            throw ValidationException::withMessages(['key' => __('seo::cp.search_console.messages.not_a_key')]);
+            throw ValidationException::withMessages(['key' => __('marketing-toolkit::cp.search_console.messages.not_a_key')]);
         }
 
         $this->connection->saveKey($json);
@@ -122,13 +122,13 @@ class SearchConsoleController
         $site = Site::selected()->handle();
 
         if ($this->connection->propertySource($site) === 'env') {
-            abort(409, __('seo::cp.search_console.messages.property_in_env'));
+            abort(409, __('marketing-toolkit::cp.search_console.messages.property_in_env'));
         }
 
         $property = trim((string) $request->validate(['property' => ['required', 'string', 'max:255']])['property']);
 
         if (! preg_match('#^(sc-domain:[a-z0-9.-]+|https?://[^\s]+/)$#i', $property)) {
-            throw ValidationException::withMessages(['property' => __('seo::cp.search_console.messages.property_format')]);
+            throw ValidationException::withMessages(['property' => __('marketing-toolkit::cp.search_console.messages.property_format')]);
         }
 
         $this->connection->saveProperty($property, $site);
@@ -150,7 +150,7 @@ class SearchConsoleController
         $site = Site::selected()->handle();
 
         if (! $client->configured($site)) {
-            return response()->json(['ok' => false, 'message' => __('seo::cp.search_console.messages.add_first')]);
+            return response()->json(['ok' => false, 'message' => __('marketing-toolkit::cp.search_console.messages.add_first')]);
         }
 
         try {
@@ -162,7 +162,7 @@ class SearchConsoleController
             return response()->json($this->connection->check($client, $site));
         }
 
-        return response()->json(['ok' => true, 'message' => trans_choice('seo::cp.search_console.messages.imported', $count, ['count' => $count])]);
+        return response()->json(['ok' => true, 'message' => trans_choice('marketing-toolkit::cp.search_console.messages.imported', $count, ['count' => $count])]);
     }
 
     private function authorize(): void

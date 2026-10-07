@@ -17,11 +17,11 @@ use Throwable;
  * from the control panel. A key uploaded there is kept in
  * storage/app/private, encrypted with APP_KEY, never in git; the property is
  * an addon setting. apply() hands an uploaded key's path to the
- * `seo.search_console.credentials` config key, and readKey() turns that
+ * `marketing-toolkit.search_console.credentials` config key, and readKey() turns that
  * config value into the key's JSON.
  *
  * One key serves every site (a service account can be a user of several
- * properties). The property is per site: `seo.search_console.property` is a
+ * properties). The property is per site: `marketing-toolkit.search_console.property` is a
  * string (every site) or a map of site handle => property; else the control
  * panel's, saved for the default site as before and for each other site in
  * a second setting.
@@ -46,8 +46,8 @@ class Connection
     {
         $connection = new self;
 
-        if (blank(config('seo.search_console.credentials')) && File::exists($connection->keyPath())) {
-            config(['seo.search_console.credentials' => $connection->keyPath()]);
+        if (blank(config('marketing-toolkit.search_console.credentials')) && File::exists($connection->keyPath())) {
+            config(['marketing-toolkit.search_console.credentials' => $connection->keyPath()]);
         }
     }
 
@@ -66,7 +66,7 @@ class Connection
      */
     public function configuredProperty(?string $site = null): ?string
     {
-        $value = config('seo.search_console.property');
+        $value = config('marketing-toolkit.search_console.property');
         $value = is_array($value) ? ($value[$site ?? Site::current()->handle()] ?? null) : $value;
 
         return is_string($value) && trim($value) !== '' ? trim($value) : null;
@@ -84,7 +84,7 @@ class Connection
 
     public function keyPath(): string
     {
-        return storage_path('app/private/seo/search-console-key.json');
+        return storage_path('app/private/marketing-toolkit/search-console-key.json');
     }
 
     /**
@@ -92,7 +92,7 @@ class Connection
      */
     public function keySource(): ?string
     {
-        $value = (string) config('seo.search_console.credentials');
+        $value = (string) config('marketing-toolkit.search_console.credentials');
 
         return match (true) {
             $value === '' => null,
@@ -115,11 +115,11 @@ class Connection
      */
     public function email(): ?string
     {
-        return self::parseKey($this->readKey((string) config('seo.search_console.credentials')))['client_email'] ?? null;
+        return self::parseKey($this->readKey((string) config('marketing-toolkit.search_console.credentials')))['client_email'] ?? null;
     }
 
     /**
-     * The key's JSON from the `seo.search_console.credentials` value: the
+     * The key's JSON from the `marketing-toolkit.search_console.credentials` value: the
      * JSON itself, or a path to it. The file the control panel saved is
      * encrypted; one saved before it was is read as it is.
      */
@@ -231,7 +231,7 @@ class Connection
     public function check(Client $client, ?string $site = null): array
     {
         if (! $client->configured($site)) {
-            return ['ok' => false, 'message' => __('seo::cp.search_console.messages.add_first')];
+            return ['ok' => false, 'message' => __('marketing-toolkit::cp.search_console.messages.add_first')];
         }
 
         $property = (string) $this->property($site);
@@ -243,10 +243,10 @@ class Connection
         } catch (Throwable $exception) {
             report($exception);
 
-            return ['ok' => false, 'message' => __('seo::cp.search_console.messages.unexpected')];
+            return ['ok' => false, 'message' => __('marketing-toolkit::cp.search_console.messages.unexpected')];
         }
 
-        return ['ok' => true, 'message' => __('seo::cp.search_console.messages.connected', ['property' => $property])];
+        return ['ok' => true, 'message' => __('marketing-toolkit::cp.search_console.messages.connected', ['property' => $property])];
     }
 
     private function explain(RequestException $exception, string $property): string
@@ -254,18 +254,18 @@ class Connection
         $body = $exception->response->json() ?? [];
         $reason = (string) data_get($body, 'error.details.0.reason', data_get($body, 'error.status', ''));
         $message = (string) data_get($body, 'error.message', data_get($body, 'error_description', ''));
-        $email = $this->email() ?? __('seo::cp.search_console.messages.the_service_account');
+        $email = $this->email() ?? __('marketing-toolkit::cp.search_console.messages.the_service_account');
 
         $tokenError = in_array(data_get($body, 'error'), ['invalid_grant', 'unauthorized_client'], true);
 
         return match (true) {
-            $tokenError && str_contains(strtolower((string) data_get($body, 'error_description')), 'disabled') => __('seo::cp.search_console.messages.key_disabled', ['url' => self::KEYS_GUIDE]),
-            $reason === 'SERVICE_DISABLED' || str_contains($message, 'has not been used') => __('seo::cp.search_console.messages.api_disabled'),
-            $tokenError => __('seo::cp.search_console.messages.key_refused'),
-            $exception->response->status() === 403 => __('seo::cp.search_console.messages.not_a_user', ['email' => $email, 'property' => $property]),
-            $exception->response->status() === 404 => __('seo::cp.search_console.messages.no_property', ['property' => $property]),
-            default => __('seo::cp.search_console.messages.google_said', [
-                'message' => $message ?: __('seo::cp.search_console.messages.error', ['status' => $exception->response->status()]),
+            $tokenError && str_contains(strtolower((string) data_get($body, 'error_description')), 'disabled') => __('marketing-toolkit::cp.search_console.messages.key_disabled', ['url' => self::KEYS_GUIDE]),
+            $reason === 'SERVICE_DISABLED' || str_contains($message, 'has not been used') => __('marketing-toolkit::cp.search_console.messages.api_disabled'),
+            $tokenError => __('marketing-toolkit::cp.search_console.messages.key_refused'),
+            $exception->response->status() === 403 => __('marketing-toolkit::cp.search_console.messages.not_a_user', ['email' => $email, 'property' => $property]),
+            $exception->response->status() === 404 => __('marketing-toolkit::cp.search_console.messages.no_property', ['property' => $property]),
+            default => __('marketing-toolkit::cp.search_console.messages.google_said', [
+                'message' => $message ?: __('marketing-toolkit::cp.search_console.messages.error', ['status' => $exception->response->status()]),
             ]),
         };
     }

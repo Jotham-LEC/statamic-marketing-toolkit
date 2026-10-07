@@ -26,7 +26,7 @@ Every test is in `tests/Feature`, one file per area; `tests/Pest.php` sets up a 
 - Tests run in the Pro edition (`TestCase::edition()`); a file that tests Free uses `uses(FreeEdition::class)`.
 - Each parallel process gets its own copy of Testbench's skeleton in `/tmp/marketing-toolkit-tests`, so a test may write to `public/` or `resources/`.
 
-The suite runs on SQLite. To run it on Postgres, point it at an empty database: `SEO_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=seo_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`; not in parallel, as the processes would share the database). GitHub Actions runs all of this on every push: PHP 8.3 on the oldest versions composer.json allows, PHP 8.4 on the newest, Postgres, and without Imagick, plus `composer validate`, Pint, PHPStan and the build.
+The suite runs on SQLite. To run it on Postgres, point it at an empty database: `MT_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=mt_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`; not in parallel, as the processes would share the database). GitHub Actions runs all of this on every push: PHP 8.3 on the oldest versions composer.json allows, PHP 8.4 on the newest, Postgres, and without Imagick, plus `composer validate`, Pint, PHPStan and the build.
 
 ## Database and data changes
 

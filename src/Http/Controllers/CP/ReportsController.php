@@ -37,10 +37,10 @@ class ReportsController
     {
         $addon = Addon::get(Edition::PACKAGE);
 
-        return Inertia::render('seo::Reports', [
+        return Inertia::render('marketing-toolkit::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
-            'canRun' => (bool) User::current()?->can('run seo reports'),
-            'runUrl' => cp_route('seo.reports.run'),
+            'canRun' => (bool) User::current()?->can('run marketing toolkit reports'),
+            'runUrl' => cp_route('mt.reports.run'),
             'settingsUrl' => $addon && User::current()?->can('editSettings', $addon) ? $addon->settingsUrl() : null,
         ]);
     }
@@ -71,7 +71,7 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        if ($report->isRunning() && ! RunReportStep::usesWorker() && User::current()?->can('run seo reports')) {
+        if ($report->isRunning() && ! RunReportStep::usesWorker() && User::current()?->can('run marketing toolkit reports')) {
             $report = $runner->step($report);
         }
 
@@ -88,12 +88,12 @@ class ReportsController
             ->values()
             ->all();
 
-        return Inertia::render('seo::Report', [
+        return Inertia::render('marketing-toolkit::Report', [
             'report' => $this->summary($report),
             'counts' => array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors'])),
             'rules' => $rules,
-            'listingUrl' => cp_route('seo.reports.pages', $report),
-            'listUrl' => cp_route('seo.reports.index'),
+            'listingUrl' => cp_route('mt.reports.pages', $report),
+            'listUrl' => cp_route('mt.reports.index'),
         ]);
     }
 
@@ -104,7 +104,7 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('seo::reports.rules.render'))->all();
+        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('marketing-toolkit::reports.rules.render'))->all();
         /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
         $editUrls = [];
         $query = $report->pages()->getQuery();
@@ -118,7 +118,7 @@ class ReportsController
         return Listing::respond(
             $query,
             $request,
-            ['score' => __('seo::reports.cp.score'), 'title' => __('seo::reports.cp.page'), 'in_sitemap' => __('seo::reports.cp.in_sitemap')],
+            ['score' => __('marketing-toolkit::reports.cp.score'), 'title' => __('marketing-toolkit::reports.cp.page'), 'in_sitemap' => __('marketing-toolkit::reports.cp.in_sitemap')],
             ['title', 'url'],
             // Not an arrow function: it must see $editUrls once preload has filled it.
             function (ReportPage $page) use ($labels, &$editUrls) {
@@ -163,8 +163,8 @@ class ReportsController
             'error' => $report->error === null ? null : __($report->error),
             'created_at' => $report->created_at->toIso8601String(),
             'finished_at' => $report->finished_at?->toIso8601String(),
-            'url' => cp_route('seo.reports.show', $report),
-            'progress_url' => cp_route('seo.reports.progress', $report),
+            'url' => cp_route('mt.reports.show', $report),
+            'progress_url' => cp_route('mt.reports.progress', $report),
         ];
     }
 

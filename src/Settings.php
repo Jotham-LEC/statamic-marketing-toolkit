@@ -10,10 +10,10 @@ use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
 /**
- * The brand-and-defaults global set (config `seo.global`), read for the
+ * The brand-and-defaults global set (config `marketing-toolkit.global`), read for the
  * current site. A site whose localization leaves a field empty takes its
  * origin's value. Every getter tolerates the set or the field being missing,
- * so a site works before `php please seo:install` has run.
+ * so a site works before `php please mt:install` has run.
  */
 class Settings
 {
@@ -95,7 +95,7 @@ class Settings
      */
     private function container(string $key): ?string
     {
-        $tabs = Blueprint::find('globals.'.config('seo.global'))?->contents()['tabs'] ?? [];
+        $tabs = Blueprint::find('globals.'.config('marketing-toolkit.global'))?->contents()['tabs'] ?? [];
 
         foreach ($tabs as $tab) {
             foreach ($tab['sections'] ?? [] as $section) {
@@ -147,7 +147,7 @@ class Settings
         $site = Site::current()->handle();
 
         if (! array_key_exists($site, $this->variables)) {
-            $this->variables[$site] = GlobalSet::findByHandle((string) config('seo.global'))?->in($site);
+            $this->variables[$site] = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
         }
 
         return $this->variables[$site];

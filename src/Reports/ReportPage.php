@@ -26,7 +26,7 @@ class ReportPage extends Model
 {
     public $timestamps = false;
 
-    protected $table = 'seo_report_pages';
+    protected $table = 'mt_report_pages';
 
     protected $guarded = ['id'];
 

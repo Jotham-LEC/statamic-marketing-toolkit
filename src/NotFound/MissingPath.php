@@ -24,7 +24,7 @@ class MissingPath extends Model
 {
     public $timestamps = false;
 
-    protected $table = 'seo_404s';
+    protected $table = 'mt_404s';
 
     protected $guarded = ['id'];
 

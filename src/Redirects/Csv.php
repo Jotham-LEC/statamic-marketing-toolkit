@@ -89,7 +89,7 @@ class Csv
                 $validator = Redirect::validator($row, $existing?->id, count($matches) > 1, $active, $sites);
 
                 if ($validator->fails()) {
-                    $result['errors'][] = __('seo::validation.csv_row', ['row' => $number, 'message' => $validator->errors()->first()]);
+                    $result['errors'][] = __('marketing-toolkit::validation.csv_row', ['row' => $number, 'message' => $validator->errors()->first()]);
 
                     continue;
                 }

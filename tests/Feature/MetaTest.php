@@ -37,7 +37,7 @@ describe('title', function () {
 
     test('the site name is dropped when it would push the title past the limit', function () {
         seoGlobal(['title_site_name' => true]);
-        config(['seo.title.max' => 20]);
+        config(['marketing-toolkit.title.max' => 20]);
 
         expect(metaFor(entryIn('pages', 'a-rather-long-page-title'))->title)->toBe('A rather long page title');
     });
@@ -61,7 +61,7 @@ describe('description', function () {
     });
 
     test('an empty first paragraph is passed over, and a long text is cut on a word', function () {
-        config(['seo.description.length' => 30]);
+        config(['marketing-toolkit.description.length' => 30]);
 
         $entry = entryIn('pages', 'long', ['content' => "&nbsp;\n\nThe real opening paragraph runs on for a while."]);
 
@@ -83,10 +83,10 @@ describe('canonical and robots', function () {
     });
 
     test('robots say index in production and noindex elsewhere, on request, on filters and on errors', function () {
-        config(['seo.robots.noindex_params' => ['sort']]);
+        config(['marketing-toolkit.robots.noindex_params' => ['sort']]);
         $entry = entryIn('pages', 'news');
 
-        expect(metaFor($entry)->robots)->toBe(config('seo.robots.default'))
+        expect(metaFor($entry)->robots)->toBe(config('marketing-toolkit.robots.default'))
             ->and(metaFor(entryIn('pages', 'hidden', ['seo' => ['noindex' => true]]))->robots)->toBe('noindex, follow')
             ->and(metaFor($entry, '/news?sort=new')->robots)->toBe('noindex, follow')
             ->and(metaFor(null, '/missing', status: 404)->robots)->toBe('noindex, follow');
@@ -99,7 +99,7 @@ describe('canonical and robots', function () {
 
 describe('open graph', function () {
     test('a dated piece in an article collection carries its dates', function () {
-        config(['seo.collections.essays' => ['og_type' => 'article']]);
+        config(['marketing-toolkit.collections.essays' => ['og_type' => 'article']]);
 
         $meta = metaFor(entryIn('essays', 'first', [], '2026-01-02'));
 
@@ -109,12 +109,12 @@ describe('open graph', function () {
     });
 
     test('og:type comes from the collection or the template, not from a value saved on the entry', function () {
-        config(['seo.collections.essays' => ['og_type' => 'article']]);
+        config(['marketing-toolkit.collections.essays' => ['og_type' => 'article']]);
 
         expect(metaFor(entryIn('essays', 'first', ['seo' => ['og_type' => 'profile']], '2026-01-02'))->ogType)->toBe('article')
             ->and(metaFor(entryIn('pages', 'team', ['seo' => ['og_type' => 'profile']]))->ogType)->toBe('website')
             ->and(metaFor(entryIn('pages', 'me'), '/me', ['og_type' => 'profile'])->ogType)->toBe('profile')
-            ->and(Fieldset::find('seo::seo')->fields()->get('seo')->config()['fields'])
+            ->and(Fieldset::find('marketing-toolkit::seo')->fields()->get('seo')->config()['fields'])
             ->each(fn ($field) => $field->handle->not->toBe('og_type'));
     });
 
@@ -128,7 +128,7 @@ describe('open graph', function () {
 describe('json-ld', function () {
     test('the graph has the site, the publisher, the page and its breadcrumbs', function () {
         entryIn('pages', 'essays');
-        config(['seo.collections.essays' => ['schema' => 'Article']]);
+        config(['marketing-toolkit.collections.essays' => ['schema' => 'Article']]);
 
         $graph = collect(metaFor(entryIn('essays', 'first', [], '2026-01-02'))->graph)->keyBy('@type');
 
@@ -147,7 +147,7 @@ describe('json-ld', function () {
     });
 
     test('an FAQ grid becomes an FAQPage with the answers as the page shows them', function () {
-        config(['seo.collections.pages' => ['faq_field' => 'faqs']]);
+        config(['marketing-toolkit.collections.pages' => ['faq_field' => 'faqs']]);
 
         $graph = collect(metaFor(entryIn('pages', 'help', ['faqs' => [['question' => 'Why?', 'answer' => 'Because **so**.']]]))->graph)->keyBy('@type');
 
@@ -168,7 +168,7 @@ describe('json-ld', function () {
 
 describe('fields in a Replicator\'s sets', function () {
     beforeEach(function () {
-        config(['seo.og.enabled' => false]);
+        config(['marketing-toolkit.og.enabled' => false]);
         Blueprint::make('page')->setNamespace('collections.pages')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
             ['handle' => 'title', 'field' => ['type' => 'text']],
             ['handle' => 'sections', 'field' => ['type' => 'replicator', 'sets' => ['main' => ['display' => 'Main', 'sets' => [
@@ -190,7 +190,7 @@ describe('fields in a Replicator\'s sets', function () {
     });
 
     test('the share image is the first visible set\'s with one; a set switched off is passed over', function () {
-        config(['seo.collections.pages.image_fields' => ['sections.hero.image']]);
+        config(['marketing-toolkit.collections.pages.image_fields' => ['sections.hero.image']]);
         $sections = [
             ['type' => 'hero', 'enabled' => false, 'image' => 'hidden.png'],
             ['type' => 'faq', 'faqs' => []],
@@ -203,13 +203,13 @@ describe('fields in a Replicator\'s sets', function () {
     });
 
     test('`*` matches a set of any type', function () {
-        config(['seo.collections.pages.image_fields' => ['sections.*.image']]);
+        config(['marketing-toolkit.collections.pages.image_fields' => ['sections.*.image']]);
 
         expect(metaFor(entryIn('pages', 'any', ['sections' => [['type' => 'faq'], ['type' => 'hero', 'image' => 'shown.png']]]))->image['url'])->toContain('/shown.png');
     });
 
     test('the FAQPage has the questions of every visible set, in the page\'s order', function () {
-        config(['seo.collections.pages.faq_field' => 'sections.faq.faqs']);
+        config(['marketing-toolkit.collections.pages.faq_field' => 'sections.faq.faqs']);
         $entry = entryIn('pages', 'help', ['sections' => [
             ['type' => 'faq', 'faqs' => [['question' => 'First?', 'answer' => 'Yes.']]],
             ['type' => 'faq', 'enabled' => false, 'faqs' => [['question' => 'Hidden?', 'answer' => 'Yes.']]],
@@ -224,7 +224,7 @@ describe('fields in a Replicator\'s sets', function () {
     });
 
     test('a description field in a set is read from the first visible set with one', function () {
-        config(['seo.collections.pages.description_fields' => ['sections.hero.lead']]);
+        config(['marketing-toolkit.collections.pages.description_fields' => ['sections.hero.lead']]);
 
         expect(metaFor(entryIn('pages', 'described', ['sections' => [
             ['type' => 'hero', 'enabled' => false, 'lead' => 'Hidden lead.'],
@@ -233,7 +233,7 @@ describe('fields in a Replicator\'s sets', function () {
     });
 
     test('no visible set, or none of that type, gives nothing', function () {
-        config(['seo.collections.pages' => ['image_fields' => ['sections.hero.image'], 'faq_field' => 'sections.faq.faqs']]);
+        config(['marketing-toolkit.collections.pages' => ['image_fields' => ['sections.hero.image'], 'faq_field' => 'sections.faq.faqs']]);
         $meta = metaFor(entryIn('pages', 'empty', ['sections' => [['type' => 'hero', 'enabled' => false, 'image' => 'hidden.png']]]));
 
         expect($meta->image)->toBeNull()
@@ -243,7 +243,7 @@ describe('fields in a Replicator\'s sets', function () {
 
 test('the tag prints the tags, escaped, with JSON-LD that cannot close its script', function () {
     entryIn('pages', 'quotes', ['title' => 'Say "hi" </script><b>&']);
-    $html = renderAt('/quotes', '<s:seo:meta :entry="$entry" />', ['entry' => Entry::findByUri('/quotes')]);
+    $html = renderAt('/quotes', '<s:mt:meta :entry="$entry" />', ['entry' => Entry::findByUri('/quotes')]);
 
     expect($html)->toContain('<title>Say &quot;hi&quot; &lt;/script&gt;&lt;b&gt;&amp;</title>')
         ->toContain('<link rel="canonical" href="https://example.test/quotes">')
@@ -256,7 +256,7 @@ test('the tag prints the tags, escaped, with JSON-LD that cannot close its scrip
 });
 
 test('a page without an entry passes what it knows', function () {
-    expect(renderAt('/contact-form', '<s:seo:meta title="Contact" description="Write to us." />'))
+    expect(renderAt('/contact-form', '<s:mt:meta title="Contact" description="Write to us." />'))
         ->toContain('<title>Contact</title>')
         ->toContain('<meta name="description" content="Write to us.">')
         ->toContain('<link rel="canonical" href="https://example.test/contact-form">');
@@ -283,11 +283,11 @@ class CountingSeo extends SiteSeo
 }
 
 test('the tag works out the description and the share image once per page', function () {
-    config(['seo.class' => CountingSeo::class, 'seo.collections.essays.schema' => 'Article']);
+    config(['marketing-toolkit.class' => CountingSeo::class, 'marketing-toolkit.collections.essays.schema' => 'Article']);
     $entry = entryIn('essays', 'long-read', ['content' => "The first paragraph.\n\nThe second."], '2026-01-02');
     CountingSeo::$calls = [];
 
-    $html = renderAt('/essays/long-read', '<s:seo:meta :entry="$entry" />', ['entry' => $entry]);
+    $html = renderAt('/essays/long-read', '<s:mt:meta :entry="$entry" />', ['entry' => $entry]);
 
     expect($html)->toContain('The first paragraph.')->and(CountingSeo::$calls)->toBe(['body' => 1, 'card' => 1]);
 });
@@ -305,7 +305,7 @@ describe('taxonomies', function () {
     beforeEach(fn () => Taxonomy::make('topics')->save());
 
     test('a term page follows its taxonomy\'s rules', function () {
-        config(['seo.taxonomies.topics' => ['page_schema' => 'CollectionPage', 'og_type' => 'article', 'description_fields' => ['intro']]]);
+        config(['marketing-toolkit.taxonomies.topics' => ['page_schema' => 'CollectionPage', 'og_type' => 'article', 'description_fields' => ['intro']]]);
         $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens', 'intro' => 'Everything that grows.']))->save();
 
         $meta = app(SiteSeo::class)->meta(Context::make($term->in('default'), Request::create('https://example.test/topics/gardens')));
@@ -316,7 +316,7 @@ describe('taxonomies', function () {
     });
 
     test('a term without rules of its own, or a collection\'s, keeps the defaults', function () {
-        config(['seo.collections.topics' => ['page_schema' => 'CollectionPage', 'description_fields' => ['intro']]]);
+        config(['marketing-toolkit.collections.topics' => ['page_schema' => 'CollectionPage', 'description_fields' => ['intro']]]);
         $term = tap(Term::make()->taxonomy('topics')->slug('gardens')->data(['title' => 'Gardens', 'intro' => 'Everything that grows.']))->save();
 
         $meta = app(SiteSeo::class)->meta(Context::make($term->in('default'), Request::create('https://example.test/topics/gardens')));

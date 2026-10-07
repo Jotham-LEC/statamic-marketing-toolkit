@@ -62,7 +62,7 @@ test('a report renders every published page, runs the checks and scores the site
         ->and($report->pages()->pluck('url')->all())->not->toContain('https://example.test/draft');
 
     $team = reportPage($report, '/team');
-    expect($team->results['title_unique'])->toBe(['status' => 'fail', 'message' => 'seo::reports.messages.title_same', 'params' => ['pages' => '/about']])
+    expect($team->results['title_unique'])->toBe(['status' => 'fail', 'message' => 'marketing-toolkit::reports.messages.title_same', 'params' => ['pages' => '/about']])
         ->and($team->results['broken_links']['params']['links'])->toContain('/nowhere')
         ->and($team->results['image_alt']['status'])->toBe('fail')
         ->and($team->results['canonical']['status'])->toBe('pass')
@@ -85,7 +85,7 @@ test('outside production the environment’s noindex is ignored, so a local repo
 
     $facts = reportPage(fullReport(), '/about')->facts();
 
-    expect($facts->noindex())->toBeFalse()->and(config('seo.robots.noindex_outside_production'))->toBeTrue();
+    expect($facts->noindex())->toBeFalse()->and(config('marketing-toolkit.robots.noindex_outside_production'))->toBeTrue();
 });
 
 test('a report runs in steps of the chunk size', function () {
@@ -129,9 +129,9 @@ test('a page that fails to render scores zero and says why', function () {
         ->and($report->summary['errors'])->toBe(1);
 
     $this->actingAs(cpUser(super: true));
-    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues.0'))
+    expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0'))
         ->toMatchArray(['label' => 'Page renders', 'status' => 'fail'])
-        ->and($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues.0.message'))->not->toStartWith('seo::');
+        ->and($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0.message'))->not->toStartWith('marketing-toolkit::');
 });
 
 test('only the newest reports are kept', function () {
@@ -158,10 +158,10 @@ test('starting while a report runs returns that report; one that stopped moving 
         ->and($running->fresh()->status)->toBe(Report::FAILED);
 });
 
-test('php please seo:report runs a whole report and prints the scores', function () {
+test('php please mt:report runs a whole report and prints the scores', function () {
     entryIn('pages', 'about');
 
-    $this->artisan('statamic:seo:report')
+    $this->artisan('statamic:mt:report')
         ->expectsOutputToContain('score')
         ->expectsOutputToContain('Unique title')
         ->assertSuccessful();
@@ -173,9 +173,9 @@ test('without a queue worker the CP advances a report one step per progress requ
     reportSettings(['chunk_size' => 1]);
     entryIn('pages', 'a');
     entryIn('pages', 'b');
-    $this->actingAs(cpUser(['view seo', 'run seo reports']));
+    $this->actingAs(cpUser(['view marketing toolkit', 'run marketing toolkit reports']));
 
-    $started = $this->postJson(cp_route('seo.reports.run'))->assertOk()->json();
+    $started = $this->postJson(cp_route('mt.reports.run'))->assertOk()->json();
     expect($started)->toMatchArray(['status' => 'running', 'pages_total' => 2, 'pages_done' => 0]);
 
     $this->postJson($started['progress_url'])->assertJson(['status' => 'running', 'pages_done' => 1]);
@@ -188,9 +188,9 @@ test('with a queue worker the run is queued, and each step queues the next', fun
     reportSettings(['chunk_size' => 1]);
     entryIn('pages', 'a');
     entryIn('pages', 'b');
-    $this->actingAs(cpUser(['view seo', 'run seo reports']));
+    $this->actingAs(cpUser(['view marketing toolkit', 'run marketing toolkit reports']));
 
-    $report = $this->postJson(cp_route('seo.reports.run'))->json();
+    $report = $this->postJson(cp_route('mt.reports.run'))->json();
     Queue::assertPushed(RunReportStep::class, fn ($job) => $job->reportId === $report['id']);
 
     // The progress request only reads when a worker does the work.
@@ -207,56 +207,56 @@ test('the reports screens and a report’s pages, filtered by a check', function
     $report = fullReport();
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.reports.index'))->assertInertia(fn (AssertableInertia $page) => $page
-        ->component('seo::Reports', false)
+    $this->get(cp_route('mt.reports.index'))->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('marketing-toolkit::Reports', false)
         ->where('reports.0.id', $report->id)
         ->where('canRun', true));
 
-    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
-        ->component('seo::Report', false)
+    $this->get(cp_route('mt.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('marketing-toolkit::Report', false)
         ->where('report.score', $report->score)
         ->where('counts.scored', 3)
         ->where('rules', fn ($rules) => collect($rules)->pluck('label')->contains('Unique title')));
 
-    $flagged = $this->getJson(cp_route('seo.reports.pages', [$report, 'rule' => 'title_unique']))->assertOk();
+    $flagged = $this->getJson(cp_route('mt.reports.pages', [$report, 'rule' => 'title_unique']))->assertOk();
     expect($flagged->json('data.*.path'))->toEqualCanonicalizing(['/about', '/team'])
         ->and($flagged->json('data.0.issues.0'))->toMatchArray(['label' => 'Unique title', 'status' => 'fail'])
         ->and($flagged->json('data.0.issues.0.message'))->toBeIn(['Same title as /about.', 'Same title as /team.'])
         ->and($flagged->json('data.0.edit_url'))->toContain('/cp/collections/pages/entries/');
 
-    $sorted = $this->getJson(cp_route('seo.reports.pages', [$report, 'sort' => 'score', 'order' => 'asc']))->json('data.*.score');
+    $sorted = $this->getJson(cp_route('mt.reports.pages', [$report, 'sort' => 'score', 'order' => 'asc']))->json('data.*.score');
     expect($sorted)->toBe(collect($sorted)->sort()->values()->all());
 });
 
-test('viewing reports needs "view seo"; running one needs "run seo reports"', function () {
+test('viewing reports needs "view marketing toolkit"; running one needs "run marketing toolkit reports"', function () {
     entryIn('pages', 'about');
     $report = fullReport();
 
-    $this->actingAs(cpUser(['view seo']));
-    $this->get(cp_route('seo.reports.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('canRun', false));
-    $this->get(cp_route('seo.reports.show', $report))->assertOk();
-    $this->postJson(cp_route('seo.reports.run'))->assertForbidden();
+    $this->actingAs(cpUser(['view marketing toolkit']));
+    $this->get(cp_route('mt.reports.index'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->where('canRun', false));
+    $this->get(cp_route('mt.reports.show', $report))->assertOk();
+    $this->postJson(cp_route('mt.reports.run'))->assertForbidden();
 });
 
-test('without "run seo reports" the progress request reads a running report without moving it on', function () {
+test('without "run marketing toolkit reports" the progress request reads a running report without moving it on', function () {
     reportSettings(['chunk_size' => 1]);
     entryIn('pages', 'a');
     $report = app(Runner::class)->start();
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
-    $this->postJson(cp_route('seo.reports.progress', $report))->assertOk()->assertJson(['status' => 'running', 'pages_done' => 0]);
+    $this->postJson(cp_route('mt.reports.progress', $report))->assertOk()->assertJson(['status' => 'running', 'pages_done' => 0]);
     expect($report->fresh()->pages_done)->toBe(0);
 });
 
 test('the dashboard widget shows the latest finished report', function () {
     entryIn('pages', 'about');
     $report = fullReport();
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
     expect((new SeoWidget)->component()->toArray()['props']['report'])->toMatchArray([
         'score' => $report->score,
         'pages' => 1,
-        'url' => cp_route('seo.reports.show', $report),
+        'url' => cp_route('mt.reports.show', $report),
     ]);
 });
 
@@ -266,7 +266,7 @@ test('reports run on the schedule set in the addon settings', function () {
         $schedule = new Schedule;
         (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
 
-        return collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'seo:report'))->map(fn ($event) => $event->expression)->values()->all();
+        return collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'mt:report'))->map(fn ($event) => $event->expression)->values()->all();
     };
 
     expect($events(['schedule' => 'off']))->toBe([])
@@ -286,7 +286,7 @@ test('the schedule is built only for the commands that need it', function (strin
         $_SERVER['argv'] = $argv;
     }
 
-    expect(collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'seo:report')))->toBe($built);
+    expect(collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'mt:report')))->toBe($built);
 })->with([
     'schedule:run' => ['schedule:run', true],
     'schedule:finish, which finishes a background event' => ['schedule:finish', true],
@@ -311,7 +311,7 @@ test('a Blade page that shows validation errors renders in a report run from the
 
 test('only one report starts at a time', function () {
     Sleep::fake(syncWithCarbon: true);
-    $other = Cache::lock('seo:reports:start', 120);
+    $other = Cache::lock('mt:reports:start', 120);
     $other->get();
 
     // Another process is starting one: this start waits, then gives up rather than starting a second.
@@ -329,14 +329,14 @@ test('only one step of a report runs at a time, and a second click doesn\'t queu
     reportSettings(['chunk_size' => 1]);
     entryIn('pages', 'a');
     entryIn('pages', 'b');
-    $this->actingAs(cpUser(['view seo', 'run seo reports']));
+    $this->actingAs(cpUser(['view marketing toolkit', 'run marketing toolkit reports']));
 
-    $report = $this->postJson(cp_route('seo.reports.run'))->json();
-    $this->postJson(cp_route('seo.reports.run'))->assertJson(['id' => $report['id']]);
+    $report = $this->postJson(cp_route('mt.reports.run'))->json();
+    $this->postJson(cp_route('mt.reports.run'))->assertJson(['id' => $report['id']]);
     Queue::assertPushed(RunReportStep::class, 1);
 
     // Another process is stepping it: this step leaves it be, and the queued one comes back later.
-    $other = Cache::lock('seo:reports:step:'.$report['id'], 600);
+    $other = Cache::lock('mt:reports:step:'.$report['id'], 600);
     $other->get();
     expect(app(Runner::class)->step(Report::query()->find($report['id']))->pages_done)->toBe(0);
 
@@ -364,15 +364,15 @@ test('a report page links to the entry or term behind it', function () {
     [$report, $entry, $term] = reportOnAboutAndATerm();
     $this->actingAs(cpUser(super: true));
 
-    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.edit_url'))
+    expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.*.edit_url'))
         ->toBe([$entry->editUrl(), $term->in('default')->editUrl()]);
 });
 
 test('a report page has no edit link for someone who may not edit it', function () {
     [$report] = reportOnAboutAndATerm();
-    $this->actingAs(cpUser(['view seo']));
+    $this->actingAs(cpUser(['view marketing toolkit']));
 
-    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.*.edit_url'))->toBe([null, null]);
+    expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.*.edit_url'))->toBe([null, null]);
 });
 
 test('a report checks links to other sites only when its settings ask', function () {
@@ -419,11 +419,11 @@ test('a report from before messages were translated, or from a site’s own chec
     );
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('rules.0.label', 'Title length')
         ->where('rules.1.label', 'House style'));
 
-    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues'))->toEqualCanonicalizing([
+    expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues'))->toEqualCanonicalizing([
         ['label' => 'Title length', 'status' => 'fail', 'message' => 'Old English text.'],
         ['label' => 'House style', 'status' => 'fail', 'message' => 'Says “colour”, not “color”: 50% of the time.'],
     ]);
@@ -435,33 +435,33 @@ test('a report reads in the language of whoever opens it', function () {
         'reports.messages.title_short' => ':count caractère ; visez :min–:max.|:count caractères ; visez :min–:max.',
         'reports.messages.title_same' => 'Même titre que :pages.',
         'reports.messages.and_more' => ':list et :count autre|:list et :count autres',
-    ], 'fr', 'seo');
+    ], 'fr', 'marketing-toolkit');
     $report = storedReport(
-        ['title_length' => ['label' => 'seo::reports.rules.title_length', 'weight' => 2, 'fail' => 0, 'warn' => 1], 'title_unique' => ['label' => 'seo::reports.rules.title_unique', 'weight' => 2, 'fail' => 1, 'warn' => 0]],
+        ['title_length' => ['label' => 'marketing-toolkit::reports.rules.title_length', 'weight' => 2, 'fail' => 0, 'warn' => 1], 'title_unique' => ['label' => 'marketing-toolkit::reports.rules.title_unique', 'weight' => 2, 'fail' => 1, 'warn' => 0]],
         [
-            'title_length' => ['status' => 'warn', 'message' => 'seo::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 30, 'max' => 60]],
-            'title_unique' => ['status' => 'fail', 'message' => 'seo::reports.messages.title_same', 'params' => ['pages' => ['message' => 'seo::reports.messages.and_more', 'params' => ['list' => '/a, /b, /c', 'count' => 2]]]],
+            'title_length' => ['status' => 'warn', 'message' => 'marketing-toolkit::reports.messages.title_short', 'params' => ['count' => 5, 'min' => 30, 'max' => 60]],
+            'title_unique' => ['status' => 'fail', 'message' => 'marketing-toolkit::reports.messages.title_same', 'params' => ['pages' => ['message' => 'marketing-toolkit::reports.messages.and_more', 'params' => ['list' => '/a, /b, /c', 'count' => 2]]]],
         ],
     );
     $this->actingAs(cpUser(super: true));
     app()->setLocale('fr');
 
-    $this->get(cp_route('seo.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.reports.show', $report))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('rules.0.label', 'Unique title')
         ->where('rules.1.label', 'Longueur du titre'));
 
     // An untranslated line falls back to English.
-    expect($this->getJson(cp_route('seo.reports.pages', $report))->json('data.0.issues'))->toBe([
+    expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues'))->toBe([
         ['label' => 'Unique title', 'status' => 'fail', 'message' => 'Même titre que /a, /b, /c et 2 autres.'],
         ['label' => 'Longueur du titre', 'status' => 'warn', 'message' => '5 caractères ; visez 30–60.'],
     ]);
 });
 
-test('php please seo:report prints a check’s name, not its key', function () {
+test('php please mt:report prints a check’s name, not its key', function () {
     entryIn('pages', 'about');
 
-    $this->artisan('statamic:seo:report')
-        ->doesntExpectOutputToContain('seo::reports')
+    $this->artisan('statamic:mt:report')
+        ->doesntExpectOutputToContain('marketing-toolkit::reports')
         ->assertSuccessful();
 });
 
@@ -471,16 +471,16 @@ test('the overview shows the latest score with the checks most pages fail', func
     $report = fullReport();
     $this->actingAs(cpUser(super: true));
 
-    $this->get(cp_route('seo.index'))->assertInertia(fn (AssertableInertia $page) => $page
+    $this->get(cp_route('mt.index'))->assertInertia(fn (AssertableInertia $page) => $page
         ->where('report.latest.score', $report->score)
         ->where('report.latest.checks', fn ($checks) => collect($checks)->pluck('label')->contains('Unique title') && collect($checks)->every(fn ($check) => $check['fail'] > 0)));
 });
 
 test('turned off under Features, reports run only by hand', function () {
     reportSettings(['schedule' => 'daily']);
-    config(['seo.reports.enabled' => false]);
+    config(['marketing-toolkit.reports.enabled' => false]);
     $schedule = new Schedule;
     (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
 
-    expect(collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'seo:report'))->all())->toBe([]);
+    expect(collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'mt:report'))->all())->toBe([]);
 });

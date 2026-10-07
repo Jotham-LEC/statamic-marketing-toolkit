@@ -19,7 +19,7 @@ class FaviconController
     {
         $name = ltrim($request->getPathInfo(), '/');
         // Off in the config or under Features; Free: the default site's domain only.
-        throw_unless(config('seo.favicons.enabled') && Sites::served(), NotFoundHttpException::class);
+        throw_unless(config('marketing-toolkit.favicons.enabled') && Sites::served(), NotFoundHttpException::class);
 
         $bytes = $favicons->file($name);
         throw_if($bytes === null, NotFoundHttpException::class);

@@ -25,7 +25,7 @@ class Client
 
     public function configured(?string $site = null): bool
     {
-        return Edition::pro() && filled(config('seo.search_console.credentials')) && (new Connection)->property($site) !== null;
+        return Edition::pro() && filled(config('marketing-toolkit.search_console.credentials')) && (new Connection)->property($site) !== null;
     }
 
     /**
@@ -33,7 +33,7 @@ class Client
      */
     public function configuredForAnySite(): bool
     {
-        return Edition::pro() && filled(config('seo.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
+        return Edition::pro() && filled(config('marketing-toolkit.search_console.credentials')) && (new Connection)->sitesWithProperty() !== [];
     }
 
     /**
@@ -93,7 +93,7 @@ class Client
         $credentials = $this->credentials();
         $key = $credentials['private_key_id'] ?? md5($credentials['private_key']);
 
-        return Cache::remember('seo:search-console-token:'.md5($credentials['client_email'].'|'.$key), now()->addMinutes(50), function () use ($credentials) {
+        return Cache::remember('mt:search-console-token:'.md5($credentials['client_email'].'|'.$key), now()->addMinutes(50), function () use ($credentials) {
             $now = time();
             $segments = [
                 $this->base64(json_encode(['alg' => 'RS256', 'typ' => 'JWT'])),
@@ -125,12 +125,12 @@ class Client
      */
     private function credentials(): array
     {
-        $value = (string) config('seo.search_console.credentials');
+        $value = (string) config('marketing-toolkit.search_console.credentials');
         $json = (new Connection)->readKey($value);
         $credentials = json_decode($json, true);
 
         if (! is_array($credentials) || ! isset($credentials['client_email'], $credentials['private_key'])) {
-            throw new RuntimeException('seo.search_console.credentials is neither a service account key nor the path to one.');
+            throw new RuntimeException('marketing-toolkit.search_console.credentials is neither a service account key nor the path to one.');
         }
 
         return $credentials;

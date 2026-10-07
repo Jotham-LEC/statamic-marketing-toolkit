@@ -17,10 +17,10 @@ class Navigation
 {
     public static function register(): void
     {
-        NavFacade::extend(fn (Nav $nav) => $nav->tools(__('seo::cp.seo'))
-            ->route('seo.index')
+        NavFacade::extend(fn (Nav $nav) => $nav->tools(__('marketing-toolkit::cp.seo'))
+            ->route('mt.index')
             ->icon('search-magnifying-glass')
-            ->can('view seo')
+            ->can('view marketing toolkit')
             ->children(fn () => self::children($nav)));
     }
 
@@ -29,19 +29,19 @@ class Navigation
      */
     private static function children(Nav $nav): array
     {
-        $variables = GlobalSet::findByHandle((string) config('seo.global'))?->in(Site::selected()->handle());
+        $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in(Site::selected()->handle());
 
         $addon = Addon::get(Edition::PACKAGE);
         $pro = Edition::pro();
 
         return array_values(array_filter([
-            $pro ? $nav->item(__('seo::cp.nav.reports'))->route('seo.reports.index')->can('view seo') : null,
-            $nav->item(__('seo::cp.nav.redirects'))->route('seo.redirects.index')->can('manage seo redirects'),
-            $pro ? $nav->item(__('seo::cp.nav.not_found'))->route('seo.404s.index')->can('view seo') : null,
-            $pro ? $nav->item(__('seo::cp.nav.search_console'))->route('seo.search-console.index')->can('view seo') : null,
-            $variables ? $nav->item(__('seo::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
-            $pro && $addon?->hasSettingsBlueprint() ? $nav->item(__('seo::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon) : null,
-            $pro ? $nav->item(__('seo::cp.nav.features'))->route('seo.features.index')->can('editSettings', $addon) : null,
+            $pro ? $nav->item(__('marketing-toolkit::cp.nav.reports'))->route('mt.reports.index')->can('view marketing toolkit') : null,
+            $nav->item(__('marketing-toolkit::cp.nav.redirects'))->route('mt.redirects.index')->can('manage marketing toolkit redirects'),
+            $pro ? $nav->item(__('marketing-toolkit::cp.nav.not_found'))->route('mt.404s.index')->can('view marketing toolkit') : null,
+            $pro ? $nav->item(__('marketing-toolkit::cp.nav.search_console'))->route('mt.search-console.index')->can('view marketing toolkit') : null,
+            $variables ? $nav->item(__('marketing-toolkit::cp.nav.brand'))->url($variables->editUrl())->can('edit', $variables) : null,
+            $pro && $addon?->hasSettingsBlueprint() ? $nav->item(__('marketing-toolkit::cp.nav.report_settings'))->url($addon->settingsUrl())->can('editSettings', $addon) : null,
+            $pro ? $nav->item(__('marketing-toolkit::cp.nav.features'))->route('mt.features.index')->can('editSettings', $addon) : null,
         ]));
     }
 }

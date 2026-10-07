@@ -21,16 +21,16 @@ class TitleLength extends Rule
     public function check(string $url, PageFacts $page, SiteFacts $site): Result
     {
         if ($page->title === null) {
-            return Result::fail('seo::reports.messages.title_missing');
+            return Result::fail('marketing-toolkit::reports.messages.title_missing');
         }
 
         $length = mb_strlen($page->title);
         [$min, $max] = [$site->settings->int('title_min'), $site->settings->int('title_max')];
 
         return match (true) {
-            $length < $min => Result::warn('seo::reports.messages.title_short', ['count' => $length, 'min' => $min, 'max' => $max]),
-            $length > $max => Result::warn('seo::reports.messages.title_long', ['count' => $length, 'min' => $min, 'max' => $max]),
-            default => Result::pass('seo::reports.messages.characters', ['count' => $length]),
+            $length < $min => Result::warn('marketing-toolkit::reports.messages.title_short', ['count' => $length, 'min' => $min, 'max' => $max]),
+            $length > $max => Result::warn('marketing-toolkit::reports.messages.title_long', ['count' => $length, 'min' => $min, 'max' => $max]),
+            default => Result::pass('marketing-toolkit::reports.messages.characters', ['count' => $length]),
         };
     }
 }
