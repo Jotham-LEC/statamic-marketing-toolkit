@@ -12,16 +12,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('seo_search_stats', function (Blueprint $table) {
+        Schema::table($this->table(), function (Blueprint $table) {
             $table->string('site', 32)->nullable()->after('id')->index();
         });
     }
 
     public function down(): void
     {
-        Schema::table('seo_search_stats', function (Blueprint $table) {
+        Schema::table($this->table(), function (Blueprint $table) {
             $table->dropIndex(['site']);
             $table->dropColumn('site');
         });
+    }
+
+    /**
+     * `mt_search_stats` where the create migration made it under that name, as it does
+     * where another package has `seo_search_stats`.
+     */
+    private function table(): string
+    {
+        return Schema::hasTable('mt_search_stats') ? 'mt_search_stats' : 'seo_search_stats';
     }
 };

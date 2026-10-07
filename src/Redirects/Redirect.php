@@ -81,14 +81,16 @@ class Redirect extends Model
 
     /**
      * Rules the signed-in user may manage: those on the sites they may work
-     * on, and those for every site.
+     * on, and those for every site only if they may work on every site, as a
+     * rule for every site applies on sites they can't see (`/*` sending all
+     * of them elsewhere).
      *
      * @param  Builder<self>  $query
      */
     public function scopeAccessible(Builder $query): void
     {
-        if (Sites::multiple()) {
-            $query->where(fn (Builder $query) => $query->whereIn('site', Sites::accessible())->orWhereNull('site'));
+        if (Sites::multiple() && ! Sites::accessesAll()) {
+            $query->whereIn('site', Sites::accessible());
         }
     }
 
@@ -97,7 +99,7 @@ class Redirect extends Model
      */
     public function isAccessible(): bool
     {
-        return $this->site === null || in_array($this->site, Sites::accessible(), true);
+        return $this->site === null ? Sites::accessesAll() : in_array($this->site, Sites::accessible(), true);
     }
 
     /**
@@ -189,7 +191,8 @@ class Redirect extends Model
      * rules, when the caller has them at hand (an import, which reads them
      * once rather than for every row); else they are looked up. $sites: the
      * handles a rule may name (the CP passes the user's own); every site's
-     * when not given.
+     * when not given. Only with every site among them may a rule name none
+     * (be for every site).
      *
      * @param  array<string, mixed>  $data
      * @param  ?Collection<int, self>  $active
@@ -209,6 +212,7 @@ class Redirect extends Model
             'target.not_regex' => __('marketing-toolkit::validation.redirect.control_characters'),
             'status.in' => __('marketing-toolkit::validation.redirect.status'),
             'site.in' => __('marketing-toolkit::validation.redirect.site'),
+            'site.required' => __('marketing-toolkit::validation.redirect.site_required'),
         ]);
     }
 
@@ -220,7 +224,7 @@ class Redirect extends Model
     private static function rules(string $source, ?string $site, ?int $ignoreId, ?bool $taken, ?Collection $active, array $sites): array
     {
         return [
-            'site' => ['nullable', 'string', Rule::in($sites)],
+            'site' => [Rule::requiredIf(Sites::multiple() && array_diff(Sites::handles(), $sites) !== []), 'nullable', 'string', Rule::in($sites)],
             'source' => [
                 // Control characters would go into the Location header (a line break starts a new header).
                 'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',

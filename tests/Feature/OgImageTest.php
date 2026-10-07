@@ -137,3 +137,18 @@ test('a card subtitle typed on several lines is drawn as one paragraph', functio
 
     expect(app(Generator::class)->card($entry)->description)->toBe('Spring launch now open');
 });
+
+test('without Imagick no page points at a card: the default image stands in, and the card routes answer 404', function () {
+    app()->instance(Generator::class, new class extends Generator
+    {
+        public function available(): bool
+        {
+            return false;
+        }
+    });
+    AssetContainer::find('assets')->disk()->put('brand.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    seoGlobal(['default_image' => ['brand.png']]);
+
+    expect(metaFor(entryIn('pages', 'about'), '/about')->image['url'])->toStartWith('https://example.test/img/asset/YXNzZXRzL2JyYW5k');
+    $this->get('/og/about.png')->assertNotFound();
+});

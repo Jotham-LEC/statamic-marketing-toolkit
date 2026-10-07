@@ -9,6 +9,8 @@ use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Assets;
 use JothamLec\MarketingToolkit\Support\Text;
+use Statamic\Auth\Protect\Protection;
+use Statamic\Auth\Protect\Protectors\NullProtector;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
@@ -68,10 +70,25 @@ trait InteractsWithContent
         return $handle ? config("marketing-toolkit.collections.{$handle}.{$key}", $default) : $default;
     }
 
+    /**
+     * Whether Statamic keeps this content behind a protection scheme (a
+     * password, a login, an IP list): its `protect` value, else the
+     * site-wide `statamic.protect.default`, read as Statamic reads them, so
+     * a scheme that doesn't exist counts too (Statamic denies it). Protected
+     * content stays out of the sitemap, llms.txt and IndexNow, and has no
+     * share card: its title and text aren't public.
+     *
+     * @api
+     */
+    public function isProtected(Entry|Term $content): bool
+    {
+        return ! (app(Protection::class)->setData($content)->driver() instanceof NullProtector);
+    }
+
     protected function contentTitle(Context $context): ?string
     {
         $content = $context->content();
-        $title = $content instanceof Term ? $content->title() : $content?->get('title');
+        $title = $content instanceof Term ? $content->title() : $content?->value('title');
 
         return filled($title) ? (string) $title : null;
     }
@@ -143,17 +160,18 @@ trait InteractsWithContent
 
     /**
      * The stored value of a field, as a list: one value for a plain field, one
-     * per visible matching set for a path into a Replicator.
+     * per visible matching set for a path into a Replicator. A translation's
+     * own value, else its origin's: value(), as get() reads only its own.
      *
      * @return Collection<int, mixed>
      */
     protected function rawValues(Entry|Term $content, string $field): Collection
     {
         if ($set = $this->setPath($field)) {
-            return $this->visibleSets($content->get($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
+            return $this->visibleSets($content->value($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
         }
 
-        return collect([$content->get($field)]);
+        return collect([$content->value($field)]);
     }
 
     /**
@@ -256,12 +274,36 @@ trait InteractsWithContent
     }
 
     /**
-     * A site-relative URL made absolute against the current site's address.
+     * A relative URL made absolute on the current site's domain. A path from
+     * the root (`/img/…`, an asset's URL, a route) is on the domain's root,
+     * not under a site's folder (`/fr/`); one without the slash is under the
+     * site's address.
      *
      * @api
      */
     public function absolute(string $url): string
     {
-        return preg_match('#^https?://#i', $url) ? $url : $this->home().ltrim($url, '/');
+        if (preg_match('#^https?://#i', $url)) {
+            return $url;
+        }
+
+        $home = $this->home();
+
+        if (str_starts_with($url, '//')) {
+            return (parse_url($home, PHP_URL_SCHEME) ?: 'https').':'.$url;
+        }
+
+        return str_starts_with($url, '/') ? self::domainRoot($home).$url : $home.$url;
+    }
+
+    /**
+     * `https://example.test` from `https://example.test/fr/`.
+     */
+    public static function domainRoot(string $url): string
+    {
+        $parts = parse_url($url);
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+
+        return isset($parts['scheme'], $parts['host']) ? $parts['scheme'].'://'.$parts['host'].$port : rtrim($url, '/');
     }
 }

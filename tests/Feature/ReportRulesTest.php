@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
@@ -24,6 +25,7 @@ use JothamLec\MarketingToolkit\Reports\Rules\TitleLength;
 use JothamLec\MarketingToolkit\Reports\Rules\TitleUnique;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
+use Statamic\Facades\Site;
 
 /**
  * @param  array<string, mixed>  $facts
@@ -208,6 +210,70 @@ test('links to this machine or a private network are never asked, nor followed t
     expect($broken)->toBe(['http://localhost.test/']);
 });
 
+test('an IPv6 address that reaches a private IPv4 one through NAT64 or 6to4 is never asked', function () {
+    Http::fake(['*' => Http::response('', 404)]);
+    fakeDns(['nat64.test' => '64:ff9b::7f00:1', 'local-nat64.test' => '64:ff9b:1::a00:1', '6to4.test' => '2002:7f00:1::1', 'public-nat64.test' => '64:ff9b::5db8:d70e']);
+
+    $broken = app(ExternalLinkChecker::class)->broken([
+        'http://[64:ff9b::7f00:1]/', 'http://[64:ff9b::a9fe:a9fe]/latest/meta-data', 'http://[64:ff9b:1::808:808]/',
+        'http://nat64.test/', 'http://local-nat64.test/', 'http://6to4.test/', 'http://public-nat64.test/',
+    ]);
+
+    // Only the NAT64 address of a public IPv4 one was asked.
+    Http::assertSentCount(1);
+    expect($broken)->toBe(['http://public-nat64.test/']);
+});
+
+test('a link is never checked through a proxy from the environment, which would look the host up again', function () {
+    $options = [];
+    Http::fake(function ($request, array $sent) use (&$options) {
+        $options[] = $sent;
+
+        return Http::response('', 301, ['Location' => 'https://fine.test/']);
+    });
+    fakeDns(['moved.test' => '93.184.215.14', 'fine.test' => '93.184.215.14']);
+
+    app(ExternalLinkChecker::class)->broken(['https://moved.test/']);
+
+    expect($options)->not->toBeEmpty()
+        ->and(array_column($options, 'proxy'))->toBe(array_fill(0, count($options), ''));
+});
+
+test('a page’s links stop being checked when its time is up, and those left are neither broken nor remembered', function () {
+    Carbon::setTestNow('2026-10-07 12:00:00');
+    Http::fake(function ($request) {
+        if ($request->url() !== 'https://slow.test/gone') {
+            return Http::response('', 301, ['Location' => 'https://slow.test/gone']);
+        }
+
+        // Each answer at the end of a redirect takes 20 seconds.
+        Carbon::setTestNow(now()->addSeconds(20));
+
+        return Http::response('', 404);
+    });
+    fakeDns(['slow.test' => '93.184.215.14']);
+    $checker = app(ExternalLinkChecker::class);
+    $urls = ['https://slow.test/a', 'https://slow.test/b', 'https://slow.test/c'];
+
+    // Two redirects followed in the 30 seconds; the third link is left.
+    expect($checker->broken($urls))->toBe(['https://slow.test/a', 'https://slow.test/b'])
+        ->and($checker->broken($urls))->toBe($urls);
+});
+
+test('where HEAD is refused, the GET stops once its headers are in', function () {
+    $options = [];
+    Http::fake(function ($request, array $sent) use (&$options) {
+        $options[$request->method()] = $sent;
+
+        return Http::response('', $request->method() === 'HEAD' ? 405 : 404);
+    });
+    fakeDns(['nohead.test' => '93.184.215.14']);
+
+    expect(app(ExternalLinkChecker::class)->broken(['https://nohead.test/a']))->toBe(['https://nohead.test/a'])
+        ->and($options['GET'])->toHaveKey('on_headers')
+        ->and($options['HEAD'])->not->toHaveKey('on_headers');
+});
+
 test('a link that redirects is judged where it ends, and a host that doesn\'t resolve is broken without asking', function () {
     Http::fake([
         'old.test/new' => Http::response('', 404),
@@ -227,6 +293,16 @@ test('a link is checked against files in public/ and nowhere above it', function
     expect($links->check('/index.php'))->toBe('ok')
         ->and($links->check('/../composer.json'))->toBe('broken')
         ->and($links->check('/x/../../composer.json'))->toBe('broken');
+});
+
+test('a link to a page on a site in a folder is found there', function () {
+    multilang();
+    entryOn('fr', 'pages', 'a-propos');
+
+    Site::setCurrent('fr');
+
+    expect(app(LinkChecker::class)->check('/fr/a-propos'))->toBe('ok')
+        ->and(app(LinkChecker::class)->check('/fr/nowhere'))->toBe('broken');
 });
 
 test('a result keeps a translation key and its parameters, and reads as English', function () {

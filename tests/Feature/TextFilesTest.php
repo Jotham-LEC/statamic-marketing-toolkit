@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Statamic\Facades\Collection;
+use Statamic\Facades\GlobalSet;
 
 test('llms.txt lists each collection\'s pages with their descriptions, without hidden ones', function () {
     seoGlobal(['default_description' => 'We make <b>things</b>.']);
@@ -18,6 +19,26 @@ test('llms.txt lists each collection\'s pages with their descriptions, without h
         ->toContain('- [About (us)](https://example.test/about): Who we are.')
         ->toContain('- [Team](https://example.test/team)')
         ->not->toContain('hidden');
+});
+
+test('llms.txt at the domain\'s root lists the sites in its folders too', function () {
+    multilang();
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    entryOn('fr', 'pages', 'a-propos');
+
+    $text = $this->get('https://example.test/llms.txt')->assertOk()->getContent();
+
+    expect($text)->toContain('https://example.test/about')->toContain('https://example.test/fr/a-propos')->toContain('## Pages (');
+});
+
+test('llms.txt is forgotten when Brand is saved', function () {
+    seoGlobal(['default_description' => 'We make gardens.']);
+    $this->get('https://example.test/llms.txt')->assertSee('We make gardens.');
+
+    GlobalSet::findByHandle('seo')->in('default')->set('default_description', 'We make parks.')->save();
+
+    $this->get('https://example.test/llms.txt')->assertSee('We make parks.')->assertDontSee('We make gardens.');
 });
 
 test('llms.txt is cached, and forgotten when content is saved', function () {

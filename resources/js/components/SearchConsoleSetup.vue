@@ -22,7 +22,7 @@ const keyFromEnv = computed(() => props.setup.key_source === 'env');
 const propertyFromEnv = computed(() => props.setup.property_source === 'env');
 const escape = (text) => String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const link = (href, text) => `<a href="${escape(href)}" target="_blank" rel="noopener" class="underline">${escape(text)}</a>`;
-const code = (text) => `<span class="font-mono text-xs">${escape(text)}</span>`;
+const code = (text) => `<span class="font-mono text-xs break-all">${escape(text)}</span>`;
 
 const usersUrl = computed(() =>
     props.setup.property
@@ -60,9 +60,15 @@ async function check() {
     result.value = await send('check', (axios) => axios.post(props.setup.urls.check));
 }
 
-function copyEmail() {
-    navigator.clipboard?.writeText(props.setup.email);
-    toast.success(__('marketing-toolkit::cp.search_console.setup.copied'));
+// The clipboard is only there on https (or localhost), and the browser may refuse.
+async function copyEmail() {
+    try {
+        if (!navigator.clipboard) throw new Error('No clipboard');
+        await navigator.clipboard.writeText(props.setup.email);
+        toast.success(__('marketing-toolkit::cp.search_console.setup.copied'));
+    } catch {
+        toast.error(__('marketing-toolkit::cp.search_console.setup.copy_failed'));
+    }
 }
 </script>
 
@@ -74,7 +80,7 @@ function copyEmail() {
         </div>
         <Description>{{ __('marketing-toolkit::cp.search_console.setup.intro') }}</Description>
 
-        <ol class="list-decimal space-y-5 ps-5 text-sm">
+        <ol class="list-decimal space-y-5 ps-5 text-sm break-words">
             <li class="space-y-2">
                 <p>
                     <strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_key') }}</strong>
@@ -98,8 +104,8 @@ function copyEmail() {
                 />
                 <div v-if="setup.email" class="flex flex-wrap items-center gap-2">
                     <Badge color="green" :text="__('marketing-toolkit::cp.search_console.setup.key_added')" />
-                    <span class="font-mono text-xs">{{ setup.email }}</span>
-                    <span v-if="keyFromEnv" class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
+                    <span class="font-mono text-xs break-all">{{ setup.email }}</span>
+                    <span v-if="keyFromEnv" class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
                     <Button v-else size="sm" variant="ghost" :text="__('marketing-toolkit::cp.search_console.setup.remove')" :loading="busy === 'forget'" @click="forgetKey" />
                 </div>
                 <template v-else-if="keyFromEnv">
@@ -114,7 +120,7 @@ function copyEmail() {
                         <Textarea id="mt-search-console-key" v-model="pasted" class="font-mono text-xs" />
                         <Button size="sm" :text="__('marketing-toolkit::cp.search_console.setup.save_key')" :disabled="!pasted" :loading="busy === 'key'" @click="pasteKey" />
                     </details>
-                    <p class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.setup.stored') }}</p>
+                    <p class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.setup.stored') }}</p>
                 </div>
             </li>
 
@@ -140,7 +146,7 @@ function copyEmail() {
                 </p>
                 <div v-if="propertyFromEnv" class="flex items-center gap-2">
                     <span class="font-mono text-xs">{{ setup.property }}</span>
-                    <span class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
+                    <span class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
                 </div>
                 <div v-else class="flex max-w-lg gap-2">
                     <label for="mt-search-console-property" class="sr-only">{{ __('marketing-toolkit::cp.search_console.property') }}</label>
@@ -153,7 +159,7 @@ function copyEmail() {
                 <p><strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_check') }}</strong>{{ __('marketing-toolkit::cp.search_console.setup.step_check_body') }}</p>
                 <Button :text="__('marketing-toolkit::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
                 <p role="status" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
-                <p class="text-gray-500" v-html="__('marketing-toolkit::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />
+                <p class="text-gray-500 dark:text-gray-400" v-html="__('marketing-toolkit::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />
             </li>
         </ol>
     </Card>

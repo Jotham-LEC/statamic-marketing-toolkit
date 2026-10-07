@@ -15,7 +15,6 @@ use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
-use Statamic\Facades\User;
 use Throwable;
 
 /**
@@ -156,10 +155,17 @@ class SearchConsoleController
         try {
             $count = $importer->import($site);
         } catch (Throwable $e) {
-            // The editor sees what the check makes of it; the error itself goes to the log.
+            // The error itself goes to the log. The editor is told the import failed, and
+            // what the check makes of it when the check fails too: a key that still reads
+            // the property says nothing about why the import did not work.
             report($e);
 
-            return response()->json($this->connection->check($client, $site));
+            $check = $this->connection->check($client, $site);
+
+            return response()->json(['ok' => false, 'message' => $check['ok']
+                ? __('marketing-toolkit::cp.search_console.messages.import_failed_log')
+                : __('marketing-toolkit::cp.search_console.messages.import_failed').' '.$check['message'],
+            ]);
         }
 
         return response()->json(['ok' => true, 'message' => trans_choice('marketing-toolkit::cp.search_console.messages.imported', $count, ['count' => $count])]);
@@ -172,6 +178,6 @@ class SearchConsoleController
 
     private function canSetUp(): bool
     {
-        return (bool) User::current()?->can('editSettings', Addon::get(Package::NAME));
+        return Package::canEditSettings();
     }
 }

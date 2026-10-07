@@ -4,7 +4,7 @@ import { toast } from '@statamic/cms/api';
 import { Badge, Button, Header, Listing } from '@statamic/cms/ui';
 import { ref } from 'vue';
 import When from '../components/When.vue';
-import { useAxios } from '../util.js';
+import { useRequests } from '../util.js';
 
 const props = defineProps({
     listingUrl: { type: String, required: true },
@@ -14,9 +14,8 @@ const props = defineProps({
     importUrl: { type: String, required: true },
 });
 
-const axios = useAxios();
+const { busy, send } = useRequests(__('marketing-toolkit::cp.redirects.import_failed'));
 const file = ref(null);
-const importing = ref(false);
 const listingKey = ref(0);
 
 async function importCsv(event) {
@@ -24,23 +23,17 @@ async function importCsv(event) {
     event.target.value = '';
     if (!chosen) return;
 
-    importing.value = true;
+    const form = new FormData();
+    form.append('file', chosen);
+    const data = await send('import', (axios) => axios.post(props.importUrl, form));
+    if (!data) return;
 
-    try {
-        const form = new FormData();
-        form.append('file', chosen);
-        const { data } = await axios.post(props.importUrl, form);
-        const summary = __('marketing-toolkit::cp.redirects.imported', { created: data.created, updated: data.updated });
+    const summary = __('marketing-toolkit::cp.redirects.imported', { created: data.created, updated: data.updated });
 
-        data.errors.length
-            ? toast.error(__('marketing-toolkit::cp.redirects.skipped', { summary, count: data.errors.length, errors: data.errors.join(' ') }), { duration: 15000 })
-            : toast.success(summary);
-        listingKey.value++;
-    } catch (error) {
-        toast.error(error.response?.data?.message ?? __('marketing-toolkit::cp.redirects.import_failed'));
-    } finally {
-        importing.value = false;
-    }
+    data.errors.length
+        ? toast.error(__('marketing-toolkit::cp.redirects.skipped', { summary, count: data.errors.length, errors: data.errors.join(' ') }), { duration: 15000 })
+        : toast.success(summary);
+    listingKey.value++;
 }
 </script>
 
@@ -49,7 +42,7 @@ async function importCsv(event) {
 
     <Header :title="__('marketing-toolkit::cp.redirects.title')" icon="moved">
         <input ref="file" type="file" accept=".csv,text/csv" class="hidden" @change="importCsv" />
-        <Button :text="__('marketing-toolkit::cp.redirects.import')" :loading="importing" @click="file.click()" />
+        <Button :text="__('marketing-toolkit::cp.redirects.import')" :loading="busy === 'import'" @click="file.click()" />
         <Button :text="__('marketing-toolkit::cp.redirects.export')" :href="exportUrl" />
         <Button :text="__('marketing-toolkit::cp.redirects.create')" variant="primary" :href="createUrl" />
     </Header>
@@ -74,7 +67,7 @@ async function importCsv(event) {
             <span class="font-mono text-sm">{{ row.target ?? '—' }}</span>
         </template>
         <template #cell-active="{ row }">
-            <span :class="row.active ? 'text-(--theme-color-success)' : 'text-gray-500'">{{ row.active ? __('marketing-toolkit::cp.redirects.yes') : __('marketing-toolkit::cp.redirects.no') }}</span>
+            <span :class="row.active ? 'text-(--theme-color-success)' : 'text-gray-500 dark:text-gray-400'">{{ row.active ? __('marketing-toolkit::cp.redirects.yes') : __('marketing-toolkit::cp.redirects.no') }}</span>
         </template>
         <template #cell-last_hit_at="{ row }">
             <When :value="row.last_hit_at" />

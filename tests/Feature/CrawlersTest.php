@@ -69,6 +69,20 @@ describe('IndexNow', function () {
             && $request['urlList'] === ['https://example.test/about', 'https://example.test/contact']);
     });
 
+    test('is told about a page that was unpublished, and about the old address of one that moved', function () {
+        $about = entryIn('pages', 'about');
+        $team = entryIn('pages', 'team');
+        app()->terminate();
+        Http::fake(['api.indexnow.org/*' => Http::response('', 200)]);
+
+        Entry::find($about->id())->published(false)->save();
+        Entry::find($team->id())->slug('people')->save();
+        app()->terminate();
+
+        Http::assertSent(fn (HttpRequest $request) => collect($request['urlList'])->sort()->values()->all()
+            === ['https://example.test/about', 'https://example.test/people', 'https://example.test/team']);
+    });
+
     test('a queue worker sends what each job changed once the job is done, not when the worker stops', function () {
         entryIn('pages', 'about');
 

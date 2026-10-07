@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Settings;
+use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\Blueprint;
 use Statamic\UpdateScripts\UpdateScript;
 
@@ -16,13 +17,24 @@ use Statamic\UpdateScripts\UpdateScript;
  * earlier still has them under `seo::`: RenameFromSeo renames them after
  * this has run (Statamic asks every script before running any), so those
  * are taken out too, judged by the name they are renamed to.
+ *
+ * It runs when updating from before 0.21.2 (0.21.0 and 0.21.1 missed the
+ * `seo::` ones), or while a blueprint still has a description under its 0.19
+ * `seo::` name: a site that swapped Co-SEO for this package without
+ * `updates:run` has no old version. RenameFromSeo renames those in the same
+ * update, so it doesn't run again.
  */
 class DropFieldDescriptions extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {
-        return collect(Settings::handles())->contains(fn (string $handle) => ($blueprint = Blueprint::find('globals.'.$handle))
-            && $this->without($blueprint->contents()) !== $blueprint->contents());
+        $blueprints = collect(Settings::handles())->map(fn (string $handle) => Blueprint::find('globals.'.$handle))->filter();
+
+        if (! Version::before((string) $oldVersion, '0.21.2') && ! $blueprints->contains(fn ($blueprint) => self::hasOldNames($blueprint->contents()))) {
+            return false;
+        }
+
+        return $blueprints->contains(fn ($blueprint) => $this->without($blueprint->contents()) !== $blueprint->contents());
     }
 
     public function update()
@@ -53,6 +65,22 @@ class DropFieldDescriptions extends UpdateScript
         }
 
         return $contents;
+    }
+
+    /**
+     * Whether a description is still under its 0.19 `seo::` name.
+     *
+     * @param  array<mixed>  $contents
+     */
+    private static function hasOldNames(array $contents): bool
+    {
+        foreach ($contents as $key => $value) {
+            if (($key === 'instructions' && is_string($value) && str_starts_with($value, 'seo::')) || (is_array($value) && self::hasOldNames($value))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

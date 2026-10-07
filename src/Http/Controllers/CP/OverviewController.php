@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\SearchConsole\Client;
@@ -14,7 +15,6 @@ use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
-use Statamic\Addons\Addon as AddonPackage;
 use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\Addon;
 use Statamic\Facades\GlobalSet;
@@ -44,7 +44,6 @@ class OverviewController
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
         // The set the Tracking tab is in: Marketing settings, or Brand on a site that hasn't moved it yet.
         $tracking = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($site) ?? $variables;
-        $addon = Addon::get(Package::NAME);
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
         return Inertia::render('marketing-toolkit::Overview', [
@@ -55,7 +54,7 @@ class OverviewController
                 'separator' => $seo->settings()->titleSiteName() ? $seo->settings()->separator() : null,
                 'description' => $seo->settings()->string('default_description'),
             ],
-            'report' => $this->report($user, $addon, $site),
+            'report' => $this->report($user, $site),
             'redirects' => $user->can('manage marketing toolkit redirects') ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
@@ -70,17 +69,20 @@ class OverviewController
             'searchConsole' => ['url' => cp_route('mt.search-console.index')],
             // On the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($tracking && $user->can('edit', $tracking) ? $tracking->editUrl() : null),
+            // On, but nothing to draw them with (Og\Generator::available()): said, so a missing card isn't a mystery.
+            'cardsUnavailable' => config('marketing-toolkit.og.enabled') && ! app(Generator::class)->available(),
+            // From the domain's root, where the web server and the addon's routes serve them, also for a site under a folder.
             'files' => collect([
-                __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? 'sitemap.xml' : null,
-                __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? 'robots.txt' : null,
-                __('marketing-toolkit::cp.overview.files.llms') => config('marketing-toolkit.llms_txt.enabled') ? 'llms.txt' : null,
-                __('marketing-toolkit::cp.overview.files.favicon') => config('marketing-toolkit.favicons.enabled') && app(Favicons::class)->version() ? 'site.webmanifest' : null,
-                __('marketing-toolkit::cp.overview.files.card') => config('marketing-toolkit.og.enabled') ? 'og.png' : null,
+                __('marketing-toolkit::cp.overview.files.sitemap') => config('marketing-toolkit.sitemap.enabled') ? '/sitemap.xml' : null,
+                __('marketing-toolkit::cp.overview.files.robots') => config('marketing-toolkit.robots_txt.enabled') ? '/robots.txt' : null,
+                __('marketing-toolkit::cp.overview.files.llms') => config('marketing-toolkit.llms_txt.enabled') ? '/llms.txt' : null,
+                __('marketing-toolkit::cp.overview.files.favicon') => config('marketing-toolkit.favicons.enabled') && app(Favicons::class)->version() ? '/site.webmanifest' : null,
+                __('marketing-toolkit::cp.overview.files.card') => config('marketing-toolkit.og.enabled') && app(Generator::class)->available() ? '/og.png' : null,
             ])->filter()->map(fn ($path, $label) => [
                 'label' => $label,
                 'url' => $seo->absolute($path),
                 // The web server answers with this file instead of the addon's.
-                'public' => file_exists(public_path($path)),
+                'public' => file_exists(public_path(ltrim($path, '/'))),
             ])->values(),
         ]);
     }
@@ -117,7 +119,7 @@ class OverviewController
     /**
      * @return array<string, mixed>
      */
-    private function report(UserContract $user, ?AddonPackage $addon, string $site): array
+    private function report(UserContract $user, string $site): array
     {
         $latest = Report::latestDone($site);
 
@@ -138,7 +140,7 @@ class OverviewController
             ],
             'url' => cp_route('mt.reports.index'),
             // The Settings tab of Reports.
-            'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? cp_route('mt.reports.index').'#settings' : null,
+            'settings_url' => Package::canEditSettings() ? cp_route('mt.reports.index').'#settings' : null,
         ];
     }
 

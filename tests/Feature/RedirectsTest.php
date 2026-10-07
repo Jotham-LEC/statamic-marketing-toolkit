@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Schema;
 use JothamLec\MarketingToolkit\Redirects\Csv;
 use JothamLec\MarketingToolkit\Redirects\Matcher;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use Statamic\Facades\Site;
 use Statamic\Facades\URL;
 
 function rule(string $source, ?string $target, int $status = 301, bool $active = true): Redirect
@@ -44,6 +45,25 @@ test('a wildcard passes what it matched to the target, and the longest source wi
     $this->get('/blog/on-reading')->assertStatus(301)->assertRedirect('https://example.test/essays/on-reading');
     $this->get('/blog/2019/old/post')->assertStatus(302)->assertRedirect('https://example.test/archive/old/post');
     $this->get('/a/one/b/two')->assertRedirect('https://example.test/x/two/one');
+});
+
+test('a rule with several wildcards matches a long address in a few steps, each * taking what it would on a short one', function () {
+    rule('/*-*-*-x*', '/to/$1/$2/$3$4');
+    rule('/*/*/*/*/end', '/never');
+    rule('/*', '/fallback');
+    $tail = str_repeat('-y', 300);
+    // Statamic lifts PCRE's limit (pcre_backtrack_limit -1). Forwards, each `*` a greedy `(.*)`, a
+    // made-up 800-character address took seconds against the second rule; here a few thousand steps
+    // must do, which forwards ran out on the first address and silently matched nothing.
+    $limit = ini_set('pcre.backtrack_limit', '5000');
+
+    try {
+        $this->get('/p-q-r-x'.$tail)->assertRedirect('https://example.test/to/p/q/r'.$tail);
+        $this->get('/a-b-c-d-x')->assertRedirect('https://example.test/to/a-b/c/d');
+        $this->get(str_repeat('/a', 400).'/endx')->assertRedirect('https://example.test/fallback');
+    } finally {
+        ini_set('pcre.backtrack_limit', (string) $limit);
+    }
 });
 
 test('an exact rule wins over a wildcard', function () {
@@ -195,6 +215,26 @@ test('a redirect goes to the site\'s own address, whatever Host header the reque
     $this->get('https://evil.test/old')->assertRedirect('https://example.test/new');
 });
 
+test('on a site whose URL is relative, a redirect goes to a path alone, not to the request\'s Host header', function () {
+    Site::setSites(['default' => ['name' => 'Acme', 'url' => '/', 'locale' => 'en_US']]);
+    Redirect::query()->create(['source' => '/old', 'target' => '/new']);
+    Redirect::query()->create(['source' => '/away', 'target' => 'https://elsewhere.test/page']);
+
+    expect($this->get('https://evil.test/old')->assertStatus(301)->headers->get('Location'))->toBe('/new')
+        ->and($this->get('https://evil.test/away')->headers->get('Location'))->toBe('https://elsewhere.test/page');
+});
+
+test('on sites in folders with relative URLs, the path keeps the site\'s folder', function () {
+    config(['statamic.editions.pro' => true, 'statamic.system.multisite' => true]);
+    Site::setSites([
+        'default' => ['name' => 'Acme', 'url' => '/', 'locale' => 'en_US'],
+        'fr' => ['name' => 'Acme', 'url' => '/fr/', 'locale' => 'fr_FR'],
+    ]);
+    Redirect::query()->create(['site' => 'fr', 'source' => '/old', 'target' => '/new']);
+
+    expect($this->get('https://evil.test/fr/old')->assertStatus(301)->headers->get('Location'))->toBe('/fr/new');
+});
+
 test('a missing address is never kept by Statamic\'s static cache, so a redirect added later applies', function () {
     config(['statamic.static_caching.strategy' => 'half']);
 
@@ -286,7 +326,7 @@ test('with case_sensitive off, a CSV import folds the stored sources once and cl
         ->and($result['errors'])->toBe(['Row 5: Another redirect already starts from this address.'])
         ->and($about->fresh()->target)->toBe('/company')
         ->and(Redirect::forSource('/new')->target)->toBe('/b')
-        ->and(Cache::has('mt:redirects:default:any-case'))->toBeFalse();
+        ->and(Cache::has('mt:redirect-rules:default:any-case'))->toBeFalse();
 });
 
 test('a CSV import clears the cached rules once, after its rows are saved', function () {
@@ -297,7 +337,7 @@ test('a CSV import clears the cached rules once, after its rows are saved', func
 
     app(Csv::class)->import("/a,/b\n/c,/d\n/e,/f\n");
 
-    expect($forgotten)->toBe([['mt:redirects:default', 3], ['mt:redirects:default:any-case', 3]]);
+    expect($forgotten)->toBe([['mt:redirect-rules:default', 3], ['mt:redirect-rules:default:any-case', 3]]);
 });
 
 test('a CSV import reads the redirects a fixed number of times, however many rows it has', function (bool $caseSensitive) {

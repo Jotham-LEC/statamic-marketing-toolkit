@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Reports;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
 use JothamLec\MarketingToolkit\Redirects\Matcher;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Asset;
 use Statamic\Facades\Data;
 use Statamic\Facades\Site;
@@ -36,7 +37,11 @@ class LinkChecker
 
     private function resolve(string $path, string $site): string
     {
-        if (Data::findByUri($path, $site) || Data::findByUri($path.'/', $site)) {
+        // A page's link names its path from the domain's root (/fr/a-propos); Statamic
+        // finds the page by its address within the site (/a-propos).
+        $within = Sites::within($path, $site) ?? $path;
+
+        if (Data::findByUri($within, $site) || Data::findByUri($within.'/', $site)) {
             return 'ok';
         }
 

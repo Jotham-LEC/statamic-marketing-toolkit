@@ -104,7 +104,7 @@ Terms are listed in the sitemap (and checked by reports) when their taxonomy is 
 | `sitemap.per_page` | `1000` | Above this, `/sitemap.xml` becomes an index of `/sitemap_1.xml`, `/sitemap_2.xml`… |
 | `robots_txt.enabled` | `true` | Serves `/robots.txt` from the Crawlers tab of Marketing settings. A real `public/robots.txt` wins: the web server answers with it first. A new Statamic site has one; delete it (`mt:install` offers to). |
 
-The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `marketing-toolkit.sitemap` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do).
+The sitemap lists only canonical addresses: it leaves out drafts, redirect entries, noindexed pages, pages whose canonical points to another page (on this site or another), and pages with "In sitemap" off. It's cached and rebuilt when content is saved or deleted, when a collection, taxonomy or page tree is saved, when `marketing-toolkit.sitemap` or `marketing-toolkit.hreflang` changes, when the Stache is cleared (as a deploy does, so changed rules show at once), and when a scheduled entry's date arrives (that needs Laravel's scheduler running, as Statamic's scheduled entries do). On a site whose URL is relative (`url: '/'`), the addresses take their domain from the request, so only requests on a host the install names (an absolute site URL's, else `APP_URL`'s) are cached: set `APP_URL` to the live address, or the sitemap is built afresh for every request.
 
 ### Redirects and the 404 log
 
@@ -134,7 +134,7 @@ A sitemap lists every site on its domain: languages under `/fr/` are in `example
 
 | Key | Default | |
 |---|---|---|
-| `indexnow.enabled` | `true` | When published content is saved, goes live on schedule or is deleted, its address is sent to IndexNow (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
+| `indexnow.enabled` | `true` | When published content is saved, goes live on schedule, is unpublished or is deleted, its address is sent to IndexNow, and when it moves, its old address too (with its automatic redirect) (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
 | `indexnow.key` | `null` (`MT_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
 
 ### Google Search Console
@@ -210,7 +210,7 @@ Its corner (any of the four), its shortcut (`Alt+Shift+M` unless changed) and wh
 
 | Key | Default | |
 |---|---|---|
-| `llms_txt.enabled` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Cached until content changes, like the sitemap. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
+| `llms_txt.enabled` | `true` | `/llms.txt` ([llmstxt.org](https://llmstxt.org)): the site's name and default description, then, for each collection the sitemap lists, its 100 most recently changed pages as Markdown links with their descriptions. Like the sitemap, it lists every site on the domain, so sites under a folder (`/fr/`) get their own sections. Cached until content or Brand changes. Override `llmsTxt()` in your `SiteSeo` subclass to write it differently. |
 | `ads_txt.enabled` | `true` | `/ads.txt`: the lines in **Marketing → Settings → Crawlers → ads.txt**; a 404 while that's empty. |
 
 A file of the same name in `public/` wins over either.
@@ -273,7 +273,7 @@ The addon sends nothing to its author: no licence check, no usage numbers, no up
 
 | When | From | To | What is sent |
 |---|---|---|---|
-| Published content is saved, goes live or is deleted (IndexNow on, production only) | The server | `https://api.indexnow.org/indexnow` | The site's host, the IndexNow key, where the key file is, and the changed addresses. |
+| Published content is saved, goes live, moves, is unpublished or is deleted (IndexNow on, production only) | The server | `https://api.indexnow.org/indexnow` | The site's host, the IndexNow key, where the key file is, and the changed addresses. |
 | A Search Console check or import (with a key and a property) | The server | `https://oauth2.googleapis.com/token`, then `https://www.googleapis.com/webmasters/v3/sites/…` | A token request signed with the service account key (its email, the read-only Search Console scope, an expiry; the private key itself never leaves the server); then the property, and for an import the date range and which rows. |
 | A report runs with **Check external links** on (off unless switched on in the report settings) | The server | The sites the pages link to | A `HEAD` request (a `GET` where `HEAD` is refused) for each linked address, at most 50 a page, each answer kept for a day. Addresses on this machine or a private network are never asked. |
 | A visitor opens a page, with a tracking ID set, in the environments in `tracking.environments` (production unless changed), never in Live Preview | The visitor's browser | Google Tag Manager and Google Analytics (`googletagmanager.com`), the Meta Pixel (`connect.facebook.net`, `facebook.com`), LinkedIn (`snap.licdn.com`, `px.ads.linkedin.com`), PostHog (your `tracking.posthog_host`) | Whatever each tool's own script collects, and with leads on, a lead event when a form is sent. How each behaves before consent: [tracking.md](tracking.md#meta-linkedin-and-posthog-without-gtm). |

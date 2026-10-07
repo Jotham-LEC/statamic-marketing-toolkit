@@ -66,19 +66,19 @@ async function disconnect() {
 
             <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
                 <template v-if="setup.can_set_up">
-                    <dt class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.key') }}</dt>
-                    <dd class="font-mono text-xs">
+                    <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.key') }}</dt>
+                    <dd class="font-mono text-xs break-all">
                         {{ setup.email ?? '—' }}
-                        <span v-if="setup.key_source === 'env'" class="font-sans text-gray-500">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
+                        <span v-if="setup.key_source === 'env'" class="font-sans text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.from_env') }}</span>
                     </dd>
                     <template v-if="!sites.length">
-                        <dt class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.property') }}</dt>
-                        <dd class="font-mono text-xs">{{ setup.property ?? '—' }}</dd>
+                        <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.property') }}</dt>
+                        <dd class="font-mono text-xs break-all">{{ setup.property ?? '—' }}</dd>
                     </template>
                 </template>
-                <dt class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.last_import') }}</dt>
+                <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.last_import') }}</dt>
                 <dd><When v-if="imported.fetched_at" :value="imported.fetched_at" /><span v-else>{{ __('marketing-toolkit::cp.search_console.never') }}</span></dd>
-                <dt class="text-gray-500">{{ __('marketing-toolkit::cp.search_console.pages') }}</dt>
+                <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.search_console.pages') }}</dt>
                 <dd class="tabular-nums">{{ imported.pages }}</dd>
             </dl>
 
@@ -87,7 +87,7 @@ async function disconnect() {
                 <ul class="space-y-1 text-sm">
                     <li v-for="site in sites" :key="site.name" class="flex gap-3" :class="{ 'font-semibold': site.selected }">
                         <span class="min-w-32">{{ site.name }}</span>
-                        <span v-if="site.property" class="font-mono text-xs">{{ site.property }}</span>
+                        <span v-if="site.property" class="min-w-0 font-mono text-xs break-all">{{ site.property }}</span>
                         <span v-else>{{ site.connected ? __('marketing-toolkit::cp.search_console.connected') : __('marketing-toolkit::cp.search_console.no_property') }}</span>
                     </li>
                 </ul>

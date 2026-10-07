@@ -1,6 +1,6 @@
 # Marketing Toolkit
 
-I built Marketing Toolkit because several marketing-centric website that I've built have common feature requirements, and I find myself replicating many of them. This project aims to refactor it out into packages that I can replicate across many of my projects -- and I'm sharing it here so that your team can benefit too.
+I built Marketing Toolkit because several marketing-centric websites that I've built have common feature requirements, and I find myself replicating many of them. This project aims to refactor it out into packages that I can replicate across many of my projects -- and I'm sharing it here so that your team can benefit too.
 
 Built for teams where marketing has ownership over SEO & Analytics, so that designers/developers can focus on app logic and design. I try to keep this project as lean, performant, & bloat-free, whilst still flexible for universal projects as best as I can.
 
@@ -67,6 +67,8 @@ Add one tag after `<meta charset>` and the viewport, and one right after `<body>
 
 In Antlers, use `{{ mt:head }}` and `{{ mt:body }}`.
 
+Entries get their SEO tab from the `marketing-toolkit::seo` fieldset. `mt:install` adds it to collections that have a route and no blueprint yet, and names the blueprints you already have that lack it, so you can link the fieldset there.
+
 Next steps are in [Getting started](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/getting-started.md). Moving a site that already has SEO set up? Follow the [migration checklist](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/migrating.md), or hand it to an AI agent with the [migration skill](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/agent-skill/README.md).
 
 ## How it compares with other add-ons
@@ -114,6 +116,6 @@ Details are in [Getting started](https://github.com/Jotham-LEC/statamic-marketin
 
 ## Licence and support
 
-Free and open source under the [MIT licence](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/LICENSE.md). No editions, no licence key. Questions and bugs go to [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).
+Free and open source under the [MIT licence](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/LICENSE). No editions, no licence key. It sends nothing to me; what it sends to other services, such as telling search engines about changed pages through IndexNow (on by default, in production), is listed in [What it sends where](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/configuration.md#what-it-sends-where). Questions and bugs go to [GitHub issues](https://github.com/Jotham-LEC/statamic-marketing-toolkit/issues).
 
 If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/jothamh).

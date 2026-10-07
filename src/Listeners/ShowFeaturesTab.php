@@ -7,7 +7,6 @@ use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Events\GlobalVariablesBlueprintFound;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
-use Statamic\Facades\User;
 
 /**
  * The Features tab of Marketing settings is for the whole install: shown on
@@ -25,9 +24,7 @@ class ShowFeaturesTab
             return;
         }
 
-        $addon = Addon::get(Package::NAME);
-
-        if ($variables->locale() !== Site::default()->handle() || ! User::current()?->can('editSettings', $addon)) {
+        if ($variables->locale() !== Site::default()->handle() || ! Package::canEditSettings()) {
             $event->blueprint->removeTab('features');
 
             return;

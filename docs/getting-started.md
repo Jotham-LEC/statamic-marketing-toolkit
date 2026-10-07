@@ -7,7 +7,7 @@ From nothing to a site with meta tags, a sitemap, share cards, redirects and rep
 ## What you need
 
 - **Statamic 6.34+** (Core is enough) on **PHP 8.3+**, with the PHP extensions in [the README's requirements](../README.md#requirements). Several sites and languages need Statamic Pro, as Statamic itself does; see [Several sites and languages](developers.md#several-sites-and-languages).
-- **PHP's `imagick` extension** for the generated share cards. Without it the cards (and their tests) fail and favicons are drawn with `gd`, from a PNG or JPEG only; everything else works.
+- **PHP's `imagick` extension** for the generated share cards. Without it pages use their uploaded or default share image instead of a card, and favicons are drawn with `gd`, from a PNG or JPEG only; everything else works.
 - **A database** Laravel can migrate. Redirects, the 404 log and reports live in tables, even on a flat-file site; SQLite is fine.
 - **A cache store that serializes**: `file`, `redis`, `database` or `memcached`. Not `array`: automatic redirects need to compare an entry with the copy loaded before it was edited, and the `array` store hands back the same object.
 
@@ -30,7 +30,9 @@ The control panel's scripts and styles are published to `public/vendor/statamic-
 
 ## 2. Add the SEO fields to your blueprints
 
-In each blueprint whose pages should have SEO fields (usually every collection with a route), add the fieldset where you want it, typically on its own tab. In the control panel: **Blueprints**, the collection's blueprint, **Add Tab** "SEO", then **Link Fieldset** and choose **SEO**. A new Statamic site's Pages collection has no blueprint file yet; opening it there creates one.
+`mt:install` does this for each collection that has a route and no blueprint file yet, such as a new Statamic site's Pages: it creates the blueprint with an SEO tab (pass `--no-blueprints` to skip that). It never changes a blueprint you already have; it names those without the SEO fields instead, and running it again won't put back a tab you took out.
+
+For those, add the fieldset where you want it in each blueprint whose pages should have SEO fields (usually every collection with a route), typically on its own tab. In the control panel: **Blueprints**, the collection's blueprint, **Add Tab** "SEO", then **Link Fieldset** and choose **SEO**.
 
 Or in the blueprint's YAML (`resources/blueprints/collections/{collection}/{blueprint}.yaml`), as a tab beside the ones it has:
 
@@ -68,7 +70,7 @@ or in Antlers, `{{ mt:head }}` and `{{ mt:body }}`.
 
 `<meta charset>` must come first: browsers look for it in the first 1024 bytes, and the tracking scripts alone can take several thousand.
 
-`mt:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `mt:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:mt:meta />` instead of `mt:head`, as before.
+`mt:head` prints the Consent Mode defaults and tracking tags first, since Google's tags must load before anything else that uses them, then the meta tags. `mt:body` prints the tags' `<noscript>` fallbacks (Google Tag Manager's needs to be in the body). A site that only wants the meta tags can use `<s:mt:meta />` instead of `mt:head`.
 
 Pages that aren't Statamic entries (a controller page, a 404 view) pass what they know to either:
 

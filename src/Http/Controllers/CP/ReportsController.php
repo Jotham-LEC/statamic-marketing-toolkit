@@ -19,6 +19,7 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 use Statamic\Facades\User;
+use Statamic\Fields\Field;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -38,7 +39,7 @@ class ReportsController
     public function index(): Response
     {
         $addon = Addon::get(Package::NAME);
-        $fields = $this->canEditSettings() ? $addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess() : null;
+        $fields = Package::canEditSettings() ? $addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess() : null;
 
         return Inertia::render('marketing-toolkit::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
@@ -56,11 +57,13 @@ class ReportsController
 
     /**
      * Saves the Settings tab. Only its own fields are set: the addon's
-     * settings also keep the Features switches and the Search Console setup.
+     * settings also keep the Features switches and the Search Console setup,
+     * hidden fields in the blueprint that their own screens change, so a
+     * stale copy of them in this form must not overwrite them.
      */
     public function saveSettings(Request $request): JsonResponse
     {
-        abort_unless($this->canEditSettings(), 403);
+        abort_unless(Package::canEditSettings(), 403);
 
         $addon = Addon::get(Package::NAME);
         $fields = $addon->settingsBlueprint()->fields()->addValues($request->all());
@@ -68,7 +71,9 @@ class ReportsController
 
         $settings = $addon->settings();
 
-        foreach ($fields->process()->values()->all() as $key => $value) {
+        $own = $fields->all()->reject(fn (Field $field) => $field->visibility() === 'hidden')->keys()->all();
+
+        foreach ($fields->process()->values()->only($own)->all() as $key => $value) {
             $settings->set($key, $value);
         }
 
@@ -85,7 +90,7 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('marketing-toolkit::reports.rules.render'));
+        $labels = $this->labels($report);
         $names = fn (ReportPage $page, string $status) => collect($page->results ?? [])
             ->filter(fn ($result) => $result['status'] === $status)
             ->keys()
@@ -111,13 +116,6 @@ class ReportsController
     private static function cell(mixed $value): mixed
     {
         return is_string($value) && preg_match('/^[=+\-@\t\r]/', $value) ? "'".$value : $value;
-    }
-
-    private function canEditSettings(): bool
-    {
-        $addon = Addon::get(Package::NAME);
-
-        return $addon?->hasSettingsBlueprint() === true && (bool) User::current()?->can('editSettings', $addon);
     }
 
     /**
@@ -146,8 +144,10 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        if ($report->isRunning() && ! RunReportStep::usesWorker() && User::current()?->can('run marketing toolkit reports')) {
-            $report = $runner->step($report);
+        // Without a worker, whoever may run reports moves it on; with one, a step
+        // whose worker died is queued again once the report has stood still.
+        if ($report->isRunning() && User::current()?->can('run marketing toolkit reports')) {
+            RunReportStep::usesWorker() ? $runner->resumeIfStalled($report) : $report = $runner->step($report);
         }
 
         return $this->summary($report);
@@ -165,7 +165,8 @@ class ReportsController
 
         return Inertia::render('marketing-toolkit::Report', [
             'report' => $this->summary($report),
-            'counts' => array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors'])),
+            // Every count, also for a report that failed before it had any.
+            'counts' => [...['scored' => 0, 'noindex' => 0, 'errors' => 0], ...array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors']))],
             'rules' => $rules,
             'listingUrl' => cp_route('mt.reports.pages', $report),
             'listUrl' => cp_route('mt.reports.index'),
@@ -180,7 +181,7 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('marketing-toolkit::reports.rules.render'))->all();
+        $labels = $this->labels($report);
         /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
         $editUrls = [];
         $query = $report->pages()->getQuery();
@@ -241,6 +242,9 @@ class ReportsController
             'finished_at' => $report->finished_at?->toIso8601String(),
             'url' => cp_route('mt.reports.show', $report),
             'progress_url' => cp_route('mt.reports.progress', $report),
+            // Whether watching it moves it on: false for a running report on the
+            // sync queue watched by someone who may not run reports (see progress()).
+            'advancing' => $report->isRunning() && (RunReportStep::usesWorker() || (bool) User::current()?->can('run marketing toolkit reports')),
         ];
     }
 
@@ -272,5 +276,18 @@ class ReportsController
     private function authorizeSite(Report $report): void
     {
         abort_unless($report->isShownOn(Site::selected()->handle()), 404);
+    }
+
+    /**
+     * Each check's label, by its handle, and the render failure's.
+     *
+     * @return array<string, string>
+     */
+    private function labels(Report $report): array
+    {
+        return collect($report->summary['rules'] ?? [])
+            ->map(fn (array $rule) => __($rule['label']))
+            ->put('render', __('marketing-toolkit::reports.rules.render'))
+            ->all();
     }
 }

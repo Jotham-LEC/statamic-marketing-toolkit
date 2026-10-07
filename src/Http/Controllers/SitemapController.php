@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
@@ -55,16 +56,21 @@ class SitemapController
         // Off in the config or under Features.
         throw_unless(config('marketing-toolkit.sitemap.enabled'), NotFoundHttpException::class);
 
-        return Cache::rememberForever(self::cacheKey(Site::current()->handle()), fn () => app(SiteSeo::class)->sitemapUrls());
+        $build = fn () => app(SiteSeo::class)->sitemapUrls();
+
+        // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
+        return Sites::trustsHost(request()) ? Cache::rememberForever(self::cacheKey(Site::current()->handle()), $build) : $build();
     }
 
     /**
-     * Per site, and per `marketing-toolkit.sitemap` settings, so a deploy that changes
-     * them doesn't serve the old list until the next save.
+     * Per site, and per `marketing-toolkit.sitemap` and `.hreflang` settings
+     * (the rows carry each page's other languages), so a deploy or a switch
+     * under Features that changes them doesn't serve the old list until the
+     * next save.
      */
     public static function cacheKey(string $site): string
     {
-        return self::CACHE_KEY.':'.$site.':'.md5(serialize(config('marketing-toolkit.sitemap')));
+        return self::CACHE_KEY.':'.$site.':'.md5(serialize([config('marketing-toolkit.sitemap'), config('marketing-toolkit.hreflang')]));
     }
 
     private function perPage(): int

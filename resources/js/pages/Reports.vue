@@ -1,12 +1,11 @@
 <script setup>
 import { Head, Link, router } from '@statamic/cms/inertia';
-import { toast } from '@statamic/cms/api';
 import { Badge, Button, Card, Header, PublishForm, TabContent, TabList, Tabs, TabTrigger, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
 import { computed, ref } from 'vue';
 import ReportProgress from '../components/ReportProgress.vue';
 import Score from '../components/Score.vue';
 import When from '../components/When.vue';
-import { useAxios } from '../util.js';
+import { useRequests } from '../util.js';
 
 const props = defineProps({
     reports: { type: Array, required: true },
@@ -16,23 +15,14 @@ const props = defineProps({
     settings: { type: Object, default: null },
 });
 
-const axios = useAxios();
-const starting = ref(false);
+const { busy, send } = useRequests(__('marketing-toolkit::reports.cp.could_not_start'));
 // Settings opens straight from a link to #settings.
 const tab = ref(props.settings && window.location.hash === '#settings' ? 'settings' : 'reports');
 const started = ref(null);
 const running = computed(() => started.value ?? props.reports.find((report) => report.status === 'running'));
 
 async function run() {
-    starting.value = true;
-
-    try {
-        started.value = (await axios.post(props.runUrl)).data;
-    } catch (error) {
-        toast.error(error.response?.data?.message ?? __('marketing-toolkit::reports.cp.could_not_start'));
-    } finally {
-        starting.value = false;
-    }
+    started.value = (await send('run', (axios) => axios.post(props.runUrl))) ?? started.value;
 }
 
 function finished(report) {
@@ -45,7 +35,7 @@ function finished(report) {
     <Head :title="__('marketing-toolkit::reports.cp.title')" />
 
     <Header :title="__('marketing-toolkit::reports.cp.title')" icon="charts-donut-graph">
-        <Button v-if="canRun && tab === 'reports'" :text="__('marketing-toolkit::reports.cp.run')" variant="primary" :loading="starting" :disabled="!!running" @click="run" />
+        <Button v-if="canRun && tab === 'reports'" :text="__('marketing-toolkit::reports.cp.run')" variant="primary" :loading="busy === 'run'" :disabled="!!running" @click="run" />
     </Header>
 
     <Tabs v-model="tab">
@@ -80,7 +70,10 @@ function finished(report) {
                             <TableCell>
                                 <Score v-if="report.status === 'done'" :value="report.score" />
                                 <Badge v-else-if="report.status === 'running'" :text="__('marketing-toolkit::reports.cp.running')" />
-                                <Badge v-else color="red" :text="__('marketing-toolkit::reports.cp.failed')" :title="report.error" />
+                                <template v-else>
+                                    <Badge color="red" :text="__('marketing-toolkit::reports.cp.failed')" />
+                                    <p v-if="report.error" class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ report.error }}</p>
+                                </template>
                             </TableCell>
                             <TableCell class="tabular-nums">{{ report.pages_total }}</TableCell>
                             <TableCell><When :value="report.finished_at" /></TableCell>

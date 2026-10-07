@@ -1,5 +1,12 @@
 # Upgrading
 
+## From 0.21.4: redirects on multi-site installs
+
+Nothing to run. Two changes to check on a multi-site install:
+
+- **Sites under a folder of their domain** (French under `/fr/`): redirects are paths within the site, so `/a-propos` means `example.com/fr/a-propos`, as the automatic redirects have always stored them. Redirects you typed with the folder (`/fr/old`) still apply, and a target that starts with the folder no longer gets it twice. A redirect for every site now also applies inside each folder site (`/old` → `/new` sends `example.com/fr/old` to `example.com/fr/new`), so check those. New 404s on such a site are logged without the folder, so a path already logged as `/fr/x` may appear again as `/x`; the old row ages out of the log.
+- **Redirects for every site and site permissions**: people who can't work on every site no longer see redirects for every site, and can't create them. Give such a redirect a site, or leave it to a super user or a role with access to every site.
+
 ## From 0.20: Brand and Marketing settings
 
 The "SEO & brand" global set is now two sets. **Brand** keeps its handle (`seo`, `marketing-toolkit.global`) and the Brand, Publisher, Shop and Share cards tabs. The new **Marketing settings** set (`marketing`, `marketing-toolkit.settings_global`) takes the Tracking, Consent, Leads and Crawlers tabs. In the control panel both sit in the new **Marketing** section of the sidebar, which replaces Tools → SEO: Brand as **Brand**, and Marketing settings as **Settings**. The report settings have moved from Tools → Addons to the **Settings** tab of **Marketing → Reports**.
@@ -24,7 +31,7 @@ The script runs when you update from 0.20 or earlier. It is safe to run again (`
 - **Roles**: Marketing settings is a new global set, so a role that may edit Brand can't edit it until you allow it. Under **Users → Roles**, tick it for the people who look after tracking and consent.
 - **Your own templates and code**: a template or class that reads a tracking, consent, leads or crawler field from the `seo` global (`{{ seo:gtm_id }}`, say) should read it from `marketing` instead once the values have moved.
 - **Field descriptions**: the fields of Brand and Marketing settings no longer show descriptions. The `DropFieldDescriptions` update script takes the addon's old descriptions out of your copies of those blueprints, and keeps any you wrote yourself. Commit the blueprints it changes.
-  - **Coming from 0.19 or earlier, through 0.21.0 or 0.21.1**: those versions missed the descriptions still under their `seo::` names, so Brand's fields may show raw keys such as `marketing-toolkit::fields.brand.title_separator.instructions` underneath. The script decides from the blueprints, not the version numbers, so updating to 0.21.2 or later with `composer update` takes them out. Without a version change, run `php please updates:run 0.21.1 --package=jotham-lec/statamic-marketing-toolkit`. Commit the blueprints it changes.
+  - **Coming from 0.19 or earlier, through 0.21.0 or 0.21.1**: those versions missed the descriptions still under their `seo::` names, so Brand's fields may show raw keys such as `marketing-toolkit::fields.brand.title_separator.instructions` underneath. Updating from 0.21.0 or 0.21.1 to any later version with `composer update` takes them out. If a site still shows them after that, run `php please updates:run 0.21.1 --package=jotham-lec/statamic-marketing-toolkit`. Commit the blueprints it changes.
 - **Bookmarks**: the report settings are now on the Settings tab of Marketing → Reports, and Features is a tab of Marketing → Settings, on the default site.
 
 ## From 0.19: the `seo` names

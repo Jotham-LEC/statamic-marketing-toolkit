@@ -1,12 +1,14 @@
 <script setup>
-import { numberFormatter } from '@statamic/cms/api';
+import { dateFormatter, numberFormatter } from '@statamic/cms/api';
 import { Head } from '@statamic/cms/inertia';
 import { Alert, Button, Card, Description, Header, Heading, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
 import Gauge from '../components/Gauge.vue';
 import When from '../components/When.vue';
 
-// "A and B", "A, B, and C": the copy uses the Oxford comma.
-const toolList = (tools) => new Intl.ListFormat('en-US', { type: 'conjunction' }).format(tools);
+// "A and B", "A, B, and C", or however the control panel's language lists them.
+const toolList = (tools) => new Intl.ListFormat(numberFormatter.locale, { type: 'conjunction' }).format(tools);
+// A day (2026-09-01) as the control panel shows dates; read as a local date, so it isn't a day out.
+const formatDay = (value) => (value ? dateFormatter.format(new Date(`${value}T00:00:00`), { dateStyle: 'medium' }) : '');
 
 defineProps({
     siteName: { type: String, required: true },
@@ -17,6 +19,7 @@ defineProps({
     search: { type: Object, default: null },
     searchConsole: { type: Object, default: null },
     files: { type: Array, required: true },
+    cardsUnavailable: { type: Boolean, default: false },
     tracking: { type: Object, required: true },
 });
 </script>
@@ -64,9 +67,9 @@ defineProps({
                 <template v-else>
                     <Description>{{ __n('marketing-toolkit::cp.overview.not_found.count', notFound.paths, { count: notFound.paths }) }}</Description>
                     <ul class="space-y-1 text-sm">
-                        <li v-for="row in notFound.recent" :key="row.path" class="flex justify-between gap-4">
+                        <li v-for="(row, index) in notFound.recent" :key="`${index}:${row.path}`" class="flex justify-between gap-4">
                             <span class="truncate font-mono text-xs">{{ row.path }}</span>
-                            <span class="shrink-0 tabular-nums text-gray-500">{{ row.hits }}×</span>
+                            <span class="shrink-0 tabular-nums text-gray-500 dark:text-gray-400">{{ row.hits }}×</span>
                         </li>
                     </ul>
                 </template>
@@ -88,11 +91,11 @@ defineProps({
                 <Description v-if="!global.exists">{{ __('marketing-toolkit::cp.overview.brand.missing', { command: 'php please mt:install' }) }}</Description>
                 <template v-else>
                     <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-                        <dt class="text-gray-500">{{ __('marketing-toolkit::cp.overview.brand.site_name') }}</dt>
+                        <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.overview.brand.site_name') }}</dt>
                         <dd>{{ siteName }}</dd>
-                        <dt class="text-gray-500">{{ __('marketing-toolkit::cp.overview.brand.titles') }}</dt>
+                        <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.overview.brand.titles') }}</dt>
                         <dd>{{ __('marketing-toolkit::cp.overview.brand.page_title') }}<template v-if="global.separator">{{ global.separator }}{{ siteName }}</template></dd>
-                        <dt class="text-gray-500">{{ __('marketing-toolkit::cp.overview.brand.default_description') }}</dt>
+                        <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.overview.brand.default_description') }}</dt>
                         <dd>{{ global.description ?? __('marketing-toolkit::cp.overview.brand.no_description') }}</dd>
                     </dl>
                     <div class="mt-auto"><Button v-if="global.url" :href="global.url" :text="__('marketing-toolkit::cp.overview.brand.edit')" /></div>
@@ -108,7 +111,7 @@ defineProps({
             <Description v-if="!search.fetched_at">{{ __('marketing-toolkit::cp.overview.search.not_imported') }}</Description>
             <template v-else>
                 <Description>
-                    {{ __('marketing-toolkit::cp.overview.search.summary', { clicks: numberFormatter.format(search.clicks), impressions: numberFormatter.format(search.impressions), from: search.from, to: search.to }) }}
+                    {{ __('marketing-toolkit::cp.overview.search.summary', { clicks: numberFormatter.format(search.clicks), impressions: numberFormatter.format(search.impressions), from: formatDay(search.from), to: formatDay(search.to) }) }}
                     {{ __('marketing-toolkit::cp.overview.search.updated') }} <When :value="search.fetched_at" />.
                 </Description>
                 <Table v-if="search.top.length" class="overflow-x-auto">
@@ -119,11 +122,11 @@ defineProps({
                         <TableColumn>{{ __('marketing-toolkit::cp.overview.search.position') }}</TableColumn>
                     </TableColumns>
                     <TableRows>
-                        <TableRow v-for="row in search.top" :key="row.path">
+                        <TableRow v-for="(row, index) in search.top" :key="`${index}:${row.path}`">
                             <TableCell><div class="max-w-48 truncate font-mono text-xs sm:max-w-md" :title="row.path">{{ row.path }}</div></TableCell>
                             <TableCell class="tabular-nums">{{ numberFormatter.format(row.clicks) }}</TableCell>
                             <TableCell class="tabular-nums">{{ numberFormatter.format(row.impressions) }}</TableCell>
-                            <TableCell class="tabular-nums">{{ row.position }}</TableCell>
+                            <TableCell class="tabular-nums">{{ numberFormatter.format(row.position, { maximumFractionDigits: 1 }) }}</TableCell>
                         </TableRow>
                     </TableRows>
                 </Table>
@@ -146,7 +149,7 @@ defineProps({
                 <ul class="space-y-1 text-sm">
                     <li v-for="tool in tracking.tools" :key="tool.name">
                         {{ tool.name }}: <span class="font-mono text-xs">{{ tool.id }}</span>
-                        <span v-if="tool.from_env" class="text-xs text-gray-500">({{ __('marketing-toolkit::cp.tracking.from_env') }})</span>
+                        <span v-if="tool.from_env" class="text-xs text-gray-500 dark:text-gray-400">({{ __('marketing-toolkit::cp.tracking.from_env') }})</span>
                     </li>
                 </ul>
                 <Description>{{ __('marketing-toolkit::cp.tracking.live_only') }} <template v-if="tracking.consent">{{ __('marketing-toolkit::cp.tracking.consent') }}</template></Description>
@@ -159,10 +162,11 @@ defineProps({
             <ul class="space-y-1 text-sm">
                 <li v-for="file in files" :key="file.label">
                     {{ file.label }}:
-                    <a :href="file.url" target="_blank" rel="noopener" class="font-mono text-xs underline">{{ file.url }}</a>
+                    <a :href="file.url" target="_blank" rel="noopener" class="font-mono text-xs break-all underline">{{ file.url }}</a>
                     <span v-if="file.public" class="ml-1 text-xs text-amber-700 dark:text-amber-400">{{ __('marketing-toolkit::cp.overview.files.public') }}</span>
                 </li>
             </ul>
+            <p v-if="cardsUnavailable" role="status" class="text-sm text-amber-700 dark:text-amber-400">{{ __('marketing-toolkit::cp.overview.files.no_cards') }}</p>
         </Card>
     </div>
 </template>

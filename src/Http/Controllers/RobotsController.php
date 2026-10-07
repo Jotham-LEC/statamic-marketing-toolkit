@@ -7,7 +7,7 @@ use JothamLec\MarketingToolkit\SiteSeo;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
- * /robots.txt from the SEO global set. Outside production it shuts every
+ * /robots.txt from the Crawlers tab of Marketing settings. Outside production it shuts every
  * crawler out. A real public/robots.txt wins: the web server serves it first.
  */
 class RobotsController

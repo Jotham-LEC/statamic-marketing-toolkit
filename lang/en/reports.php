@@ -59,19 +59,19 @@ return [
 
         // A page that didn't render, and a report that stopped.
         'status' => 'The page answered with status :status.',
+        'render_failed' => 'The page couldn’t be rendered (:exception). The full error is in the site’s log.',
         'page_deleted' => 'The page was deleted while the report was running.',
         'stopped' => 'The report stopped making progress.',
+        'failed' => 'The report stopped because of an error. The full error is in the site’s log.',
     ],
 
     'cp' => [
         'title' => 'SEO reports',
         'report' => 'SEO report #:id',
         'back' => '← Reports',
-        'settings' => 'Settings',
         'tab_reports' => 'Reports',
         'tab_settings' => 'Settings',
         'export' => 'Export CSV',
-        'settings_saved' => 'Your report settings have been saved.',
         'run' => 'Run report',
         'could_not_start' => 'The report could not be started.',
         'intro' => 'A report opens every published page and checks its title, description, headings, canonical link, sitemap entry, image descriptions, internal links, share image, and structured data. Each page gets a score out of 100, and the site’s score is the average of those scores.',

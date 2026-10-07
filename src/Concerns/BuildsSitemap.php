@@ -56,7 +56,8 @@ trait BuildsSitemap
     /** @api */
     public function inSitemap(Entry|Term $content): bool
     {
-        $seo = $content->get('seo');
+        // A translation's own group, else its origin's.
+        $seo = $content->value('seo');
         $seo = is_array($seo) ? $seo : [];
         $canonical = $seo['canonical'] ?? null;
 
@@ -65,6 +66,7 @@ trait BuildsSitemap
             && ! ($content instanceof Entry && $content->isRedirect())
             && ! ($seo['noindex'] ?? false)
             && ($seo['sitemap'] ?? true) !== false
+            && ! $this->isProtected($content)
             && (blank($canonical) || rtrim((string) $canonical, '/') === rtrim((string) $content->absoluteUrl(), '/'));
     }
 

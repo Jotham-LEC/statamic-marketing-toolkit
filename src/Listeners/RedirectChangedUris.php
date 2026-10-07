@@ -4,7 +4,9 @@ namespace JothamLec\MarketingToolkit\Listeners;
 
 use Carbon\Carbon;
 use Illuminate\Events\Dispatcher;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
+use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term;
@@ -139,6 +141,7 @@ class RedirectChangedUris
             foreach ($from as $site => $uri) {
                 if (isset($to[$site]) && $uri !== $to[$site]) {
                     $this->redirects->create($uri, $to[$site], $site);
+                    $this->tellIndexNow($event->term, $uri, $site);
                 }
             }
         }
@@ -194,9 +197,23 @@ class RedirectChangedUris
     private function moved(EntryContract $entry, string $from, string $to): void
     {
         $this->redirects->create($from, $to, $entry->locale());
+        $this->tellIndexNow($entry, $from, $entry->locale());
 
         if (Collection::findByMount($entry)) {
             $this->redirects->createForPrefix($from, $to, $entry->locale());
+        }
+    }
+
+    /**
+     * The old address now redirects: IndexNow is told, so engines recrawl it
+     * and follow the 301 sooner. Never a protected page's.
+     */
+    private function tellIndexNow(EntryContract|Term $content, string $uri, string $site): void
+    {
+        $home = Site::get($site)?->absoluteUrl();
+
+        if ($home !== null && ! app(SiteSeo::class)->isProtected($content)) {
+            app(IndexNow::class)->queue(rtrim($home, '/').'/'.ltrim($uri, '/'));
         }
     }
 

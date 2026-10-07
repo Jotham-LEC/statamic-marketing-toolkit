@@ -217,32 +217,59 @@ describe('redirects', function () {
             ]);
     });
 
-    test('a user who may work on one site manages only its rules and those for every site', function () {
+    test('a user who may work on one site manages only its rules: those for every site apply on sites they can\'t see', function () {
         $this->actingAs(cpUser(['manage marketing toolkit redirects', 'access cothinking site']));
         $theirs = Redirect::query()->create(['site' => 'cothinking', 'source' => '/theirs', 'target' => '/a']);
         $everywhere = Redirect::query()->create(['source' => '/everywhere', 'target' => '/b']);
         $other = Redirect::query()->create(['site' => 'default', 'source' => '/other', 'target' => '/c']);
         $form = fn (array $values = []) => ['source' => '/x', 'target' => '/y', 'status' => '301', 'active' => true, ...$values];
 
-        expect($this->getJson(cp_route('mt.redirects.listing', ['sort' => 'id']))->json('data.*.source'))->toEqualCanonicalizing(['/theirs', '/everywhere'])
-            ->and($this->get(cp_route('mt.redirects.export'))->streamedContent())->not->toContain('/other');
+        expect($this->getJson(cp_route('mt.redirects.listing', ['sort' => 'id']))->json('data.*.source'))->toBe(['/theirs'])
+            ->and($this->get(cp_route('mt.redirects.export'))->streamedContent())->not->toContain('/other')->not->toContain('/everywhere');
 
-        $this->get(cp_route('mt.redirects.edit', $other))->assertNotFound();
-        $this->patchJson(cp_route('mt.redirects.update', $other), $form(['source' => '/other']))->assertNotFound();
+        foreach ([$other, $everywhere] as $redirect) {
+            $this->get(cp_route('mt.redirects.edit', $redirect))->assertNotFound();
+            $this->patchJson(cp_route('mt.redirects.update', $redirect), $form(['source' => $redirect->source, 'site' => 'cothinking']))->assertNotFound();
+            $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
+        }
+
         $this->postJson(cp_route('mt.redirects.store'), $form(['site' => 'default']))->assertJsonValidationErrors('site');
-        $this->patchJson(cp_route('mt.redirects.update', $everywhere), $form(['source' => '/everywhere', 'site' => 'default']))->assertJsonValidationErrors('site');
-        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$other->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
+        $this->postJson(cp_route('mt.redirects.store'), $form(['site' => null]))->assertJsonValidationErrors(['site' => 'Only someone who may work on every site']);
+        $this->patchJson(cp_route('mt.redirects.update', $theirs), $form(['source' => '/theirs', 'site' => null]))->assertJsonValidationErrors('site');
+
+        // A new rule's form starts on their site, with no "every site" to choose.
+        $this->get(cp_route('mt.redirects.create'))->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('values.site', 'cothinking')
+            ->where('blueprint.tabs.0.sections.0.fields.4.clearable', false));
 
         $this->get(cp_route('mt.redirects.edit', $theirs))->assertOk();
-        $this->patchJson(cp_route('mt.redirects.update', $everywhere), $form(['source' => '/everywhere', 'target' => '/b2']))->assertOk();
-        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$theirs->id, $everywhere->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
+        $this->patchJson(cp_route('mt.redirects.update', $theirs), $form(['source' => '/theirs', 'target' => '/a2', 'site' => 'cothinking']))->assertOk();
+        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$theirs->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
 
-        $csv = "source,target,status,active,site\n/mine,/1,301,1,cothinking\n/not-mine,/2,301,1,default\n";
+        // A row for every site (no site) is refused, as for another site.
+        $csv = "source,target,status,active,site\n/mine,/1,301,1,cothinking\n/not-mine,/2,301,1,default\n/everyone,/3,301,1,\n/everywhere,/4,301,1,\n";
         $result = $this->post(cp_route('mt.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', $csv)])->assertOk()->json();
 
         expect($result)->toMatchArray(['created' => 1, 'updated' => 0])
-            ->and($result['errors'])->toHaveCount(1)
-            ->and(Redirect::query()->orderBy('id')->pluck('source')->all())->toBe(['/other', '/mine']);
+            ->and($result['errors'])->toHaveCount(3)
+            ->and(Redirect::query()->orderBy('id')->get(['source', 'target'])->toArray())->toBe([
+                ['source' => '/everywhere', 'target' => '/b'],
+                ['source' => '/other', 'target' => '/c'],
+                ['source' => '/mine', 'target' => '/1'],
+            ]);
+    });
+
+    test('a user who may work on every site manages the rules for every site', function () {
+        $this->actingAs(cpUser(['manage marketing toolkit redirects', 'access default site', 'access cothinking site']));
+        $everywhere = Redirect::query()->create(['source' => '/everywhere', 'target' => '/b']);
+
+        expect($this->getJson(cp_route('mt.redirects.listing'))->json('data.*.source'))->toBe(['/everywhere']);
+
+        $this->get(cp_route('mt.redirects.create'))->assertInertia(fn (AssertableInertia $page) => $page->where('values.site', null));
+        $this->patchJson(cp_route('mt.redirects.update', $everywhere), ['source' => '/everywhere', 'target' => '/b2', 'status' => '301', 'active' => true])->assertOk();
+        $this->postJson(cp_route('mt.redirects.store'), ['source' => '/new', 'target' => '/n', 'status' => '301', 'active' => true])->assertOk();
+
+        expect(Redirect::query()->whereNull('site')->pluck('target')->all())->toBe(['/b2', '/n']);
     });
 });
 
