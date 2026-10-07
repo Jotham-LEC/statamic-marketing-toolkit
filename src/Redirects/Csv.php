@@ -14,7 +14,7 @@ use SplTempFileObject;
  * on the row's site (in any letter case, when matching ignores it); a row
  * that fails the form's checks is skipped and reported by its row number.
  * Both keep to the sites the signed-in user may work on, and to the rules
- * for every site.
+ * for every site only for one who may work on every site.
  */
 class Csv
 {

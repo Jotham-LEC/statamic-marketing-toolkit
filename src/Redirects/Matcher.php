@@ -16,21 +16,31 @@ use Statamic\Facades\URL;
  * cache read, not a query. A site's own rule wins over one for every site
  * from the same address. When matching ignores case, a second map holds the
  * sources case-folded, and the wildcards ignore case too.
+ *
+ * Sources are paths within the site, as Statamic's uri() and the automatic
+ * redirects write them: on a site at example.com/fr/, `/a-propos` is
+ * example.com/fr/a-propos. A path is asked for as requested (`/fr/a-propos`),
+ * and is matched without the site's folder first, then as it is, so a rule
+ * typed with the folder (as one had to before) keeps working.
  */
 class Matcher
 {
-    private const string KEY = 'mt:redirects';
+    /** Renamed when the compiled form changes, so a cached set in the old one is never read. */
+    private const string KEY = 'mt:redirect-rules';
 
     /** Set while many rules are saved at once (an import), which flush once at the end. */
     private static bool $deferred = false;
 
     /**
+     * @param  string  $path  as requested, from the domain's root (with the site's folder)
      * @param  ?string  $site  a site handle; null: the current site
      * @return array{id: int, status: int, target: ?string}|null
      */
     public function match(string $path, string $query = '', ?string $site = null): ?array
     {
-        return $this->matchIn($this->rules($site ?? Site::current()->handle()), $path, $query);
+        $site ??= Site::current()->handle();
+
+        return $this->matchIn($this->rules($site), self::paths($path, $site), $query);
     }
 
     /**
@@ -42,30 +52,59 @@ class Matcher
      */
     public function matchAmong(iterable $redirects, string $path, ?string $site = null): ?array
     {
-        return $this->matchIn(self::compile(collect($redirects), $site), $path, '');
+        return $this->matchIn(self::compile(collect($redirects), $site), self::paths($path, $site), '');
     }
 
     /**
+     * The forms of a requested path rules are matched against: within the site
+     * (without its folder), then as requested. Already decoded and without a
+     * query string: a `?` here was `%3F`, part of the path.
+     *
+     * @return list<string>
+     */
+    private static function paths(string $path, ?string $site): array
+    {
+        $path = '/'.trim($path, '/');
+        $within = Sites::within($path, $site);
+
+        return array_values(array_unique(array_filter([$within === null ? null : '/'.trim($within, '/'), $path])));
+    }
+
+    /**
+     * An exact source wins over a wildcard, whichever form of the path it matches.
+     *
      * @param  array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}  $rules
+     * @param  list<string>  $paths
      * @return array{id: int, status: int, target: ?string}|null
      */
-    private function matchIn(array $rules, string $path, string $query): ?array
+    private function matchIn(array $rules, array $paths, string $query): ?array
     {
-        // Already decoded and without a query string: a `?` here was `%3F`, part of the path.
-        $path = '/'.trim($path, '/');
+        foreach ($paths as $path) {
+            // A source in the very case asked for wins over one that differs only in case,
+            // unless only the one in another case is the site's own.
+            $exact = $rules['exact'][$path] ?? null;
+            $folded = $rules['folded'][Redirect::key($path)] ?? null;
 
-        // A source in the very case asked for wins over one that differs only in case,
-        // unless only the one in another case is the site's own.
-        $exact = $rules['exact'][$path] ?? null;
-        $folded = $rules['folded'][Redirect::key($path)] ?? null;
-
-        if ($rule = ($folded && $folded['own'] && ! ($exact['own'] ?? 0) ? $folded : null) ?? $exact ?? $folded) {
-            return $this->resolved($rule, [], $query);
+            if ($rule = ($folded && $folded['own'] && ! ($exact['own'] ?? 0) ? $folded : null) ?? $exact ?? $folded) {
+                return $this->resolved($rule, [], $query);
+            }
         }
 
+        // Each path backwards (see pattern()), by character or by byte as each rule needs it.
+        $backwards = [];
+
         foreach ($rules['wildcards'] as $rule) {
-            if (preg_match($rule['pattern'], $path, $captures)) {
-                return $this->resolved($rule, array_slice($captures, 1), $query);
+            foreach ($paths as $i => $path) {
+                // Matched by character, a path that isn't valid UTF-8 matches no rule, as PCRE's `u` would have it.
+                if ($rule['chars'] && ! mb_check_encoding($path, 'UTF-8')) {
+                    continue;
+                }
+
+                if (preg_match($rule['pattern'], $backwards[$rule['chars']][$i] ??= self::reverse($path, $rule['chars']), $captures)) {
+                    $captures = array_map(fn (string $capture) => self::reverse($capture, $rule['chars']), array_reverse(array_slice($captures, 1)));
+
+                    return $this->resolved($rule, $captures, $query);
+                }
             }
         }
 
@@ -144,7 +183,7 @@ class Matcher
                 ->sortByDesc(fn (Redirect $redirect) => [strlen($redirect->source), $own($redirect)])
                 ->map(fn (Redirect $redirect) => [
                     ...$rule($redirect),
-                    'pattern' => self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
+                    ...self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
                 ])
                 ->values()
                 ->all(),
@@ -152,19 +191,42 @@ class Matcher
     }
 
     /**
-     * A wildcard source as a regular expression. Ignoring case, it folds letters
-     * beyond A–Z too (`/CAFÉ/*` matches `/café/x`), unless the source isn't valid
-     * UTF-8. What the `*` matched keeps the visitor's case either way.
+     * A wildcard source as a regular expression, written backwards, to match a
+     * path read backwards. Forwards, each `*` was a greedy `(.*)`, and with
+     * several, PCRE tried every way of sharing a long path between them: a
+     * rule that matched a path of a few hundred characters could run out of
+     * PCRE's backtrack limit and silently not match, and a made-up address
+     * cost every such rule that limit. Backwards, each piece of text between
+     * two `*` is taken at its first place (its last, forwards: where the
+     * greedy `*` before it puts it) and never tried again (an atomic group),
+     * so each `*` matches what it did, in time that grows with the path's
+     * length alone. Ignoring case, it folds letters beyond A–Z too (`/CAFÉ/*`
+     * matches `/café/x`), reading by character, unless the source isn't
+     * valid UTF-8. What the `*` matched keeps the visitor's case either way.
+     *
+     * @return array{pattern: string, chars: bool}
      */
-    private static function pattern(string $source, bool $ignoresCase): string
+    private static function pattern(string $source, bool $ignoresCase): array
     {
-        $pattern = '#^'.str_replace('\*', '(.*)', preg_quote($source, '#')).'$#';
+        $chars = $ignoresCase && mb_check_encoding($source, 'UTF-8');
+        $pieces = array_map(fn (string $piece) => preg_quote($piece, '#'), explode('*', self::reverse($source, $chars)));
+        // The source's end, then each piece between two `*`, then its start (a wildcard has at least one `*`).
+        $end = array_shift($pieces);
+        $start = array_pop($pieces);
+        $between = implode('', array_map(fn (string $piece) => '(?>(.*?)'.$piece.')', $pieces));
 
-        if (! $ignoresCase) {
-            return $pattern;
-        }
+        return [
+            'pattern' => '#^'.$end.$between.'(.*)'.$start.'$#'.($ignoresCase ? ($chars ? 'iu' : 'i') : ''),
+            'chars' => $chars,
+        ];
+    }
 
-        return $pattern.(mb_check_encoding($source, 'UTF-8') ? 'iu' : 'i');
+    /**
+     * Backwards by character (UTF-8), or by byte.
+     */
+    private static function reverse(string $text, bool $chars): string
+    {
+        return $chars ? implode('', array_reverse(mb_str_split($text, 1, 'UTF-8'))) : strrev($text);
     }
 
     /**
