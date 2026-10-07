@@ -102,12 +102,43 @@ class ExternalLinkChecker
         }
 
         foreach ($ips as $ip) {
-            if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)) {
+            if (! self::isPublic($ip)) {
                 return false;
             }
         }
 
         return $ips[0];
+    }
+
+    /**
+     * Whether $ip is on the public internet. PHP's global range takes the
+     * NAT64 prefix 64:ff9b::/96 as public, but a NAT64 gateway passes it on
+     * to the IPv4 address in its last 32 bits, which may be this machine's
+     * (64:ff9b::7f00:1 is 127.0.0.1): that address is judged instead. The
+     * local-use prefix 64:ff9b:1::/48 may embed one anywhere, so is refused.
+     * (6to4, 2002::/16, PHP refuses already.)
+     */
+    private static function isPublic(string $ip): bool
+    {
+        if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_GLOBAL_RANGE)) {
+            return false;
+        }
+
+        $packed = (string) inet_pton($ip);
+
+        if (strlen($packed) !== 16) {
+            return true;
+        }
+
+        if (str_starts_with($packed, "\x00\x64\xff\x9b\x00\x01")) {
+            return false;
+        }
+
+        if (! str_starts_with($packed, "\x00\x64\xff\x9b".str_repeat("\x00", 8))) {
+            return true;
+        }
+
+        return self::isPublic((string) inet_ntop(substr($packed, 12)));
     }
 
     /**
@@ -152,7 +183,10 @@ class ExternalLinkChecker
 
     /**
      * A request pinned to the address that was checked, so DNS can't answer
-     * differently when the connection is made.
+     * differently when the connection is made. Never through a proxy: on the
+     * command line (a queue worker) Guzzle takes one from HTTP_PROXY and
+     * HTTPS_PROXY, and a proxy looks the host up again itself; an empty
+     * proxy also stops curl reading those variables on its own.
      */
     private function request(PendingRequest $request, string $url, string $address): PendingRequest
     {
@@ -164,7 +198,7 @@ class ExternalLinkChecker
             ->withHeaders(['User-Agent' => self::USER_AGENT])
             ->timeout(self::TIMEOUT)
             ->withoutRedirecting()
-            ->withOptions(['curl' => [CURLOPT_RESOLVE => [trim((string) $parts['host'], '[]').":{$port}:{$ip}"]]]);
+            ->withOptions(['proxy' => '', 'curl' => [CURLOPT_RESOLVE => [trim((string) $parts['host'], '[]').":{$port}:{$ip}"]]]);
     }
 
     private function isBroken(mixed $response): bool
