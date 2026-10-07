@@ -62,6 +62,8 @@ Add one tag after `<meta charset>` and the viewport, and one right after `<body>
 
 In Antlers, use `{{ mt:head }}` and `{{ mt:body }}`.
 
+Entries get their SEO tab from the `marketing-toolkit::seo` fieldset. `mt:install` adds it to collections that have a route and no blueprint yet, and names the blueprints you already have that lack it, so you can link the fieldset there.
+
 Next steps are in [Getting started](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/getting-started.md). Moving a site that already has SEO set up? Follow the [migration checklist](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/migrating.md), or hand it to an AI agent with the [migration skill](https://github.com/Jotham-LEC/statamic-marketing-toolkit/blob/main/docs/agent-skill/README.md).
 
 ## How it compares with other add-ons

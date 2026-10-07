@@ -30,7 +30,9 @@ The control panel's scripts and styles are published to `public/vendor/statamic-
 
 ## 2. Add the SEO fields to your blueprints
 
-In each blueprint whose pages should have SEO fields (usually every collection with a route), add the fieldset where you want it, typically on its own tab. In the control panel: **Blueprints**, the collection's blueprint, **Add Tab** "SEO", then **Link Fieldset** and choose **SEO**. A new Statamic site's Pages collection has no blueprint file yet; opening it there creates one.
+`mt:install` does this for each collection that has a route and no blueprint file yet, such as a new Statamic site's Pages: it creates the blueprint with an SEO tab (pass `--no-blueprints` to skip that). It never changes a blueprint you already have; it names those without the SEO fields instead, and running it again won't put back a tab you took out.
+
+For those, add the fieldset where you want it in each blueprint whose pages should have SEO fields (usually every collection with a route), typically on its own tab. In the control panel: **Blueprints**, the collection's blueprint, **Add Tab** "SEO", then **Link Fieldset** and choose **SEO**.
 
 Or in the blueprint's YAML (`resources/blueprints/collections/{collection}/{blueprint}.yaml`), as a tab beside the ones it has:
 

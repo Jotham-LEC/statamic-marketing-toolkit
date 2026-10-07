@@ -43,6 +43,7 @@ A security and bug review of the whole addon: fixes for multi-site installs with
 - **The addon installs on a site where another package already has a `seo_redirects` (or other `seo_*`) table**, and leaves that table alone. Rolling back the per-site redirects or 404s migration refuses while two sites share an address, instead of losing every rule's site.
 
 ### Changed
+- **`mt:install` gives entries their SEO tab.** A collection with a route and no blueprint file yet (a new site's Pages) gets its blueprint with the SEO tab; `--no-blueprints` skips it. Blueprints you already have are never changed: those without the SEO fields are named, with how to add them, so a rerun can't bring back a tab you removed.
 - **With Consent Mode on, PostHog and the Meta Pixel load only after the visitor accepts**, as LinkedIn already did. Before, their scripts downloaded straight away and only held back tracking, so PostHog and Meta saw the visitor's IP before the banner was answered. A page view or lead sent before the answer still goes if the visitor accepts on that page.
 - **With Consent Mode on, Google Tag Manager's `<noscript>` iframe is left out**, like the Meta and LinkedIn `<noscript>` pixels: without JavaScript there are no Consent Mode defaults and no banner to answer.
 - **A redirect for every site now also applies inside each site's folder** on a multi-site install (`/old` → `/new` sends `example.com/fr/old` to `example.com/fr/new`).

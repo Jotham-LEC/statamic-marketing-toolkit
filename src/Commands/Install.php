@@ -11,6 +11,7 @@ use Statamic\Console\RunsInPlease;
 use Statamic\Contracts\Globals\GlobalSet as GlobalSetContract;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Collection;
 use Statamic\Facades\Entry;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -34,7 +35,8 @@ class Install extends Command
     protected $signature = 'statamic:mt:install
         {--container= : Asset container for the logo, share image and icon (else the first one)}
         {--tab=* : Add these tabs the blueprint doesn\'t have, e.g. shop}
-        {--forms : Add the lead source fields to every form}';
+        {--forms : Add the lead source fields to every form}
+        {--no-blueprints : Don\'t give collections without a blueprint one with an SEO tab}';
 
     protected $description = 'Create the Brand and Marketing settings global sets, or add what a newer version brings';
 
@@ -90,6 +92,10 @@ class Install extends Command
             $changed = $changed || $forms !== [];
         }
 
+        if (! $this->option('no-blueprints')) {
+            $changed = $this->addSeoTabs() || $changed;
+        }
+
         $changed = $this->checkPublicFiles() || $changed;
 
         if (! $changed) {
@@ -97,6 +103,44 @@ class Install extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The entries' SEO tab (the marketing-toolkit::seo fieldset). A
+     * collection with a route and no blueprint file yet, as a new site's
+     * Pages, gets its blueprint with the tab (unless --no-blueprints): a new
+     * file, like the global sets this creates. A blueprint that
+     * exists is the site's: one without the tab is named, never changed, so
+     * a rerun can't bring back a tab the site took out.
+     */
+    private function addSeoTabs(): bool
+    {
+        $routed = Collection::all()->filter(fn ($collection) => $collection->routes()->filter()->isNotEmpty());
+        $new = $routed->filter(fn ($collection) => Blueprint::in('collections/'.$collection->handle())->isEmpty());
+
+        $without = $routed->diffKeys($new)->flatMap(fn ($collection) => $collection->entryBlueprints()
+            ->reject(fn (BlueprintContents $blueprint) => $blueprint->hasField('seo'))
+            ->map(fn (BlueprintContents $blueprint) => $collection->title().' ('.$blueprint->title().')'))
+            ->values();
+
+        if ($without->isNotEmpty()) {
+            $this->components->warn('These blueprints have no SEO tab: '.$without->implode(', ').'. Add one with Link Fieldset → SEO (see docs/getting-started.md).');
+        }
+
+        if ($new->isEmpty()) {
+            return false;
+        }
+
+        foreach ($new as $collection) {
+            $blueprint = $collection->fallbackEntryBlueprint();
+            $contents = $blueprint->contents();
+            $contents['tabs']['seo'] = ['display' => 'SEO', 'sections' => [['fields' => [['import' => 'marketing-toolkit::seo']]]]];
+            $blueprint->setContents($contents)->save();
+        }
+
+        $this->components->info('SEO tab added to the blueprints of: '.$new->map->title()->implode(', ').'. Commit them.');
+
+        return true;
     }
 
     /**

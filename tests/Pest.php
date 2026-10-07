@@ -5,6 +5,7 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Context;
@@ -38,6 +39,9 @@ uses(TestCase::class)
         // Production env makes Laravel's CSRF check live; the CP sends the token.
         // PreventRequestForgery is Laravel 13's; ValidateCsrfToken is Laravel 12's.
         $this->withoutMiddleware([PreventRequestForgery::class, ValidateCsrfToken::class, VerifyCsrfToken::class]);
+
+        // mt:install writes collection blueprints to disk, which would outlive the test.
+        File::deleteDirectory(resource_path('blueprints/collections'));
 
         // On a host without Imagick, pages would point at no card: the tests of card URLs
         // still run there (those that draw one are skipped), so cards count as drawable.

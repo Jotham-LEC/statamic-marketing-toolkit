@@ -12,6 +12,7 @@ use JothamLec\MarketingToolkit\UpdateScripts\DropFieldDescriptions;
 use JothamLec\MarketingToolkit\UpdateScripts\MoveToMarketingSettings;
 use JothamLec\MarketingToolkit\UpdateScripts\RenameFromSeo;
 use Statamic\Facades\Blueprint;
+use Statamic\Facades\Collection;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\YAML;
 
@@ -127,6 +128,40 @@ test('every field mt:install writes is in 0.20 or listed by the version that bro
     $before = file(__DIR__.'/../fixtures/fields-0.20.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
     expect($fields->diff($before)->diff(collect(AddNewBrandFields::FIELDS)->flatten())->values()->all())->toBe([]);
+});
+
+test('a collection with a route and no blueprint yet gets one with an SEO tab', function () {
+    Collection::make('drafts')->save();
+
+    $this->artisan('statamic:mt:install')->expectsOutputToContain('SEO tab added to the blueprints of')->assertSuccessful();
+
+    $pages = Collection::find('pages')->entryBlueprint();
+    expect($pages->hasField('seo'))->toBeTrue()
+        ->and($pages->tabs()->keys()->all())->toContain('main', 'seo')
+        ->and(resource_path('blueprints/collections/pages/page.yaml'))->toBeFile()
+        // No route, no pages: nothing to add SEO fields to.
+        ->and(resource_path('blueprints/collections/drafts'))->not->toBeDirectory();
+
+    Collection::find('drafts')->delete();
+});
+
+test('--no-blueprints leaves the collections alone', function () {
+    $this->artisan('statamic:mt:install', ['--no-blueprints' => true])->assertSuccessful();
+
+    expect(resource_path('blueprints/collections'))->not->toBeDirectory();
+});
+
+test('a blueprint of the site\'s own without the SEO tab is named, never changed, so a removed tab stays removed', function () {
+    $this->artisan('statamic:mt:install')->assertSuccessful();
+    $page = resource_path('blueprints/collections/pages/page.yaml');
+    $contents = YAML::file($page)->parse();
+    unset($contents['tabs']['seo']);
+    File::put($page, YAML::dump($contents));
+    $before = File::get($page);
+
+    $this->artisan('statamic:mt:install')->expectsOutputToContain('These blueprints have no SEO tab: Pages (Page)')->assertSuccessful();
+
+    expect(File::get($page))->toBe($before);
 });
 
 test('a rerun with nothing to add says so', function () {
