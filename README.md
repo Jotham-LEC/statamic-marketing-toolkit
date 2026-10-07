@@ -1,10 +1,10 @@
 # Marketing Toolkit
 
-SEO, redirects, 404s, SEO reports, tracking tags and Consent Mode for Statamic, in one add-on your marketing team can run without a developer.
 
 ![The Marketing overview, with the SEO score, the failing checks, recent 404s, redirects, and the brand](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/overview.png)
 
-I kept rebuilding the same features for every marketing site I made, so I moved them into one add-on, kept lean and switchable, and I'm sharing it so your team can use it too.
+
+SEO, redirects, 404s, SEO reports, tracking tags and Consent Mode for Statamic. Built for teams where marketing has ownership over SEO & Analytics, so that designers/developers can focus on app logic and design. 
 
 ## For marketers
 
