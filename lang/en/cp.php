@@ -230,6 +230,7 @@ return [
             'leads' => ['display' => 'Leads and their source'],
             'favicons' => ['display' => 'Favicons'],
             'ads_txt' => ['display' => 'ads.txt'],
+            'toolbar' => ['display' => 'Front-end toolbar'],
         ],
     ],
 

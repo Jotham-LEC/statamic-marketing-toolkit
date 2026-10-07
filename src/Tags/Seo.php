@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Tags;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Toolbar\Toolbar;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
 
@@ -14,7 +15,9 @@ use Statamic\Tags\Tags;
  * addon adds to a page. The head is the Consent Mode defaults and tracking
  * tags, which must come before anything else that loads Google's tags, then
  * the meta tags, then the icons' links; the body is the tags' <noscript>
- * fallbacks. `<s:mt:favicons />` is the icons' links alone.
+ * fallbacks, then the front-end toolbar's guard, the same for every visitor.
+ * `<s:mt:favicons />` is the icons' links alone, and `<s:mt:toolbar />` the
+ * toolbar's guard alone, before </body>, for a layout without `mt:body`.
  *
  * `<s:mt:meta />` alone is the meta tags: every tag the
  * <head> needs for the current page's SEO. It reads the entry or term from the
@@ -47,7 +50,12 @@ class Seo extends Tags
 
     public function body(): string
     {
-        return app(Tracking::class)->body();
+        return app(Tracking::class)->body().Toolbar::guard();
+    }
+
+    public function toolbar(): string
+    {
+        return Toolbar::guard();
     }
 
     public function meta(): string

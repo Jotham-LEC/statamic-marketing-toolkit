@@ -30,6 +30,7 @@ final class Features
         'tracking' => 'marketing-toolkit.tracking.enabled',
         'leads' => 'marketing-toolkit.leads.enabled',
         'favicons' => 'marketing-toolkit.favicons.enabled',
+        'toolbar' => 'marketing-toolkit.toolbar.enabled',
     ];
 
     public const string SETTING = 'features_off';

@@ -1,0 +1,2 @@
+{{-- Printed by <s:mt:body /> (or <s:mt:toolbar />) for every visitor alike (Toolbar\Toolbar::guard()): the toolbar loads only for a signed-in control panel user, and never in a frame. --}}
+<script{!! $nonce ? ' nonce="'.e($nonce).'"' : '' !!}>(function(d){if(/(?:^|; )mt_toolbar=1(?:;|$)/.test(d.cookie)&&self===top){var s=d.createElement('script');s.src=@json($src);s.dataset.endpoint=@json($endpoint);d.head.appendChild(s);}})(document);</script>

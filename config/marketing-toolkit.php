@@ -301,6 +301,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Front-end toolbar
+    |--------------------------------------------------------------------------
+    |
+    | A small bar on the site for signed-in control panel users: the page's
+    | score and failing checks, its search and share preview, redirects and
+    | 404s, tracking and consent, and its other sites. <s:mt:body /> prints
+    | the same tiny script for every visitor, which loads the toolbar only
+    | when the `mt_toolbar` cookie says a control panel user is signed in, so
+    | pages stay safe to cache. Each user can hide or move it under Preferences.
+    |
+    */
+
+    'toolbar' => [
+        'enabled' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Reports
     |--------------------------------------------------------------------------
     |

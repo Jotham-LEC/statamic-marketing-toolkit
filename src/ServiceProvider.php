@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Queue;
 use JothamLec\MarketingToolkit\Conversions\Attribution;
 use JothamLec\MarketingToolkit\Cp\Navigation;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
+use JothamLec\MarketingToolkit\Http\Middleware\MarkToolbarUser;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Listeners\AttributeSubmission;
 use JothamLec\MarketingToolkit\Listeners\CountConversion;
@@ -15,12 +16,15 @@ use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
 use JothamLec\MarketingToolkit\Listeners\RedirectChangedUris;
 use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
 use JothamLec\MarketingToolkit\Listeners\SubmitToIndexNow;
+use JothamLec\MarketingToolkit\Listeners\ToolbarSignIn;
+use JothamLec\MarketingToolkit\Listeners\ToolbarSignOut;
 use JothamLec\MarketingToolkit\Reports\ReportSettings;
 use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
 use JothamLec\MarketingToolkit\Support\Config;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Toolbar\Toolbar;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Events\CollectionSaved;
 use Statamic\Events\CollectionTreeSaved;
@@ -32,6 +36,8 @@ use Statamic\Events\TaxonomySaved;
 use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 use Statamic\Facades\Permission;
+use Statamic\Facades\Preference;
+use Statamic\Preferences\Preferences;
 use Statamic\Providers\AddonServiceProvider;
 use Statamic\Statamic;
 
@@ -54,6 +60,8 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $middlewareGroups = [
         'statamic.web' => [HandleMissing::class],
+        // After Statamic's own: the user is known and their preferences are booted.
+        'statamic.cp.authenticated' => [MarkToolbarUser::class],
     ];
 
     /*
@@ -147,6 +155,9 @@ class ServiceProvider extends AddonServiceProvider
             CountConversion::class => ! config('marketing-toolkit.leads.enabled'),
             RedirectChangedUris::class => ! config('marketing-toolkit.redirects.automatic'),
             HandleMissing::class => ! config('marketing-toolkit.redirects.enabled') && ! config('marketing-toolkit.not_found.enabled'),
+            MarkToolbarUser::class => ! Toolbar::enabled(),
+            ToolbarSignIn::class => ! Toolbar::enabled(),
+            ToolbarSignOut::class => ! Toolbar::enabled(),
         ]));
 
         $this->listen = array_filter(array_map(fn (array $listeners) => array_values(array_diff($listeners, $this->unused)), $this->listen));
@@ -168,7 +179,7 @@ class ServiceProvider extends AddonServiceProvider
         $this->publishes([__DIR__.'/../config/marketing-toolkit.php' => config_path('marketing-toolkit.php')], 'marketing-toolkit-config');
 
         // Written and read by the page's own script: left as plain text.
-        EncryptCookies::except([Attribution::COOKIE, CountConversion::COOKIE]);
+        EncryptCookies::except([Attribution::COOKIE, CountConversion::COOKIE, Toolbar::COOKIE]);
 
         // A key and property set up in the control panel, where .env has none.
         Connection::apply();
@@ -193,6 +204,8 @@ class ServiceProvider extends AddonServiceProvider
 
         Navigation::register();
 
+        $this->registerPreferences();
+
         Statamic::provideToScript(['marketingToolkit' => [
             // Off: a save has nothing to ask the redirect check.
             'automaticRedirects' => (bool) config('marketing-toolkit.redirects.automatic'),
@@ -201,6 +214,44 @@ class ServiceProvider extends AddonServiceProvider
             // Trackers set in .env, which the Tracking tab's warning counts as well.
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
         ]]);
+    }
+
+    /**
+     * The toolbar's preferences, under Preferences → Marketing Toolkit, for
+     * each user (or a role, or everyone). Shown while the toolbar is on.
+     */
+    private function registerPreferences(): void
+    {
+        if (! Toolbar::enabled()) {
+            return;
+        }
+
+        // The facade's own instance: Statamic doesn't bind it as a singleton.
+        /** @var Preferences $registry */
+        $registry = Preference::getFacadeRoot();
+
+        $registry->extend(fn (Preferences $preferences) => $preferences->tab('marketing-toolkit', __('marketing-toolkit::toolbar.preferences.tab'), function (Preferences $preferences) {
+            $preferences->register(Toolbar::PREFERENCES['hidden']['key'], [
+                'type' => 'toggle',
+                'display' => __('marketing-toolkit::toolbar.preferences.hidden'),
+            ]);
+            $preferences->register(Toolbar::PREFERENCES['position']['key'], [
+                'type' => 'button_group',
+                'display' => __('marketing-toolkit::toolbar.preferences.position'),
+                'default' => Toolbar::PREFERENCES['position']['default'],
+                'options' => [
+                    'bottom-left' => __('marketing-toolkit::toolbar.preferences.positions.bottom_left'),
+                    'bottom-right' => __('marketing-toolkit::toolbar.preferences.positions.bottom_right'),
+                ],
+            ]);
+            $preferences->register(Toolbar::PREFERENCES['shortcut']['key'], [
+                'type' => 'text',
+                'display' => __('marketing-toolkit::toolbar.preferences.shortcut'),
+                'placeholder' => Toolbar::PREFERENCES['shortcut']['default'],
+                'default' => Toolbar::PREFERENCES['shortcut']['default'],
+                'validate' => ['nullable', 'regex:'.Toolbar::SHORTCUT],
+            ]);
+        }));
     }
 
     /**

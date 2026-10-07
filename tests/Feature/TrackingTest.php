@@ -93,7 +93,7 @@ test('nothing prints outside production, or in Live Preview', function () {
     seoGlobal(['gtm_id' => 'GTM-ABC1234']);
 
     $this->app['env'] = 'local';
-    expect(trackingHead())->not->toContain('gtm.js')->and(trackingBody())->toBe('');
+    expect(trackingHead())->not->toContain('gtm.js')->and(trackingBody())->not->toContain('googletagmanager');
 
     config(['marketing-toolkit.tracking.environments' => ['production', 'local']]);
     expect(trackingHead())->toContain('gtm.js');

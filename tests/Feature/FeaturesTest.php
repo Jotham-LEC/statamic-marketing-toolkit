@@ -117,7 +117,7 @@ test('the public routes are registered with their module off, so cached routes a
 });
 
 test('listeners and middleware of modules that are off aren\'t registered', function () {
-    Features::save(['favicons', 'sitemap', 'llms_txt', 'redirects', 'not_found', 'automatic_redirects']);
+    Features::save(['favicons', 'sitemap', 'llms_txt', 'redirects', 'not_found', 'automatic_redirects', 'toolbar']);
     $provider = app()->getProvider(ServiceProvider::class);
     rebootFeatures();
 

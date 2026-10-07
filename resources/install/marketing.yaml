@@ -197,3 +197,6 @@ tabs:
           -
             handle: feature_ads_txt
             field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.ads_txt.display', default: true, width: 50 }
+          -
+            handle: feature_toolbar
+            field: { type: toggle, display: 'marketing-toolkit::cp.features.modules.toolbar.display', default: true, width: 50 }
