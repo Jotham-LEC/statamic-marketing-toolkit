@@ -62,7 +62,7 @@ trait BuildsTextFiles
                 $context = Context::make($entry);
                 $description = $context->seo()['description'] ?? $this->contentDescription($context);
                 $description = $description === null ? null : Text::limit(Text::plain($description), 200);
-                $title = str_replace(['[', ']'], ['(', ')'], (string) $entry->get('title'));
+                $title = str_replace(['[', ']'], ['(', ')'], (string) $entry->value('title'));
 
                 $lines[] = '- ['.$title.']('.$entry->absoluteUrl().')'.($description ? ': '.$description : '');
             }

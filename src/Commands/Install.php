@@ -302,7 +302,7 @@ class Install extends Command
 
             $home = Entry::findByUri('/', $site);
             $home = $home instanceof Page ? $home->entry() : $home;
-            $homeDescription = data_get($home?->get('seo'), 'description') ?: $home?->get('description');
+            $homeDescription = data_get($home?->value('seo'), 'description') ?: $home?->value('description');
 
             $defaults = array_filter([
                 'default_description' => is_string($homeDescription) && $homeDescription !== '' ? $homeDescription : null,

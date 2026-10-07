@@ -10,6 +10,7 @@ use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Cp\Navigation;
 use JothamLec\MarketingToolkit\Meta;
+use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\Reports\ExternalLinkChecker;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Tests\TestCase;
@@ -37,6 +38,18 @@ uses(TestCase::class)
         // Production env makes Laravel's CSRF check live; the CP sends the token.
         // PreventRequestForgery is Laravel 13's; ValidateCsrfToken is Laravel 12's.
         $this->withoutMiddleware([PreventRequestForgery::class, ValidateCsrfToken::class, VerifyCsrfToken::class]);
+
+        // On a host without Imagick, pages would point at no card: the tests of card URLs
+        // still run there (those that draw one are skipped), so cards count as drawable.
+        if (! extension_loaded('imagick')) {
+            app()->instance(Generator::class, new class extends Generator
+            {
+                public function available(): bool
+                {
+                    return true;
+                }
+            });
+        }
 
         Site::setSites(['default' => ['name' => 'Acme', 'url' => 'https://example.test/', 'locale' => 'en_US']]);
         AssetContainer::make('assets')->disk('assets')->save();

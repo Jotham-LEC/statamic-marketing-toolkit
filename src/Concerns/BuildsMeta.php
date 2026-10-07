@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Concerns;
 
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Meta;
+use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Assets\Asset;
@@ -158,20 +159,28 @@ trait BuildsMeta
     }
 
     /**
-     * The URL of the entry's generated card, or null when cards are off. The
+     * The URL of the entry's generated card, or null when cards are off, this
+     * host can't draw them (no Imagick), or the entry is protected (its card
+     * would show what it protects). The
      * `v` parameter changes with each edit, so link previews refetch it.
+     *
+     * On the root of the entry's domain, which serves the card routes, with
+     * the page's path from that root: /fr/a-propos's card is
+     * /og/fr/a-propos.png, and the controller finds the site from the path
+     * as Statamic finds a page's.
      */
     public function generatedImageUrl(Entry $entry): ?string
     {
-        if (! config('marketing-toolkit.og.enabled') || $entry->status() !== 'published' || ! $entry->url()) {
+        if (! config('marketing-toolkit.og.enabled') || $entry->status() !== 'published' || ! $entry->url() || $this->isProtected($entry)
+            || ! app(Generator::class)->available()) {
             return null;
         }
 
-        $path = trim((string) $entry->uri(), '/');
+        $absolute = (string) $entry->absoluteUrl();
+        $path = trim((string) parse_url($absolute, PHP_URL_PATH), '/');
         $route = $path === '' ? route('mt.og.home', [], false) : route('mt.og', ['path' => $path], false);
 
-        // On the entry's own site's domain, which serves its card.
-        return rtrim((string) $entry->site()->absoluteUrl(), '/').'/'.ltrim($route, '/').'?v='.$entry->lastModified()->timestamp;
+        return self::domainRoot($absolute).'/'.ltrim($route, '/').'?v='.$entry->lastModified()->timestamp;
     }
 
     /*

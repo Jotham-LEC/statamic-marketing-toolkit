@@ -2,9 +2,11 @@
 
 namespace JothamLec\MarketingToolkit\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
@@ -17,12 +19,15 @@ class TextFileController
 {
     public const string LLMS_CACHE_KEY = 'mt:llms';
 
-    public function llms(SiteSeo $seo): Response
+    public function llms(Request $request, SiteSeo $seo): Response
     {
         // Off in the config or under Features.
         throw_unless(config('marketing-toolkit.llms_txt.enabled'), NotFoundHttpException::class);
 
-        return $this->text(Cache::rememberForever(self::llmsCacheKey(Site::current()->handle()), fn () => $seo->llmsTxt()));
+        $build = fn () => $seo->llmsTxt();
+
+        // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
+        return $this->text(Sites::trustsHost($request) ? Cache::rememberForever(self::llmsCacheKey(Site::current()->handle()), $build) : $build());
     }
 
     public function ads(SiteSeo $seo): Response

@@ -11,9 +11,9 @@
 
 New Google Cloud projects often block service account keys with the organization policy `iam.disableServiceAccountKeyCreation`. Someone who administers the organization can allow keys for the project in [Organization policies](https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation), then you create the key as usual. A key (or service account) that exists but is disabled can be [enabled again](https://docs.cloud.google.com/iam/docs/keys-disable-enable). **Check the connection** on Marketing → Search Console says which of these Google reports.
 
-### Share cards: "Imagick PHP extension must be installed"
+### Share cards: no generated card, or "Imagick PHP extension must be installed"
 
-the-og draws cards with Imagick. Install PHP's `imagick` extension (on NixOS, add `all.imagick` to the PHP `buildEnv` extensions). Uploaded share images don't need it; only generated cards do.
+the-og draws cards with Imagick, and has no GD fallback. On a host without PHP's `imagick` extension, pages don't point at a generated card: they use the uploaded share image, else the default image from Brand, else none, and `/og.png` and `/og/….png` answer 404. Install the extension (on NixOS, add `all.imagick` to the PHP `buildEnv` extensions) to get the cards. Uploaded share images don't need it; only generated cards do.
 
 ### robots.txt has no Sitemap line, or the favicon is blank
 

@@ -20,6 +20,18 @@ use Statamic\Contracts\Entries\Entry;
  */
 class Generator
 {
+    /**
+     * Whether cards can be drawn here: the-og draws with Imagick alone (no
+     * GD), and PHP's imagick extension is only suggested, so a host may lack
+     * it. Without it the meta tags fall back to the default image rather
+     * than point at a card that fails, and the card routes answer 404.
+     * Override (and bind) to check more, or to switch cards off in tests.
+     */
+    public function available(): bool
+    {
+        return extension_loaded('imagick');
+    }
+
     public function png(Entry $entry): string
     {
         $card = $this->card($entry);
@@ -61,10 +73,10 @@ class Generator
         $mount = $mount?->in($entry->locale()) ?? $mount;
 
         return new Card(
-            title: $overrides['og_title'] ?? (string) $entry->get('title'),
+            title: $overrides['og_title'] ?? (string) $entry->value('title'),
             // A long subtitle may be typed on several lines: the card draws it as one paragraph.
             description: isset($overrides['og_subtitle']) ? Str::squish((string) $overrides['og_subtitle']) : $seo->description($context),
-            label: $mount ? (string) $mount->get('title') : $settings->siteName(),
+            label: $mount ? (string) $mount->value('title') : $settings->siteName(),
             siteName: $settings->siteName(),
             picture: $settings->asset('og_picture')?->resolvedPath(),
             background: $settings->string('og_background', '#ffffff'),

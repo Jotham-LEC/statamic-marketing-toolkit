@@ -12,7 +12,6 @@ use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Query\Builder;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Markdown;
-use Statamic\Facades\Site;
 use Statamic\Structures\Page;
 
 /**
@@ -320,18 +319,20 @@ trait BuildsSchema
         }
 
         $trail = collect([['name' => $this->settings->siteName(), 'item' => $this->home()]]);
-        $segments = array_values(array_filter(explode('/', (string) $content->url())));
+        // The path on the content's site, without the site's folder (/fr/) a URL has.
+        $segments = array_values(array_filter(explode('/', (string) $content->uri())));
+        $site = $this->contentSite($context)->handle();
         $path = '';
 
         foreach (array_slice($segments, 0, -1) as $segment) {
             $path .= '/'.$segment;
 
-            $ancestor = Entries::findByUri($path, Site::current()->handle());
+            $ancestor = Entries::findByUri($path, $site);
             $ancestor = $ancestor instanceof Page ? $ancestor->entry() : $ancestor;
 
             // A draft's title and address aren't public yet.
             if ($ancestor instanceof Entry && $ancestor->status() === 'published') {
-                $trail->push(['name' => (string) $ancestor->get('title'), 'item' => $ancestor->absoluteUrl()]);
+                $trail->push(['name' => (string) $ancestor->value('title'), 'item' => $ancestor->absoluteUrl()]);
             }
         }
 
@@ -417,7 +418,7 @@ trait BuildsSchema
 
         return $items
             ->map(fn ($author): ?array => match (true) {
-                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->get('title'), 'url' => (string) $author->absoluteUrl()],
+                $author instanceof Entry => ['@type' => 'Person', 'name' => (string) $author->value('title'), 'url' => (string) $author->absoluteUrl()],
                 $author instanceof User => ['@type' => 'Person', 'name' => (string) ($author->name() ?: $author->get('name')), 'url' => (string) $author->get('url')],
                 default => null,
             })
