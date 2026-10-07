@@ -18,7 +18,7 @@ use Statamic\Structures\Page;
  * published entry at that path on the domain. The meta tags only point here when the entry has no uploaded share
  * image, but the card is served either way so editors can preview it.
  */
-class OgImageController
+final class OgImageController
 {
     public function __invoke(Request $request, Generator $generator, SiteSeo $seo, ?string $path = null): Response
     {

@@ -10,7 +10,7 @@ use Statamic\Exceptions\NotFoundHttpException;
 /**
  * /{key}.txt: the file that proves to IndexNow the site owns its key.
  */
-class IndexNowKeyController
+final class IndexNowKeyController
 {
     public function __invoke(IndexNow $indexNow): Response
     {

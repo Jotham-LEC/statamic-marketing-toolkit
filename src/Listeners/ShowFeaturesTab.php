@@ -14,7 +14,7 @@ use Statamic\Facades\Site;
  * settings. A module config/marketing-toolkit.php switches off is shown off
  * and can't be switched on there.
  */
-class ShowFeaturesTab
+final class ShowFeaturesTab
 {
     public function handle(GlobalVariablesBlueprintFound $event): void
     {

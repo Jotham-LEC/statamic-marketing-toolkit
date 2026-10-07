@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * publish form, on a blueprint defined here), CSV in and out, and the two
  * endpoints behind the "add a redirect?" question when content is saved.
  */
-class RedirectsController
+final class RedirectsController
 {
     public function index(): Response
     {

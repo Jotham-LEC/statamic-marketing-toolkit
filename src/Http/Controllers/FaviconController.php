@@ -13,7 +13,7 @@ use Statamic\Exceptions\NotFoundHttpException;
  * /icon-512.png and /site.webmanifest, made from the brand's icon. A file in
  * public/ of the same name wins: the web server serves it first.
  */
-class FaviconController
+final class FaviconController
 {
     public function __invoke(Request $request, Favicons $favicons): Response
     {

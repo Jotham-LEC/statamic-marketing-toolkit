@@ -15,7 +15,7 @@ use Statamic\Http\Controllers\CP\ActionController as StatamicActionController;
  * Runs Statamic actions on the redirects and 404 listings. The listing says
  * which it is in the action context.
  */
-class ActionController extends StatamicActionController
+final class ActionController extends StatamicActionController
 {
     /**
      * Only the addon's actions run here: Statamic's `run()` would run any

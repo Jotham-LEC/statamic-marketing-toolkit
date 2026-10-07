@@ -12,7 +12,7 @@ use Throwable;
  * Saving Brand makes the icons again, from the image and colours just
  * saved: on every site, since the others take what they leave empty from it.
  */
-class RemakeFavicons
+final class RemakeFavicons
 {
     public function handle(GlobalVariablesSaved $event): void
     {

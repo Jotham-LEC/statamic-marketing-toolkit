@@ -14,7 +14,7 @@ use Statamic\Facades\Site;
  * and print the scores. The scheduler runs it when reports are scheduled. On
  * a multi-site install it reports on each site in turn, or on `--site`.
  */
-class Report extends Command
+final class Report extends Command
 {
     use RunsInPlease;
 

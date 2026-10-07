@@ -10,7 +10,7 @@ use Statamic\Fields\Fieldtype;
  * fieldtype draws a boxed card instead, and real sections can't sit inside
  * the `seo` group. It shows its label; it stores nothing.
  */
-class Heading extends Fieldtype
+final class Heading extends Fieldtype
 {
     protected static $handle = 'mt_heading';
 

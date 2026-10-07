@@ -17,7 +17,7 @@ use Statamic\UpdateScripts\UpdateScript;
  * runs it on `composer update` (or `php please updates:run`); commit the
  * blueprints it changes.
  */
-class AddNewBrandFields extends UpdateScript
+final class AddNewBrandFields extends UpdateScript
 {
     /**
      * The fields each version from 0.20 brought, by that version. A field

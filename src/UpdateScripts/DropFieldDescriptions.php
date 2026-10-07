@@ -24,7 +24,7 @@ use Statamic\UpdateScripts\UpdateScript;
  * `updates:run` has no old version. RenameFromSeo renames those in the same
  * update, so it doesn't run again.
  */
-class DropFieldDescriptions extends UpdateScript
+final class DropFieldDescriptions extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {

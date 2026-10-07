@@ -14,7 +14,7 @@ use Statamic\Facades\Site;
  * clears the Stache. llms.txt also begins with Brand's description, so a
  * saved global set flushes them too.
  */
-class FlushSitemap
+final class FlushSitemap
 {
     public function handle(): void
     {

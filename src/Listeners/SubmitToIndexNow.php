@@ -18,7 +18,7 @@ use Statamic\Events\TermSaved;
  * sent. A page's old address, once it moves, is sent by RedirectChangedUris
  * with its redirect.
  */
-class SubmitToIndexNow
+final class SubmitToIndexNow
 {
     public function __construct(private IndexNow $indexNow) {}
 

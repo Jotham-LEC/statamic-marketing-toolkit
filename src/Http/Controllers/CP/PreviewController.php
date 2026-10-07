@@ -17,7 +17,7 @@ use Statamic\Contracts\Entries\Entry;
  * current values, so the preview follows the editor's typing before the
  * entry is saved, and run them through the same SiteSeo rules the page uses.
  */
-class PreviewController
+final class PreviewController
 {
     public function meta(Request $request, MetaPayload $payload): JsonResponse
     {

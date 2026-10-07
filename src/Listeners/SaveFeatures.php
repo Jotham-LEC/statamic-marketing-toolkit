@@ -14,7 +14,7 @@ use Statamic\Facades\Site;
  * site's localization has the tab (ShowFeaturesTab). A module that
  * config/marketing-toolkit.php switches off stays as it was.
  */
-class SaveFeatures
+final class SaveFeatures
 {
     public function handle(GlobalVariablesSaved $event): void
     {

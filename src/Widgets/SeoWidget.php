@@ -16,7 +16,7 @@ use Statamic\Widgets\Widget;
  * hit missing pages, of the site selected in the control panel. Add it in
  * config/statamic/cp.php: `['type' => 'mt']`.
  */
-class SeoWidget extends Widget
+final class SeoWidget extends Widget
 {
     protected static $handle = 'mt';
 

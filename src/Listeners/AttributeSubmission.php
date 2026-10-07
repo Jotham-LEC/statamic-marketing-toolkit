@@ -13,7 +13,7 @@ use Statamic\Events\FormSubmitted;
  * the check here covers a queue worker or Octane process booted before
  * leads were switched off.
  */
-class AttributeSubmission
+final class AttributeSubmission
 {
     public function handle(FormSubmitted $event): void
     {

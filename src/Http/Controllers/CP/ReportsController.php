@@ -35,7 +35,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * plain text, from a site's own checks and older reports); they're
  * translated here, on their way to the screen.
  */
-class ReportsController
+final class ReportsController
 {
     public function index(): Response
     {

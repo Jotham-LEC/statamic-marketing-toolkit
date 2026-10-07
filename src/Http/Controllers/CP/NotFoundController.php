@@ -18,7 +18,7 @@ use Statamic\Facades\Site;
  * each with a "Create redirect" action. On a multi-site install, those of
  * the selected site.
  */
-class NotFoundController
+final class NotFoundController
 {
     public function index(): Response
     {

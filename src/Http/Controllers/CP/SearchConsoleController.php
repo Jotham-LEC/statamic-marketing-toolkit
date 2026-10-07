@@ -24,7 +24,7 @@ use Throwable;
  * be changed here. The property, the check and the import are of the site
  * selected in the control panel; the key serves every site.
  */
-class SearchConsoleController
+final class SearchConsoleController
 {
     public function __construct(private Connection $connection) {}
 

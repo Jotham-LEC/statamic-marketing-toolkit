@@ -25,7 +25,7 @@ use Symfony\Component\Finder\SplFileInfo;
  * the Brand global is still `seo`, so `{{ seo:site_name }}` stays, and so do
  * a `config/seo.php` or `lang/vendor/seo` of another package. Remove it at 1.0.
  */
-class RenameFromSeo extends UpdateScript
+final class RenameFromSeo extends UpdateScript
 {
     public const array PERMISSIONS = [
         'view seo' => Permissions::VIEW,

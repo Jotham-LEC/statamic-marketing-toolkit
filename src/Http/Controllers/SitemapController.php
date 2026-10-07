@@ -18,7 +18,7 @@ use Statamic\Facades\Site;
  * index of /sitemap_{n}.xml. Cached until an entry, term, tree, collection
  * or taxonomy is saved (JothamLec\MarketingToolkit\Listeners\FlushSitemap).
  */
-class SitemapController
+final class SitemapController
 {
     public const string CACHE_KEY = 'mt:sitemap';
 

@@ -24,7 +24,7 @@ use Statamic\UpdateScripts\UpdateScript;
  * Brand holds values of those fields, as on a server whose globals are in
  * the database and whose blueprints were moved where the update ran first.
  */
-class MoveToMarketingSettings extends UpdateScript
+final class MoveToMarketingSettings extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {

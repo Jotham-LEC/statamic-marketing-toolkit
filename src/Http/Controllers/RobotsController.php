@@ -11,7 +11,7 @@ use Statamic\Exceptions\NotFoundHttpException;
  * /robots.txt from the Crawlers tab of Marketing settings. Outside production it shuts every
  * crawler out. A real public/robots.txt wins: the web server serves it first.
  */
-class RobotsController
+final class RobotsController
 {
     public function __invoke(SiteSeo $seo): Response
     {

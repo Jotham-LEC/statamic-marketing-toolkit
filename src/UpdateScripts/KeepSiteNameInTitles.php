@@ -13,7 +13,7 @@ use Statamic\UpdateScripts\UpdateScript;
  * localization with a separator saved and no toggle gets the toggle on,
  * which is what its titles already do.
  */
-class KeepSiteNameInTitles extends UpdateScript
+final class KeepSiteNameInTitles extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {

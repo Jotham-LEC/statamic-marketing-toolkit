@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
  * domain, and a clear that doesn't match leaves it to send the lead again
  * on every page for five minutes.
  */
-class CountConversion
+final class CountConversion
 {
     public const string COOKIE = 'mt_conversion';
 

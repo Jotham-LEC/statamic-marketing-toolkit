@@ -9,7 +9,7 @@ use Statamic\Actions\Action;
 /**
  * From a row of the 404 log: open a new redirect with the missing path as its source.
  */
-class CreateRedirect extends Action
+final class CreateRedirect extends Action
 {
     protected $confirm = false;
 

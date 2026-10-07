@@ -29,7 +29,7 @@ use Statamic\Structures\Page;
  * adds what is missing (the fields a newer version brings too) and changes
  * nothing else.
  */
-class Install extends Command
+final class Install extends Command
 {
     use RunsInPlease;
 

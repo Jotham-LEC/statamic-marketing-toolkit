@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
  * a rule, so a page that comes back takes its address back. The bookkeeping
  * (hit counts, the log) runs in terminate(), after the response has gone out.
  */
-class HandleMissing
+final class HandleMissing
 {
     public function __construct(private Matcher $matcher, private Recorder $recorder) {}
 

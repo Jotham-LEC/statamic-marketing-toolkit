@@ -16,7 +16,7 @@ use Statamic\Facades\Site;
  * forgotten with it (Listeners\FlushSitemap). A file of the same name in
  * public/ wins: the web server serves it first.
  */
-class TextFileController
+final class TextFileController
 {
     public const string LLMS_CACHE_KEY = 'mt:llms';
 

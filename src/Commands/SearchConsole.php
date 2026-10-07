@@ -17,7 +17,7 @@ use Throwable;
  * runs it daily once `marketing-toolkit.search_console` is set up. On a multi-site install
  * it imports each site that has a property, or only `--site`.
  */
-class SearchConsole extends Command
+final class SearchConsole extends Command
 {
     use RunsInPlease;
 

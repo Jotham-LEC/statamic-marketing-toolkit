@@ -22,7 +22,7 @@ use Statamic\Tags\Tags;
  *
  * `<s:mt:meta />` is the meta tags alone. The parameters are in docs/developers.md ("The tag").
  */
-class Seo extends Tags
+final class Seo extends Tags
 {
     protected static $handle = 'mt';
 

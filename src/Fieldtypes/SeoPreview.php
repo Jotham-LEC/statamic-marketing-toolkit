@@ -10,7 +10,7 @@ use Statamic\Fields\Fieldtype;
  * The search result and the share cards this entry will produce, drawn live
  * from the publish form. It shows; it stores nothing.
  */
-class SeoPreview extends Fieldtype
+final class SeoPreview extends Fieldtype
 {
     protected static $handle = 'mt_preview';
 

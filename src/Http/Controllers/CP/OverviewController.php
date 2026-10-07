@@ -29,7 +29,7 @@ use Statamic\Facades\User;
  * screen that changes it. Links the person may not use are left out. On a
  * multi-site install, all of it for the site selected in the control panel.
  */
-class OverviewController
+final class OverviewController
 {
     public function __construct(
         private SiteSeo $seo,

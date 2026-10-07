@@ -32,7 +32,7 @@ use Throwable;
  * remembers of the content as it was loaded; the redirects are written once
  * the save has gone through.
  */
-class RedirectChangedUris
+final class RedirectChangedUris
 {
     /** @var array<string, array<string, array<int, mixed>>> */
     private array $pending = [];
