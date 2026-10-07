@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.22.2 – 2026-10-08
+
+### Fixed
+- **A `config/seo.php` that names only the site's own classes is moved to `config/marketing-toolkit.php`.** The update from 0.19 or earlier moved the file only when it named one of the addon's (`JothamLec\…`) classes, so a file cut down to what the site changed (its own `App\Seo`, its share-card template, modules it switched off) stayed behind, and from 0.20 the addon ignored it: the site's `SiteSeo` subclass wasn't used, and the modules it had switched off came back on. The file is now also recognised by the addon's own keys (two of `collections`, `og`, `favicons`, `tracking`, `indexnow`, `robots_txt`, `llms_txt`…), and another package's `config/seo.php` still stays where it is.
+- **The front-end toolbar works with a Content Security Policy that doesn't allow inline scripts.** The script `<s:mt:body />` prints held the toolbar's address with its version, so its hash changed with each update and a policy couldn't allow it. The addresses are now attributes of its tag and its code never changes: add `'sha256-ER0DYGxHgRaNqwj+0P+VzXfNCbXGqSELhjDw67SNG8I='` to `script-src`. See [configuration.md](docs/configuration.md#toolbar).
+- **A site's own `sitemap.xml`, `llms.txt`, `robots.txt` or other route for one of the addon's addresses answers again.** From 0.20 the addon registered its routes whatever the config said (so cached routes follow the Features switches), and registered after the site's they replaced them: with the addon's module off, the address answered 404. It now leaves an address the site already has a route for, and robots.txt still names `/sitemap.xml`.
+
+### Upgrading
+- **A site where `config/seo.php` is still there after updating to 0.20 or later** gets it moved on `composer update`, and the addon reads it again. Commit the move, and check the pages' meta tags: the site's own `SiteSeo` subclass and its switched-off modules apply again.
+
 ## 0.22.1 – 2026-10-08
 
 ### Changed
