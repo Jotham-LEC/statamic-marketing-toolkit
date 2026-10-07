@@ -194,7 +194,7 @@ When a page has no share image, the site draws one: the page title and descripti
 
 ## The front-end toolbar
 
-![The toolbar along the bottom of a page, with its SEO score panel open](images/toolbar.png)
+![The toolbar along the bottom of a page, with its SEO score panel open on two failing checks and three warnings](images/toolbar.png)
 
 While you're signed in to the control panel, the live site shows a small button in the bottom-left corner with the page's SEO score. Visitors never see it. Click it, or press **Alt+Shift+M**, to open the toolbar along the bottom of the page:
 

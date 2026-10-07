@@ -399,6 +399,16 @@ ul.menu {
     gap: 8px 16px;
 }
 
+/* Links that stand alone: at least 24 px to aim at (WCAG 2.2), 44 px on a small screen. */
+.actions a,
+.issues a,
+.rows a,
+.body > p > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+}
+
 .button {
     display: inline-block;
     padding: 6px 12px;
@@ -572,7 +582,11 @@ ul.menu {
     }
 
     .menu a,
-    .menu button {
+    .menu button,
+    .actions a,
+    .issues a,
+    .rows a,
+    .body > p > a {
         min-height: 44px;
     }
 }

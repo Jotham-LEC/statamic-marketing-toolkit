@@ -38,6 +38,10 @@ Each check lists the pages it flagged. Export the report as a CSV.
 
 ![An SEO report with a score of 98, two failing checks, and the Export CSV button](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/report.png)
 
+Signed in, each page of the live site shows its score and what to fix, and visitors never see it.
+
+![The toolbar along the bottom of a page, with its SEO score panel open on two failing checks and three warnings](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/toolbar.png)
+
 Moved pages get their redirect automatically.
 
 ![The redirects list, with a wildcard redirect, a 410, and a redirect marked Automatic](https://raw.githubusercontent.com/Jotham-LEC/statamic-marketing-toolkit/main/docs/images/redirects.png)
