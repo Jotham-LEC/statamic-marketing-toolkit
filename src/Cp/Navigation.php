@@ -23,7 +23,9 @@ class Navigation
                 [(string) config('marketing-toolkit.global'), (string) config('marketing-toolkit.settings_global')],
             );
 
-            $nav->create(__('marketing-toolkit::cp.nav.overview'))->section($section)->route('mt.index')->icon('megaphone')->can('view marketing toolkit');
+            $overview = $nav->create(__('marketing-toolkit::cp.nav.overview'))->section($section)->route('mt.index')->icon('megaphone')->can('view marketing toolkit');
+            // Its address starts every other screen's, which would light it up on all of them: only its own.
+            (fn () => $this->active = 'marketing-toolkit$')->call($overview);
             $nav->create(__('marketing-toolkit::cp.nav.reports'))->section($section)->route('mt.reports.index')->icon('charts-donut-graph')->can('view marketing toolkit');
             $nav->create(__('marketing-toolkit::cp.nav.redirects'))->section($section)->route('mt.redirects.index')->icon('moved')->can('manage marketing toolkit redirects');
             $nav->create(__('marketing-toolkit::cp.nav.not_found'))->section($section)->route('mt.404s.index')->icon('warning-diamond')->can('view marketing toolkit');

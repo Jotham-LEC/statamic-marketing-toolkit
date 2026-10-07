@@ -174,3 +174,13 @@ test('the overview marks a file public/ serves instead of the addon\'s', functio
         File::delete(public_path('robots.txt'));
     }
 });
+
+test('Overview is highlighted on the overview only, not on the screens under it', function () {
+    $this->actingAs(cpUser(super: true));
+
+    $this->get(cp_route('mt.reports.show', 1));
+    expect(marketingNav()->get('Overview')->isActive())->toBeFalse();
+
+    $this->get(cp_route('mt.index'));
+    expect(marketingNav()->get('Overview')->isActive())->toBeTrue();
+});

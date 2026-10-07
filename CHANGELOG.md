@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.21.1 – 2026-10-07
+
+### Fixed
+- **Overview is highlighted on the overview only.** Its address starts every other Marketing screen's, so it stayed highlighted beside Reports, Redirects and the rest.
+- The screenshots in the README and docs show the 0.21 control panel.
+
 ## 0.21.0 – 2026-10-07
 
 The control panel gets its own Marketing section, the brand is kept apart from the tracking and crawler settings, and reports can be exported.
