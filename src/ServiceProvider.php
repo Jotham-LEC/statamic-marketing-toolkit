@@ -243,7 +243,7 @@ class ServiceProvider extends AddonServiceProvider
         // Off under Features (or in config/marketing-toolkit.php): reports run only by hand.
         $schedules = config('marketing-toolkit.reports.enabled') ? $settings->get('schedule') : 'off';
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
-        $day = array_search($settings->get('schedule_day'), ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'], true);
+        $day = array_search($settings->get('schedule_day'), ReportSettings::DAYS, true);
 
         // One run per site on a multi-site install, each with its own overlap lock.
         foreach (Sites::multiple() ? Sites::handles() : [null] as $site) {

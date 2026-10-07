@@ -27,6 +27,9 @@ class ReportSettings
         'schedule_time' => '03:00',
     ];
 
+    /** `schedule_day`'s options, each at its index in Carbon's days of the week. */
+    public const array DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
     /** @var array<string, mixed> */
     private array $values;
 
