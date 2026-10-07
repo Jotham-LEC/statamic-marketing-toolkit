@@ -15,7 +15,6 @@ use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
-use Statamic\Addons\Addon as AddonPackage;
 use Statamic\Contracts\Auth\User as UserContract;
 use Statamic\Facades\Addon;
 use Statamic\Facades\GlobalSet;
@@ -45,7 +44,6 @@ class OverviewController
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
         // The set the Tracking tab is in: Marketing settings, or Brand on a site that hasn't moved it yet.
         $tracking = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($site) ?? $variables;
-        $addon = Addon::get(Package::NAME);
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
         return Inertia::render('marketing-toolkit::Overview', [
@@ -56,7 +54,7 @@ class OverviewController
                 'separator' => $seo->settings()->titleSiteName() ? $seo->settings()->separator() : null,
                 'description' => $seo->settings()->string('default_description'),
             ],
-            'report' => $this->report($user, $addon, $site),
+            'report' => $this->report($user, $site),
             'redirects' => $user->can('manage marketing toolkit redirects') ? [
                 'active' => $redirects()->count(),
                 'automatic' => $redirects()->where('automatic', true)->count(),
@@ -119,7 +117,7 @@ class OverviewController
     /**
      * @return array<string, mixed>
      */
-    private function report(UserContract $user, ?AddonPackage $addon, string $site): array
+    private function report(UserContract $user, string $site): array
     {
         $latest = Report::latestDone($site);
 
@@ -140,7 +138,7 @@ class OverviewController
             ],
             'url' => cp_route('mt.reports.index'),
             // The Settings tab of Reports.
-            'settings_url' => $addon?->hasSettingsBlueprint() && $user->can('editSettings', $addon) ? cp_route('mt.reports.index').'#settings' : null,
+            'settings_url' => Package::canEditSettings() ? cp_route('mt.reports.index').'#settings' : null,
         ];
     }
 

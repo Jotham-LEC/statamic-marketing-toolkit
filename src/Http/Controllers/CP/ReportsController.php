@@ -39,7 +39,7 @@ class ReportsController
     public function index(): Response
     {
         $addon = Addon::get(Package::NAME);
-        $fields = $this->canEditSettings() ? $addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess() : null;
+        $fields = Package::canEditSettings() ? $addon->settingsBlueprint()->fields()->addValues($addon->settings()->raw())->preProcess() : null;
 
         return Inertia::render('marketing-toolkit::Reports', [
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
@@ -63,7 +63,7 @@ class ReportsController
      */
     public function saveSettings(Request $request): JsonResponse
     {
-        abort_unless($this->canEditSettings(), 403);
+        abort_unless(Package::canEditSettings(), 403);
 
         $addon = Addon::get(Package::NAME);
         $fields = $addon->settingsBlueprint()->fields()->addValues($request->all());
@@ -90,7 +90,7 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('marketing-toolkit::reports.rules.render'));
+        $labels = $this->labels($report);
         $names = fn (ReportPage $page, string $status) => collect($page->results ?? [])
             ->filter(fn ($result) => $result['status'] === $status)
             ->keys()
@@ -116,13 +116,6 @@ class ReportsController
     private static function cell(mixed $value): mixed
     {
         return is_string($value) && preg_match('/^[=+\-@\t\r]/', $value) ? "'".$value : $value;
-    }
-
-    private function canEditSettings(): bool
-    {
-        $addon = Addon::get(Package::NAME);
-
-        return $addon?->hasSettingsBlueprint() === true && (bool) User::current()?->can('editSettings', $addon);
     }
 
     /**
@@ -188,7 +181,7 @@ class ReportsController
     {
         $this->authorizeSite($report);
 
-        $labels = collect($report->summary['rules'] ?? [])->map(fn (array $rule) => __($rule['label']))->put('render', __('marketing-toolkit::reports.rules.render'))->all();
+        $labels = $this->labels($report);
         /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
         $editUrls = [];
         $query = $report->pages()->getQuery();
@@ -283,5 +276,18 @@ class ReportsController
     private function authorizeSite(Report $report): void
     {
         abort_unless($report->isShownOn(Site::selected()->handle()), 404);
+    }
+
+    /**
+     * Each check's label, by its handle, and the render failure's.
+     *
+     * @return array<string, string>
+     */
+    private function labels(Report $report): array
+    {
+        return collect($report->summary['rules'] ?? [])
+            ->map(fn (array $rule) => __($rule['label']))
+            ->put('render', __('marketing-toolkit::reports.rules.render'))
+            ->all();
     }
 }

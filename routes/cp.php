@@ -22,6 +22,9 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
         Route::post('redirects', [RedirectsController::class, 'store'])->name('redirects.store');
         Route::get('redirects/{redirect}', [RedirectsController::class, 'edit'])->whereNumber('redirect')->name('redirects.edit');
         Route::patch('redirects/{redirect}', [RedirectsController::class, 'update'])->whereNumber('redirect')->name('redirects.update');
+        Route::get('redirects/export', [RedirectsController::class, 'export'])->name('redirects.export');
+        Route::post('redirects/import', [RedirectsController::class, 'import'])->name('redirects.import');
+        Route::post('redirects/choice', [RedirectsController::class, 'choice'])->name('redirects.choice');
     });
 
     Route::post('actions', [ActionController::class, 'run'])->name('actions.run');
@@ -29,11 +32,6 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
 
     Route::post('preview/card', [PreviewController::class, 'card'])->name('preview.card');
 
-    Route::middleware('can:manage marketing toolkit redirects')->group(function () {
-        Route::get('redirects/export', [RedirectsController::class, 'export'])->name('redirects.export');
-        Route::post('redirects/import', [RedirectsController::class, 'import'])->name('redirects.import');
-        Route::post('redirects/choice', [RedirectsController::class, 'choice'])->name('redirects.choice');
-    });
     // Asked on every save of an entry or term: answers "no change" without the permission.
     Route::post('redirects/check', [RedirectsController::class, 'check'])->name('redirects.check');
 

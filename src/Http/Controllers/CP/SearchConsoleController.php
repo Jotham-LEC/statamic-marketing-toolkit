@@ -15,7 +15,6 @@ use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
-use Statamic\Facades\User;
 use Throwable;
 
 /**
@@ -179,6 +178,6 @@ class SearchConsoleController
 
     private function canSetUp(): bool
     {
-        return (bool) User::current()?->can('editSettings', Addon::get(Package::NAME));
+        return Package::canEditSettings();
     }
 }
