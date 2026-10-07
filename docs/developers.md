@@ -175,8 +175,8 @@ Cards are cached per entry, last-modified time, template, version and text, and 
 - **Redirects** are the Eloquent model `JothamLec\MarketingToolkit\Redirects\Redirect` (`site`, `source`, `target`, `status`, `active`, `automatic`, `hits`, `last_hit_at`). `site` is a site handle, or null for every site (always null on a single site). Saving or deleting one through the model clears the cached rules; after bulk queries, call `JothamLec\MarketingToolkit\Redirects\Matcher::flush()`.
 - **Automatic redirects** go through `JothamLec\MarketingToolkit\Redirects\AutoRedirects::create($from, $to, $site)`, which also collapses chains among that site's rules. Use it when you move content in code.
 - **The 404 log** is `JothamLec\MarketingToolkit\NotFound\MissingPath` (with `site`, as redirects).
-- **Reports**: `app(JothamLec\MarketingToolkit\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site.
-- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the Brand and Marketing settings globals, `absolute()` and the sitemap read it) and puts back what was there. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
+- **Reports**: `app(JothamLec\MarketingToolkit\Reports\Runner::class)->runToEnd($runner->start(site: 'handle'))` runs one in-process; without `site`, of the current site. Reports, like the 404 log, have a `site` column that is null on a single site. Each check is a class in `src/Reports/Rules` extending `Rule` (`handle()`, `label()`, `weight()`, `check($url, PageFacts, SiteFacts): Result`).
+- **Another site as the current one**: `JothamLec\MarketingToolkit\Support\Sites::as($handle, fn () => …)` runs code with that site current (the Brand and Marketing settings globals, `absolute()` and the sitemap read it) and puts back what was there.
 
 ## Several sites and languages
 

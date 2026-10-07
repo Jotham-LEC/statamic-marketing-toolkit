@@ -24,6 +24,7 @@ Every test is in `tests/Feature`, one file per area; `tests/Pest.php` sets up a 
 - Statamic matches the site by its absolute URL, so request front-end pages as `https://example.test/…`.
 - Blueprints, forms and global sets are files that outlive a test: delete what a test creates, or give it a handle no other test uses.
 - Each parallel process gets its own copy of Testbench's skeleton in `/tmp/marketing-toolkit-tests`, so a test may write to `public/` or `resources/`.
+- The blueprints are YAML, so they repeat lists the code owns (the report checks and their defaults, the Features switches, the tracking ID patterns). `BlueprintsTest` fails when the two disagree: change both.
 
 The suite runs on SQLite. To run it on Postgres, point it at an empty database: `MT_TEST_DB=pgsql DB_PORT=5432 DB_DATABASE=mt_test vendor/bin/pest` (also `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`; not in parallel, as the processes would share the database). GitHub Actions runs all of this on every push: PHP 8.3 on the oldest versions composer.json allows, PHP 8.4 on the newest, Postgres, and without Imagick, plus `composer validate`, Pint, PHPStan and the build.
 
