@@ -134,7 +134,7 @@ A sitemap lists every site on its domain: languages under `/fr/` are in `example
 
 | Key | Default | |
 |---|---|---|
-| `indexnow.enabled` | `true` | When published content is saved, goes live on schedule or is deleted, its address is sent to IndexNow (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
+| `indexnow.enabled` | `true` | When published content is saved, goes live on schedule, is unpublished or is deleted, its address is sent to IndexNow, and when it moves, its old address too (with its automatic redirect) (Bing, Yandex, Naver, Seznam and others; not Google) once the request has been answered. Production only; a failure is logged. |
 | `indexnow.key` | `null` (`MT_INDEXNOW_KEY`) | The key served at `/{key}.txt`. Left empty, it is derived from `APP_KEY`, so it stays the same across deploys. |
 
 ### Google Search Console
@@ -259,7 +259,7 @@ The addon sends nothing to its author: no licence check, no usage numbers, no up
 
 | When | From | To | What is sent |
 |---|---|---|---|
-| Published content is saved, goes live or is deleted (IndexNow on, production only) | The server | `https://api.indexnow.org/indexnow` | The site's host, the IndexNow key, where the key file is, and the changed addresses. |
+| Published content is saved, goes live, moves, is unpublished or is deleted (IndexNow on, production only) | The server | `https://api.indexnow.org/indexnow` | The site's host, the IndexNow key, where the key file is, and the changed addresses. |
 | A Search Console check or import (with a key and a property) | The server | `https://oauth2.googleapis.com/token`, then `https://www.googleapis.com/webmasters/v3/sites/…` | A token request signed with the service account key (its email, the read-only Search Console scope, an expiry; the private key itself never leaves the server); then the property, and for an import the date range and which rows. |
 | A report runs with **Check external links** on (off unless switched on in the report settings) | The server | The sites the pages link to | A `HEAD` request (a `GET` where `HEAD` is refused) for each linked address, at most 50 a page, each answer kept for a day. Addresses on this machine or a private network are never asked. |
 | A visitor opens a page, with a tracking ID set, in the environments in `tracking.environments` (production unless changed), never in Live Preview | The visitor's browser | Google Tag Manager and Google Analytics (`googletagmanager.com`), the Meta Pixel (`connect.facebook.net`, `facebook.com`), LinkedIn (`snap.licdn.com`, `px.ads.linkedin.com`), PostHog (your `tracking.posthog_host`) | Whatever each tool's own script collects, and with leads on, a lead event when a form is sent. How each behaves before consent: [tracking.md](tracking.md#meta-linkedin-and-posthog-without-gtm). |
