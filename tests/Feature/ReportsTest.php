@@ -4,7 +4,9 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Sleep;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Fieldtypes\SeoPreview;
@@ -132,6 +134,21 @@ test('a page that fails to render scores zero and says why', function () {
     expect($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0'))
         ->toMatchArray(['label' => 'Page renders', 'status' => 'fail'])
         ->and($this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0.message'))->not->toStartWith('marketing-toolkit::');
+});
+
+test('a page that throws shows the exception’s class, not its text, which goes to the log', function () {
+    View::composer('form', fn () => throw new RuntimeException('SQLSTATE[HY000] secret-db.internal password=hunter2'));
+    entryIn('pages', 'contact', ['template' => 'form']);
+    Log::spy();
+
+    $report = fullReport();
+
+    $this->actingAs(cpUser(super: true));
+    $message = $this->getJson(cp_route('mt.reports.pages', $report))->json('data.0.issues.0.message');
+
+    expect($message)->toBe('The page couldn’t be rendered (RuntimeException). The full error is in the site’s log.')
+        ->and(json_encode(reportPage($report, '/contact')->only(['facts', 'results'])))->not->toContain('secret-db');
+    Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains((string) $message, 'secret-db'));
 });
 
 test('only the newest reports are kept', function () {

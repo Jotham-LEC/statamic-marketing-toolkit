@@ -59,6 +59,7 @@ return [
 
         // A page that didn't render, and a report that stopped.
         'status' => 'The page answered with status :status.',
+        'render_failed' => 'The page couldn’t be rendered (:exception). The full error is in the site’s log.',
         'page_deleted' => 'The page was deleted while the report was running.',
         'stopped' => 'The report stopped making progress.',
     ],

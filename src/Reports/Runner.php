@@ -125,7 +125,7 @@ class Runner
                 $rendered = $this->renderer->render($content);
                 $facts = $rendered['status'] === 200 && $rendered['error'] === null
                     ? $this->inspector->inspect($rendered['html'])
-                    : new PageFacts(status: $rendered['status'], error: $rendered['error']);
+                    : new PageFacts(status: $rendered['status'], error: $rendered['error'], exception: $rendered['exception'] ?? null);
             }
 
             $broken = $report->settings()->ruleEnabled(ExternalLinks::handle()) && $facts->externalLinks !== []
@@ -207,7 +207,11 @@ class Runner
 
             if (! $facts->rendered()) {
                 $counts['errors']++;
-                $result = $facts->error !== null ? Result::fail($facts->error) : Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]);
+                $result = match (true) {
+                    $facts->error === null => Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]),
+                    $facts->exception !== null => Result::fail($facts->error, ['exception' => $facts->exception]),
+                    default => Result::fail($facts->error),
+                };
                 $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
                 $scores[] = 0;
 
