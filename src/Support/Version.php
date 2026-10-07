@@ -13,13 +13,11 @@ use UnexpectedValueException;
  */
 final class Version
 {
-    /** Whether the version is a release before the other. */
     public static function before(string $version, string $than): bool
     {
         return ($normal = self::normal($version)) !== null && version_compare($normal, (string) self::normal($than), '<');
     }
 
-    /** Whether the version is a release after the other. */
     public static function after(string $version, string $than): bool
     {
         return ($normal = self::normal($version)) !== null && version_compare($normal, (string) self::normal($than), '>');

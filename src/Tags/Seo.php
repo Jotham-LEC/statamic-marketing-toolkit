@@ -20,11 +20,7 @@ use Statamic\Tags\Tags;
  * `<s:mt:favicons />` is the icons' links alone, and `<s:mt:toolbar />` the
  * toolbar's guard alone, before </body>, for a layout without `mt:body`.
  *
- * `<s:mt:meta />` alone is the meta tags: every tag the
- * <head> needs for the current page's SEO. It reads the entry or term from the
- * view's `page`; a page without one (a controller view, a 404) passes what it
- * knows as parameters: title, description, canonical (false for none),
- * image, og_type, noindex, status, or `entry` to name the content directly.
+ * `<s:mt:meta />` is the meta tags alone. The parameters are in docs/developers.md ("The tag").
  */
 class Seo extends Tags
 {

@@ -133,9 +133,6 @@ class ServiceProvider extends AddonServiceProvider
         parent::boot();
     }
 
-    /**
-     * The modules that are off (Features), off before anything registers.
-     */
     protected function bootFeatures(): void
     {
         Features::apply();
@@ -262,7 +259,6 @@ class ServiceProvider extends AddonServiceProvider
             $event?->withoutOverlapping()->runInBackground();
         }
 
-        // Search Console's numbers, daily, once it is set up (in .env or the control panel).
         if (app(SearchConsoleClient::class)->configuredForAnySite()) {
             $schedule->command('statamic:mt:search-console')->dailyAt('04:30')->withoutOverlapping();
         }

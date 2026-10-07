@@ -22,7 +22,6 @@ class OgImageController
 {
     public function __invoke(Request $request, Generator $generator, SiteSeo $seo, ?string $path = null): Response
     {
-        // No Imagick to draw with.
         throw_unless(Features::on('share_cards') && $generator->available(), NotFoundHttpException::class);
 
         $entry = $this->entry($request, trim((string) $path, '/'));

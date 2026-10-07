@@ -369,9 +369,6 @@ class Install extends Command
         return array_values(array_unique($filled));
     }
 
-    /**
-     * A field's label, as the control panel shows it.
-     */
     private static function label(string $handle): string
     {
         foreach (collect(self::SETS)->flatMap(fn (array $set) => self::tabs('', $set['file'])) as $tab) {

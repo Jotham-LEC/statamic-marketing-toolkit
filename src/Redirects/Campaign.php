@@ -50,8 +50,6 @@ final class Campaign
     }
 
     /**
-     * The UTM tags in $target's query string.
-     *
      * @return array<string, string>
      */
     public static function tags(string $target): array

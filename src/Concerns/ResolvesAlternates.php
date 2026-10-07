@@ -13,21 +13,12 @@ use Statamic\Facades\Site;
 use Statamic\Sites\Site as SiteObject;
 
 /**
- * A page's other languages, for hreflang and og:locale. Part of SiteSeo's
- * override surface: a project overrides these methods on its SiteSeo
- * subclass (bound in its place), not on the trait, which only splits the
- * class into readable parts.
+ * A page's other languages, for hreflang and og:locale.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait ResolvesAlternates
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Languages
-    |--------------------------------------------------------------------------
-    */
-
     /**
      * The same page in each language, for hreflang: code => address, with
      * `x-default` for the version shown to everyone else (config

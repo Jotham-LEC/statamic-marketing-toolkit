@@ -13,9 +13,7 @@ use Statamic\Contracts\Entries\Entry;
 
 /**
  * The page's meta tags: title, description, share image, canonical, robots
- * and the Open Graph extras. Part of SiteSeo's override surface: a project
- * overrides these methods on its SiteSeo subclass (bound in its place), not
- * on the trait, which only splits the class into readable parts.
+ * and the Open Graph extras.
  *
  * @phpstan-require-extends SiteSeo
  */
@@ -48,12 +46,6 @@ trait BuildsMeta
             localeAlternates: $alternates === [] ? [] : $this->localeAlternates($context),
         );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Title, description, image
-    |--------------------------------------------------------------------------
-    */
 
     /** @api */
     public function title(Context $context): string
@@ -184,12 +176,6 @@ trait BuildsMeta
         return self::domainRoot($absolute).'/'.ltrim($route, '/').'?v='.$entry->lastModified()->timestamp;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | URLs and robots
-    |--------------------------------------------------------------------------
-    */
-
     /**
      * Where search engines should send the ranking: an override, the original
      * a republished piece points at, else this page (with `?page=N` past the
@@ -301,12 +287,6 @@ trait BuildsMeta
 
         return $route !== null && in_array($route, (array) config('marketing-toolkit.robots.noindex_routes'), true);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Open Graph extras
-    |--------------------------------------------------------------------------
-    */
 
     /** @api */
     public function ogType(Context $context): string

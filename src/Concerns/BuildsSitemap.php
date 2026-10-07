@@ -11,20 +11,12 @@ use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site;
 
 /**
- * The URLs the sitemap lists. Part of SiteSeo's override surface: a project
- * overrides these methods on its SiteSeo subclass (bound in its place), not
- * on the trait, which only splits the class into readable parts.
+ * The URLs the sitemap lists.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait BuildsSitemap
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Sitemap
-    |--------------------------------------------------------------------------
-    */
-
     /**
      * Every URL the sitemap lists, sorted by address, each with its other
      * languages (hreflang code => address) when it has any.

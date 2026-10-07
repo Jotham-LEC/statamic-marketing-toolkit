@@ -13,20 +13,12 @@ use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site;
 
 /**
- * llms.txt, ads.txt and robots.txt. Part of SiteSeo's override surface: a
- * project overrides these methods on its SiteSeo subclass (bound in its place), not on the trait, which only splits the class into readable
- * parts.
+ * llms.txt, ads.txt and robots.txt.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait BuildsTextFiles
 {
-    /*
-    |--------------------------------------------------------------------------
-    | llms.txt and ads.txt
-    |--------------------------------------------------------------------------
-    */
-
     /**
      * /llms.txt (llmstxt.org): the site's name and description, then, per
      * collection the sitemap lists, its pages as Markdown links with their
@@ -123,12 +115,6 @@ trait BuildsTextFiles
 
         return $text === '' ? null : $text."\n";
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Robots.txt
-    |--------------------------------------------------------------------------
-    */
 
     /** @api */
     public function robotsTxt(): string

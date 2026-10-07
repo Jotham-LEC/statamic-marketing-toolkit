@@ -44,7 +44,6 @@ class NotFoundController
             $request,
             [
                 'last_seen_at' => __('marketing-toolkit::cp.listing.last_seen'), 'path' => __('marketing-toolkit::cp.listing.path'),
-                // The site column only where there is more than one.
                 ...(Sites::multiple() ? ['site' => __('marketing-toolkit::cp.listing.site')] : []),
                 'hits' => __('marketing-toolkit::cp.listing.hits'), 'first_seen_at' => __('marketing-toolkit::cp.listing.first_seen'),
                 'referrer' => __('marketing-toolkit::cp.listing.last_linked_from'),

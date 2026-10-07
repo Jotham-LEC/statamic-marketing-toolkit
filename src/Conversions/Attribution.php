@@ -86,8 +86,6 @@ class Attribution
     }
 
     /**
-     * Adds the attribution fields to every form's blueprint that lacks them.
-     *
      * @return list<string> the forms changed
      */
     public static function addToForms(): array

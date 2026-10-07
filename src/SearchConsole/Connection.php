@@ -73,8 +73,6 @@ class Connection
     }
 
     /**
-     * The handles of the sites that have a property.
-     *
      * @return list<string>
      */
     public function sitesWithProperty(): array

@@ -17,6 +17,8 @@ use WeakMap;
  * (`$this->app->bind(SiteSeo::class, Seo::class)`), and overrides only the
  * rules it needs to change. Every method receives the Context, so a rule can
  * look at the entry, the term, the request and the template's overrides.
+ * The traits only split the class into parts: override their methods here,
+ * on the subclass.
  *
  * The methods marked `@api` (those docs/developers.md lists) keep their
  * names and signatures until the next major version; the others are

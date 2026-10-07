@@ -94,9 +94,6 @@ class Redirect extends Model
         }
     }
 
-    /**
-     * Whether the signed-in user may manage this rule (see scopeAccessible()).
-     */
     public function isAccessible(): bool
     {
         return $this->site === null ? Sites::accessesAll() : in_array($this->site, Sites::accessible(), true);

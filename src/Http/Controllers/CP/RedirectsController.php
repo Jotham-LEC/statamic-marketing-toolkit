@@ -57,7 +57,6 @@ class RedirectsController
             $request,
             [
                 'source' => __('marketing-toolkit::cp.listing.from'), 'target' => __('marketing-toolkit::cp.listing.to'),
-                // The site column only where there is more than one.
                 ...(Sites::multiple() ? ['site' => __('marketing-toolkit::cp.listing.site')] : []),
                 'status' => __('marketing-toolkit::cp.listing.status'), 'active' => __('marketing-toolkit::cp.listing.active'),
                 'hits' => __('marketing-toolkit::cp.listing.hits'), 'last_hit_at' => __('marketing-toolkit::cp.listing.last_used'),
@@ -289,7 +288,6 @@ class RedirectsController
                 ],
             ]],
             ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('marketing-toolkit::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
-            // Only where there is more than one site to choose from.
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
                 // Every site (none chosen) only for someone who may work on every site.
                 'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => Sites::accessesAll(),

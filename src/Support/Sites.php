@@ -32,8 +32,6 @@ final class Sites
     }
 
     /**
-     * Every site's handle.
-     *
      * @return list<string>
      */
     public static function handles(): array

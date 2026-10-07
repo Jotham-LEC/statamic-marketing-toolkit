@@ -240,8 +240,6 @@ class Runner
     }
 
     /**
-     * The checks a report with these settings runs.
-     *
      * @return list<Rule>
      */
     public function rules(ReportSettings $settings): array
@@ -332,9 +330,6 @@ class Runner
         $this->prune($settings->int('keep_reports'), $report->site);
     }
 
-    /**
-     * Keeps the latest $keep reports of each site.
-     */
     private function prune(int $keep, ?string $site): void
     {
         $stale = Report::query()->ofSite($site)->where('status', '!=', Report::RUNNING)->orderByDesc('id')->skip(max(1, $keep))->take(PHP_INT_MAX)->pluck('id');

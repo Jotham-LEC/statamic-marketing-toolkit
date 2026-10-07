@@ -21,20 +21,12 @@ use Statamic\Fields\Value;
 
 /**
  * The helpers the rules share: settings, collection rules, reading fields
- * and images, and the site's address. Part of SiteSeo's override surface: a
- * project overrides these methods on its SiteSeo subclass (bound in its place), not on the trait, which only splits the class into readable
- * parts.
+ * and images, and the site's address.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait InteractsWithContent
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Helpers
-    |--------------------------------------------------------------------------
-    */
-
     /** @api */
     public function settings(): Settings
     {

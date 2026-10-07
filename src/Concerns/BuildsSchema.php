@@ -15,20 +15,12 @@ use Statamic\Facades\Markdown;
 use Statamic\Structures\Page;
 
 /**
- * The JSON-LD @graph and each node in it. Part of SiteSeo's override
- * surface: a project overrides these methods on its SiteSeo subclass (bound in its place), not on the trait, which only splits the class into readable
- * parts.
+ * The JSON-LD @graph and each node in it.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait BuildsSchema
 {
-    /*
-    |--------------------------------------------------------------------------
-    | JSON-LD
-    |--------------------------------------------------------------------------
-    */
-
     /**
      * One @graph per page. Nodes point at each other by @id.
      *
