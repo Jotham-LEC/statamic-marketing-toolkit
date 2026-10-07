@@ -206,9 +206,11 @@ class ServiceProvider extends AddonServiceProvider
 
         Navigation::register();
 
-        Statamic::provideToScript(['marketingToolkit' => [
+        // Worked out when the control panel renders, which has the CP routes; a front-end request never asks.
+        Statamic::provideToScript(['marketingToolkit' => fn () => [
             // Off: a save has nothing to ask the redirect check.
             'automaticRedirects' => Features::on('automatic_redirects'),
+            'urls' => ['redirectCheck' => cp_route('mt.redirects.check'), 'redirectChoice' => cp_route('mt.redirects.choice')],
             // Brand and Marketing settings: the Tracking tab is in one of them.
             'globals' => Settings::handles(),
             // The Tracking tab's fields, and those set in .env, which its warning counts as well.

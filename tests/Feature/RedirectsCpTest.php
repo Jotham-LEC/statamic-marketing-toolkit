@@ -368,3 +368,8 @@ test('saving a redirect keeps the rest of the target\'s query as typed, and only
     $this->patchJson(cp_route('mt.redirects.update', $redirect), ['source' => '/find/*', 'target' => $tagged, 'status' => '301', 'active' => true, 'utm_campaign' => 'winter sale'])->assertOk();
     expect($redirect->fresh()->target)->toBe('/offer?q=$1&a.b=1&x=1&x=2&flag&c=d+e&utm_campaign=winter%20sale#top');
 });
+
+test('the control panel’s script gets the addresses a save asks about its redirect', function () {
+    expect(Statamic\Statamic::jsonVariables(request())['marketingToolkit']['urls'])
+        ->toBe(['redirectCheck' => cp_route('mt.redirects.check'), 'redirectChoice' => cp_route('mt.redirects.choice')]);
+});

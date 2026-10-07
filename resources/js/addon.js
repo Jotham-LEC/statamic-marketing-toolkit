@@ -56,12 +56,13 @@ function referenceFor(payload) {
 function confirmRedirect(payload) {
     const axios = useAxios();
     const reference = referenceFor(payload);
+    const { automaticRedirects, urls } = config.get('marketingToolkit') ?? {};
 
     // Automatic redirects switched off: nothing to ask.
-    if (!reference || !config.get('marketingToolkit')?.automaticRedirects) return Promise.resolve();
+    if (!reference || !automaticRedirects) return Promise.resolve();
 
     return axios
-        .post(cp_url('marketing-toolkit/redirects/check'), { reference, values: payload.values })
+        .post(urls.redirectCheck, { reference, values: payload.values })
         .then(({ data }) => {
             if (!data.changes) return;
 
@@ -80,7 +81,7 @@ function confirmRedirect(payload) {
 
                     // A failed answer leaves the default: the redirect is added. The save
                     // goes ahead, so say so when that isn't what was chosen.
-                    axios.post(cp_url('marketing-toolkit/redirects/choice'), { reference, create }).then(resolve, () => {
+                    axios.post(urls.redirectChoice, { reference, create }).then(resolve, () => {
                         if (!create) toast.error(__('marketing-toolkit::cp.confirm.choice_failed'), { duration: 10000 });
                         resolve();
                     });
