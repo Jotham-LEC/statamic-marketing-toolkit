@@ -44,7 +44,7 @@ class SearchConsoleController
             'setup' => $this->setup($client, $site),
             'sites' => Sites::multiple() ? Site::authorized()->map(fn ($each) => [
                 'name' => (string) $each->name(),
-                'property' => $this->canSetUp() ? $this->connection->property($each->handle()) : null,
+                'property' => Package::canEditSettings() ? $this->connection->property($each->handle()) : null,
                 'connected' => $client->configured($each->handle()),
                 'selected' => $each->handle() === $site,
             ])->values()->all() : [],
@@ -64,7 +64,7 @@ class SearchConsoleController
      */
     private function setup(Client $client, string $site): array
     {
-        $canSetUp = $this->canSetUp();
+        $canSetUp = Package::canEditSettings();
 
         return [
             'configured' => $client->configured($site),
@@ -173,11 +173,6 @@ class SearchConsoleController
 
     private function authorize(): void
     {
-        abort_unless($this->canSetUp(), 403);
-    }
-
-    private function canSetUp(): bool
-    {
-        return Package::canEditSettings();
+        abort_unless(Package::canEditSettings(), 403);
     }
 }

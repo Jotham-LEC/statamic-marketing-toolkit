@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Reports;
 
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Sleep;
@@ -121,7 +122,7 @@ class Runner
             return $report;
         }
 
-        return Cache::lock('mt:reports:step:'.$report->id, 600)
+        return self::stepLock($report, 600)
             // Read again once the lock is held: a step that just ended may have finished it.
             ->get(fn () => $report->refresh()->isRunning() ? Sites::as($report->site, fn () => $this->stepInSite($report)) : $report)
             ?: $report->refresh();
@@ -189,7 +190,7 @@ class Runner
             return false;
         }
 
-        $step = Cache::lock('mt:reports:step:'.$report->id, 1);
+        $step = self::stepLock($report, 1);
 
         if (! $step->get()) {
             return false;
@@ -204,6 +205,14 @@ class Runner
         RunReportStep::dispatch($report->id);
 
         return true;
+    }
+
+    /**
+     * Held while a step of the report runs.
+     */
+    private static function stepLock(Report $report, int $seconds): Lock
+    {
+        return Cache::lock('mt:reports:step:'.$report->id, $seconds);
     }
 
     /**

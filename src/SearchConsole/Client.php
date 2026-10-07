@@ -17,6 +17,8 @@ class Client
 {
     private const string SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
 
+    private const string SITES_URL = 'https://www.googleapis.com/webmasters/v3/sites/';
+
     private const string TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
     /** The most rows the Search Analytics API returns at once. */
@@ -49,7 +51,7 @@ class Client
         do {
             $batch = Http::withToken($this->token())
                 ->timeout(30)
-                ->post("https://www.googleapis.com/webmasters/v3/sites/{$property}/searchAnalytics/query", [
+                ->post(self::SITES_URL.$property.'/searchAnalytics/query', [
                     'startDate' => $from,
                     'endDate' => $to,
                     'dimensions' => ['page'],
@@ -78,7 +80,7 @@ class Client
 
         return Http::withToken($this->token())
             ->timeout(15)
-            ->get("https://www.googleapis.com/webmasters/v3/sites/{$property}")
+            ->get(self::SITES_URL.$property)
             ->throw()
             ->json();
     }

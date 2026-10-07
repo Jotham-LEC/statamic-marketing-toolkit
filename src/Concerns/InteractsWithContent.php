@@ -263,6 +263,11 @@ trait InteractsWithContent
         return 630;
     }
 
+    protected function websiteId(): string
+    {
+        return $this->home().'#website';
+    }
+
     protected function publisherId(): string
     {
         return $this->home().'#publisher';

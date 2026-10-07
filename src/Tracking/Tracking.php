@@ -245,7 +245,7 @@ class Tracking
     {
         $id = trim((string) $this->settings->string('linkedin_conversion_id'));
 
-        return $this->conversions() && preg_match('/^\d{3,12}$/', $id) ? $id : null;
+        return $this->conversions() && preg_match(self::PATTERNS['linkedin'], $id) ? $id : null;
     }
 
     /**

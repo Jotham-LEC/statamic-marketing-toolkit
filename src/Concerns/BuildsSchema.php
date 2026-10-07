@@ -62,7 +62,7 @@ trait BuildsSchema
     {
         return array_filter([
             '@type' => 'WebSite',
-            '@id' => $this->home().'#website',
+            '@id' => $this->websiteId(),
             'url' => $this->home(),
             'name' => $this->settings->siteName(),
             'alternateName' => $this->settings->string('site_alternate_name'),
@@ -274,7 +274,7 @@ trait BuildsSchema
             'url' => $this->url($context),
             'name' => $this->ogTitle($context),
             'description' => $this->description($context),
-            'isPartOf' => ['@id' => $this->home().'#website'],
+            'isPartOf' => ['@id' => $this->websiteId()],
             'inLanguage' => $this->contentSite($context)->lang(),
             // Where Google takes a page's thumbnail for Search and Discover from.
             'primaryImageOfPage' => $image ? ['@type' => 'ImageObject', 'url' => $image['url'], 'width' => $image['width'], 'height' => $image['height']] : null,
