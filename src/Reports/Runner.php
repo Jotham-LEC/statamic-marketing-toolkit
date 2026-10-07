@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Sleep;
 use JothamLec\MarketingToolkit\Reports\Rules\BrokenLinks;
 use JothamLec\MarketingToolkit\Reports\Rules\Canonical;
 use JothamLec\MarketingToolkit\Reports\Rules\DescriptionLength;
@@ -206,14 +207,20 @@ class Runner
     }
 
     /**
-     * Every remaining step, for the command line and the scheduler.
+     * Every remaining step, for the command line and the scheduler. While
+     * another process holds the step, it waits a moment before asking again.
      *
      * @param  (callable(Report): void)|null  $progress
      */
     public function runToEnd(Report $report, ?callable $progress = null): Report
     {
         while ($report->isRunning()) {
+            $done = $report->pages_done;
             $report = $this->step($report);
+
+            if ($report->isRunning() && $report->pages_done === $done) {
+                Sleep::for(250)->milliseconds();
+            }
 
             if ($progress) {
                 $progress($report);

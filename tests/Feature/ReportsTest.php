@@ -384,6 +384,24 @@ test('only one step of a report runs at a time, and a second click doesn\'t queu
     expect(app(Runner::class)->step(Report::query()->find($report['id']))->pages_done)->toBe(1);
 });
 
+test('running a report to the end waits while another process holds the step, rather than asking again at once', function () {
+    entryIn('pages', 'about');
+    $runner = app(Runner::class);
+    $report = $runner->start();
+    $other = Cache::lock('mt:reports:step:'.$report->id, 600);
+    $other->get();
+    Sleep::fake();
+    $waits = 0;
+    Sleep::whenFakingSleep(function () use (&$waits, $other) {
+        if (++$waits === 3) {
+            $other->release();
+        }
+    });
+
+    expect($runner->runToEnd($report)->status)->toBe(Report::DONE);
+    Sleep::assertSleptTimes(3);
+});
+
 test('a queued step that fails for good marks the report failed, with no error text', function () {
     entryIn('pages', 'about');
     $report = app(Runner::class)->start();
