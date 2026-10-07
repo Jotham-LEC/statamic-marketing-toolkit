@@ -2,10 +2,9 @@
 
 namespace JothamLec\MarketingToolkit\SearchConsole;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Support\BelongsToSite;
 
 /**
  * One page's numbers from Google Search Console over the last import's
@@ -24,34 +23,13 @@ use JothamLec\MarketingToolkit\Support\Sites;
  */
 class SearchStat extends Model
 {
+    use BelongsToSite;
+
     protected $table = 'mt_search_stats';
 
     public $timestamps = false;
 
     protected $guarded = ['id'];
-
-    /**
-     * Rows of exactly this site; null: those of a single-site install.
-     *
-     * @param  Builder<self>  $query
-     */
-    public function scopeOfSite(Builder $query, ?string $site): void
-    {
-        $site === null ? $query->whereNull('site') : $query->where('site', $site);
-    }
-
-    /**
-     * The rows the control panel shows while $site is selected: its own, and
-     * those from before the install had more than one site.
-     *
-     * @param  Builder<self>  $query
-     */
-    public function scopeShownOn(Builder $query, string $site): void
-    {
-        if (Sites::multiple()) {
-            $query->where(fn (Builder $query) => $query->where('site', $site)->orWhereNull('site'));
-        }
-    }
 
     protected function casts(): array
     {

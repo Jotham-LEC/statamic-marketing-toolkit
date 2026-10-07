@@ -2,11 +2,10 @@
 
 namespace JothamLec\MarketingToolkit\Reports;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Support\BelongsToSite;
 
 /**
  * One run over the site: its settings when it started, how far it has got,
@@ -28,6 +27,8 @@ use JothamLec\MarketingToolkit\Support\Sites;
  */
 class Report extends Model
 {
+    use BelongsToSite;
+
     public const string RUNNING = 'running';
 
     public const string DONE = 'done';
@@ -64,29 +65,6 @@ class Report extends Model
     }
 
     /**
-     * Reports of exactly this site; null: those of a single-site install.
-     *
-     * @param  Builder<self>  $query
-     */
-    public function scopeOfSite(Builder $query, ?string $site): void
-    {
-        $site === null ? $query->whereNull('site') : $query->where('site', $site);
-    }
-
-    /**
-     * The reports the control panel shows while $site is selected: its own,
-     * and those from before the install had more than one site.
-     *
-     * @param  Builder<self>  $query
-     */
-    public function scopeShownOn(Builder $query, string $site): void
-    {
-        if (Sites::multiple()) {
-            $query->where(fn (Builder $query) => $query->where('site', $site)->orWhereNull('site'));
-        }
-    }
-
-    /**
      * The latest finished report the control panel shows while $site is
      * selected, for the overview and the dashboard widget.
      */
@@ -102,14 +80,6 @@ class Report extends Model
     public function scoredPages(): int
     {
         return (int) ($this->summary['scored'] ?? $this->pages_total);
-    }
-
-    /**
-     * Whether the control panel shows this report while $site is selected (see scopeShownOn()).
-     */
-    public function isShownOn(string $site): bool
-    {
-        return ! Sites::multiple() || $this->site === null || $this->site === $site;
     }
 
     public function settings(): ReportSettings
