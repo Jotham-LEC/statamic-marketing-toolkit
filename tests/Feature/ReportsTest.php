@@ -2,6 +2,7 @@
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -95,6 +96,23 @@ test('a report runs in steps of the chunk size', function () {
     foreach (['a', 'b', 'c', 'd', 'e'] as $slug) {
         entryIn('pages', $slug);
     }
+
+    $runner = app(Runner::class);
+    $report = $runner->start();
+
+    expect($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'running', 'pages_done' => 2])
+        ->and($runner->step($report)->pages_done)->toBe(4)
+        ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
+});
+
+test('a step of slow pages stops after five minutes and leaves the rest of its chunk to the next', function () {
+    reportSettings(['chunk_size' => 5]);
+    foreach (['a', 'b', 'c', 'd', 'e'] as $slug) {
+        entryIn('pages', $slug);
+    }
+    Carbon::setTestNow('2026-10-07 12:00:00');
+    // Each page takes three minutes to render.
+    View::composer('default', fn () => Carbon::setTestNow(now()->addMinutes(3)));
 
     $runner = app(Runner::class);
     $report = $runner->start();

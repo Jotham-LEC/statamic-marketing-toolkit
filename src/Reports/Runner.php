@@ -48,6 +48,13 @@ class Runner
     /** A running report that hasn't moved for this long is taken to have died. */
     private const int STALE_MINUTES = 30;
 
+    /**
+     * A step takes no new page after this many seconds, leaving the rest of
+     * its chunk to the next, so slow pages (or slow sites they link to) can't
+     * run it past a queue worker's timeout (RunReportStep::$timeout).
+     */
+    private const int STEP_SECONDS = 300;
+
     public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo, private ExternalLinkChecker $externalLinks) {}
 
     /**
@@ -115,8 +122,13 @@ class Runner
     private function stepInSite(Report $report): Report
     {
         $pages = $report->pages()->where('checked', false)->orderBy('id')->limit(max(1, $report->settings()->int('chunk_size')))->get();
+        $until = now()->addSeconds(self::STEP_SECONDS);
 
-        foreach ($pages as $page) {
+        foreach ($pages as $index => $page) {
+            if ($index > 0 && now()->gte($until)) {
+                break;
+            }
+
             $content = $this->content($page);
 
             if ($content === null) {

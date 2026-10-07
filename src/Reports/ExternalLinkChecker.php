@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Reports;
 
+use Carbon\CarbonInterface;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriResolver;
 use Illuminate\Http\Client\PendingRequest;
@@ -9,6 +10,8 @@ use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Psr\Http\Message\ResponseInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -23,6 +26,12 @@ use Throwable;
  * or a private network is not followed, and each request goes to the
  * address that was checked, so a page's links can't reach the server's own
  * network.
+ *
+ * A page's links get BUDGET seconds between them; those still waiting after
+ * that are left unchecked (not broken, and asked again next time), so a page
+ * of slow sites can't hold a report's step past the queue worker's timeout.
+ * Where HEAD is refused, the GET is cut off once its headers are in: only
+ * the status and any redirect matter, not the body.
  */
 class ExternalLinkChecker
 {
@@ -31,9 +40,17 @@ class ExternalLinkChecker
 
     private const int TIMEOUT = 8;
 
+    /** Seconds for all of one page's links. */
+    private const int BUDGET = 30;
+
+    /** followed()'s answer when the budget ran out first. */
+    private const string UNCHECKED = 'unchecked';
+
     private const int MAX_REDIRECTS = 5;
 
     private const string USER_AGENT = 'Mozilla/5.0 (compatible; statamic-marketing-toolkit link check)';
+
+    private ?CarbonInterface $deadline = null;
 
     /**
      * @param  list<string>  $urls
@@ -43,6 +60,7 @@ class ExternalLinkChecker
     {
         $urls = array_slice(array_values(array_unique($urls)), 0, self::LIMIT);
         $addresses = [];
+        $this->deadline = now()->addSeconds(self::BUDGET);
 
         foreach ($urls as $url) {
             if (Cache::get($this->key($url)) !== null) {
@@ -62,7 +80,11 @@ class ExternalLinkChecker
             ));
 
             foreach (array_keys($addresses) as $url) {
-                $this->remember($url, $this->isBroken($this->followed($url, $responses[$url] ?? null)));
+                $response = $this->followed($url, $responses[$url] ?? null);
+
+                if ($response !== self::UNCHECKED) {
+                    $this->remember($url, $this->isBroken($response));
+                }
             }
         }
 
@@ -143,13 +165,18 @@ class ExternalLinkChecker
 
     /**
      * The last answer for $url: asked again with GET where HEAD was refused,
-     * and redirects followed one by one, each to a public address.
+     * and redirects followed one by one, each to a public address. UNCHECKED
+     * when the page's budget runs out on the way.
      */
     private function followed(string $url, mixed $response): mixed
     {
         for ($hops = 0; ; $hops++) {
             if ($response instanceof Response && in_array($response->status(), [403, 405, 501], true)) {
                 $response = $this->send('get', $url);
+            }
+
+            if ($response === self::UNCHECKED) {
+                return $response;
             }
 
             $location = $response instanceof Response && $response->redirect() ? $response->header('Location') : '';
@@ -164,20 +191,38 @@ class ExternalLinkChecker
     }
 
     /**
-     * @return Response|Throwable|false|null null: the host doesn't resolve; false: not asked
+     * @return Response|Throwable|string|false|null null: the host doesn't resolve; false: not asked; UNCHECKED: no time left
      */
-    private function send(string $method, string $url): Response|Throwable|false|null
+    private function send(string $method, string $url): Response|Throwable|string|false|null
     {
+        $left = $this->deadline === null ? self::TIMEOUT : (int) now()->diffInSeconds($this->deadline, false);
+
+        if ($left < 1) {
+            return self::UNCHECKED;
+        }
+
         $address = $this->address($url);
 
         if (! is_string($address)) {
             return $address;
         }
 
+        $headers = null;
+        $request = $this->request(Http::createPendingRequest(), $url, $address)->timeout(min(self::TIMEOUT, $left));
+
+        if ($method === 'get') {
+            // Throwing here stops curl before the body: the headers are all the check reads.
+            $request->withOptions(['on_headers' => function (ResponseInterface $response) use (&$headers) {
+                $headers = $response;
+
+                throw new RuntimeException('Body not wanted.');
+            }]);
+        }
+
         try {
-            return $this->request(Http::createPendingRequest(), $url, $address)->send($method, $url);
+            return $request->send($method, $url);
         } catch (Throwable $exception) {
-            return $exception;
+            return $headers instanceof ResponseInterface ? new Response($headers) : $exception;
         }
     }
 
