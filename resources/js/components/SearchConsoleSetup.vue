@@ -80,7 +80,7 @@ async function copyEmail() {
         </div>
         <Description>{{ __('marketing-toolkit::cp.search_console.setup.intro') }}</Description>
 
-        <ol class="list-decimal space-y-5 ps-5 text-sm">
+        <ol class="list-decimal space-y-5 ps-5 text-sm break-words">
             <li class="space-y-2">
                 <p>
                     <strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_key') }}</strong>

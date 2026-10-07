@@ -86,8 +86,9 @@ return [
     'search_console' => [
         'title' => 'Search Console',
         'status' => 'Connection',
-        'connected' => 'Connected',
-        'not_connected' => 'Not connected',
+        // A key and a property are saved; only "Check the connection" asks Google whether they work.
+        'connected' => 'Set up',
+        'not_connected' => 'Not set up',
         'not_connected_body' => 'Anyone who can change this addon’s settings can connect Google Search Console here, so that you can see how often each page is found and clicked.',
         'key' => 'Key',
         'property' => 'Property',

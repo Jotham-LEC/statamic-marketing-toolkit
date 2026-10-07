@@ -28,6 +28,8 @@ A security and bug review of the whole addon: fixes for multi-site installs with
 - **Reports on a queue worker no longer stall.** Each page's links get 30 seconds, and any still waiting are left unchecked rather than counted as broken; a step stops taking new pages after five minutes; checking a link no longer downloads the whole page. A report whose queued step fails is marked failed instead of showing "running" for half an hour, and one whose worker died is picked up again once it has stood still for 15 minutes and someone who may run reports is watching.
 - **A report's progress that can't be loaded stops and offers Try again**, instead of retrying silently. Someone who may only watch a report, with no queue worker, is told why it isn't moving.
 - **A failed report says why**, on its own screen and in the list, instead of "scored undefined pages".
+- **Reports leave out protected pages**, as the sitemap does, instead of counting each as a page that failed to render (scored 0).
+- **Search Console's status says "Set up" once a key and property are saved**, not "Connected": only **Check the connection** asks Google whether they work. The setup steps no longer run off the side of a phone-sized screen.
 - **`php please mt:report` waits while another process is running a step of the same report**, instead of querying the database in a tight loop.
 - **A failed Search Console import says so.** It showed "connected" whenever the key could still read the property, with nothing imported.
 - **A Search Console key uploaded before keys were encrypted is now encrypted** the next time it is read.
