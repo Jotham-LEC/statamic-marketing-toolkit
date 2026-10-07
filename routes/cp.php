@@ -8,6 +8,7 @@ use JothamLec\MarketingToolkit\Http\Controllers\CP\PreviewController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\RedirectsController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\ReportsController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\SearchConsoleController;
+use JothamLec\MarketingToolkit\Http\Controllers\CP\ToolbarController;
 
 // Permissions are checked here (Statamic's permissions answer Laravel's Gate);
 // a controller checks only what a route can't say, such as editing the addon's settings.
@@ -58,4 +59,7 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
     Route::post('search-console/property', [SearchConsoleController::class, 'property'])->name('search-console.property');
     Route::post('search-console/check', [SearchConsoleController::class, 'check'])->name('search-console.check');
     Route::post('search-console/import', [SearchConsoleController::class, 'import'])->name('search-console.import');
+
+    // The front-end toolbar's links, on a multi-site install: selects the page's site, then opens the screen.
+    Route::get('toolbar/go', [ToolbarController::class, 'go'])->name('toolbar.go');
 });

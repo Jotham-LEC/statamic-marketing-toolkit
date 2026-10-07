@@ -1,6 +1,6 @@
 <?php
 
-// The front-end toolbar (resources/js/toolbar) and its preferences.
+// The front-end toolbar (resources/js/toolbar, Toolbar\PageData) and its preferences.
 return [
     'preferences' => [
         'tab' => 'Marketing Toolkit',
@@ -13,5 +13,116 @@ return [
         'shortcut' => 'Toolbar shortcut',
     ],
 
-    'signed_out' => 'You’re no longer signed in, so the toolbar has closed.',
+    // What the toolbar's script shows; the rest arrives as sentences.
+    'ui' => [
+        'name' => 'Marketing Toolkit',
+        'open' => 'Open the Marketing Toolkit toolbar',
+        'close' => 'Close the Marketing Toolkit toolbar',
+        'close_panel' => 'Close',
+        'score' => 'SEO score :score out of 100',
+        'loading' => 'Loading this page’s details…',
+        'error' => 'The toolbar couldn’t load this page’s details. Reload the page to try again.',
+        'signed_out' => 'You’re no longer signed in, so the toolbar has closed.',
+        'edit_entry' => 'Edit entry',
+        'edit_term' => 'Edit term',
+        'seo' => 'SEO',
+        'panels' => [
+            'seo' => 'SEO score',
+            'preview' => 'Search and share preview',
+            'redirects' => 'Redirects',
+            'tracking' => 'Tracking and consent',
+            'sites' => 'This page in other sites',
+            'more' => 'More',
+        ],
+        'tabs' => [
+            'seo' => 'Score',
+            'preview' => 'Preview',
+            'redirects' => 'Redirects',
+            'tracking' => 'Tracking',
+            'sites' => 'Sites',
+            'more' => 'More',
+        ],
+        'missing' => 'Missing page',
+        'google' => 'Google',
+        'share' => 'Share card',
+        'no_image' => 'This page has no share image.',
+        'open_report' => 'Open the report',
+        'run_report' => 'Run a new report',
+        'add_redirect' => 'Add a redirect',
+        'settings' => 'Open Marketing settings',
+        'view' => 'View',
+        'edit' => 'Edit',
+        'overview' => 'Marketing overview',
+        'dashboard' => 'Control panel',
+        'refresh_cache' => 'Refresh this page’s cache',
+        'cache_refreshed' => 'This page’s cache was cleared, so the next visit stores a fresh copy.',
+        'cache_failed' => 'This page’s cache couldn’t be cleared. Try again from the control panel.',
+        'hide' => 'Hide the toolbar',
+        'hidden' => 'The toolbar is hidden on every device you use. You can turn it back on under Preferences in the control panel.',
+        'shortcut' => 'Press :keys to open or close the toolbar.',
+        'no_shortcut' => 'The toolbar has no keyboard shortcut. You can set one under Preferences in the control panel.',
+        'consent_state' => 'In this browser, :granted are granted and :denied are denied.',
+        'consent_all_granted' => 'In this browser, :granted are granted.',
+        'consent_all_denied' => 'In this browser, :denied are denied.',
+        'consent_unknown' => 'This browser hasn’t told Consent Mode anything yet.',
+        'and' => 'and',
+    ],
+
+    'seo' => [
+        'date' => 'From the report of :date.',
+        'changed' => 'This page was saved on :saved, after the report of :date, so its score may have changed.',
+        'not_in_report' => 'This page has no score yet, because it wasn’t in the latest report. The next report will check it.',
+        'no_report' => 'No report has been run on this site yet. Run one to score every page.',
+        'passing' => 'Every check passes on this page.',
+        'noindex' => 'This page is hidden from search engines, so it isn’t scored.',
+        'search' => 'In the last :days days, this page had :clicks clicks from :impressions impressions, at an average position of :position.',
+        'search_none' => 'Search Console has no numbers for this page yet.',
+    ],
+
+    'preview' => [
+        'canonical' => 'This page names :url as its main address, so search engines will show that address instead.',
+        'noindex' => 'Search engines are asked not to list this page, because :reason.',
+        'reasons' => [
+            'page' => 'its SEO tab says so',
+            'environment' => 'this isn’t the production environment',
+            'rule' => 'one of the site’s rules says so',
+        ],
+        'in_sitemap' => 'This page is in the sitemap.',
+        'not_in_sitemap' => 'This page isn’t in the sitemap.',
+        'languages' => 'Search engines are told about this page in :count languages.',
+    ],
+
+    'redirects' => [
+        'to_here' => 'One redirect sends visitors here, and it has been used :hits times.|:count redirects send visitors here, and they have been used :hits times.',
+        'none' => 'No redirects send visitors to this page.',
+        'ignored' => 'A redirect from this address never applies, because a page exists here.',
+        'missing' => 'Statamic answers this address with a 404.',
+        'logged' => 'The 404 log has counted one visit, on :date.|The 404 log has counted :count visits since :date.',
+        'draft' => 'A draft has this address, so visitors get a 404 until it is published.',
+    ],
+
+    'tracking' => [
+        'printing' => 'These tags load on this page: :tools.',
+        'not_production' => 'No tags load here, because this isn’t the production environment.',
+        'off' => 'No tags load here, because tracking is switched off under Features.',
+        'none_set' => 'No tracking tags are set up in Marketing settings.',
+        'consent_on' => 'Consent Mode is on, and visitors :where are denied until they agree.',
+        'everywhere' => 'everywhere',
+        'in_regions' => 'in :regions',
+        'eea' => 'the EEA, the UK and Switzerland',
+        'consent_off' => 'Consent Mode is off, so tags don’t wait for a cookie banner.',
+        'overlap' => 'Google Tag Manager and :tools are both set, so those tools count each visit twice. Move them into Google Tag Manager.',
+        'leads_on' => 'Form submissions are sent to these tools as leads.',
+        'leads_off' => 'Form submissions aren’t sent to these tools as leads.',
+    ],
+
+    'sites' => [
+        'missing' => 'This page doesn’t exist in :site yet.',
+        'statuses' => [
+            'published' => 'Published',
+            'draft' => 'Draft',
+            'scheduled' => 'Scheduled',
+            'expired' => 'Expired',
+        ],
+    ],
 ];

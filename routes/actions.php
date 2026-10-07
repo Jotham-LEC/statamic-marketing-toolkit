@@ -12,4 +12,5 @@ use JothamLec\MarketingToolkit\Http\Controllers\ToolbarController;
 Route::name('mt.')->group(function () {
     Route::get('toolbar', [ToolbarController::class, 'show'])->middleware('throttle:60,1')->name('toolbar');
     Route::post('toolbar/cache', [ToolbarController::class, 'refreshCache'])->middleware(['throttle:60,1', 'can:access cache utility'])->name('toolbar.cache');
+    Route::post('toolbar/hide', [ToolbarController::class, 'hide'])->middleware('throttle:60,1')->name('toolbar.hide');
 });

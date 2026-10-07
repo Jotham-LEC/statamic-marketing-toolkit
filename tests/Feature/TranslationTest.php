@@ -3,6 +3,7 @@
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Reports\Runner;
@@ -47,8 +48,12 @@ test('lang/en has no key left unused', function () {
         ->flatMap(fn ($file) => array_keys(Arr::dot(['marketing-toolkit::'.$file->getFilenameWithoutExtension() => require $file->getPathname()])))
         ->all();
 
-    // Built from parts at run time: a rule's handle, a report check's message, a tracker's name.
-    $dynamic = fn (string $key) => str_starts_with($key, 'marketing-toolkit::reports.') || str_starts_with($key, 'marketing-toolkit::cp.tracking.names.') || str_starts_with($key, 'marketing-toolkit::fields.attribution.');
+    // Built from parts at run time: a rule's handle, a report check's message, a tracker's name, a
+    // noindex reason, a status; or sent whole: the toolbar's labels, which its script reads.
+    $dynamic = fn (string $key) => Str::startsWith($key, [
+        'marketing-toolkit::reports.', 'marketing-toolkit::cp.tracking.names.', 'marketing-toolkit::fields.attribution.',
+        'marketing-toolkit::toolbar.ui.', 'marketing-toolkit::toolbar.preview.reasons.', 'marketing-toolkit::toolbar.sites.statuses.',
+    ]);
 
     expect(array_values(array_filter($defined, fn (string $key) => ! in_array($key, $used, true) && ! $dynamic($key))))->toBe([]);
 });
