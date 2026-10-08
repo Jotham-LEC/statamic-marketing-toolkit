@@ -21,13 +21,13 @@ use Statamic\Fields\Blueprint as BlueprintContents;
 use Statamic\Structures\Page;
 
 /**
- * `php please mt:install`: creates the "Brand" and "Marketing settings"
- * global sets and their blueprints through Statamic's API, so editors can
- * fill in the title separator, defaults, publisher and share-card colours
+ * The `php please mt:install` command creates the "Brand" and "Marketing
+ * settings" global sets and their blueprints through Statamic's API, so editors
+ * can fill in the title separator, defaults, publisher and share-card colours
  * (Brand), and the tracking tags, Consent Mode, leads, verification codes and
- * robots.txt (Marketing settings) in the control panel. Safe to rerun: it
- * adds what is missing (the fields a newer version brings too) and changes
- * nothing else.
+ * robots.txt (Marketing settings) in the control panel. It is safe to rerun,
+ * because it adds what is missing (including the fields a newer version brings)
+ * and changes nothing else.
  */
 final class Install extends Command
 {
@@ -41,13 +41,13 @@ final class Install extends Command
 
     protected $description = 'Create the Brand and Marketing settings global sets, or add what a newer version brings';
 
-    /** Each set: its config key => its blueprint in resources/install and its title. */
+    /** Maps each set's config key to its blueprint in resources/install and its title. */
     public const array SETS = [
         'global' => ['file' => 'seo', 'title' => 'Brand'],
         'settings_global' => ['file' => 'marketing', 'title' => 'Marketing settings'],
     ];
 
-    /** Files the addon serves, by the module that serves each. A file of the same name in public/ wins. */
+    /** Lists the files the addon serves, each with its module. A file of the same name in public/ wins. */
     private const array SERVED = [
         'robots.txt' => 'robots_txt',
         'llms.txt' => 'llms_txt',
@@ -107,12 +107,12 @@ final class Install extends Command
     }
 
     /**
-     * The entries' SEO tab (the marketing-toolkit::seo fieldset). A
-     * collection with a route and no blueprint file yet, as a new site's
-     * Pages, gets its blueprint with the tab (unless --no-blueprints): a new
-     * file, like the global sets this creates. A blueprint that
-     * exists is the site's: one without the tab is named, never changed, so
-     * a rerun can't bring back a tab the site took out.
+     * Adds the entries' SEO tab, which is the marketing-toolkit::seo fieldset. A
+     * collection with a route but no blueprint file yet, such as a new site's
+     * Pages, gets a blueprint with the tab (unless --no-blueprints is passed),
+     * which is a new file, like the global sets this command creates. A blueprint
+     * that exists belongs to the site, so one without the tab is named but never
+     * changed, and a rerun can't bring back a tab the site took out.
      */
     private function addSeoTabs(): bool
     {
@@ -145,8 +145,8 @@ final class Install extends Command
     }
 
     /**
-     * One global set: its blueprint (or the fields it lacks), the set on
-     * every site, and the defaults its empty fields take.
+     * Installs one global set, which means its blueprint (or the fields it
+     * lacks), the set on every site, and the defaults its empty fields take.
      *
      * @param  list<string>  $tabs  tabs to add that the blueprint doesn't have
      */
@@ -175,14 +175,14 @@ final class Install extends Command
         if (! GlobalSet::findByHandle($handle)) {
             $set = GlobalSet::make($handle)->title($title);
 
-            // On every site; the others take what they leave empty from the default site's.
+            // The set goes on every site, and the others take what they leave empty from the default site's.
             if (Site::multiEnabled()) {
                 $set->sites(Site::all()->mapWithKeys(fn ($site) => [$site->handle() => $site->handle() === Site::default()->handle() ? null : Site::default()->handle()])->all());
             }
 
             $set->save();
 
-            // The Features tab starts as the addon's settings have the switches.
+            // The Features tab starts with the switches set as the addon's settings have them.
             if ($handle === config('marketing-toolkit.settings_global')) {
                 SaveFeatures::seed($set);
             }
@@ -205,8 +205,9 @@ final class Install extends Command
     }
 
     /**
-     * A set that exists but isn't on every site: enabled there when asked
-     * (each taking what it leaves empty from the default site), else named.
+     * Handles a set that exists but isn't on every site. When asked, it enables
+     * the set there (each site taking what it leaves empty from the default
+     * site); otherwise, it names those sites.
      */
     private function enableOnEverySite(GlobalSetContract $set): bool
     {
@@ -229,9 +230,9 @@ final class Install extends Command
     }
 
     /**
-     * Files in public/ that the web server answers with instead of the
-     * addon's (a new Statamic site has a robots.txt and an empty
-     * favicon.ico): named, and deleted when asked.
+     * Names the files in public/ that the web server answers with instead of
+     * the addon's own, and deletes them when asked. A new Statamic site has a
+     * robots.txt and an empty favicon.ico, for example.
      */
     private function checkPublicFiles(): bool
     {
@@ -287,7 +288,7 @@ final class Install extends Command
     /**
      * Adds to an existing blueprint the fields it lacks, each in its tab and
      * section as a fresh install has them. A tab the site removed stays
-     * removed: only tabs the blueprint still has receive fields. The
+     * removed, because only tabs the blueprint still has receive fields. The
      * AddNewBrandFields update script passes the fields the new version
      * brings, as `$only`, so a field the site removed stays removed.
      *
@@ -327,9 +328,9 @@ final class Install extends Command
 
     /**
      * Fills the brand fields that are empty, and only those, with what the
-     * site uses when they are: on each site the set is enabled on that has
-     * no origin. A site with an origin takes the origin's values, so filling
-     * it would cut it off from them.
+     * site uses when they are empty. It does so on each site that the set is
+     * enabled on and that has no origin. A site with an origin takes the
+     * origin's values, so filling it would cut it off from them.
      *
      * @return list<string> the fields filled
      */
@@ -385,8 +386,8 @@ final class Install extends Command
     }
 
     /**
-     * The asset container the blueprint's first assets field uses: where
-     * fields added later point too.
+     * Gets the asset container that the blueprint's first assets field uses,
+     * which is where fields added later point too.
      */
     public static function containerOf(BlueprintContents $blueprint): ?string
     {
@@ -394,8 +395,8 @@ final class Install extends Command
     }
 
     /**
-     * A set's tabs, from resources/install/{$file}.yaml (seo: Brand,
-     * marketing: Marketing settings), with the asset container on each
+     * Gets a set's tabs from resources/install/{$file}.yaml (seo for Brand and
+     * marketing for Marketing settings), with the asset container set on each
      * assets field.
      *
      * @return array<string, array{display: string, sections: list<array{display?: string, fields: list<array{handle: string, field: array<string, mixed>}>}>}>

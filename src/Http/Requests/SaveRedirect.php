@@ -10,10 +10,9 @@ use Statamic\Facades\Blueprint;
 use Statamic\Fields\Blueprint as BlueprintObject;
 
 /**
- * The redirect form (Marketing → Redirects, create and edit). The form is
- * Statamic's publish form on blueprint(); its values are processed by that
- * blueprint, then checked with the rules a CSV row passes too. The route
- * checks the permission.
+ * This request handles the redirect form (Marketing → Redirects, create and edit). The form is
+ * Statamic's publish form on blueprint(). Its values are processed by that blueprint and then checked
+ * with the same rules that a CSV row passes. The route checks the permission.
  */
 final class SaveRedirect extends FormRequest
 {
@@ -23,9 +22,8 @@ final class SaveRedirect extends FormRequest
     }
 
     /**
-     * The form's values as a redirect stores them: a campaign's UTM tags
-     * become the target's query string, and no site chosen (or a single
-     * site) means every site.
+     * Converts the form's values into the form a redirect stores. A campaign's UTM tags become the target's
+     * query string, and choosing no site (or having a single site) means every site.
      */
     protected function prepareForValidation(): void
     {
@@ -67,7 +65,7 @@ final class SaveRedirect extends FormRequest
 
     public static function blueprint(): BlueprintObject
     {
-        // A campaign link's UTM tags, added to the target when saved.
+        // This section holds a campaign link's UTM tags, which are added to the target when it is saved.
         $campaign = [[
             'display' => __('marketing-toolkit::cp.redirect_form.campaign'),
             'collapsible' => true,
@@ -94,7 +92,7 @@ final class SaveRedirect extends FormRequest
             ]],
             ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('marketing-toolkit::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
             ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
-                // Every site (none chosen) only for someone who may work on every site.
+                // Only someone who may work on every site can choose every site (by choosing none).
                 'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => Sites::accessesAll(),
                 'placeholder' => Sites::accessesAll() ? __('marketing-toolkit::cp.redirect_form.all_sites') : null,
             ]]] : []),

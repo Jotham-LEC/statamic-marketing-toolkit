@@ -9,7 +9,7 @@ use Statamic\Actions\Action;
 use Statamic\Contracts\Auth\User;
 
 /**
- * From a row of the 404 log: open a new redirect with the missing path as its source.
+ * Opens a new redirect from a row of the 404 log, with the missing path as its source.
  */
 final class CreateRedirect extends Action
 {
@@ -57,7 +57,7 @@ final class CreateRedirect extends Action
      */
     public function redirect($items, $values)
     {
-        // On the site the visitor missed it on.
+        // The new redirect opens on the site where the visitor hit the missing path.
         return cp_route('mt.redirects.create', array_filter(['source' => $items->first()->path, 'site' => $items->first()->site]));
     }
 

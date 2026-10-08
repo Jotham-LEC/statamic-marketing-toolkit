@@ -5,13 +5,13 @@ namespace JothamLec\MarketingToolkit\Reports;
 use Illuminate\Support\Facades\Lang;
 
 /**
- * One check's verdict on one page. Its message is a translation key and its
- * parameters, kept as they are and translated when shown, so a report reads
- * in the language of whoever opens it. Reports from before messages were
- * translated hold plain text, which is shown as it is.
+ * One check's verdict on one page. Its message is a translation key with its
+ * parameters, which are stored as they are and translated when shown, so a
+ * report reads in the language of whoever opens it. Reports from before
+ * messages were translated hold plain text, which is shown as it is.
  *
- * A parameter may itself be a message, as `['message' => ..., 'params' => [...]]`
- * (a list that ends "and 3 more"), translated along with the message.
+ * A parameter may itself be a message, written as `['message' => ..., 'params' => [...]]`,
+ * such as a list that ends "and 3 more", and it is translated along with the message.
  */
 final readonly class Result
 {
@@ -51,7 +51,7 @@ final readonly class Result
     }
 
     /**
-     * Its share of the check's weight: all, half, or none.
+     * Gets the share of the check's weight that the result earns, which is all, half, or none.
      */
     public function value(): float
     {
@@ -63,8 +63,8 @@ final readonly class Result
     }
 
     /**
-     * A stored message in the current language. A `count` parameter picks the
-     * plural form, if the language has one for that message.
+     * Translates a stored message into the current language. A `count` parameter
+     * picks the plural form, if the language has one for that message.
      *
      * @param  array<string, mixed>  $params
      */
@@ -75,7 +75,7 @@ final readonly class Result
             $params,
         );
 
-        // Only a known key is split on `|`: plain text may hold one.
+        // Only a known key is split on `|`, because plain text may contain one.
         if (isset($params['count']) && is_numeric($params['count']) && Lang::has($message)) {
             return trans_choice($message, (float) $params['count'], $params);
         }
@@ -84,7 +84,7 @@ final readonly class Result
     }
 
     /**
-     * As a page's results column keeps it; `params` only when there are some.
+     * Gets the result as a page's results column stores it, with `params` only when there are some.
      *
      * @return array{status: string, message: string, params?: array<string, mixed>}
      */

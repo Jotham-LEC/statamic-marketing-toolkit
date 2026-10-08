@@ -5,13 +5,13 @@ namespace JothamLec\MarketingToolkit\Reports;
 use JothamLec\MarketingToolkit\Reports\Rules\Rule;
 
 /**
- * What a report adds up as its last step scores the pages one by one: how
- * many pages fail or warn on each check, each page's score, and how many
- * pages were scored, left out as noindex, or failed to render.
+ * Adds up a report's totals as its last step scores the pages one by one. It
+ * counts how many pages fail or warn on each check, keeps each page's score,
+ * and counts how many pages were scored, left out as noindex, or failed to render.
  */
 final class SiteTotals
 {
-    /** @var array<string, array{label: string, weight: int, fail: int, warn: int}> by check */
+    /** @var array<string, array{label: string, weight: int, fail: int, warn: int}> keyed by check */
     private array $rules = [];
 
     /** @var list<int> */
@@ -34,7 +34,7 @@ final class SiteTotals
     }
 
     /**
-     * A page that didn't render: it scores zero.
+     * Adds a page that didn't render, which scores zero.
      */
     public function addError(): void
     {
@@ -43,8 +43,8 @@ final class SiteTotals
     }
 
     /**
-     * A page that rendered, with its results by check. $score is null for a
-     * page search engines are told to skip: it is listed, not scored.
+     * Adds a page that rendered, with its results keyed by check. $score is null
+     * for a page that search engines are told to skip, because it is listed but not scored.
      *
      * @param  array<string, array{status: string}>  $results
      */
@@ -64,7 +64,7 @@ final class SiteTotals
     }
 
     /**
-     * The site's score: the average of the pages' scores.
+     * Gets the site's score, which is the average of the pages' scores.
      */
     public function score(): ?int
     {
@@ -72,7 +72,7 @@ final class SiteTotals
     }
 
     /**
-     * The report's summary, as Report stores it.
+     * Gets the report's summary in the form that Report stores.
      *
      * @return array{rules: array<string, array{label: string, weight: int, fail: int, warn: int}>, scored: int, noindex: int, errors: int}
      */

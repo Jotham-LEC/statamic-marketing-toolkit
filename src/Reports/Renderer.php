@@ -15,23 +15,24 @@ use Throwable;
 
 /**
  * Renders a page in this process, the way Statamic's front end would answer a
- * visit, without an HTTP request: a fresh request object, Statamic's cascade
- * pointed at it, the content's own response, then everything put back.
+ * visit, but without an HTTP request. It makes a fresh request object, points
+ * Statamic's cascade at it, takes the content's own response, and then puts
+ * everything back.
  *
- * While rendering, `noindex_outside_production` is off, so a report run on a
- * local or staging copy sees the robots tags production would print.
+ * It switches `noindex_outside_production` off while rendering, so a report run
+ * on a local or staging copy sees the robots tags that production would print.
  *
- * The page renders as a visitor sees it: a report started from the control
- * panel runs while someone is signed in, and a page could show them more
- * (an `{{ if logged_in }}` block, the toolbar) than a visitor would get.
+ * The page renders as a visitor sees it, because a report started from the
+ * control panel runs while someone is signed in, and a page could show them more
+ * (such as an `{{ if logged_in }}` block or the toolbar) than a visitor would get.
  */
 class Renderer
 {
     /**
      * A page that throws is stored with a generic message and the exception's
-     * class, not its text: the report is shown to anyone who may view reports,
-     * and a query exception's text holds SQL and connection details. The full
-     * error goes to the log.
+     * class, not its text, because the report is shown to anyone who may view
+     * reports, and a query exception's text holds SQL and connection details.
+     * The full error goes to the log.
      */
     public function render(Entry|Term $content): RenderedPage
     {
@@ -44,8 +45,8 @@ class Renderer
         $cascade->withRequest($request);
         config(['marketing-toolkit.robots.noindex_outside_production' => false]);
 
-        // Outside a web request (the console, a queue worker) no middleware shares the
-        // validation errors views expect; an empty bag, as ShareErrorsFromSession gives.
+        // Outside a web request (the console or a queue worker), no middleware shares the
+        // validation errors that views expect, so this shares an empty bag, as ShareErrorsFromSession does.
         View::share('errors', View::shared('errors') ?? new ViewErrorBag);
 
         $signedIn = $this->signOut();
@@ -69,10 +70,10 @@ class Renderer
     }
 
     /**
-     * Forgets the signed-in user of each guard the site's pages may ask, for
-     * the length of the render.
+     * Forgets the signed-in user of each guard that the site's pages may ask
+     * about, for as long as the render lasts.
      *
-     * @return array<string, Authenticatable> the users forgotten, by guard
+     * @return array<string, Authenticatable> the forgotten users, keyed by guard
      */
     private function signOut(): array
     {

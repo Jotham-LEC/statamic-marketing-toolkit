@@ -11,8 +11,8 @@ use Statamic\CP\Column;
 
 /**
  * Answers the requests of Statamic's `<Listing>` component for an Eloquent
- * table: search, sort by a listed column, pagination, and the columns in the
- * shape the component expects.
+ * table. It handles search, sorting by a listed column, and pagination, and it
+ * returns the columns in the shape the component expects.
  */
 final class Listing
 {
@@ -20,9 +20,9 @@ final class Listing
      * @template TModel of Model
      *
      * @param  Builder<TModel>  $query
-     * @param  array<string, string>  $columns  field => label; the first is the default sort
+     * @param  array<string, string>  $columns  Maps each field to its label, and the first field is the default sort.
      * @param  list<string>  $searchable
-     * @param  Closure(Collection<int, TModel>): iterable<array<string, mixed>>  $rows  the page's models as the listing's rows
+     * @param  Closure(Collection<int, TModel>): iterable<array<string, mixed>>  $rows  Maps the page's models to rows.
      * @return array{data: list<array<string, mixed>>, meta: array<string, mixed>}
      */
     public static function respond(Builder $query, Request $request, array $columns, array $searchable, Closure $rows, string $defaultOrder = 'asc'): array
@@ -30,7 +30,7 @@ final class Listing
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function (Builder $query) use ($searchable, $search) {
                 foreach ($searchable as $field) {
-                    // `ilike` on Postgres, whose `like` minds letter case.
+                    // This becomes `ilike` on Postgres, because Postgres's `like` is case-sensitive.
                     $query->orWhereLike($field, '%'.$search.'%', caseSensitive: false);
                 }
             });

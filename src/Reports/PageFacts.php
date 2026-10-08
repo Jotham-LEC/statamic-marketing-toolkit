@@ -3,7 +3,7 @@
 namespace JothamLec\MarketingToolkit\Reports;
 
 /**
- * What one rendered page says about itself, as the checks need it.
+ * Holds what one rendered page says about itself, in the form the checks need.
  */
 final readonly class PageFacts
 {
@@ -12,11 +12,11 @@ final readonly class PageFacts
      * @param  list<string>  $brokenLinks  paths on this site that lead nowhere
      * @param  list<string>  $redirectedLinks  paths answered by a redirect rule
      * @param  list<string>  $internalLinks  every path on this site the page links to
-     * @param  list<string>  $externalLinks  its links to other sites
-     * @param  list<string>  $brokenExternalLinks  those that lead nowhere (when checked)
+     * @param  list<string>  $externalLinks  the page's links to other sites
+     * @param  list<string>  $brokenExternalLinks  the links to other sites that lead nowhere, when they were checked
      * @param  list<string>  $jsonLdErrors
-     * @param  bool  $inSitemap  whether the sitemap lists the page (not read from the HTML)
-     * @param  ?string  $exception  the class of what a page that didn't render threw
+     * @param  bool  $inSitemap  whether the sitemap lists the page, which is not read from the HTML
+     * @param  ?string  $exception  the class of the exception thrown by a page that didn't render
      */
     public function __construct(
         public int $status = 200,

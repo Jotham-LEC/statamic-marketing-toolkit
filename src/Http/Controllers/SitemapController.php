@@ -16,9 +16,9 @@ use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 
 /**
- * /sitemap.xml: every published page search engines should index. Up to
- * `marketing-toolkit.sitemap.per_page` URLs it is one <urlset>; past that it becomes an
- * index of /sitemap_{n}.xml. Cached until an entry, term, tree, collection
+ * Serves /sitemap.xml, which lists every published page that search engines should index. Up to
+ * `marketing-toolkit.sitemap.per_page` URLs it is one <urlset>, and past that it becomes an
+ * index of /sitemap_{n}.xml. It is cached until an entry, term, tree, collection
  * or taxonomy is saved (JothamLec\MarketingToolkit\Listeners\FlushSitemap),
  * and at most until the next dated entry is published or expires.
  */
@@ -44,7 +44,7 @@ final class SitemapController
 
     public function page(Request $request, SiteSeo $seo, string $page): Response
     {
-        // Taken as text: a number too big for an int would fail the type, a 500 rather than a 404.
+        // The page is taken as text, because a number too big for an int would fail the type with a 500, not a 404.
         throw_if(strlen($page) > 9 || (int) $page < 1, NotFoundHttpException::class);
 
         $chunk = $this->urls($request, $seo)->forPage((int) $page, $this->perPage());
@@ -63,16 +63,17 @@ final class SitemapController
 
         $build = fn () => $seo->sitemapUrls();
 
-        // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
+        // It is cached only on a host that the install names, because the addresses may come from
+        // the Host header (Sites::trustsHost).
         return Sites::trustsHost($request) ? Cache::remember(self::cacheKey(Site::current()->handle()), self::cachedUntil(), $build) : $build();
     }
 
     /**
-     * When the sitemap and llms.txt stop being right by themselves: the next
-     * date of an entry in a collection that hides future or past dates, when
-     * that entry is published or expires. Statamic's scheduler flushes them
-     * then too (EntryScheduleReached), but only where the scheduler runs.
-     * Null: no such date, so they are cached until the next save.
+     * Returns when the sitemap and llms.txt stop being right by themselves. This is
+     * the next date of an entry in a collection that hides future or past dates,
+     * when that entry is published or expires. Statamic's scheduler flushes them
+     * then too (EntryScheduleReached), but only where the scheduler runs. It
+     * returns null when there is no such date, so they are cached until the next save.
      */
     public static function cachedUntil(): ?CarbonInterface
     {
@@ -90,10 +91,10 @@ final class SitemapController
     }
 
     /**
-     * Per site, and per `marketing-toolkit.sitemap` and `.hreflang` settings
-     * (the rows carry each page's other languages), so a deploy or a switch
-     * under Features that changes them doesn't serve the old list until the
-     * next save.
+     * Builds a key per site and per `marketing-toolkit.sitemap` and `.hreflang`
+     * settings (the rows carry each page's other languages), so a deploy or a
+     * switch under Features that changes them doesn't serve the old list until
+     * the next save.
      */
     public static function cacheKey(string $site): string
     {

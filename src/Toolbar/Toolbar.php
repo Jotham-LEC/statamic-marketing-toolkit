@@ -12,10 +12,10 @@ use Symfony\Component\HttpFoundation\Cookie as CookieObject;
 use Throwable;
 
 /**
- * The front-end toolbar's rules, in one place. Pages print the same small
- * guard for everyone (guard()), so they stay safe to cache; it loads the
- * toolbar only while the `mt_toolbar` cookie is there. That cookie is a hint,
- * not a credential: it is set for a control panel user (on sign-in and on
+ * Keeps the front-end toolbar's rules in one place. Pages print the same small
+ * guard for everyone (guard()), so they stay safe to cache, and the guard loads
+ * the toolbar only while the `mt_toolbar` cookie is there. That cookie is a hint,
+ * not a credential, because it is set for a control panel user (on sign-in and on
  * control panel requests) and removed on sign-out.
  * What the toolbar shows comes from an endpoint that checks the session.
  */
@@ -24,7 +24,7 @@ final class Toolbar
     public const string COOKIE = 'mt_toolbar';
 
     /**
-     * The guard's code. The addresses it loads are attributes of its tag, so
+     * Holds the guard's code. The addresses it loads are attributes of its tag, so
      * the code is the same on every site and in every version, and a Content
      * Security Policy can allow it by its hash (docs/configuration.md#toolbar).
      */
@@ -36,9 +36,9 @@ final class Toolbar
     }
 
     /**
-     * Whether $user gets the toolbar: the module is on and they may use the
-     * control panel. Its corner, shortcut and whether it is hidden are kept
-     * in the browser, where the toolbar's More panel changes them.
+     * Determines whether $user gets the toolbar, which is when the module is on and
+     * they may use the control panel. Its corner, its shortcut and whether it is
+     * hidden are kept in the browser, where the toolbar's More panel changes them.
      */
     public static function wants(?User $user): bool
     {
@@ -46,8 +46,8 @@ final class Toolbar
     }
 
     /**
-     * The marker cookie: readable by the page's script (not HttpOnly), no
-     * data in it, on the session's domain and for the session's lifetime.
+     * Makes the marker cookie, which the page's script can read (it isn't HttpOnly).
+     * It holds no data and lives on the session's domain for the session's lifetime.
      */
     public static function cookie(): CookieObject
     {
@@ -65,9 +65,9 @@ final class Toolbar
     }
 
     /**
-     * The inline script pages print, the same for every visitor: it loads the
-     * toolbar only when the marker cookie is there and the page isn't in a
-     * frame. Empty while the module is off, in Live Preview, and in a static
+     * Returns the inline script that pages print, which is the same for every visitor.
+     * It loads the toolbar only when the marker cookie is there and the page isn't in
+     * a frame. It is empty while the module is off, in Live Preview, and in a static
      * export (`ssg:generate`), which has no session.
      */
     public static function guard(): string
@@ -84,7 +84,7 @@ final class Toolbar
     }
 
     /**
-     * An address without its scheme and host, so the same guard works on
+     * Strips the scheme and host from an address, so the same guard works on
      * every domain the site answers on.
      */
     private static function path(string $url): string
@@ -93,12 +93,12 @@ final class Toolbar
     }
 
     /**
-     * The installed version, so an update loads the new script rather than a cached one.
+     * Returns the installed version, so an update loads the new script rather than a cached one.
      */
     private static function version(): string
     {
         try {
-            // The commit, which changes with every build, else the version (a path repository has no commit).
+            // This is the commit, which changes with every build, or the version (a path repository has no commit).
             return substr((string) (InstalledVersions::getReference(Package::NAME) ?? InstalledVersions::getPrettyVersion(Package::NAME)), 0, 12) ?: 'dev';
         } catch (Throwable) {
             return 'dev';

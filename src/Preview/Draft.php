@@ -16,14 +16,14 @@ use Statamic\Fields\Blueprint as BlueprintObject;
 use Statamic\Support\Arr;
 
 /**
- * The entry or term a publish form describes, built from its unsaved values
- * the way Statamic's live preview builds one, and never saved. It counts as
- * published, so an editor sees the page as it will look once it is live.
+ * Builds the entry or term that a publish form describes from its unsaved values,
+ * the way Statamic's live preview builds one, and never saves it. The draft counts
+ * as published, so an editor sees the page as it will look once it is live.
  */
 class Draft
 {
     /**
-     * Fields that are not plain data: Statamic keeps them as properties.
+     * These fields are not plain data, because Statamic keeps them as properties.
      */
     private const array PROPERTIES = ['slug', 'blueprint', 'published', 'date', 'parent', 'seo_preview'];
 
@@ -33,9 +33,9 @@ class Draft
     }
 
     /**
-     * @param  array<string, mixed>  $input  what a publish form sends: `blueprint` (its
-     *                                       fully qualified handle), `site`, `values`, and
-     *                                       `reference` when it edits saved content
+     * @param  array<string, mixed>  $input  The data a publish form sends, which is `blueprint`
+     *                                       (its fully qualified handle), `site`, `values`, and
+     *                                       `reference` when it edits saved content.
      */
     public static function from(array $input): EntryContract|TermContract
     {
@@ -77,7 +77,7 @@ class Draft
             $entry = clone $existing;
             $entry->data($existing->data()->merge($data));
         } else {
-            // With the site, so the policy also asks whether they may work on it.
+            // The site is passed in, so the policy also asks whether they may work on it.
             Gate::authorize('create', [EntryContract::class, $collection, Site::get($site)]);
 
             $entry = Entry::make()->collection($collection)->locale($site)->data($data)->slug('slug');
@@ -112,7 +112,7 @@ class Draft
             Gate::authorize('create', [TermContract::class, $taxonomy, Site::get($site)]);
         }
 
-        // A fresh term, so the stored one (and Statamic's cache of it) is never touched.
+        // A fresh term is made, so the stored one (and Statamic's cache of it) is never touched.
         return Term::make()
             ->taxonomy($taxonomy)
             ->slug($slug ?? $existing?->slug() ?? 'slug')
@@ -121,9 +121,9 @@ class Draft
     }
 
     /**
-     * The saved entry or term a publish form's reference names ("entry::{id}",
-     * "term::{taxonomy}::{slug}::{site}"), in $site or the reference's own
-     * site; null on a create form.
+     * Finds the saved entry or term that a publish form's reference names ("entry::{id}",
+     * "term::{taxonomy}::{slug}::{site}"), in $site or the reference's own site. It
+     * returns null on a create form.
      */
     public static function stored(string $reference, ?string $site = null): EntryContract|TermContract|null
     {

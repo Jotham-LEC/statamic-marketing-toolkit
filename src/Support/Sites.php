@@ -9,14 +9,14 @@ use Statamic\Facades\Site;
 use Statamic\Sites\Sites as StatamicSites;
 
 /**
- * Statamic's sites as the redirects, the 404 log and reports see them. On a
- * single site their rows name no site (null: every site), exactly as before
- * multi-site support; with more than one site they name the one they are for.
+ * Describes Statamic's sites as the redirects, the 404 log and reports see them. On a single
+ * site, their rows name no site (null means every site), exactly as before multi-site support.
+ * With more than one site, they name the one they are for.
  */
 final class Sites
 {
     /**
-     * Whether Statamic has several sites (Statamic Pro, multi-site on).
+     * Determines whether Statamic has several sites (with Statamic Pro and multi-site on).
      */
     public static function multiple(): bool
     {
@@ -24,7 +24,7 @@ final class Sites
     }
 
     /**
-     * The handle a row stores for $site: null while there is only one site.
+     * Returns the handle a row stores for $site, which is null while there is only one site.
      */
     public static function scope(?string $site): ?string
     {
@@ -40,9 +40,9 @@ final class Sites
     }
 
     /**
-     * The handles of the sites the signed-in user may work on (Statamic's
-     * `access {site} site` permission; a super user, every one), or every
-     * site's while the addon works as on a single site.
+     * Returns the handles of the sites the signed-in user may work on (Statamic's
+     * `access {site} site` permission, or every one for a super user), or every
+     * site's handle while the addon works as it does on a single site.
      *
      * @return list<string>
      */
@@ -52,8 +52,8 @@ final class Sites
     }
 
     /**
-     * Whether the signed-in user may work on every site (a super user, or one
-     * with `access {site} site` for each), and so on rules for every site.
+     * Determines whether the signed-in user may work on every site (as a super user, or with
+     * `access {site} site` for each), and so on rules for every site.
      */
     public static function accessesAll(): bool
     {
@@ -61,8 +61,8 @@ final class Sites
     }
 
     /**
-     * The folder a site lives in on its domain, as the paths Laravel reads from
-     * a request start with it: `/fr` for a site at example.com/fr/, '' for one
+     * Returns the folder a site lives in on its domain, in the form that the paths Laravel reads
+     * from a request start with. It is `/fr` for a site at example.com/fr/, and '' for one
      * at the root of its domain (or of the folder the app is installed in).
      */
     public static function folder(?string $site): string
@@ -75,9 +75,9 @@ final class Sites
     }
 
     /**
-     * A path as requested (`/fr/a-propos`), within $site (`/a-propos`), as
-     * Statamic's uri() and the addon's redirects and 404 log write it; null
-     * when it doesn't start with the site's folder.
+     * Returns a path as requested (`/fr/a-propos`) as it is within $site (`/a-propos`), which is how
+     * Statamic's uri() and the addon's redirects and 404 log write it. It returns null when the path
+     * doesn't start with the site's folder.
      */
     public static function within(string $path, ?string $site): ?string
     {
@@ -92,7 +92,7 @@ final class Sites
     }
 
     /**
-     * Site handle => name, for a select.
+     * Maps each site handle to its name, for a select.
      *
      * @return array<string, string>
      */
@@ -102,14 +102,14 @@ final class Sites
     }
 
     /**
-     * Whether the addresses built for this request may be cached and served
+     * Determines whether the addresses built for this request may be cached and served
      * to every request. A site whose URL is relative (`url: '/'`) takes its
-     * domain from the request's Host header, which a client sets to anything:
-     * cached after a save, one request with `Host: evil.test` would give
-     * every visitor a sitemap of evil.test addresses until the next save. So
-     * with such a site only a request on a host the install names (an
-     * absolute site URL's, else APP_URL's) is cached; others are built afresh,
-     * for that request alone. With every site's URL absolute nothing depends
+     * domain from the request's Host header, which a client can set to anything.
+     * If that were cached after a save, one request with `Host: evil.test` would give
+     * every visitor a sitemap of evil.test addresses until the next save. So,
+     * with such a site, only a request on a host the install names (an
+     * absolute site URL's, or else APP_URL's) is cached, and others are built afresh
+     * for that request alone. When every site's URL is absolute, nothing depends
      * on the Host, and everything is cached.
      */
     public static function trustsHost(Request $request): bool
@@ -127,8 +127,8 @@ final class Sites
     }
 
     /**
-     * Runs $work with $site as Statamic's current site (null: as it is), then
-     * puts back what was there, so the site stays worked out from the request
+     * Runs $work with $site as Statamic's current site (a null site leaves it as it is), then
+     * puts back what was there, so the site is still worked out from the request
      * afterwards rather than pinned.
      *
      * @template T

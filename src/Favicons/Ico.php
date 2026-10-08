@@ -3,8 +3,8 @@
 namespace JothamLec\MarketingToolkit\Favicons;
 
 /**
- * A favicon.ico holding PNG images, as every browser since IE 11 reads it:
- * a 6-byte header, a 16-byte entry per image, then the PNGs themselves.
+ * Builds a favicon.ico that holds PNG images, which every browser since IE 11 reads. It has
+ * a 6-byte header, a 16-byte entry per image, and then the PNGs themselves.
  */
 final class Ico
 {
@@ -20,7 +20,7 @@ final class Ico
         $offset = 6 + 16 * count($pngs);
 
         foreach ($pngs as $size => $png) {
-            // 0 stands for 256 in the one-byte width and height.
+            // A 0 stands for 256 in the one-byte width and height.
             $side = $size >= 256 ? 0 : $size;
             $entries .= pack('CCCCvvVV', $side, $side, 0, 0, 1, 32, strlen($png), $offset + strlen($data));
             $data .= $png;

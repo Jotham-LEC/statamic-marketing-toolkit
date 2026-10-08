@@ -3,8 +3,8 @@
 namespace JothamLec\MarketingToolkit\Support;
 
 /**
- * Paths Statamic answers itself, outside the front end: the control panel,
- * and its action routes (`/!/…`).
+ * Recognises the paths Statamic answers itself, outside the front end, which are the control
+ * panel and its action routes (`/!/…`).
  */
 final class StatamicRoutes
 {

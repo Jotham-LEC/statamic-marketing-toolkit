@@ -15,10 +15,10 @@ use Statamic\StaticCaching\Cacher;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
 /**
- * The front-end toolbar's endpoint, at /!/marketing-toolkit/toolbar: what
- * the toolbar shows about one page, for the signed-in user. Nothing it
+ * Serves the front-end toolbar's endpoint at /!/marketing-toolkit/toolbar, which
+ * returns what the toolbar shows about one page for the signed-in user. Nothing it
  * answers is cached anywhere. Besides reading, it can clear this one page's
- * static cache, for whoever may use the cache utility.
+ * static cache for whoever may use the cache utility.
  */
 final class ToolbarController
 {
@@ -37,14 +37,14 @@ final class ToolbarController
         $url = $this->pageUrl($request);
         $site = $url === null ? null : Site::findByUrl($url);
 
-        // Only the site's own addresses are asked about.
+        // The endpoint only answers for addresses on the site's own domains.
         if ($site === null || Validator::make($request->query(), ['status' => ['nullable', 'integer', 'between:100,599']])->fails()) {
             return $this->private(response()->json(['message' => 'This address isn’t on this site.'], 422));
         }
 
         $status = $request->filled('status') ? $request->integer('status') : null;
 
-        // In the user's control panel language, as the control panel would be.
+        // The answer uses the user's control panel language, as the control panel would.
         app()->setLocale($user->preferredLocale());
 
         $data = Sites::as($site->handle(), fn () => (new PageData($user, $url, $status))->toArray());
@@ -63,14 +63,14 @@ final class ToolbarController
         $url = $this->pageUrl($request);
         abort_if($url === null || Site::findByUrl($url) === null, 422);
 
-        // Without its query string: every copy of the page goes.
+        // The query string is dropped, so that every cached copy of the page is cleared.
         $cacher->invalidateUrls([strtok($url, '?')]);
 
         return $this->private(response()->noContent());
     }
 
     /**
-     * The page's address, without its fragment: a web address, or null.
+     * Returns the page's address without its fragment, or null if it isn't a web address.
      */
     private function pageUrl(Request $request): ?string
     {
@@ -80,7 +80,7 @@ final class ToolbarController
     }
 
     /**
-     * No user who gets the toolbar: the marker cookie goes, so the next page loads nothing.
+     * Answers when no user gets the toolbar, and forgets the marker cookie so the next page loads nothing.
      */
     private function signedOut(): JsonResponse
     {

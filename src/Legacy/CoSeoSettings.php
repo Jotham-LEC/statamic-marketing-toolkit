@@ -9,13 +9,12 @@ use Statamic\Facades\YAML;
 use Throwable;
 
 /**
- * Co-SEO saved its addon settings (the Search Console property) under its
- * own name: `resources/addons/seo.yaml`, or, with the Eloquent driver, an
- * `addon_settings` row for `jotham-lec/statamic-co-seo`. Marketing Toolkit
- * reads them under its new name. Run once by a migration; what the new name
- * already has wins.
+ * Co-SEO saved its addon settings (the Search Console property) under its own name, in
+ * `resources/addons/seo.yaml` or, with the Eloquent driver, in an `addon_settings` row for
+ * `jotham-lec/statamic-co-seo`. This copies them so Marketing Toolkit reads them under its
+ * new name. A migration runs it once, and what the new name already has wins.
  *
- * Added in 0.18.0. Removed in 1.0: see docs/upgrading.md, "Removed in 1.0".
+ * This was added in 0.18.0 and will be removed in 1.0; see "Removed in 1.0" in docs/upgrading.md.
  */
 final class CoSeoSettings
 {

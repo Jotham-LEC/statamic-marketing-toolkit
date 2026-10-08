@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Builder;
 use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
- * A row with a `site` column: a site's handle, or null on a single site
- * (and for rows from before the install had more than one).
+ * Belongs on a model whose rows have a `site` column, which holds a site's handle, or null on a
+ * single site (and for rows from before the install had more than one).
  *
  * @property ?string $site
  */
 trait BelongsToSite
 {
     /**
-     * Rows of exactly this site; null: those of a single-site install.
+     * Scopes the query to rows of exactly this site, and a null site means those of a single-site install.
      *
      * @param  Builder<static>  $query
      */
@@ -24,8 +24,8 @@ trait BelongsToSite
     }
 
     /**
-     * The rows the control panel shows while $site is selected: its own, and
-     * those from before the install had more than one site.
+     * Scopes the query to the rows the control panel shows while $site is selected, which are its own
+     * and those from before the install had more than one site.
      *
      * @param  Builder<static>  $query
      */

@@ -26,9 +26,9 @@ use Statamic\Facades\User;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Marketing → Redirects: the list, the create and edit forms (Statamic's
- * publish form, on a blueprint defined here), CSV in and out, and the two
- * endpoints behind the "add a redirect?" question when content is saved.
+ * Shows Marketing → Redirects. It serves the list, the create and edit forms
+ * (Statamic's publish form, on a blueprint defined here), CSV import and export,
+ * and the two endpoints behind the "add a redirect?" question when content is saved.
  */
 final class RedirectsController
 {
@@ -49,7 +49,7 @@ final class RedirectsController
     public function listing(Request $request): array
     {
         $sites = Sites::options();
-        // The same on every row: they depend on the kind of row and the user alone.
+        // The actions are the same on every row, because they depend only on the kind of row and the user.
         $actions = RecordActions::for(collect([new Redirect]), ['type' => 'redirects']);
 
         return Listing::respond(
@@ -83,7 +83,8 @@ final class RedirectsController
         return $this->form(
             new Redirect([
                 'source' => (string) $request->query('source', ''),
-                // Without one, for every site; for someone who can't work on every site, the selected one if theirs.
+                // Without a site, the redirect is for every site. For someone who can't work on every site,
+                // it is for the selected one if theirs.
                 'site' => Sites::scope($request->query('site') === null ? self::defaultSite() : (string) $request->query('site')),
             ]),
             title: __('marketing-toolkit::cp.redirects.create'),
@@ -110,7 +111,7 @@ final class RedirectsController
     {
         abort_unless($redirect->isAccessible(), 404);
 
-        // Edited by hand, it is no longer one the content made.
+        // A redirect that is edited by hand is no longer one that the content made.
         $redirect->update([...$request->validated(), 'automatic' => false]);
 
         return response()->json(['saved' => true]);
@@ -136,7 +137,7 @@ final class RedirectsController
     }
 
     /**
-     * Before an entry or term is saved from its form: will its address change?
+     * Tells the form, before an entry or term is saved, whether its address will change.
      *
      * @return array{changes: bool, from?: string, to?: string}
      */
@@ -148,7 +149,7 @@ final class RedirectsController
 
         $stored = $this->referenced((string) $request->input('reference'));
 
-        // Only published content gets a redirect (RedirectChangedUris), before and after the save.
+        // Only content that is published before and after the save gets a redirect (RedirectChangedUris).
         if (! $stored || ($stored instanceof EntryContract && (! $stored->published() || ! $request->boolean('values.published', true)))) {
             return ['changes' => false];
         }
@@ -177,7 +178,7 @@ final class RedirectsController
     }
 
     /**
-     * The editor's answer, read by the save that follows.
+     * Stores the editor's answer, which the save that follows reads.
      */
     public function choice(Request $request, AutoRedirects $redirects): JsonResponse
     {
@@ -192,7 +193,7 @@ final class RedirectsController
     }
 
     /**
-     * The saved entry or term a publish form's reference points at, if this user may see it.
+     * Returns the saved entry or term that a publish form's reference points at, if this user may see it.
      */
     private function referenced(string $reference): EntryContract|TermContract|null
     {
@@ -204,8 +205,8 @@ final class RedirectsController
     }
 
     /**
-     * The site a new rule is for when the form names none: every site (null),
-     * unless the user may not work on every site.
+     * Returns the site a new rule is for when the form names none. This is every
+     * site (null), unless the user may not work on every site.
      */
     private static function defaultSite(): ?string
     {

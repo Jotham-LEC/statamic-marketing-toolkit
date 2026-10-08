@@ -5,20 +5,20 @@ namespace JothamLec\MarketingToolkit\UpdateScripts;
 use Statamic\Facades\GlobalSet;
 
 /**
- * 0.18.2 stopped adding the site name to page titles unless the new
+ * Version 0.18.2 stopped adding the site name to page titles unless the new
  * "Add the site name to page titles" toggle is on, and kept it for a site
- * with a separator saved. In the control panel the toggle still showed off
- * there, so the next save of SEO & brand dropped the site name. Each
- * localization with a separator saved and no toggle gets the toggle on,
- * which is what its titles already do.
+ * with a separator saved. In the control panel, the toggle still showed as off
+ * there, so the next save of SEO & brand dropped the site name. This turns the
+ * toggle on for each localization with a separator saved and no toggle,
+ * which matches what its titles already do.
  *
- * Added in 0.18.3. Removed in 1.0: see docs/upgrading.md, "Removed in 1.0".
+ * This was added in 0.18.3 and will be removed in 1.0; see "Removed in 1.0" in docs/upgrading.md.
  */
 final class KeepSiteNameInTitles extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {
-        // Also from Co-SEO, whose docs have its sites run `updates:run 0.17.0`.
+        // This also covers Co-SEO, whose docs have its sites run `updates:run 0.17.0`.
         return self::before((string) $oldVersion, '0.18.3');
     }
 

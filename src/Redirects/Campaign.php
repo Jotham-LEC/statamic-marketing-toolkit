@@ -3,20 +3,19 @@
 namespace JothamLec\MarketingToolkit\Redirects;
 
 /**
- * A campaign link: a short address on the site, like /go/linkedin,
- * that redirects to a page with UTM tags, so the campaign shows in
- * Analytics and in each lead's source. The tags live in the redirect's
- * target; the redirect counts the clicks.
+ * A campaign link is a short address on the site, such as /go/linkedin, that redirects to a page with
+ * UTM tags, so the campaign shows in Analytics and in each lead's source. The tags are stored in the
+ * redirect's target, and the redirect counts the clicks.
  */
 final class Campaign
 {
     public const array TAGS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 
     /**
-     * $target with these UTM tags: each set one replaces the target's own,
-     * each emptied one is taken out, and the rest of its query stays as typed,
-     * byte for byte: a `$1` a wildcard fills in, `a.b`, `+`, a bare `?flag` or
-     * a repeated key would not survive a trip through parse_str().
+     * Returns $target with these UTM tags. Each tag that is set replaces the target's own, each emptied
+     * tag is taken out, and the rest of the query stays exactly as typed, byte for byte. We avoid
+     * parse_str() here, because a `$1` that a wildcard fills in, `a.b`, `+`, a bare `?flag`, or a
+     * repeated key would not survive the trip.
      *
      * @param  array<string, mixed>  $tags
      */

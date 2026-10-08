@@ -26,11 +26,10 @@ use Statamic\Support\Arr;
 use Throwable;
 
 /**
- * Adds a 301 when published content moves: an entry's or a term's slug or
- * date changes, or a page is moved in a collection's tree (with every page
- * under it). The old address is worked out while saving, from what Statamic
- * remembers of the content as it was loaded; the redirects are written once
- * the save has gone through.
+ * This listener adds a 301 when published content moves, such as when an entry's or a term's slug or date
+ * changes, or when a page is moved in a collection's tree (with every page under it). The old address is
+ * worked out while saving, from what Statamic remembers of the content as it was loaded, and the
+ * redirects are written once the save has gone through.
  */
 final class RedirectChangedUris
 {
@@ -68,12 +67,12 @@ final class RedirectChangedUris
         $before->slug($original['slug'] ?? $entry->slug());
         $before->data(Arr::except($original, ['collection', 'locale', 'origin', 'slug', 'date', 'published', 'path']));
 
-        // Statamic keeps the date as UTC; read in the app's timezone it would move by the offset.
+        // Statamic keeps the date in UTC, so reading it in the app's timezone would shift it by the offset.
         if ($entry->collection()?->dated() && ($date = $original['date'] ?? null)) {
             $before->date(Carbon::createFromFormat('Y-m-d-Hi', $date, 'UTC'));
         }
 
-        // Worked out last, so Statamic's caches end up holding the entry being saved.
+        // We work out the new address last, so Statamic's caches end up holding the entry being saved.
         $from = $this->entryUri($before);
         $to = $this->entryUri($entry);
 
@@ -97,7 +96,7 @@ final class RedirectChangedUris
         [$from, $to] = $move;
         $this->moved($entry, $from, $to);
 
-        // In a tree, the pages under this one moved with it.
+        // In a tree, the pages under this one moved with it, so they get redirects too.
         if ($page = $entry->structure()?->in($entry->locale())->findByEntry($entry->id())) {
             Uris::forget();
 
@@ -128,7 +127,7 @@ final class RedirectChangedUris
         $to = $this->termUris($term);
 
         if ($from !== $to) {
-            // The editor's dialog answered for the id the form knew: the old slug's.
+            // The editor's dialog answered for the ID that the form knew, which is the old slug's ID.
             $this->pending['term'][$term->id()] = [$from, $to, $term->taxonomyHandle().'::'.$slug];
         }
     }
@@ -186,7 +185,7 @@ final class RedirectChangedUris
     }
 
     /**
-     * Each site has its own tree of a collection.
+     * Builds the key for a tree, which includes the locale because each site has its own tree of a collection.
      */
     private function treeKey(Tree $tree): string
     {
@@ -194,9 +193,8 @@ final class RedirectChangedUris
     }
 
     /**
-     * The page's own 301, and when it is a collection's mount, one wildcard
-     * rule for the entries that moved with it: among the rules of the
-     * entry's site.
+     * Creates the page's own 301 and, when the page is a collection's mount, one wildcard rule for the
+     * entries that moved with it. Both are added among the rules of the entry's site.
      */
     private function moved(EntryContract $entry, string $from, string $to): void
     {
@@ -209,8 +207,8 @@ final class RedirectChangedUris
     }
 
     /**
-     * The old address now redirects: IndexNow is told, so engines recrawl it
-     * and follow the 301 sooner. Never a protected page's.
+     * Tells IndexNow that the old address now redirects, so search engines recrawl it and follow the 301
+     * sooner. A protected page's address is never sent.
      */
     private function tellIndexNow(EntryContract|Term $content, string $uri, string $site): void
     {
@@ -233,15 +231,14 @@ final class RedirectChangedUris
         try {
             return $entry->uri();
         } catch (Throwable) {
-            // A route that can't be built from the old data has no old address.
+            // When the route can't be built from the old data, there is no old address.
             return null;
         }
     }
 
     /**
-     * The term's address on each site its taxonomy is on. A slug is shared
-     * by the sites that don't set their own, so a new one moves the term on
-     * each of those.
+     * Returns the term's address on each site that its taxonomy is on. The sites that don't set their own
+     * slug share one, so a new slug moves the term on each of those sites.
      *
      * @return array<string, string> site handle => URI
      */
@@ -263,7 +260,7 @@ final class RedirectChangedUris
     {
         Uris::forget();
 
-        // Walked fresh on a copy: a tree caches its pages and doesn't drop them when it changes.
+        // We walk a fresh copy, because a tree caches its pages and doesn't drop them when it changes.
         return (clone $tree)->disableUriCache()->pages()->flattenedPages()
             ->filter(fn ($page) => $page->reference())
             ->mapWithKeys(fn ($page) => [$page->reference() => (string) $page->uri()])
@@ -282,9 +279,8 @@ final class RedirectChangedUris
     }
 
     /**
-     * Drops what an earlier save of this content left: one that was cancelled
-     * or failed never reached its Saved event, and this instance outlives it
-     * in a queue worker or a long import.
+     * Drops anything that an earlier save of this content left behind. A save that was cancelled or failed
+     * never reached its Saved event, and this instance outlives it in a queue worker or a long import.
      */
     private function forget(string $type, string $id): void
     {

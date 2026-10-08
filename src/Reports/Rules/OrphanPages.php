@@ -8,9 +8,9 @@ use JothamLec\MarketingToolkit\Reports\SiteFacts;
 use JothamLec\MarketingToolkit\Support\Uris;
 
 /**
- * A page in the sitemap that no other page links to: search engines find it
- * only through the sitemap, and visitors only through search. The home page
- * needs no link.
+ * Flags a page in the sitemap that no other page links to. Search engines find
+ * such a page only through the sitemap, and visitors find it only through
+ * search. The home page needs no link.
  */
 class OrphanPages extends Rule
 {

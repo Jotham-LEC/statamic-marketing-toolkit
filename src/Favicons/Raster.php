@@ -8,9 +8,9 @@ use ImagickPixel;
 use Throwable;
 
 /**
- * Draws an uploaded image as a square PNG of a given size: fitted whole,
- * centred, on transparency or a colour. Imagick when PHP has it (it also
- * reads SVG), else GD, which every PHP host has.
+ * Draws an uploaded image as a square PNG of a given size, fitted whole and centred on
+ * transparency or a colour. It uses Imagick when PHP has it (because it also reads SVG),
+ * or else GD, which every PHP host has.
  */
 class Raster
 {
@@ -25,7 +25,7 @@ class Raster
     }
 
     /**
-     * A $size × $size PNG of the image, or null if it can't be read.
+     * Returns a $size × $size PNG of the image, or null if it can't be read.
      *
      * @param  ?string  $background  `#rrggbb`, or null for transparent
      * @param  float  $padding  the share of each side left empty
@@ -52,7 +52,7 @@ class Raster
         $image->setBackgroundColor(new ImagickPixel('transparent'));
 
         if ($this->isSvg($bytes)) {
-            // Read at a resolution that gives at least $size pixels, rather than scaling up a small drawing.
+            // The SVG is read at a resolution that gives at least $size pixels, rather than scaling up a small drawing.
             $image->setResolution(max(96, $size), max(96, $size));
         }
 

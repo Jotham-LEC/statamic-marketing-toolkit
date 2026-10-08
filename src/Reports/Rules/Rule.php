@@ -7,20 +7,20 @@ use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 /**
- * One check a report runs on every page. Its weight is how much it counts
- * towards the page's score: 3 for what keeps a page out of search results,
- * 2 for what shapes how it shows, 1 for polish.
+ * One check that a report runs on every page. Its weight sets how much it
+ * counts towards the page's score, which is 3 for what keeps a page out of
+ * search results, 2 for what shapes how it shows, and 1 for polish.
  */
 abstract class Rule
 {
     /**
-     * The key in the addon settings (`rule_{handle}`) and in a page's results.
+     * Gets the check's key in the addon settings (`rule_{handle}`) and in a page's results.
      */
     abstract public static function handle(): string;
 
     /**
-     * The check's name: a translation key, or plain text. Reports keep it as
-     * it is and translate it when shown.
+     * Gets the check's name, which is a translation key or plain text. Reports
+     * store it as it is and translate it when they show it.
      */
     public function label(): string
     {
@@ -32,7 +32,7 @@ abstract class Rule
     abstract public function check(string $url, PageFacts $page, SiteFacts $site): Result;
 
     /**
-     * Whether the check applies to a page search engines are told to skip.
+     * Determines whether the check applies to a page that search engines are told to skip.
      */
     public function appliesToNoindex(): bool
     {
@@ -40,9 +40,9 @@ abstract class Rule
     }
 
     /**
-     * Some items for a message, as a message parameter: the first few, then
-     * "and N more", translated when the message is shown. Full addresses are
-     * shortened to their paths unless $paths is false.
+     * Turns some items into a message parameter that lists the first few and
+     * then "and N more", which is translated when the message is shown. Full
+     * addresses are shortened to their paths unless $paths is false.
      *
      * @param  list<string>  $items
      * @return string|array{message: string, params: array{list: string, count: int}}

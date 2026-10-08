@@ -3,7 +3,7 @@
 namespace JothamLec\MarketingToolkit\Og;
 
 /**
- * What goes on a generated share card. A Template decides where each part
+ * Holds what goes on a generated share card. A Template decides where each part
  * sits and how it looks.
  */
 final readonly class Card

@@ -14,17 +14,17 @@ use Statamic\Contracts\Entries\Entry;
  * Draws an entry's share card and caches the PNG until the entry, the card's
  * colours or the template's version change.
  *
- * What the card says, in order of precedence: the entry's SEO "Card title" /
- * "Card subtitle", else its title and the same description its meta tags
- * carry. Which template: the collection's `og_template`, else `default`.
+ * The card shows the entry's SEO "Card title" and "Card subtitle" if they are set, or else its
+ * title and the same description its meta tags carry. The template is the collection's
+ * `og_template`, or else `default`.
  */
 class Generator
 {
     /**
-     * Whether cards can be drawn here: the-og draws with Imagick alone (no
-     * GD), and PHP's imagick extension is only suggested, so a host may lack
-     * it. Without it the meta tags fall back to the default image rather
-     * than point at a card that fails, and the card routes answer 404.
+     * Determines whether cards can be drawn here. the-og draws with Imagick alone (not GD), and
+     * PHP's imagick extension is only suggested, so a host may lack it. Without it, the meta tags
+     * fall back to the default image rather than point at a card that fails, and the card routes
+     * answer 404.
      */
     public function available(): bool
     {
@@ -53,8 +53,8 @@ class Generator
     }
 
     /**
-     * What the card says, worked out with the entry's site as the current one
-     * (its brand values and colours), wherever it is asked for.
+     * Works out what the card says with the entry's site as the current one (for its brand values
+     * and colours), wherever it is asked for.
      */
     public function card(Entry $entry): Card
     {
@@ -67,13 +67,13 @@ class Generator
         $context = Context::make($entry);
         $settings = $seo->settings();
         $overrides = $context->seo();
-        // The mount page as it is on the entry's site, where it has its own title.
+        // This is the mount page as it is on the entry's site, where it has its own title.
         $mount = $entry->collection()->mount();
         $mount = $mount?->in($entry->locale()) ?? $mount;
 
         return new Card(
             title: $overrides['og_title'] ?? (string) $entry->value('title'),
-            // A long subtitle may be typed on several lines: the card draws it as one paragraph.
+            // A long subtitle may be typed on several lines, but the card draws it as one paragraph.
             description: isset($overrides['og_subtitle']) ? Str::squish((string) $overrides['og_subtitle']) : $seo->description($context),
             label: $mount ? (string) $mount->value('title') : $settings->siteName(),
             siteName: $settings->siteName(),
@@ -89,7 +89,7 @@ class Generator
         $key = config("marketing-toolkit.collections.{$entry->collectionHandle()}.og_template") ?? 'default';
 
         // A key that names no template falls back to the default rather than
-        // breaking the image; a missing default is a setup error.
+        // breaking the image, and a missing default is a setup error.
         $class = config("marketing-toolkit.og.templates.{$key}") ?? config('marketing-toolkit.og.templates.default');
 
         if (! is_string($class) || ! is_subclass_of($class, Template::class)) {

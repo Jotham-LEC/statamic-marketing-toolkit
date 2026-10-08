@@ -9,8 +9,9 @@ use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Facades\Site;
 
 /**
- * Reads a rendered page for the checks: title, description, h1s, canonical,
- * robots, images, links back into this site, the share image and JSON-LD.
+ * Reads a rendered page for the checks. It picks out the title, description,
+ * h1s, canonical, robots, images, links back into this site, the share image
+ * and the JSON-LD.
  */
 class HtmlInspector
 {
@@ -58,12 +59,12 @@ class HtmlInspector
     }
 
     /**
-     * The page's links: broken and redirected paths on this site, every path
-     * on this site it links to, and its links to other sites.
+     * Collects the page's links, which are the broken and redirected paths on
+     * this site, every path on this site it links to, and its links to other sites.
      */
     private function links(DOMXPath $xpath): PageLinks
     {
-        // The report's site: the Runner makes it the current one.
+        // This is the report's site, because the Runner makes it the current one.
         $host = parse_url(Site::current()->absoluteUrl(), PHP_URL_HOST);
         $broken = $redirected = $internal = $external = [];
 
@@ -89,7 +90,7 @@ class HtmlInspector
 
             $path = $parts['path'] ?? '/';
 
-            // A relative link ("next-page") is relative to nothing the checker knows; skip it.
+            // A relative link ("next-page") is relative to nothing the checker knows, so it is skipped.
             if (! str_starts_with($path, '/')) {
                 continue;
             }

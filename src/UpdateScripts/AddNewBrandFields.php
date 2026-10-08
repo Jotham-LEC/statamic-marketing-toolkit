@@ -7,18 +7,17 @@ use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 
 /**
- * An update adds to the Brand and Marketing settings blueprints the fields
- * the new version brings, in the tabs the site kept, as `mt:install` would
- * add them. Only those: a field the site removed stays removed, through every
- * later update. Updating from before 0.20 (when this script came, and fields
- * were added by hand), every field the blueprints lack is added. Statamic
- * runs it on `composer update` (or `php please updates:run`); commit the
+ * Adds the fields that the new version brings to the Brand and Marketing settings blueprints, in
+ * the tabs the site kept, as `mt:install` would add them. It adds only those, so a field the site
+ * removed stays removed through every later update. When updating from before 0.20 (when this
+ * script arrived, and fields were added by hand), every field the blueprints lack is added.
+ * Statamic runs it on `composer update` (or `php please updates:run`), and you should commit the
  * blueprints it changes.
  */
 final class AddNewBrandFields extends UpdateScript
 {
     /**
-     * The fields each version from 0.20 brought, by that version. A field
+     * Lists the fields each version from 0.20 brought, keyed by that version. A field
      * added to resources/install must be listed here, or no update adds it.
      */
     public const array FIELDS = [
@@ -60,9 +59,9 @@ final class AddNewBrandFields extends UpdateScript
     }
 
     /**
-     * The fields brought after the old version, up to the new one: null for
-     * all of them, from before 0.20. An old version that isn't a release (a
-     * branch) brings none; `mt:install` adds what is missing.
+     * Returns the fields brought after the old version, up to the new one, or null for all of
+     * them when updating from before 0.20. An old version that isn't a release (a branch)
+     * brings none, and `mt:install` adds what is missing.
      *
      * @return list<string>|null
      */

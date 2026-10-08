@@ -15,16 +15,16 @@ use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Site;
 
 /**
- * robots.txt, llms.txt and ads.txt. SiteSeo's robotsTxt(), llmsTxt() and
- * adsTxt() call these; a site overrides those, not this class.
+ * This class builds robots.txt, llms.txt, and ads.txt. SiteSeo's robotsTxt(),
+ * llmsTxt(), and adsTxt() call it, and a site overrides those, not this class.
  */
 final class TextFiles
 {
     public function __construct(private Settings $settings, private Sitemap $sitemap) {}
 
     /**
-     * robots.txt: the paths the Brand global disallows (the control panel
-     * unless it names others), the AI crawlers it turns away, its extra
+     * Builds robots.txt from the paths the Brand global disallows (the control
+     * panel, unless it names others), the AI crawlers it turns away, its extra
      * lines, and the sitemap. Everything is disallowed on a copy of the site
      * that is kept out of search engines ($hidden).
      */
@@ -58,15 +58,16 @@ final class TextFiles
     }
 
     /**
-     * /llms.txt (llmstxt.org): the site's name and description, then, per
-     * collection the sitemap lists, its pages as Markdown links with their
-     * descriptions, the most recently changed first. It is for AI assistants
-     * that read a site's summary before its pages. llms.txt is only read at a
-     * domain's root, so, like the sitemap, it lists every site on the domain:
-     * a site under a folder (/fr/) gets its own sections, named after it.
+     * Builds /llms.txt (see llmstxt.org). It lists the site's name and
+     * description, then, for each collection the sitemap lists, its pages as
+     * Markdown links with their descriptions, most recently changed first. It
+     * is for AI assistants that read a site's summary before its pages.
+     * llms.txt is only read at a domain's root, so, like the sitemap, it lists
+     * every site on the domain, and a site under a folder (/fr/) gets its own
+     * sections, named after it.
      *
-     * @param  int  $perCollection  the most pages listed per collection
-     * @param  Closure(Context): ?string  $describe  a page's description
+     * @param  int  $perCollection  the maximum number of pages listed per collection
+     * @param  Closure(Context): ?string  $describe  returns a page's description
      */
     public function llms(SiteSeo $seo, int $perCollection, Closure $describe): string
     {
@@ -87,8 +88,8 @@ final class TextFiles
     }
 
     /**
-     * /ads.txt: the lines in Marketing settings → Crawlers, for a site that
-     * sells ad space; null when there are none.
+     * Builds /ads.txt from the lines in Marketing settings → Crawlers, for a
+     * site that sells ad space. It returns null when there are none.
      */
     public function ads(): ?string
     {
@@ -98,8 +99,8 @@ final class TextFiles
     }
 
     /**
-     * The current site's sections of llms.txt, one per collection, each
-     * named with the site when the domain has several.
+     * Returns the current site's sections of llms.txt, one per collection.
+     * Each section is named with the site when the domain has several.
      *
      * @param  Closure(Context): ?string  $describe
      * @return list<string>
@@ -142,10 +143,10 @@ final class TextFiles
     }
 
     /**
-     * robots.txt groups for the AI crawlers the Brand global turns away:
-     * those that gather training data, and those that index for AI search
-     * answers. Fetchers a person sends (ChatGPT-User, Perplexity-User) don't
-     * all read robots.txt, so they aren't listed.
+     * Returns the robots.txt groups for the AI crawlers the Brand global turns
+     * away, which are those that gather training data and those that index
+     * for AI search answers. Fetchers a person sends (ChatGPT-User and
+     * Perplexity-User) don't all read robots.txt, so they aren't listed.
      *
      * @return list<string>
      */

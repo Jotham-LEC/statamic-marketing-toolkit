@@ -9,9 +9,9 @@ use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
- * /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
- * /icon-512.png and /site.webmanifest, made from the brand's icon. A file in
- * public/ of the same name wins: the web server serves it first.
+ * Serves /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
+ * /icon-512.png and /site.webmanifest, made from the brand's icon. A file of the
+ * same name in public/ wins, because the web server serves it first.
  */
 final class FaviconController
 {
@@ -25,9 +25,9 @@ final class FaviconController
 
         return response($bytes)->withHeaders(array_filter([
             'Content-Type' => Favicons::FILES[$name],
-            // Browsers ask for /favicon.ico without the version: a day, then they check again.
+            // Browsers ask for /favicon.ico without the version, so they keep it for a day and then check again.
             'Cache-Control' => 'public, max-age=86400',
-            // An SVG opened on its own runs no script.
+            // This policy stops an SVG that is opened on its own from running any script.
             'Content-Security-Policy' => $name === 'favicon.svg' ? "default-src 'none'; style-src 'unsafe-inline'" : null,
             'X-Content-Type-Options' => 'nosniff',
         ]));

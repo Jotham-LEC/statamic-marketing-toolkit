@@ -8,15 +8,15 @@ use Statamic\Facades\Site;
 use Statamic\Taxonomies\LocalizedTerm;
 
 /**
- * Working out content addresses. Statamic remembers each entry's URI, and
- * each tree's, for the rest of the request; content whose address is being
- * worked out before and after a change needs them forgotten in between.
+ * Helps work out content addresses. Statamic remembers each entry's URI, and
+ * each tree's, for the rest of the request, so content whose address is worked
+ * out before and after a change needs them forgotten in between.
  */
 final class Uris
 {
     /**
-     * A path compared with others: decoded, without a trailing slash (home
-     * stays `/`).
+     * Returns a path in a form that compares with others, which is decoded and without a trailing
+     * slash (the home page stays `/`).
      */
     public static function normalizePath(string $path): string
     {
@@ -30,10 +30,10 @@ final class Uris
     }
 
     /**
-     * Whether a term's address is a page. Statamic answers a term's URI only
+     * Determines whether a term's address is a page. Statamic answers a term's URI only
      * when its template exists (LocalizedTerm::toResponse()) and 404s it
      * otherwise, so a taxonomy without a `{taxonomy}.show` view has addresses
-     * but no pages: renaming one of its terms moves nothing worth a redirect.
+     * but no pages, and renaming one of its terms moves nothing worth a redirect.
      */
     public static function termHasPage(Term $term): bool
     {

@@ -52,7 +52,7 @@ final class DeleteRecords extends Action
     /** @return string */
     public function confirmationText()
     {
-        // The CP picks the singular or plural part.
+        // The control panel picks the singular or the plural part of the text.
         return __('marketing-toolkit::cp.actions.delete_confirm');
     }
 
@@ -63,7 +63,7 @@ final class DeleteRecords extends Action
      */
     public function run($items, $values)
     {
-        // One by one, so each redirect's model events clear the cached rules.
+        // The items are deleted one by one, so that each redirect's model events clear the cached rules.
         $items->each->delete();
     }
 }

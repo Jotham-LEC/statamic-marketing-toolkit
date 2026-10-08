@@ -10,9 +10,10 @@ use Statamic\Console\RunsInPlease;
 use Statamic\Facades\Site;
 
 /**
- * `php please mt:report`: check every published page now, in this process,
- * and print the scores. The scheduler runs it when reports are scheduled. On
- * a multi-site install it reports on each site in turn, or on `--site`.
+ * The `php please mt:report` command checks every published page now, in this
+ * process, and prints the scores. The scheduler runs it when reports are
+ * scheduled. On a multi-site install, it reports on each site in turn, or only
+ * on the site that `--site` names.
  */
 final class Report extends Command
 {

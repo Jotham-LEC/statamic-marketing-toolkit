@@ -42,13 +42,13 @@ use Statamic\Statamic;
 class ServiceProvider extends AddonServiceProvider
 {
     /*
-     * Views, translations, fieldsets and blueprints are all `marketing-toolkit::`,
-     * the addon's slug, as Statamic names the last three; it names views
-     * after the package unless told.
+     * Views, translations, fieldsets and blueprints all use `marketing-toolkit::`, the addon's slug.
+     * Statamic names the last three after the slug already, but it names views after the package
+     * unless it is told otherwise.
      */
     protected $viewNamespace = 'marketing-toolkit';
 
-    /** Merged in register() instead (see mergeConfigFrom), before anything boots that reads it. */
+    /** The config is merged in register() instead (see mergeConfigFrom), before anything that reads it boots. */
     protected $config = false;
 
     protected $vite = [
@@ -58,28 +58,28 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $middlewareGroups = [
         'statamic.web' => [HandleMissing::class],
-        // After Statamic's own: the user is known.
+        // This runs after Statamic's own middleware, so the user is already known.
         'statamic.cp.authenticated' => [MarkToolbarUser::class],
     ];
 
     /*
-     * FlushSitemap takes no event, so Statamic can't find its events from its
-     * handle() as it does for the other listeners in Listeners/.
+     * FlushSitemap's handle() takes no event, so Statamic can't find its events from it
+     * as it does for the other listeners in Listeners/.
      */
     protected $listen = [
         EntrySaved::class => [FlushSitemap::class],
         EntryDeleted::class => [FlushSitemap::class],
-        // A scheduled entry going live, or an expiring one going away (Statamic's scheduler).
+        // Statamic's scheduler fires this when a scheduled entry goes live or an expiring one goes away.
         EntryScheduleReached::class => [FlushSitemap::class],
         TermSaved::class => [FlushSitemap::class],
         TermDeleted::class => [FlushSitemap::class],
         CollectionTreeSaved::class => [FlushSitemap::class],
-        // A new route moves every entry or term in it.
+        // A new route moves every entry or term in the collection or taxonomy.
         CollectionSaved::class => [FlushSitemap::class],
         TaxonomySaved::class => [FlushSitemap::class],
-        // A deploy clears the Stache; the rules may have changed with the code.
+        // A deploy clears the Stache, and the rules may have changed along with the code.
         StacheCleared::class => [FlushSitemap::class],
-        // llms.txt starts with Brand's description; saving any global set is rare enough to flush on.
+        // llms.txt starts with Brand's description, and saving any global set is rare enough to flush on.
         GlobalVariablesSaved::class => [FlushSitemap::class],
     ];
 
@@ -89,25 +89,25 @@ class ServiceProvider extends AddonServiceProvider
     {
         parent::register();
 
-        // Here rather than in Statamic's bootConfig(), which runs after the Features switches read it.
+        // The config is merged here rather than in Statamic's bootConfig(), which runs after
+        // the Features switches read it.
         $this->mergeConfigFrom(__DIR__.'/../config/marketing-toolkit.php', 'marketing-toolkit');
 
-        // A site binds its subclass in its own service provider, which registers after this one.
-        // `marketing-toolkit.class` still works until 1.0.
+        // A site binds its own subclass in its service provider, which registers after this one.
+        // The `marketing-toolkit.class` config key still works until 1.0.
         $this->app->bind(SiteSeo::class, fn ($app) => $app->build(config('marketing-toolkit.class') ?? SiteSeo::class));
 
-        // One instance, so what it learns while content saves is still there once it has saved.
+        // It is a single instance, so what it learns while content saves is still there once the save is done.
         $this->app->singleton(RedirectChangedUris::class);
 
-        // One per request: it gathers the changed addresses until the response is out.
+        // There is one instance per request, because it gathers the changed addresses until the response is out.
         $this->app->singleton(IndexNow::class);
     }
 
     /**
-     * The site's config/marketing-toolkit.php over the addon's, merged at every depth
-     * (Support\Config) rather than Laravel's one level, so a site states only
-     * what it changes, even inside `og` or `robots`. Keys renamed since the
-     * site published its copy are read under their new names.
+     * Merges the site's config/marketing-toolkit.php over the addon's at every depth (Support\Config),
+     * rather than at Laravel's single level, so a site states only what it changes, even inside `og`
+     * or `robots`. Keys renamed since the site published its copy are read under their new names.
      */
     protected function mergeConfigFrom($path, $key)
     {
@@ -124,8 +124,8 @@ class ServiceProvider extends AddonServiceProvider
      */
     public function boot()
     {
-        // Ahead of the parent's own callback, which registers the routes, listeners and
-        // middleware: each listener and middleware asks whether its module is on itself.
+        // This runs ahead of the parent's own callback, which registers the routes, listeners and
+        // middleware, because each listener and middleware asks for itself whether its module is on.
         Statamic::booted(fn () => Features::apply());
 
         parent::boot();
@@ -135,16 +135,16 @@ class ServiceProvider extends AddonServiceProvider
     {
         $this->publishes([__DIR__.'/../config/marketing-toolkit.php' => config_path('marketing-toolkit.php')], 'marketing-toolkit-config');
 
-        // Written and read by the page's own script: left as plain text.
+        // The page's own script writes and reads these cookies, so they are left as plain text.
         EncryptCookies::except([Attribution::COOKIE, CountConversion::COOKIE, Toolbar::COOKIE]);
 
-        // A key and property set up in the control panel, where .env has none.
+        // This uses a key and property set up in the control panel when .env has none.
         Connection::apply();
 
         $this->app->terminating(fn () => $this->app->make(IndexNow::class)->flush());
 
-        // A queue worker doesn't terminate between jobs: send what each job changed once it is done.
-        // (A sync job is part of the request or command that ran it, which terminates as usual.)
+        // A queue worker doesn't terminate between jobs, so this sends what each job changed once it is done.
+        // A sync job is skipped, because it is part of the request or command that ran it, which terminates as usual.
         Queue::after(function (JobProcessed $event) {
             if ($event->connectionName !== 'sync') {
                 $this->app->make(IndexNow::class)->flush();
@@ -161,25 +161,26 @@ class ServiceProvider extends AddonServiceProvider
 
         Navigation::register();
 
-        // Worked out when the control panel renders, which has the CP routes; a front-end request never asks.
+        // These values are worked out when the control panel renders, which has the CP routes,
+        // and a front-end request never asks for them.
         Statamic::provideToScript(['marketingToolkit' => fn () => [
-            // Off: a save has nothing to ask the redirect check.
+            // When automatic redirects are off, a save has nothing to ask the redirect check.
             'automaticRedirects' => Features::on('automatic_redirects'),
             'urls' => ['redirectCheck' => cp_route('mt.redirects.check'), 'redirectChoice' => cp_route('mt.redirects.choice')],
-            // Brand and Marketing settings: the Tracking tab is in one of them.
+            // These are the Brand and Marketing settings globals, and the Tracking tab is in one of them.
             'globals' => Settings::handles(),
-            // The Tracking tab's fields, and those set in .env, which its warning counts as well.
+            // These are the Tracking tab's fields and those set in .env, which the tab's warning counts as well.
             'trackingFields' => Tracking::FIELDS,
             'trackingFromConfig' => array_filter(app(Tracking::class)->fromConfig()),
         ]]);
     }
 
     /**
-     * Statamic builds an addon's schedule on every console boot: each artisan
-     * command, queue job process and test. Reading the report settings costs
-     * 15 to 25 ms there (Statamic parses each default value as Antlers), spent
-     * only to learn that reports are off. The schedule is needed only by the
-     * commands that run it, list it, or finish a background event of it.
+     * Statamic builds an addon's schedule on every console boot, which means each artisan
+     * command, queue job process and test. Reading the report settings costs 15 to 25 ms
+     * there, because Statamic parses each default value as Antlers, and it is spent only to
+     * learn that reports are off. Only the commands that run the schedule, list it, or finish
+     * a background event of it need it.
      *
      * @param  Schedule  $schedule
      * @return void
@@ -190,7 +191,7 @@ class ServiceProvider extends AddonServiceProvider
             return;
         }
 
-        // A key set up in the control panel, which bootAddon() would only apply after this.
+        // This applies a key set up in the control panel, which bootAddon() would only apply after this.
         Connection::apply();
 
         $this->scheduleJobs($schedule);
@@ -199,12 +200,12 @@ class ServiceProvider extends AddonServiceProvider
     private function scheduleJobs(Schedule $schedule): void
     {
         $settings = app(ReportSettings::class);
-        // Off under Features (or in config/marketing-toolkit.php): reports run only by hand.
+        // When reports are off under Features (or in config/marketing-toolkit.php), they run only by hand.
         $schedules = Features::on('reports') ? $settings->get('schedule') : 'off';
         $time = substr((string) $settings->get('schedule_time'), 0, 5) ?: '03:00';
         $day = array_search($settings->get('schedule_day'), ReportSettings::DAYS, true);
 
-        // One run per site on a multi-site install, each with its own overlap lock.
+        // A multi-site install gets one run per site, each with its own overlap lock.
         foreach (Sites::multiple() ? Sites::handles() : [null] as $site) {
             $command = $site === null ? 'statamic:mt:report' : 'statamic:mt:report --site='.$site;
 
@@ -221,7 +222,7 @@ class ServiceProvider extends AddonServiceProvider
             $schedule->command('statamic:mt:search-console')->dailyAt('04:30')->withoutOverlapping();
         }
 
-        // Keeps the 404 log to `not_found.max_rows` (MissingPath::prunable()).
+        // This keeps the 404 log to `not_found.max_rows` rows (see MissingPath::prunable()).
         if (Features::on('not_found')) {
             $schedule->command('model:prune', ['--model' => [MissingPath::class]])->daily();
         }

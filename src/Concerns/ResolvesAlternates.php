@@ -14,18 +14,18 @@ use Statamic\Facades\Site;
 use Statamic\Sites\Site as SiteObject;
 
 /**
- * A page's other languages, for hreflang and og:locale.
+ * This trait works out a page's other languages for hreflang and og:locale.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait ResolvesAlternates
 {
     /**
-     * The same page in each language, for hreflang: code => address, with
-     * `x-default` for the version shown to everyone else (config
-     * `marketing-toolkit.hreflang.x_default`). Empty when there is no other language to
-     * point to, or when this isn't an address to index: noindexed, canonical
-     * elsewhere, a listing past its first page.
+     * Returns the same page in each language for hreflang, as code => address,
+     * with `x-default` for the version shown to everyone else (config
+     * `marketing-toolkit.hreflang.x_default`). It is empty when there is no other language
+     * to point to, or when this isn't an address to index because it is
+     * noindexed, canonical elsewhere, or a listing past its first page.
      *
      * @return array<string, string>
      *
@@ -49,8 +49,9 @@ trait ResolvesAlternates
     }
 
     /**
-     * hreflang code => address of $content in each language it is published
-     * and listed in, itself included, plus `x-default`. Empty under two.
+     * Returns hreflang code => address of $content in each language it is
+     * published and listed in, itself included, plus `x-default`. It is empty
+     * when there are fewer than two.
      *
      * @return array<string, string>
      */
@@ -87,10 +88,11 @@ trait ResolvesAlternates
     }
 
     /**
-     * $content on each site it can be listed on, in the sites' order: an
-     * entry's origin and its localizations, a term on each of its
-     * taxonomy's sites (where it has entries). Drafts, noindexed versions
-     * and those canonical elsewhere are left out, as from the sitemap.
+     * Returns $content on each site it can be listed on, in the sites' order.
+     * For an entry, that is its origin and its localizations, and for a term,
+     * it is the term on each of its taxonomy's sites where it has entries.
+     * Drafts, noindexed versions, and those canonical elsewhere are left out,
+     * as they are from the sitemap.
      *
      * @return array<string, Entry|Term> site handle => content
      *
@@ -123,8 +125,8 @@ trait ResolvesAlternates
     }
 
     /**
-     * Each site's hreflang code: its language (`en`, `fr`), or its full
-     * locale (`en-GB`, `en-US`) where two sites share a language.
+     * Returns each site's hreflang code, which is its language (`en`, `fr`),
+     * or its full locale (`en-GB`, `en-US`) where two sites share a language.
      *
      * @return array<string, string> site handle => code
      *
@@ -141,8 +143,9 @@ trait ResolvesAlternates
     }
 
     /**
-     * The site whose version is `x-default`: the default site, another named
-     * in `marketing-toolkit.hreflang.x_default`, or none (false).
+     * Returns the site whose version is `x-default`. That is the default site,
+     * another site named in `marketing-toolkit.hreflang.x_default`, or none
+     * when that setting is false.
      *
      * @api
      */
@@ -158,7 +161,7 @@ trait ResolvesAlternates
     }
 
     /**
-     * og:locale:alternate: the locales of the page's other languages.
+     * Returns the og:locale:alternate values, which are the locales of the page's other languages.
      *
      * @return list<string>
      */
@@ -178,7 +181,7 @@ trait ResolvesAlternates
     }
 
     /**
-     * The site of the page's content (its language), else the current one.
+     * Returns the site of the page's content (its language), or else the current site.
      */
     public function contentSite(Context $context): SiteObject
     {

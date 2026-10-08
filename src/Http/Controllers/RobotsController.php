@@ -8,8 +8,8 @@ use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
- * /robots.txt from the Crawlers tab of Marketing settings. Outside production it shuts every
- * crawler out. A real public/robots.txt wins: the web server serves it first.
+ * Serves /robots.txt from the Crawlers tab of Marketing settings. Outside production it shuts
+ * every crawler out. A real public/robots.txt wins, because the web server serves it first.
  */
 final class RobotsController
 {

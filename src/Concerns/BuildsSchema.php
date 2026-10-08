@@ -17,14 +17,14 @@ use Statamic\Fieldtypes\Bard\Augmentor;
 use Statamic\Structures\Page;
 
 /**
- * The JSON-LD @graph and each node in it.
+ * This trait builds the JSON-LD @graph and each node in it.
  *
  * @phpstan-require-extends SiteSeo
  */
 trait BuildsSchema
 {
     /**
-     * One @graph per page. Nodes point at each other by @id.
+     * Builds one @graph per page, in which the nodes point at each other by @id.
      *
      * @return list<array<string, mixed>>
      *
@@ -46,7 +46,7 @@ trait BuildsSchema
     }
 
     /**
-     * The site, with its alternate name (Google's site names) when set.
+     * Builds the site's node, with its alternate name (used for Google's site names) when one is set.
      *
      * @return array<string, mixed>
      *
@@ -65,9 +65,10 @@ trait BuildsSchema
     }
 
     /**
-     * Who is behind the site, from the global set: one or more schema.org
-     * types (an Organization by default; a Person; a Store, an
-     * EducationalOrganization…), with only the properties those types accept.
+     * Builds the node for who is behind the site, from the global set. It has
+     * one or more schema.org types (an Organization by default, or a Person, a
+     * Store, an EducationalOrganization, and so on), and only the properties
+     * those types accept.
      *
      * @return array<string, mixed>
      *
@@ -109,8 +110,9 @@ trait BuildsSchema
     }
 
     /**
-     * One value as itself, several as a list, none as null: a publisher with
-     * one other name keeps the markup it had while that field was a text.
+     * Returns one value as itself, several as a list, and none as null, so a
+     * publisher with one other name keeps the markup it had while that field
+     * was a text.
      *
      * @param  list<string>  $values
      * @return string|list<string>|null
@@ -125,8 +127,9 @@ trait BuildsSchema
     }
 
     /**
-     * The shop's return policy, for all its products (Google's preference):
-     * a window in days for a country, or just a link to the policy page.
+     * Builds the shop's return policy for all its products, as Google prefers.
+     * It gives a window in days for a country, or just a link to the policy
+     * page.
      *
      * @return array<string, mixed>|null
      */
@@ -151,8 +154,8 @@ trait BuildsSchema
     }
 
     /**
-     * The shop's shipping rates, from a grid: where to, for orders of what
-     * value, at what cost and how many days on the way.
+     * Builds the shop's shipping rates from a grid, which says where to, for
+     * orders of what value, at what cost, and how many days on the way.
      *
      * @return array<string, mixed>|null
      */
@@ -160,7 +163,7 @@ trait BuildsSchema
     {
         $currency = $this->settings->string('currency');
 
-        // A rate means nothing without its currency.
+        // A rate means nothing without its currency, so there is no node without one.
         if ($currency === null) {
             return null;
         }
@@ -177,7 +180,7 @@ trait BuildsSchema
     }
 
     /**
-     * One row of the shipping rates grid as a ShippingConditions node.
+     * Turns one row of the shipping rates grid into a ShippingConditions node.
      *
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
@@ -186,7 +189,7 @@ trait BuildsSchema
     {
         $number = fn (string $key) => is_numeric($row[$key] ?? null) ? (float) $row[$key] : null;
 
-        // For orders between two values, when the row gives either.
+        // The order value range is added when the row gives either a minimum or a maximum.
         $orderValue = null;
 
         if ($number('min_order') !== null || $number('max_order') !== null) {
@@ -198,7 +201,7 @@ trait BuildsSchema
             ], fn ($value) => $value !== null);
         }
 
-        // Days on the way, when the row gives both ends.
+        // The days on the way are added only when the row gives both ends of the range.
         $transitTime = null;
 
         if ($number('min_days') !== null && $number('max_days') !== null) {
@@ -218,8 +221,9 @@ trait BuildsSchema
     }
 
     /**
-     * The publisher's schema.org types: a multiple select that also takes
-     * types typed in, or a single type saved before it allowed several.
+     * Returns the publisher's schema.org types. They come from a multiple
+     * select that also accepts typed-in types, or from a single type saved
+     * before the field allowed several.
      *
      * @return list<string>
      *
@@ -262,7 +266,7 @@ trait BuildsSchema
     }
 
     /**
-     * Opening hours from a grid of days, opening and closing times.
+     * Builds the opening hours from a grid of days, opening times, and closing times.
      *
      * @return list<array<string, mixed>>
      */
@@ -281,7 +285,7 @@ trait BuildsSchema
     }
 
     /**
-     * Contact points (customer service, sales…) from a grid.
+     * Builds the contact points (customer service, sales, and so on) from a grid.
      *
      * @return list<array<string, mixed>>
      */
@@ -321,17 +325,17 @@ trait BuildsSchema
             'description' => $this->description($context),
             'isPartOf' => ['@id' => $this->websiteId()],
             'inLanguage' => $this->contentSite($context)->lang(),
-            // Where Google takes a page's thumbnail for Search and Discover from.
+            // Google takes a page's thumbnail for Search and Discover from this property.
             'primaryImageOfPage' => $image ? ['@type' => 'ImageObject', 'url' => $image['url'], 'width' => $image['width'], 'height' => $image['height']] : null,
-            // A profile page is about someone (Google requires it): the entry, as a Person.
+            // Google requires a profile page to say who it is about, so the entry is given as a Person.
             'mainEntity' => $type === 'ProfilePage' ? $this->profileEntity($context) : null,
         ]);
     }
 
     /**
-     * Who a ProfilePage is about: a Person named by the entry, with its
-     * address and picture. Override for an Organization, or to point at the
-     * publisher.
+     * Returns who a ProfilePage is about, which is a Person named by the entry,
+     * with its address and picture. Override this method for an Organization,
+     * or to point at the publisher.
      *
      * @return array<string, mixed>
      *
@@ -349,7 +353,7 @@ trait BuildsSchema
     }
 
     /**
-     * Home, then each published ancestor that is a page of its own, then this page.
+     * Lists the home page, then each published ancestor that is a page of its own, and then this page.
      *
      * @return array<string, mixed>|null
      *
@@ -364,7 +368,7 @@ trait BuildsSchema
         }
 
         $trail = collect([['name' => $this->settings->siteName(), 'item' => $this->home()]]);
-        // The path on the content's site, without the site's folder (/fr/) a URL has.
+        // This is the path on the content's site, without the site's folder (such as /fr/) that a URL has.
         $segments = array_values(array_filter(explode('/', (string) $content->uri())));
         $site = $this->contentSite($context)->handle();
         $path = '';
@@ -375,7 +379,7 @@ trait BuildsSchema
             $ancestor = Entries::findByUri($path, $site);
             $ancestor = $ancestor instanceof Page ? $ancestor->entry() : $ancestor;
 
-            // A draft's title and address aren't public yet.
+            // Drafts are skipped because their title and address aren't public yet.
             if ($ancestor instanceof Entry && $ancestor->status() === 'published') {
                 $trail->push(['name' => (string) $ancestor->value('title'), 'item' => $ancestor->absoluteUrl()]);
             }
@@ -423,8 +427,9 @@ trait BuildsSchema
     }
 
     /**
-     * An article's images: an uploaded one in the three shapes Google asks for
-     * (16:9, 4:3, 1:1), else the share image.
+     * Returns an article's images. An uploaded image is given in the three
+     * shapes Google asks for (16:9, 4:3, and 1:1), and otherwise the share
+     * image is used.
      *
      * @return list<string>
      *
@@ -446,9 +451,10 @@ trait BuildsSchema
     }
 
     /**
-     * The people who wrote an article, from the field the collection names
-     * (`author_field`): entries (a team collection) or users. Empty when there
-     * is none, and the publisher stands as the author.
+     * Returns the people who wrote an article, from the field the collection
+     * names (`author_field`), which holds entries (from a team collection) or
+     * users. It is empty when there are none, and then the publisher stands
+     * as the author.
      *
      * @return list<array<string, mixed>>
      *
@@ -474,9 +480,10 @@ trait BuildsSchema
     }
 
     /**
-     * A product, from the fields the collection names (config `product`):
-     * price, availability, SKU, GTIN and brand, with the shop's currency.
-     * Left out without a price above zero, which Google requires.
+     * Builds a product from the fields the collection names (config `product`),
+     * which are the price, availability, SKU, GTIN, and brand, with the shop's
+     * currency. The node is left out without a price above zero, which Google
+     * requires.
      *
      * @return array<string, mixed>|null
      *
@@ -522,8 +529,8 @@ trait BuildsSchema
     }
 
     /**
-     * schema.org availability from a toggle (in stock or not) or a value such
-     * as `InStock`, `PreOrder` or `https://schema.org/OutOfStock`.
+     * Returns a schema.org availability from a toggle (in stock or not) or
+     * from a value such as `InStock`, `PreOrder`, or `https://schema.org/OutOfStock`.
      */
     protected function availability(mixed $value): string
     {
@@ -537,7 +544,7 @@ trait BuildsSchema
     }
 
     /**
-     * A field's augmented value as a plain scalar: a select's value, a text.
+     * Returns a field's augmented value as a plain scalar, such as a select's value or a text.
      */
     protected function plainValue(mixed $value): mixed
     {
@@ -551,11 +558,11 @@ trait BuildsSchema
     }
 
     /**
-     * FAQPage from a grid of question / answer rows (config `faq_field`), or
-     * from that grid in each visible set of a Replicator (`sections.faq.faqs`),
-     * in the page's order. Answers are rendered from Markdown, as the page
-     * shows them, or from Bard; a row whose question isn't text, or whose
-     * answer is neither, is left out.
+     * Builds an FAQPage from a grid of question and answer rows (config
+     * `faq_field`), or from that grid in each visible set of a Replicator
+     * (`sections.faq.faqs`), in the page's order. Answers are rendered from
+     * Markdown, as the page shows them, or from Bard. A row whose question
+     * isn't text, or whose answer is neither, is left out.
      *
      * @return array<string, mixed>|null
      *
@@ -586,9 +593,9 @@ trait BuildsSchema
     }
 
     /**
-     * An FAQ answer as HTML: a text (Markdown, or Bard saved as HTML) parsed
-     * as Markdown, or a Bard field's stored nodes rendered as Bard renders
-     * them, without its sets. Null for anything else.
+     * Returns an FAQ answer as HTML. A text (Markdown, or Bard saved as HTML)
+     * is parsed as Markdown, and a Bard field's stored nodes are rendered as
+     * Bard renders them, without its sets. Anything else returns null.
      */
     protected function answerHtml(mixed $answer): ?string
     {
@@ -606,9 +613,10 @@ trait BuildsSchema
     }
 
     /**
-     * Editors' nodes: the page's "Extra JSON-LD" field (SEO tab), an object or
-     * a list of objects. Anything that does not parse is ignored rather than
-     * breaking the page. Developers add theirs in extraNodes().
+     * Returns the editors' nodes from the page's "Extra JSON-LD" field (on the
+     * SEO tab), which holds an object or a list of objects. Anything that does
+     * not parse is ignored rather than breaking the page. Developers add their
+     * own nodes in extraNodes().
      *
      * @return list<array<string, mixed>>
      *
@@ -628,9 +636,9 @@ trait BuildsSchema
     }
 
     /**
-     * Developers' nodes: override to add the site's own types (Event,
-     * Course…) worked out in code. Empty by default; editors' hand-written
-     * JSON-LD comes from customNodes().
+     * Returns the developers' nodes. Override this method to add the site's
+     * own types (Event, Course, and so on) worked out in code. It is empty by
+     * default, and the editors' hand-written JSON-LD comes from customNodes().
      *
      * @return list<array<string, mixed>>
      *

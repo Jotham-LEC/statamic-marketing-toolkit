@@ -8,7 +8,7 @@ use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Exceptions\NotFoundHttpException;
 
 /**
- * /{key}.txt: the file that proves to IndexNow the site owns its key.
+ * Serves /{key}.txt, the file that proves to IndexNow that the site owns its key.
  */
 final class IndexNowKeyController
 {

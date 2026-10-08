@@ -24,10 +24,10 @@ use Statamic\Facades\Site;
 use Statamic\Facades\User;
 
 /**
- * Marketing → Overview: where the site stands (the latest report, redirects, recent
+ * Shows Marketing → Overview, where the site stands (the latest report, redirects, recent
  * 404s, the brand defaults, the files it serves), each with a way into the
  * screen that changes it. Links the person may not use are left out. On a
- * multi-site install, all of it for the site selected in the control panel.
+ * multi-site install, everything is for the site selected in the control panel.
  */
 final class OverviewController
 {
@@ -45,14 +45,14 @@ final class OverviewController
 
         $site = Sites::multiple() ? Site::selected()->handle() : Site::default()->handle();
 
-        // The selected site's brand values and addresses, not the control panel's domain's.
+        // This uses the selected site's brand values and addresses, not those of the control panel's domain.
         return Sites::as($site, fn () => $this->render($user, $site));
     }
 
     private function render(UserContract $user, string $site): Response
     {
         $variables = GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->in($site);
-        // The set the Tracking tab is in: Marketing settings, or Brand on a site that hasn't moved it yet.
+        // The Tracking tab is in Marketing settings, or in Brand on a site that hasn't moved it yet.
         $trackingSet = GlobalSet::findByHandle((string) config('marketing-toolkit.settings_global'))?->in($site) ?? $variables;
         $redirects = fn () => Redirect::query()->where('active', true)->when(Sites::multiple(), fn ($query) => $query->appliesOn($site));
 
@@ -78,11 +78,13 @@ final class OverviewController
             ],
             'search' => $this->search($site),
             'searchConsole' => ['url' => cp_route('mt.search-console.index')],
-            // On the site's own address, which can differ from the control panel's.
+            // This is worked out on the site's own address, which can differ from the control panel's.
             'tracking' => $this->tracking($trackingSet && $user->can('edit', $trackingSet) ? $trackingSet->editUrl() : null),
-            // On, but nothing to draw them with (Og\Generator::available()): said, so a missing card isn't a mystery.
+            // This says when share cards are on but can't be drawn (Og\Generator::available()),
+            // so that a missing card isn't a mystery.
             'cardsUnavailable' => Features::on('share_cards') && ! $this->cards->available(),
-            // From the domain's root, where the web server and the addon's routes serve them, also for a site under a folder.
+            // The paths start at the domain's root, where the web server and the addon's routes serve them,
+            // even for a site under a folder.
             'files' => collect([
                 __('marketing-toolkit::cp.overview.files.sitemap') => Features::on('sitemap') ? '/sitemap.xml' : null,
                 __('marketing-toolkit::cp.overview.files.robots') => Features::on('robots_txt') ? '/robots.txt' : null,
@@ -92,20 +94,20 @@ final class OverviewController
             ])->filter()->map(fn ($path, $label) => [
                 'label' => $label,
                 'url' => $this->seo->absolute($path),
-                // The web server answers with this file instead of the addon's.
+                // When this file exists, the web server answers with it instead of the addon's.
                 'public' => file_exists(public_path(ltrim($path, '/'))),
             ])->values(),
         ]);
     }
 
     /**
-     * The trackers set, each with where it comes from, and those loaded beside GTM.
+     * Lists the trackers that are set, each with where it comes from, and those loaded beside GTM.
      *
      * @return array<string, mixed>
      */
     private function tracking(?string $url): array
     {
-        // From .env when the config holds it; an ID a Tracking subclass returns comes from code.
+        // An ID comes from .env when the config holds it, and an ID that a Tracking subclass returns comes from code.
         $fromEnv = fn (string $tracker, string $id) => strcasecmp(trim((string) config('marketing-toolkit.tracking.'.Tracking::FIELDS[$tracker])), $id) === 0;
 
         return [
@@ -114,7 +116,7 @@ final class OverviewController
                 'id' => $id,
                 'from_env' => $fromEnv($tracker, $id),
             ])->values()->all(),
-            // Set, but not an ID, so never printed: where to fix it.
+            // A value that is set but isn't an ID is never printed, so this says where to fix it.
             'invalid' => collect($this->tracking->invalid())->map(fn (string $value, string $tracker) => __('marketing-toolkit::cp.tracking.invalid', [
                 'name' => __('marketing-toolkit::cp.tracking.names.'.$tracker),
                 'value' => $value,
@@ -139,7 +141,7 @@ final class OverviewController
                 'pages' => $latest->scoredPages(),
                 'finished_at' => $latest->finished_at?->toIso8601String(),
                 'url' => cp_route('mt.reports.show', $latest),
-                // The checks most pages fail, beside the gauge.
+                // These are the checks that most pages fail, shown beside the gauge.
                 'checks' => collect($latest->summary['rules'] ?? [])
                     ->filter(fn (array $rule) => ($rule['fail'] ?? 0) > 0)
                     ->sortByDesc(fn (array $rule) => [$rule['fail'] * ($rule['weight'] ?? 1), $rule['fail']])
@@ -149,14 +151,14 @@ final class OverviewController
                     ->all(),
             ],
             'url' => cp_route('mt.reports.index'),
-            // The Settings tab of Reports.
+            // This link opens the Settings tab of Reports.
             'settings_url' => Package::canEditSettings() ? cp_route('mt.reports.index').'#settings' : null,
         ];
     }
 
     /**
-     * Search Console's numbers, once it is set up: the totals for the
-     * period and the pages with the most clicks.
+     * Returns Search Console's numbers once it is set up, which are the totals
+     * for the period and the pages with the most clicks.
      *
      * @return array<string, mixed>|null
      */

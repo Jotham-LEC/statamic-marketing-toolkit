@@ -8,17 +8,17 @@ use Statamic\Facades\Blueprint;
 use Statamic\Facades\Form;
 
 /**
- * Where a lead came from, the first time they reached the site: the UTM
+ * Records where a lead came from the first time they reached the site, which means the UTM
  * tags of the address they landed on, the page that sent them, and that
  * landing page. A script in <s:mt:head /> keeps them in the `mt_source`
- * cookie for 90 days; a form submission copies them into its own fields, so
+ * cookie for 90 days, and a form submission copies them into its own fields, so
  * the control panel and the exports show them beside the message.
  */
 class Attribution
 {
     public const string COOKIE = 'mt_source';
 
-    /** Submission field => the cookie's key. */
+    /** Maps each submission field to the cookie's key. */
     public const array FIELDS = [
         'utm_source' => 'source',
         'utm_medium' => 'medium',
@@ -30,7 +30,7 @@ class Attribution
     ];
 
     /**
-     * The visitor's first-touch values, cleaned: text only, at most 255 characters each.
+     * Returns the visitor's first-touch values, cleaned to plain text of at most 255 characters each.
      *
      * @return array<string, string> submission field => value
      */
@@ -56,7 +56,7 @@ class Attribution
     }
 
     /**
-     * Fills the submission's attribution fields that its form has and the
+     * Fills in the submission's attribution fields that its form has and that the
      * visitor didn't fill in themselves.
      */
     public function apply(Submission $submission, Request $request): void
@@ -71,8 +71,8 @@ class Attribution
     }
 
     /**
-     * The fields `php please mt:install --forms` adds to each form: hidden
-     * on the site, listed in the control panel.
+     * Returns the fields that `php please mt:install --forms` adds to each form, which are hidden
+     * on the site and listed in the control panel.
      *
      * @return list<array{handle: string, field: array<string, mixed>}>
      */

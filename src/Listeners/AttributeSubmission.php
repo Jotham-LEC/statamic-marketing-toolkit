@@ -8,8 +8,8 @@ use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Events\FormSubmitted;
 
 /**
- * Copies where the lead came from into the submission, before it is
- * saved. It does nothing while the leads module is off.
+ * This listener copies where the lead came from into the submission before it is saved. It does nothing
+ * while the leads module is off.
  */
 final class AttributeSubmission
 {

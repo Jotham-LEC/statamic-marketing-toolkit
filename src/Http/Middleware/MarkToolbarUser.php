@@ -10,11 +10,11 @@ use Statamic\Facades\User;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * On every control panel request, the toolbar's marker cookie follows the
- * user: set while they get the toolbar, removed once they don't (the toolbar
- * was switched off, or they lost `access cp`). This covers sessions from before
- * the addon had a toolbar, and "remember me" sign-ins, which skip the
- * sign-in form. Checked after the request, so saving the preference counts at once.
+ * On every control panel request, this middleware keeps the toolbar's marker cookie in step with the
+ * user. The cookie is set while they get the toolbar, and removed once they don't (because the toolbar
+ * was switched off, or they lost `access cp`). This covers sessions from before the addon had a toolbar,
+ * and "remember me" sign-ins, which skip the sign-in form. The check runs after the request, so saving
+ * the preference takes effect at once.
  */
 final class MarkToolbarUser
 {

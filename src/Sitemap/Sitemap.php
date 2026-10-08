@@ -14,15 +14,15 @@ use Statamic\Facades\Site;
 use Statamic\Facades\Term as Terms;
 
 /**
- * The URLs the sitemap lists. Which pages count is up to SiteSeo, whose
- * hooks a site may override (inSitemap(), termHasEntries(),
- * additionalSitemapUrls()): each is asked of the SiteSeo passed in.
+ * This class collects the URLs the sitemap lists. SiteSeo decides which pages
+ * count through hooks that a site may override (inSitemap(), termHasEntries(),
+ * and additionalSitemapUrls()), and each hook is called on the SiteSeo passed in.
  */
 final class Sitemap
 {
     /**
-     * Every URL the sitemap lists, sorted by address, each with its other
-     * languages (hreflang code => address) when it has any.
+     * Returns every URL the sitemap lists, sorted by address. Each URL carries
+     * its other languages (hreflang code => address) when it has any.
      *
      * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */
@@ -37,8 +37,9 @@ final class Sitemap
     }
 
     /**
-     * The sites one sitemap lists: the current one, and the others on its
-     * domain (languages under /fr/, /de/). A domain serves one sitemap.
+     * Returns the sites one sitemap lists, which are the current site and the
+     * others on its domain (languages under /fr/ or /de/), because a domain
+     * serves one sitemap.
      *
      * @return list<string>
      */
@@ -51,9 +52,10 @@ final class Sitemap
     }
 
     /**
-     * The collections the sitemap and llms.txt list on $sites: those with a
-     * route there, all of them or those `marketing-toolkit.sitemap.collections`
-     * names, less `marketing-toolkit.sitemap.exclude_collections`.
+     * Returns the collections the sitemap and llms.txt list on $sites. These
+     * are the collections with a route there, either all of them or those that
+     * `marketing-toolkit.sitemap.collections` names, minus those in
+     * `marketing-toolkit.sitemap.exclude_collections`.
      *
      * @param  list<string>  $sites
      * @return Collection<int, CollectionContract>
@@ -86,7 +88,7 @@ final class Sitemap
             ->whereIn('collection', $collections)
             ->whereIn('site', $sites)
             ->whereStatus('published')
-            // In chunks, keeping only the address and date: a big site's entries needn't all be in memory.
+            // Entries are read in chunks with only the address and date kept, so not all of them sit in memory.
             ->orderBy('id')
             ->lazy(500)
             ->filter(fn (Entry $entry) => $seo->inSitemap($entry))
@@ -96,9 +98,9 @@ final class Sitemap
     }
 
     /**
-     * The terms of the taxonomies `marketing-toolkit.sitemap.taxonomies`
+     * Returns the terms of the taxonomies that `marketing-toolkit.sitemap.taxonomies`
      * names, on each site of the domain. Each site's terms are counted on
-     * that site, as termHasEntries() asks about the current one.
+     * that site, because termHasEntries() asks about the current one.
      *
      * @return Collection<int, array{loc: string, lastmod: ?string, alternates?: array<string, string>}>
      */

@@ -11,18 +11,18 @@ use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
 
 /**
- * The Brand and Marketing settings global sets (config
- * `marketing-toolkit.global` and `settings_global`), read for the current
- * site: a field is looked for in Marketing settings, then in Brand, so a site
- * whose values haven't moved to Marketing settings yet reads them as before,
- * and a value saved in Marketing settings wins over one left behind.
+ * This class reads the Brand and Marketing settings global sets (config
+ * `marketing-toolkit.global` and `settings_global`) for the current site.
+ * A field is looked for in Marketing settings first and then in Brand, so a
+ * site whose values haven't moved to Marketing settings yet reads them as
+ * before, and a value saved in Marketing settings wins over one left behind.
  * A site whose localization leaves a field empty takes its origin's value.
- * Every getter tolerates a set or a field being missing, so a site works
- * before `php please mt:install` has run.
+ * Every getter tolerates a missing set or field, so a site works before
+ * `php please mt:install` has run.
  */
 class Settings
 {
-    /** @var array<string, list<Variables>> site handle => its localizations of both sets */
+    /** @var array<string, list<Variables>> site handle => the site's localizations of both sets */
     private array $variables = [];
 
     public function string(string $key, ?string $default = null): ?string
@@ -33,7 +33,7 @@ class Settings
     }
 
     /**
-     * A toggle, or $default while it was never saved.
+     * Returns a toggle's value, or $default if the toggle has never been saved.
      */
     public function bool(string $key, bool $default = false): bool
     {
@@ -53,7 +53,7 @@ class Settings
     }
 
     /**
-     * A grid's rows, without empty values: e.g. opening hours or contact points.
+     * Returns a grid's rows without their empty values, for example opening hours or contact points.
      *
      * @return list<array<string, mixed>>
      */
@@ -70,9 +70,9 @@ class Settings
     }
 
     /**
-     * The asset a field holds, found from the stored path and the field's
-     * container. Augmenting the value instead would build every field of the
-     * set first, tens of milliseconds on each page.
+     * Returns the asset a field holds, found from the stored path and the
+     * field's container. Augmenting the value instead would build every field
+     * of the set first, which costs tens of milliseconds on each page.
      */
     public function asset(string $key): ?Asset
     {
@@ -94,9 +94,10 @@ class Settings
     }
 
     /**
-     * The asset container an assets field of either set's blueprint names,
-     * a field imported from a fieldset included. A field that names none
-     * uses the site's only container, as Statamic's assets field does.
+     * Returns the asset container that an assets field in either set's
+     * blueprint names, including a field imported from a fieldset. A field
+     * that names none uses the site's only container, as Statamic's assets
+     * field does.
      */
     private function container(string $key): ?string
     {
@@ -114,7 +115,7 @@ class Settings
     }
 
     /**
-     * The site's name as Statamic knows it (Settings → Sites, else APP_NAME).
+     * Returns the site's name as Statamic knows it, from Settings → Sites or else APP_NAME.
      */
     public function siteName(): string
     {
@@ -122,8 +123,9 @@ class Settings
     }
 
     /**
-     * Whether page titles end with the site name. Off by default; a site set
-     * up before the toggle existed, with a separator saved, keeps its titles.
+     * Determines whether page titles end with the site name. It is off by
+     * default, but a site set up before the toggle existed, with a separator
+     * saved, keeps its titles.
      */
     public function titleSiteName(): bool
     {
@@ -131,8 +133,8 @@ class Settings
     }
 
     /**
-     * The separator with a space on each side, however it was typed: the
-     * control panel may trim a value, so `·` and ` · ` read the same.
+     * Returns the separator with a space on each side, however it was typed.
+     * The control panel may trim a value, so `·` and ` · ` read the same.
      */
     public function separator(): string
     {
@@ -142,7 +144,7 @@ class Settings
     }
 
     /**
-     * The name page titles end with: Brand's "Name in page titles", else the site's name.
+     * Returns the name page titles end with, which is Brand's "Name in page titles" or else the site's name.
      */
     public function titleName(): string
     {
@@ -150,8 +152,9 @@ class Settings
     }
 
     /**
-     * A field that is a list now and was one text before (other names, areas
-     * served): its items, or the text as the only one.
+     * Reads a field that is a list now but was a single text before, such as
+     * other names or areas served. It returns the list's items, or the text
+     * as the only item.
      *
      * @return list<string>
      */
@@ -169,8 +172,8 @@ class Settings
     }
 
     /**
-     * The handles of the two sets, in the order a field is looked for:
-     * Marketing settings, then Brand.
+     * Returns the handles of the two sets in the order a field is looked for,
+     * which is Marketing settings first and then Brand.
      *
      * @return list<string>
      */
@@ -183,7 +186,7 @@ class Settings
     }
 
     /**
-     * A field's value, from the first set that has one.
+     * Returns a field's value from the first set that has one.
      */
     private function value(string $key): mixed
     {
@@ -199,8 +202,9 @@ class Settings
     }
 
     /**
-     * The current site's localizations of the sets enabled there. Kept per
-     * site: the current site can change while one instance lives.
+     * Returns the current site's localizations of the sets enabled there. They
+     * are kept per site because the current site can change while one
+     * instance lives.
      *
      * @return list<Variables>
      */

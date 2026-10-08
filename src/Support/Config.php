@@ -5,9 +5,9 @@ namespace JothamLec\MarketingToolkit\Support;
 /**
  * Merges a site's config/marketing-toolkit.php into the addon's defaults. Laravel's own
  * merge is one level deep, so a site that set `og.templates` alone lost
- * `og.enabled` and the cards with it. Here keyed arrays merge at every depth,
+ * `og.enabled` and the cards with it. Here, keyed arrays merge at every depth,
  * while a list (ignore_paths, sitemap collections) or a value replaces the
- * default whole: a site's list is the list it wants.
+ * default whole, because a site's list is the list it wants.
  */
 final class Config
 {

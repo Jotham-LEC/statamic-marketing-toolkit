@@ -12,35 +12,33 @@ use Statamic\Facades\Site;
 use Throwable;
 
 /**
- * How Search Console is set up, so Marketing can walk someone through it:
- * the service account key and the property, from `.env` (which wins) or
- * from the control panel. A key uploaded there is kept in
- * storage/app/private, encrypted with APP_KEY, never in git; the property is
- * an addon setting. apply() hands an uploaded key's path to the
+ * Describes how Search Console is set up, so Marketing can walk someone through it. That means the
+ * service account key and the property, which come from `.env` (which wins) or from the control panel.
+ * A key uploaded there is kept in storage/app/private, encrypted with APP_KEY and never in git, and
+ * the property is an addon setting. apply() hands an uploaded key's path to the
  * `marketing-toolkit.search_console.credentials` config key, and readKey() turns that
  * config value into the key's JSON.
  *
- * One key serves every site (a service account can be a user of several
- * properties). The property is per site: `marketing-toolkit.search_console.property` is a
- * string (every site) or a map of site handle => property; else the control
- * panel's, saved for the default site as before and for each other site in
- * a second setting.
+ * One key serves every site, because a service account can be a user of several properties. The
+ * property is per site: `marketing-toolkit.search_console.property` is a string (for every site) or a
+ * map of site handle => property. Otherwise the control panel's property is used, which is saved for
+ * the default site as before and for each other site in a second setting.
  */
 class Connection
 {
     public const string SETTING = 'search_console_property';
 
-    /** The properties of the sites other than the default: site handle => property. */
+    /** This setting holds the properties of the sites other than the default, as site handle => property. */
     public const string SITES_SETTING = 'search_console_properties';
 
-    /** Google's guide to enabling a disabled service account key. */
+    /** This is Google's guide to enabling a disabled service account key. */
     public const string KEYS_GUIDE = 'https://docs.cloud.google.com/iam/docs/keys-disable-enable';
 
-    /** Where an organization policy can stop new service account keys being created. */
+    /** This is where an organisation policy can stop new service account keys from being created. */
     public const string KEY_POLICY = 'https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation';
 
     /**
-     * Fills the key `.env` left empty from what the control panel saved.
+     * Fills in the key that `.env` left empty from what the control panel saved.
      */
     public static function apply(): void
     {
@@ -52,8 +50,8 @@ class Connection
     }
 
     /**
-     * The site's property: from the config (`.env`), else as saved in the
-     * control panel. Null: the current site.
+     * Returns the site's property from the config (`.env`), or else as saved in the
+     * control panel. A null site means the current site.
      */
     public function property(?string $site = null): ?string
     {
@@ -61,8 +59,8 @@ class Connection
     }
 
     /**
-     * The property the config gives the site: a string for every site, or the
-     * site's entry in a map.
+     * Returns the property that the config gives the site, which is either a string for every site
+     * or the site's entry in a map.
      */
     public function configuredProperty(?string $site = null): ?string
     {
@@ -86,7 +84,7 @@ class Connection
     }
 
     /**
-     * Where the key comes from: `env` (the config, typically `.env`), `cp` (uploaded) or null.
+     * Returns where the key comes from, which is `env` (the config, typically `.env`), `cp` (uploaded) or null.
      */
     public function keySource(): ?string
     {
@@ -109,7 +107,7 @@ class Connection
     }
 
     /**
-     * The service account's email, which has to be a user of the property.
+     * Returns the service account's email, which has to be a user of the property.
      */
     public function email(): ?string
     {
@@ -117,10 +115,10 @@ class Connection
     }
 
     /**
-     * The key's JSON from the `marketing-toolkit.search_console.credentials` value: the
-     * JSON itself, or a path to it. The file the control panel saved is
-     * encrypted; one saved before it was is read as it is, and encrypted
-     * then, so it doesn't stay in plain text on disk.
+     * Returns the key's JSON from the `marketing-toolkit.search_console.credentials` value, which is
+     * either the JSON itself or a path to it. The file the control panel saved is encrypted. A file
+     * saved before encryption was added is read as it is and encrypted then, so it doesn't stay in
+     * plain text on disk.
      */
     public function readKey(string $value): string
     {
@@ -137,8 +135,8 @@ class Connection
         try {
             return Crypt::decryptString($contents);
         } catch (DecryptException) {
-            // Only a key: what doesn't decrypt may be one encrypted with an earlier APP_KEY.
-            // A storage folder that can't be written to still reads the key.
+            // Only a plain key is re-saved, because what doesn't decrypt may be a key encrypted with an
+            // earlier APP_KEY. A storage folder that can't be written to still reads the key.
             if (self::parseKey($contents) !== null) {
                 rescue(fn () => $this->saveKey($contents));
             }
@@ -148,8 +146,8 @@ class Connection
     }
 
     /**
-     * The property to suggest: the site's domain, which covers http, https and
-     * every subdomain; an address prefix where there is no domain (an IP, localhost).
+     * Returns the property to suggest, which is the site's domain because it covers http, https and
+     * every subdomain. Where there is no domain (an IP or localhost), it suggests an address prefix.
      */
     public function suggestedProperty(?string $site = null): string
     {
@@ -162,7 +160,7 @@ class Connection
     }
 
     /**
-     * A service account key as Google Cloud downloads it, or null.
+     * Returns a service account key as Google Cloud downloads it, or null if the JSON isn't one.
      *
      * @return array{client_email: string, private_key: string}|null
      */

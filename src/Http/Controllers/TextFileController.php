@@ -12,9 +12,9 @@ use Statamic\Exceptions\NotFoundHttpException;
 use Statamic\Facades\Site;
 
 /**
- * /llms.txt and /ads.txt. llms.txt is cached like the sitemap, and
- * forgotten with it (Listeners\FlushSitemap). A file of the same name in
- * public/ wins: the web server serves it first.
+ * Serves /llms.txt and /ads.txt. The llms.txt file is cached like the sitemap
+ * and forgotten with it (Listeners\FlushSitemap). A file of the same name in
+ * public/ wins, because the web server serves it first.
  */
 final class TextFileController
 {
@@ -26,7 +26,8 @@ final class TextFileController
 
         $build = fn () => $seo->llmsTxt();
 
-        // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
+        // It is cached only on a host that the install names, because the addresses may come from
+        // the Host header (Sites::trustsHost).
         return $this->text(Sites::trustsHost($request) ? Cache::remember(self::llmsCacheKey(Site::current()->handle()), SitemapController::cachedUntil(), $build) : $build());
     }
 
@@ -41,9 +42,9 @@ final class TextFileController
     }
 
     /**
-     * Per site, and per the settings that shape llms.txt (the collections the
-     * sitemap lists, and where descriptions come from), so a deploy that
-     * changes them doesn't serve the old file until the next save.
+     * Builds a key per site and per the settings that shape llms.txt (the
+     * collections the sitemap lists, and where descriptions come from), so a
+     * deploy that changes them doesn't serve the old file until the next save.
      */
     public static function llmsCacheKey(string $site): string
     {

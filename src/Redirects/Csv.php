@@ -9,13 +9,12 @@ use SplFileObject;
 use SplTempFileObject;
 
 /**
- * Redirects as CSV: `source,target,status,active`, one rule per row, with that
- * header, and a fifth column `site` on a multi-site install (a site's handle,
- * or empty for every site). Import adds new sources and updates existing ones
- * on the row's site (in any letter case, when matching ignores it); a row
- * that fails the form's checks is skipped and reported by its row number.
- * Both keep to the sites the signed-in user may work on, and to the rules
- * for every site only for one who may work on every site.
+ * This class exports and imports redirects as CSV, with one rule per row under the header
+ * `source,target,status,active`. A multi-site install adds a fifth column, `site`, which holds a site's
+ * handle, or is empty for every site. Import adds new sources and updates existing ones on the row's site
+ * (in any letter case, when matching ignores case). A row that fails the form's checks is skipped and
+ * reported by its row number. Both export and import keep to the sites the signed-in user may work on,
+ * and they include the rules for every site only for a user who may work on every site.
  */
 class Csv
 {
@@ -30,7 +29,7 @@ class Csv
 
         fputcsv($out, $sites ? [...self::HEADER, 'site'] : self::HEADER, escape: '');
 
-        // Each address's rule for every site (no site) first: databases sort a null differently.
+        // Each address's rule for every site (with no site) comes first, because databases sort a null differently.
         Redirect::query()->accessible()->orderBy('source')->orderByRaw('site is not null')->orderBy('site')->each(function (Redirect $redirect) use ($out, $sites) {
             $row = [$redirect->source, $redirect->target, $redirect->status, $redirect->active ? 1 : 0];
 
@@ -43,7 +42,7 @@ class Csv
      */
     public function import(string $contents): array
     {
-        // Read as CSV records, not lines: a quoted cell may hold a line break.
+        // We read the file as CSV records rather than lines, because a quoted cell may hold a line break.
         $file = new SplTempFileObject;
         $file->fwrite(ltrim($contents, "\u{FEFF}"));
         $file->rewind();
@@ -53,11 +52,10 @@ class Csv
         return Matcher::flushAfter(fn () => DB::transaction(function () use ($file) {
             $result = ['created' => 0, 'updated' => 0, 'errors' => []];
             $sites = Sites::accessible();
-            // Every rule read once, not for each row and again in its checks: by
-            // site ('' for every site) and source as rules compare it (case-folded
-            // when matching ignores case), oldest first; and the active ones, which
-            // the loop check follows. Both kept current as rows are saved, so a
-            // row sees the rows before it.
+            // We read every rule once, rather than for each row and again in its checks. The rules are
+            // grouped by site ('' for every site) and by source as rules compare it (case-folded when
+            // matching ignores case), oldest first. The active rules, which the loop check follows, are
+            // kept apart. Both are kept current as rows are saved, so each row sees the rows before it.
             $rules = Redirect::query()->orderBy('id')->get();
             $bySource = [];
             $active = $rules->where('active', true)->keyBy('id');
@@ -71,7 +69,7 @@ class Csv
             foreach ($file as $record) {
                 $cells = array_map(fn ($cell) => trim((string) $cell), $record);
 
-                // A blank line is no record, and isn't counted as one.
+                // A blank line is not a record, so it is not counted as one; the header row is skipped too.
                 if ($cells === [''] || (++$number === 1 && strtolower($cells[0]) === 'source')) {
                     continue;
                 }
@@ -96,10 +94,10 @@ class Csv
                 }
 
                 try {
-                    // A savepoint per row: on Postgres a failed statement aborts the
+                    // Each row gets its own savepoint, because on Postgres a failed statement aborts the
                     // whole transaction, and the rows before it would be lost with it.
                     $saved = DB::transaction(fn () => $existing
-                        // An imported rule is the user's own, as one saved in the form is.
+                        // An imported rule belongs to the user, just as a rule saved in the form does.
                         ? tap($existing)->update([...$row, 'automatic' => false])
                         : Redirect::query()->create($row));
                 } catch (QueryException $exception) {

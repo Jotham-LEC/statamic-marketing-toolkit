@@ -9,8 +9,8 @@ use Statamic\Events\GlobalVariablesSaved;
 use Throwable;
 
 /**
- * Saving Brand makes the icons again, from the image and colours just
- * saved: on every site, since the others take what they leave empty from it.
+ * Saving Brand makes the icons again from the image and colours just saved. This happens on every site,
+ * because the other sites take whatever they leave empty from it.
  */
 final class RemakeFavicons
 {
@@ -23,7 +23,7 @@ final class RemakeFavicons
         $favicons = app(Favicons::class);
         $favicons->flush();
 
-        // Nothing to make, and no need to look the asset up.
+        // Without a favicon there is nothing to make, so we don't need to look the asset up.
         if (blank($event->variables->value('favicon'))) {
             return;
         }
@@ -31,7 +31,7 @@ final class RemakeFavicons
         try {
             Sites::as($event->variables->locale(), fn () => $favicons->file('site.webmanifest'));
         } catch (Throwable $exception) {
-            // The next request for an icon tries again.
+            // We only report the error, because the next request for an icon tries again.
             report($exception);
         }
     }

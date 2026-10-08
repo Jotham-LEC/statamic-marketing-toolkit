@@ -20,8 +20,8 @@ use Statamic\Facades\Site;
 use Statamic\Fields\Value;
 
 /**
- * The helpers the rules share: settings, collection rules, reading fields
- * and images, and the site's address.
+ * This trait holds the helpers the rules share. They read the settings, the
+ * collection rules, fields, and images, and they work out the site's address.
  *
  * @phpstan-require-extends SiteSeo
  */
@@ -34,8 +34,8 @@ trait InteractsWithContent
     }
 
     /**
-     * A key of this page's rules: its collection's (config `marketing-toolkit.collections`),
-     * or for a term, its taxonomy's (`marketing-toolkit.taxonomies`).
+     * Returns a key of this page's rules, from its collection's settings (config
+     * `marketing-toolkit.collections`), or for a term, from its taxonomy's (`marketing-toolkit.taxonomies`).
      *
      * @api
      */
@@ -51,7 +51,7 @@ trait InteractsWithContent
     }
 
     /**
-     * A key of this entry's collection settings (config `marketing-toolkit.collections`).
+     * Returns a key of this entry's collection settings (config `marketing-toolkit.collections`).
      *
      * @api
      */
@@ -63,12 +63,13 @@ trait InteractsWithContent
     }
 
     /**
-     * Whether Statamic keeps this content behind a protection scheme (a
-     * password, a login, an IP list): its `protect` value, else the
-     * site-wide `statamic.protect.default`, read as Statamic reads them, so
-     * a scheme that doesn't exist counts too (Statamic denies it). Protected
-     * content stays out of the sitemap, llms.txt and IndexNow, and has no
-     * share card: its title and text aren't public.
+     * Determines whether Statamic keeps this content behind a protection
+     * scheme, such as a password, a login, or an IP list. It reads the
+     * content's `protect` value, or else the site-wide
+     * `statamic.protect.default`, as Statamic reads them, so a scheme that
+     * doesn't exist counts too, because Statamic denies it. Protected content
+     * stays out of the sitemap, llms.txt, and IndexNow, and it has no share
+     * card, because its title and text aren't public.
      *
      * @api
      */
@@ -86,8 +87,8 @@ trait InteractsWithContent
     }
 
     /**
-     * The entry's `description`, a field the collection names, else the first
-     * paragraph of its `content`.
+     * Returns the entry's `description`, or a field the collection names, or
+     * else the first paragraph of its `content`.
      */
     protected function contentDescription(Context $context): ?string
     {
@@ -109,7 +110,7 @@ trait InteractsWithContent
             return null;
         }
 
-        // A body that is not rendered HTML (no blueprint field, a plain textarea) is read as Markdown.
+        // A body that is not rendered HTML (with no blueprint field, or a plain textarea) is read as Markdown.
         if (! str_contains($html, '<p')) {
             $html = Markdown::parse($html);
         }
@@ -118,7 +119,7 @@ trait InteractsWithContent
     }
 
     /**
-     * HTML from an augmented Markdown or Bard value.
+     * Returns the HTML from an augmented Markdown or Bard value.
      */
     protected function html(mixed $value): ?string
     {
@@ -151,9 +152,10 @@ trait InteractsWithContent
     }
 
     /**
-     * The stored value of a field, as a list: one value for a plain field, one
-     * per visible matching set for a path into a Replicator. A translation's
-     * own value, else its origin's: value(), as get() reads only its own.
+     * Returns the stored value of a field as a list, with one value for a plain
+     * field and one per visible matching set for a path into a Replicator. It
+     * reads a translation's own value, or else its origin's, so it calls
+     * value(), because get() reads only the translation's own.
      *
      * @return Collection<int, mixed>
      */
@@ -170,9 +172,9 @@ trait InteractsWithContent
     }
 
     /**
-     * `sections.hero.image` → the Replicator field, the set type (`*` for any)
-     * and the field in the set. Statamic handles have no dots, so a plain name
-     * is never a path.
+     * Splits a path such as `sections.hero.image` into the Replicator field,
+     * the set type (`*` for any), and the field in the set. Statamic handles
+     * have no dots, so a plain name is never a path.
      *
      * @return array{field: string, type: string, key: string}|null
      */
@@ -184,8 +186,8 @@ trait InteractsWithContent
     }
 
     /**
-     * A Replicator's sets of a type, in order, without those switched off.
-     * Takes the stored rows or the augmented ones (which have none switched off).
+     * Returns a Replicator's sets of a type, in order, without those switched
+     * off. It accepts the stored rows or the augmented ones, which have none switched off.
      *
      * @return Collection<int, mixed>
      */
@@ -201,8 +203,8 @@ trait InteractsWithContent
     }
 
     /**
-     * A field's value without its augmented Value wrapper, whichever of the two
-     * a caller (or a subclass) passes.
+     * Returns a field's value without its augmented Value wrapper, whichever of
+     * the two a caller (or a subclass) passes.
      */
     private function unwrap(mixed $value): mixed
     {
@@ -210,8 +212,8 @@ trait InteractsWithContent
     }
 
     /**
-     * An uploaded image as a share image: cropped on its focal point and
-     * served as JPEG (WhatsApp and others do not preview WebP).
+     * Turns an uploaded image into a share image. It is cropped on its focal
+     * point and served as JPEG, because WhatsApp and others do not preview WebP.
      *
      * @return array{url: string, width: int, height: int, alt: ?string}
      */
@@ -220,8 +222,8 @@ trait InteractsWithContent
         $width ??= $this->imageWidth();
         $height ??= $this->imageHeight();
 
-        // Fluently, not as an array: only fit() turns `crop_focal` into Glide's
-        // `crop-{x}-{y}`. Glide takes an unknown fit as `contain`, which neither
+        // The manipulation is built fluently, not as an array, because only fit() turns `crop_focal`
+        // into Glide's `crop-{x}-{y}`. Glide treats an unknown fit as `contain`, which neither
         // fills the card nor enlarges a small image.
         $url = Image::manipulate($asset)
             ->width($width)
@@ -242,8 +244,8 @@ trait InteractsWithContent
     }
 
     /**
-     * The share image's size, 1200×630 as Facebook, LinkedIn and X expect.
-     * Override both for another.
+     * Returns the share image's width. The size is 1200×630, as Facebook,
+     * LinkedIn, and X expect, so override both methods for another size.
      *
      * @api
      */
@@ -274,10 +276,10 @@ trait InteractsWithContent
     }
 
     /**
-     * A relative URL made absolute on the current site's domain. A path from
-     * the root (`/img/…`, an asset's URL, a route) is on the domain's root,
-     * not under a site's folder (`/fr/`); one without the slash is under the
-     * site's address.
+     * Makes a relative URL absolute on the current site's domain. A path from
+     * the root (`/img/…`, an asset's URL, or a route) is on the domain's root,
+     * not under a site's folder (`/fr/`), while a path without the slash is
+     * under the site's address.
      *
      * @api
      */
@@ -297,7 +299,7 @@ trait InteractsWithContent
     }
 
     /**
-     * `https://example.test` from `https://example.test/fr/`.
+     * Returns the domain's root, such as `https://example.test` from `https://example.test/fr/`.
      */
     public static function domainRoot(string $url): string
     {

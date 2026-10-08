@@ -15,9 +15,9 @@ use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
 /**
- * Marketing → 404s: the missing paths visitors hit, most recent first,
- * each with a "Create redirect" action. On a multi-site install, those of
- * the selected site.
+ * Shows Marketing → 404s, the missing paths that visitors hit, most recent
+ * first, each with a "Create redirect" action. On a multi-site install, it
+ * shows those of the selected site.
  */
 final class NotFoundController
 {
@@ -37,7 +37,7 @@ final class NotFoundController
     public function listing(Request $request): array
     {
         $sites = Sites::options();
-        // The same on every row: they depend on the kind of row and the user alone.
+        // The actions are the same on every row, because they depend only on the kind of row and the user.
         $actions = RecordActions::for(collect([new MissingPath]), ['type' => '404s']);
 
         return Listing::respond(
@@ -52,7 +52,7 @@ final class NotFoundController
             ['path', 'referrer'],
             fn (Collection $rows) => $rows->map(fn (MissingPath $row) => [
                 'id' => $row->id,
-                // None: logged before there was more than one site.
+                // A row has no site when it was logged before there was more than one site.
                 'site' => $row->site === null ? '—' : ($sites[$row->site] ?? $row->site),
                 'path' => $row->path,
                 'hits' => $row->hits,

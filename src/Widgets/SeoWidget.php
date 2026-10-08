@@ -11,9 +11,9 @@ use Statamic\Widgets\VueComponent;
 use Statamic\Widgets\Widget;
 
 /**
- * The dashboard's SEO card: the latest report's score and the most recently
- * hit missing pages, of the site selected in the control panel. Add it in
- * config/statamic/cp.php: `['type' => 'mt']`.
+ * Shows the dashboard's SEO card, with the latest report's score and the most
+ * recently hit missing pages of the site selected in the control panel. You may
+ * add it in config/statamic/cp.php as `['type' => 'mt']`.
  */
 final class SeoWidget extends Widget
 {

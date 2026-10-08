@@ -16,12 +16,11 @@ use JothamLec\MarketingToolkit\Rules\UniqueSource;
 use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
- * One rule: requests for `source` go to `target` with `status` (301, 302),
- * or are answered 410 Gone. A `*` in the source matches anything, and the
- * target takes what it matched as $1, $2… Rules apply only to addresses the
- * site would otherwise answer with a 404. On a multi-site install a rule
- * names the site it applies on, or none for every site; a site's own rule
- * wins over one for every site from the same address.
+ * A redirect is one rule. Requests for `source` go to `target` with `status` (301 or 302), or they are
+ * answered with 410 Gone. A `*` in the source matches anything, and the target receives what it matched
+ * as $1, $2, and so on. Rules apply only to addresses that the site would otherwise answer with a 404.
+ * On a multi-site install, a rule names the site it applies on, or names none to apply on every site,
+ * and a site's own rule wins over a rule for every site from the same address.
  *
  * @property int $id
  * @property ?string $site
@@ -37,7 +36,7 @@ class Redirect extends Model
 {
     public const array STATUSES = [301, 302, 410];
 
-    /** The longest source: MySQL's unique index on site and source must stay under 3072 bytes. */
+    /** This is the longest source allowed, as MySQL's unique index on site and source must stay under 3072 bytes. */
     public const int MAX_SOURCE = 736;
 
     protected $table = 'mt_redirects';
@@ -65,13 +64,13 @@ class Redirect extends Model
             $redirect->target = $redirect->status === 410 ? null : self::normalizeTarget($redirect->target);
         });
 
-        // After the transaction, if there is one: a request in between could cache the old rules again.
+        // We flush after the transaction, if any, because a request in between could cache the old rules again.
         static::saved(fn () => DB::afterCommit(fn () => Matcher::flush()));
         static::deleted(fn () => DB::afterCommit(fn () => Matcher::flush()));
     }
 
     /**
-     * Rules stored for exactly this site; null: those for every site.
+     * Limits the query to rules stored for exactly this site, or to the rules for every site when $site is null.
      *
      * @param  Builder<self>  $query
      */
@@ -81,10 +80,9 @@ class Redirect extends Model
     }
 
     /**
-     * Rules the signed-in user may manage: those on the sites they may work
-     * on, and those for every site only if they may work on every site, as a
-     * rule for every site applies on sites they can't see (`/*` sending all
-     * of them elsewhere).
+     * Limits the query to rules the signed-in user may manage. These are the rules on the sites they may work
+     * on, and the rules for every site only if they may work on every site, because a rule for every site
+     * also applies on sites they can't see (a `/*` rule could send all of those sites elsewhere).
      *
      * @param  Builder<self>  $query
      */
@@ -101,7 +99,7 @@ class Redirect extends Model
     }
 
     /**
-     * Rules that apply on this site: its own and those for every site.
+     * Limits the query to rules that apply on this site, which are its own rules and the rules for every site.
      *
      * @param  Builder<self>  $query
      */
@@ -111,9 +109,9 @@ class Redirect extends Model
     }
 
     /**
-     * A site path as rules store and compare it: decoded (so `/caf%C3%A9` and
-     * `/café` are one address, as requests are matched), a leading slash, no
-     * trailing slash (except the home page), no query string or fragment.
+     * Returns a site path in the form that rules store and compare. The path is decoded (so `/caf%C3%A9` and
+     * `/café` are one address, as they are when requests are matched), has a leading slash, has no trailing
+     * slash (except for the home page), and has no query string or fragment.
      */
     public static function normalize(string $path): string
     {
@@ -124,8 +122,8 @@ class Redirect extends Model
     }
 
     /**
-     * Whether rules match an address in any letter case: `redirects.case_sensitive`
-     * off, for a site whose old addresses worked in any case (Wix, IIS).
+     * Determines whether rules match an address in any letter case. This happens when
+     * `redirects.case_sensitive` is off, for a site whose old addresses worked in any case (Wix or IIS).
      */
     public static function ignoresCase(): bool
     {
@@ -133,9 +131,9 @@ class Redirect extends Model
     }
 
     /**
-     * A normalized path as rules compare it: case-folded when matching ignores
-     * case (`/CAFÉ` and `/café` are one), else as it is. A path that isn't
-     * valid UTF-8 is left alone.
+     * Returns a normalised path in the form that rules compare. It is case-folded when matching ignores case
+     * (so `/CAFÉ` and `/café` are one address), and is otherwise left as it is. A path that isn't valid
+     * UTF-8 is left alone.
      */
     public static function key(string $path): string
     {
@@ -143,9 +141,9 @@ class Redirect extends Model
     }
 
     /**
-     * The rule that starts from this address on $site (null: the rules for
-     * every site), in any letter case when matching ignores it. Sources are stored as typed, and databases fold letters
-     * differently (SQLite only A–Z, MySQL by its collation), so that comparison is made here.
+     * Finds the rule that starts from this address on $site (or among the rules for every site when $site is
+     * null), in any letter case when matching ignores case. Sources are stored as typed, and databases fold
+     * letters differently (SQLite only folds A–Z, and MySQL folds by its collation), so we compare them here.
      */
     public static function forSource(string $source, ?int $ignoreId = null, ?string $site = null): ?self
     {
@@ -162,9 +160,9 @@ class Redirect extends Model
     }
 
     /**
-     * A target as typed, tidied: another site's address is kept as it is; a
-     * path here loses its trailing slash and keeps its query and fragment,
-     * still encoded, since it goes into the Location header as it is.
+     * Tidies a target as typed. Another site's address is kept as it is. A path on this site loses its
+     * trailing slash and keeps its query and fragment, still encoded, because it goes into the Location
+     * header as it is.
      */
     public static function normalizeTarget(?string $target): ?string
     {
@@ -184,13 +182,11 @@ class Redirect extends Model
     }
 
     /**
-     * Checks a redirect's fields, from a CSV row; the form checks them with
-     * the same rules() and messages() (Http\Requests\SaveRedirect). $taken:
-     * whether another rule already starts from the source, and $active: the
-     * active rules, when the caller has them at hand (an import, which reads
-     * them once rather than for every row); else they are looked up. $sites:
-     * the handles a rule may name (the CP passes the user's own); every
-     * site's when not given.
+     * Checks a redirect's fields from a CSV row. The form checks them with the same rules() and messages()
+     * (see Http\Requests\SaveRedirect). $taken says whether another rule already starts from the source.
+     * $active holds the active rules when the caller has them at hand (such as an import, which reads them
+     * once rather than for every row); otherwise they are looked up. $sites lists the handles a rule may
+     * name (the CP passes the user's own), and every site's handle is allowed when it is not given.
      *
      * @param  array<string, mixed>  $data
      * @param  ?Collection<int, self>  $active
@@ -204,18 +200,18 @@ class Redirect extends Model
     }
 
     /**
-     * The checks a redirect's fields pass, from the form or a CSV row. Only
-     * with every site among $sites may a rule name none (be for every site).
+     * Returns the checks that a redirect's fields must pass, from the form or a CSV row. A rule may name no
+     * site (and so apply on every site) only when every site is among $sites.
      *
      * @param  ?Collection<int, self>  $active
-     * @param  ?list<string>  $sites  the handles a rule may name; null: every site's
+     * @param  ?list<string>  $sites  the handles a rule may name, or null for every site's handle
      * @return array<string, mixed>
      */
     public static function rules(string $source, ?string $site, ?int $ignoreId = null, ?bool $taken = null, ?Collection $active = null, ?array $sites = null): array
     {
         $sites ??= Sites::handles();
 
-        // Before the other checks: a regex on text that isn't UTF-8 fails, and Postgres refuses it.
+        // This runs before the other checks, because a regex on text that isn't UTF-8 fails, and Postgres refuses it.
         $utf8 = function (string $attribute, mixed $value, Closure $fail) {
             if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
                 $fail(__('marketing-toolkit::validation.redirect.encoding'));
@@ -225,7 +221,8 @@ class Redirect extends Model
         return [
             'site' => [Rule::requiredIf(Sites::multiple() && array_diff(Sites::handles(), $sites) !== []), 'nullable', 'string', Rule::in($sites)],
             'source' => [
-                // Control characters would go into the Location header (a line break starts a new header).
+                // We reject control characters, because they would go into the Location header, where a line break
+                // starts a new header.
                 'required', 'string', 'bail', $utf8, 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
                 new UniqueSource($site, $ignoreId, $taken),
             ],
@@ -258,10 +255,10 @@ class Redirect extends Model
     }
 
     /**
-     * Whether a rule sends every address it matches to that same address:
-     * `/a` to `/a`, or `/x/*` to `/x/$1`. Letter case counts even when matching
-     * ignores it: `/About` to `/about` is how an old address in capitals reaches
-     * the page, and if that page is missing the 404 isn't redirected again.
+     * Determines whether a rule sends every address it matches back to that same address, such as `/a` to
+     * `/a`, or `/x/*` to `/x/$1`. Letter case counts even when matching ignores it, because `/About` to
+     * `/about` is how an old address in capitals reaches the page, and if that page is missing, the 404 isn't
+     * redirected again.
      */
     public static function pointsBack(string $source, ?string $target): bool
     {

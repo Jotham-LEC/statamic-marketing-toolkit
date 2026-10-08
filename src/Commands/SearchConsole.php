@@ -12,10 +12,11 @@ use Statamic\Facades\Site;
 use Throwable;
 
 /**
- * `php please mt:search-console`: fetches each page's clicks, impressions,
- * click-through rate and position from Google Search Console. The schedule
- * runs it daily once `marketing-toolkit.search_console` is set up. On a multi-site install
- * it imports each site that has a property, or only `--site`.
+ * The `php please mt:search-console` command fetches each page's clicks,
+ * impressions, click-through rate and position from Google Search Console. The
+ * schedule runs it daily once `marketing-toolkit.search_console` is set up. On a
+ * multi-site install, it imports each site that has a property, or only the site
+ * that `--site` names.
  */
 final class SearchConsole extends Command
 {

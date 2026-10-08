@@ -10,30 +10,28 @@ use Statamic\Facades\Site;
 use Statamic\Facades\URL;
 
 /**
- * Finds the rule for a path on a site. The active rules that apply there are
- * cached per site as one array (an exact-match map and the wildcards, longest
- * source first) and rebuilt when a rule is saved or deleted, so a 404 costs a
- * cache read, not a query. A site's own rule wins over one for every site
- * from the same address. When matching ignores case, a second map holds the
- * sources case-folded, and the wildcards ignore case too.
+ * This class finds the rule for a path on a site. The active rules that apply there are cached per site
+ * as one array (an exact-match map and the wildcards, longest source first), and the cache is rebuilt
+ * when a rule is saved or deleted, so a 404 costs a cache read rather than a query. A site's own rule
+ * wins over a rule for every site from the same address. When matching ignores case, a second map holds
+ * the sources case-folded, and the wildcards ignore case too.
  *
- * Sources are paths within the site, as Statamic's uri() and the automatic
- * redirects write them: on a site at example.com/fr/, `/a-propos` is
- * example.com/fr/a-propos. A path is asked for as requested (`/fr/a-propos`),
- * and is matched without the site's folder first, then as it is, so a rule
- * typed with the folder (as one had to before) keeps working.
+ * Sources are paths within the site, as Statamic's uri() and the automatic redirects write them. On a
+ * site at example.com/fr/, for example, `/a-propos` means example.com/fr/a-propos. A path is passed in as
+ * it was requested (`/fr/a-propos`), and it is matched without the site's folder first and then as it
+ * is, so a rule typed with the folder (as it had to be before) keeps working.
  */
 class Matcher
 {
-    /** Renamed when the compiled form changes, so a cached set in the old one is never read. */
+    /** We rename this key when the compiled form changes, so a set cached in the old form is never read. */
     private const string KEY = 'mt:redirect-rules';
 
-    /** Set while many rules are saved at once (an import), which flush once at the end. */
+    /** This is set while many rules are saved at once, such as in an import, so the cache flushes once at the end. */
     private static bool $deferred = false;
 
     /**
-     * @param  string  $path  as requested, from the domain's root (with the site's folder)
-     * @param  ?string  $site  a site handle; null: the current site
+     * @param  string  $path  the path as requested, from the domain's root (with the site's folder)
+     * @param  ?string  $site  a site handle, or null for the current site
      * @return array{id: int, status: int, target: ?string}|null
      */
     public function match(string $path, string $query = '', ?string $site = null): ?array
@@ -44,8 +42,8 @@ class Matcher
     }
 
     /**
-     * The rule for a path among the given ones: the rules that could match
-     * it, without reading (or rebuilding) every rule.
+     * Finds the rule for a path among the given rules, which are the rules that could match it. This
+     * avoids reading (or rebuilding) every rule.
      *
      * @param  iterable<Redirect>  $redirects
      * @return array{id: int, status: int, target: ?string}|null
@@ -56,9 +54,9 @@ class Matcher
     }
 
     /**
-     * The forms of a requested path rules are matched against: within the site
-     * (without its folder), then as requested. Already decoded and without a
-     * query string: a `?` here was `%3F`, part of the path.
+     * Returns the forms of a requested path that rules are matched against: first within the site (without
+     * its folder), and then as requested. The path is already decoded and has no query string, so a `?`
+     * here was a `%3F` that is part of the path.
      *
      * @return list<string>
      */
@@ -80,8 +78,8 @@ class Matcher
     private function matchIn(array $rules, array $paths, string $query): ?array
     {
         foreach ($paths as $path) {
-            // A source in the very case asked for wins over one that differs only in case,
-            // unless only the one in another case is the site's own.
+            // A source in the exact case requested wins over one that differs only in case, unless
+            // only the source in another case is the site's own.
             $exact = $rules['exact'][$path] ?? null;
             $folded = $rules['folded'][Redirect::key($path)] ?? null;
 
@@ -90,12 +88,12 @@ class Matcher
             }
         }
 
-        // Each path backwards (see pattern()), by character or by byte as each rule needs it.
+        // This caches each path read backwards (see pattern()), by character or by byte, as each rule needs it.
         $backwards = [];
 
         foreach ($rules['wildcards'] as $rule) {
             foreach ($paths as $i => $path) {
-                // Matched by character, a path that isn't valid UTF-8 matches no rule, as PCRE's `u` would have it.
+                // When matching by character, a path that isn't valid UTF-8 matches no rule, as with PCRE's `u`.
                 if ($rule['chars'] && ! mb_check_encoding($path, 'UTF-8')) {
                     continue;
                 }
@@ -124,8 +122,8 @@ class Matcher
     }
 
     /**
-     * Runs $callback, which saves many rules, and flushes once when it is done
-     * (after its transaction, so a request between can't cache the old rules).
+     * Runs $callback, which saves many rules, and flushes the cache once when it is done. The flush happens
+     * after the callback's transaction, so a request in between can't cache the old rules.
      *
      * @template T
      *
@@ -145,7 +143,7 @@ class Matcher
     }
 
     /**
-     * Cached apart for each `redirects.case_sensitive`, so changing it takes effect at once.
+     * The rules are cached separately for each `redirects.case_sensitive` value, so changing it takes effect at once.
      *
      * @return array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
      */
@@ -158,11 +156,11 @@ class Matcher
     }
 
     /**
-     * The rules in the three forms match() reads: `exact` and `folded` look a
-     * path up directly; `wildcards` are tried in turn.
+     * Compiles the rules into the three forms that match() reads. The `exact` and `folded` maps look a path
+     * up directly, and the `wildcards` are tried in turn.
      *
      * @param  Collection<int, Redirect>  $redirects
-     * @param  ?string  $site  the site they are matched on: its own rules win over those for every site
+     * @param  ?string  $site  the site they are matched on, whose own rules win over those for every site
      * @return array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
      */
     private static function compile(Collection $redirects, ?string $site = null): array
@@ -177,10 +175,9 @@ class Matcher
     }
 
     /**
-     * The rules without a `*`, by their source as stored:
-     * `['/old-page' => rule, '/about' => rule]`. Where a rule for every site
-     * and the site's own rule share a source, the site's own is added last,
-     * so it is the one kept.
+     * Maps the rules without a `*` by their source as stored, such as
+     * `['/old-page' => rule, '/about' => rule]`. Where a rule for every site and the site's own rule
+     * share a source, the site's own rule is added last, so it is the one that is kept.
      *
      * @param  Collection<int, Redirect>  $redirects
      * @return array<string, array<string, mixed>>
@@ -189,16 +186,15 @@ class Matcher
     {
         return $redirects
             ->sortBy(fn (Redirect $redirect) => self::isOwn($redirect, $site))
-            // Normalized again for sources saved before they were decoded on save.
+            // We normalise the source again for sources that were saved before they were decoded on save.
             ->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => self::rule($redirect, $site)])
             ->all();
     }
 
     /**
-     * The rules without a `*`, by their source case-folded, for matching in
-     * any letter case: `/About-Us` and `/ABOUT-US` are both `['/about-us' =>
-     * rule]`. Of sources that differ only in case (saved before case was
-     * ignored), the oldest is kept, and the site's own wins over one for
+     * Maps the rules without a `*` by their case-folded source, for matching in any letter case, so
+     * `/About-Us` and `/ABOUT-US` both become `['/about-us' => rule]`. Of sources that differ only in case
+     * (saved before case was ignored), the oldest is kept, and the site's own rule wins over a rule for
      * every site.
      *
      * @param  Collection<int, Redirect>  $redirects
@@ -213,12 +209,11 @@ class Matcher
     }
 
     /**
-     * The rules with a `*`, each with its pattern, the longest source first:
-     * when several match, the most specific wins, and at the same length, the
-     * site's own. `/blog/*` becomes the rule with the pattern
-     * `#^(.*)/golb/$#`, matched against the path read backwards (see
-     * pattern()): `/blog/hello` read backwards is `olleh/golb/`, which
-     * matches with `olleh`, so `$1` is `hello`.
+     * Lists the rules with a `*`, each with its pattern, with the longest source first. When several rules
+     * match, the most specific one wins, and at the same length, the site's own rule wins. For example,
+     * `/blog/*` becomes a rule with the pattern `#^(.*)/golb/$#`, which is matched against the path read
+     * backwards (see pattern()). Read backwards, `/blog/hello` is `olleh/golb/`, which matches with
+     * `olleh`, so `$1` is `hello`.
      *
      * @param  Collection<int, Redirect>  $redirects
      * @return list<array<string, mixed>>
@@ -238,8 +233,8 @@ class Matcher
     }
 
     /**
-     * What the matcher keeps of a rule. `own`: 1 for a rule of the site it
-     * is matched on, 0 for one for every site.
+     * Returns the parts of a rule that the matcher keeps. The `own` value is 1 for a rule of the site it is
+     * matched on, and 0 for a rule for every site.
      *
      * @return array{id: int, status: int, target: ?string, own: int}
      */
@@ -254,18 +249,16 @@ class Matcher
     }
 
     /**
-     * A wildcard source as a regular expression, written backwards, to match a
-     * path read backwards. Forwards, each `*` was a greedy `(.*)`, and with
-     * several, PCRE tried every way of sharing a long path between them: a
-     * rule that matched a path of a few hundred characters could run out of
-     * PCRE's backtrack limit and silently not match, and a made-up address
-     * cost every such rule that limit. Backwards, each piece of text between
-     * two `*` is taken at its first place (its last, forwards: where the
-     * greedy `*` before it puts it) and never tried again (an atomic group),
-     * so each `*` matches what it did, in time that grows with the path's
-     * length alone. Ignoring case, it folds letters beyond A–Z too (`/CAFÉ/*`
-     * matches `/café/x`), reading by character, unless the source isn't
-     * valid UTF-8. What the `*` matched keeps the visitor's case either way.
+     * Turns a wildcard source into a regular expression, written backwards, to match a path read
+     * backwards. Written forwards, each `*` was a greedy `(.*)`, and with several of them, PCRE tried every
+     * way of sharing a long path between them. A rule that matched a path of a few hundred characters
+     * could run out of PCRE's backtrack limit and silently fail to match, and a made-up address cost every
+     * such rule that limit. Written backwards, each piece of text between two `*` is taken at its first
+     * place (its last place forwards, where the greedy `*` before it puts it) and is never tried again
+     * (an atomic group). Each `*` therefore matches what it did before, in time that grows only with the
+     * path's length. When ignoring case, the pattern folds letters beyond A–Z too (`/CAFÉ/*` matches
+     * `/café/x`) by reading by character, unless the source isn't valid UTF-8. Either way, the text that
+     * the `*` matched keeps the visitor's case.
      *
      * @return array{pattern: string, chars: bool}
      */
@@ -273,7 +266,8 @@ class Matcher
     {
         $chars = $ignoresCase && mb_check_encoding($source, 'UTF-8');
         $pieces = array_map(fn (string $piece) => preg_quote($piece, '#'), explode('*', self::reverse($source, $chars)));
-        // The source's end, then each piece between two `*`, then its start (a wildcard has at least one `*`).
+        // The pattern holds the source's end, each piece between two `*`, and then its start.
+        // A wildcard always has at least one `*`, so the end and the start both exist.
         $end = array_shift($pieces);
         $start = array_pop($pieces);
         $between = implode('', array_map(fn (string $piece) => '(?>(.*?)'.$piece.')', $pieces));
@@ -285,7 +279,7 @@ class Matcher
     }
 
     /**
-     * Backwards by character (UTF-8), or by byte.
+     * Reverses the text by character (UTF-8), or by byte.
      */
     private static function reverse(string $text, bool $chars): string
     {
@@ -302,11 +296,11 @@ class Matcher
         $target = $rule['target'];
 
         if ($target !== null) {
-            // What a `*` matched is decoded text; it goes back into an address encoded.
+            // The text that a `*` matched is decoded, so we encode it again before it goes back into an address.
             $target = preg_replace_callback('/\$(\d+)/', fn ($m) => $this->encode($captures[(int) $m[1] - 1] ?? ''), $target);
             $target = $this->withTrailingSlash($target);
 
-            // The visitor's query string travels on (utm tags, a search), ahead of any fragment.
+            // The visitor's query string (such as UTM tags or a search) is passed on, ahead of any fragment.
             if ($query !== '') {
                 [$address, $fragment] = array_pad(explode('#', $target, 2), 2, null);
                 $target = $address.(str_contains($address, '?') ? '&' : '?').$query.($fragment !== null ? '#'.$fragment : '');

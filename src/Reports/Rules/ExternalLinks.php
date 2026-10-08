@@ -7,8 +7,9 @@ use JothamLec\MarketingToolkit\Reports\Result;
 use JothamLec\MarketingToolkit\Reports\SiteFacts;
 
 /**
- * Links to other sites that lead nowhere (a 404, a 410, a domain that no
- * longer exists). Off by default: checking means requests to those sites.
+ * Flags links to other sites that lead nowhere, such as a 404, a 410, or a
+ * domain that no longer exists. The check is off by default, because it sends
+ * requests to those sites.
  */
 class ExternalLinks extends Rule
 {

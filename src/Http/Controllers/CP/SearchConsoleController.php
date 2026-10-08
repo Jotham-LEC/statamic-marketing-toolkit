@@ -18,22 +18,22 @@ use Statamic\Facades\Site;
 use Throwable;
 
 /**
- * Marketing → Search Console, and setting it up there: the service account key, the
- * property, a check that Google lets the key read it, and the first import.
- * For whoever may change the addon's settings; `.env` values win and can't
- * be changed here. The property, the check and the import are of the site
- * selected in the control panel; the key serves every site.
+ * Shows Marketing → Search Console and sets it up there, with the service account key,
+ * the property, a check that Google lets the key read it, and the first import.
+ * Setup is for whoever may change the addon's settings, and `.env` values win and
+ * can't be changed here. The property, the check and the import are for the site
+ * selected in the control panel, while the key serves every site.
  */
 final class SearchConsoleController
 {
     public function __construct(private Connection $connection) {}
 
     /**
-     * Marketing → Search Console: the steps to connect it, then where the
-     * connection stands: the key, each site's property, the last import.
-     * Anyone who may view SEO sees it, for the sites they may work on; only
-     * whoever may change the addon's settings gets the steps, the buttons and
-     * the properties (the others, whether each site is connected).
+     * Shows Marketing → Search Console, with the steps to connect it and then
+     * where the connection stands (the key, each site's property, the last import).
+     * Anyone who may view SEO sees it for the sites they may work on. Only whoever
+     * may change the addon's settings gets the steps, the buttons and the
+     * properties, and the others see whether each site is connected.
      */
     public function index(Client $client): Response
     {
@@ -57,8 +57,8 @@ final class SearchConsoleController
     }
 
     /**
-     * Where the setup stands for the selected site. Without permission to
-     * change it, only whether it is connected and where the values come from.
+     * Returns where the setup stands for the selected site. Without permission to
+     * change it, the user only sees whether it is connected and where the values come from.
      *
      * @return array<string, mixed>
      */
@@ -155,8 +155,8 @@ final class SearchConsoleController
         try {
             $count = $importer->import($site);
         } catch (Throwable $e) {
-            // The error itself goes to the log. The editor is told the import failed, and
-            // what the check makes of it when the check fails too: a key that still reads
+            // The error itself goes to the log. The editor is told that the import failed, and
+            // what the check makes of it when the check fails too, because a key that still reads
             // the property says nothing about why the import did not work.
             report($e);
 

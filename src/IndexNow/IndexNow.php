@@ -8,16 +8,14 @@ use JothamLec\MarketingToolkit\Support\Features;
 use Throwable;
 
 /**
- * IndexNow (indexnow.org): tells Bing, Yandex, Naver, Seznam and the other
- * participating engines which addresses changed, so they recrawl them now
- * rather than on their next visit. Google does not take part. The addresses
- * a request changes are sent together once it has been answered, only in
- * production, one request per domain, and a failure is logged, never shown
- * to the editor.
+ * Uses IndexNow (indexnow.org) to tell Bing, Yandex, Naver, Seznam and the other participating
+ * engines which addresses changed, so they recrawl them now rather than on their next visit. Google
+ * does not take part. The addresses a request changes are sent together once it has been answered,
+ * only in production and with one request per domain. A failure is logged and never shown to the editor.
  */
 class IndexNow
 {
-    /** Shares the addresses with every participating engine. */
+    /** This endpoint shares the addresses with every participating engine. */
     private const string ENDPOINT = 'https://api.indexnow.org/indexnow';
 
     /** @var array<string, true> */
@@ -29,8 +27,8 @@ class IndexNow
     }
 
     /**
-     * The site's key: config `marketing-toolkit.indexnow.key`, else one derived from the app
-     * key, so it stays the same across deploys without setting anything.
+     * Returns the site's key, which is the `marketing-toolkit.indexnow.key` config value or else one
+     * derived from the app key, so it stays the same across deploys without setting anything.
      */
     public function key(): string
     {
@@ -55,8 +53,8 @@ class IndexNow
     }
 
     /**
-     * Sends the queued addresses, one request per host: IndexNow takes one
-     * host per request, and each site's domain serves the key itself.
+     * Sends the queued addresses with one request per host, because IndexNow takes one host per
+     * request and each site's domain serves the key itself.
      */
     public function flush(): void
     {

@@ -29,14 +29,14 @@ use Statamic\Facades\Site;
 use Statamic\Facades\Term;
 
 /**
- * Runs reports. start() lists the pages; step() renders the next chunk of
- * them and reads what each says; the last step runs the checks, which need
+ * Runs reports. start() lists the pages, and step() renders the next chunk of
+ * them and reads what each one says. The last step runs the checks, which need
  * every page (to find repeated titles), scores the pages and the site, and
- * drops reports beyond the number to keep.
+ * drops the reports beyond the number to keep.
  *
- * A report is of one site: on a multi-site install each runs with its site
- * as Statamic's current one, so the pages, the sitemap, the brand global and
- * the links it follows are that site's.
+ * A report covers one site. On a multi-site install, each report runs with its
+ * site as Statamic's current one, so the pages, the sitemap, the brand global
+ * and the links it follows are that site's.
  */
 class Runner
 {
@@ -52,34 +52,35 @@ class Runner
 
     /**
      * A step takes no new page after this many seconds and leaves the rest of
-     * its chunk to the next step. Slow pages, or slow sites they link to, then
-     * can't run a step past the queue job's timeout (RunReportStep::$timeout),
+     * its chunk to the next step. This way, slow pages, or slow sites they link
+     * to, can't run a step past the queue job's timeout (RunReportStep::$timeout),
      * which stays below the 90 seconds Laravel's queues wait by default before
      * they hand a job to another worker (`retry_after`).
      */
     public const int STEP_SECONDS = 45;
 
     /**
-     * How long the lock a running step holds lasts. It outlasts the job's
-     * timeout, so a second step can't start while the first one still runs.
+     * The number of seconds that the lock held by a running step lasts. It outlasts
+     * the job's timeout, so a second step can't start while the first one still runs.
      */
     private const int STEP_LOCK_SECONDS = 120;
 
     /**
      * A report on a queue worker that hasn't moved for this long has lost its
-     * step (a worker killed outright), and resumeIfStalled() queues one. Past
-     * the step's timeout, so a step still running has been stopped by then.
+     * step (because a worker was killed outright), and resumeIfStalled() queues
+     * one. This is longer than the step's timeout, so a step still running has
+     * been stopped by then.
      */
     private const int RESUME_MINUTES = 15;
 
     public function __construct(private Renderer $renderer, private HtmlInspector $inspector, private SiteSeo $seo, private ExternalLinkChecker $externalLinks) {}
 
     /**
-     * A new report of the site, or the one already running. One start at a
-     * time per site: a click and the schedule at the same moment would each
-     * find nothing running.
+     * Starts a new report of the site, or returns the one already running. Only
+     * one start runs at a time per site, because a click and the schedule at the
+     * same moment would each find nothing running.
      *
-     * @param  ?string  $site  a site handle; null: the current site
+     * @param  ?string  $site  a site handle, or null for the current site
      */
     public function start(?ReportSettings $settings = null, ?string $site = null): Report
     {
@@ -119,10 +120,10 @@ class Runner
     }
 
     /**
-     * Renders and reads the next chunk of pages; finishes the report after the
-     * last. One step at a time per report: a progress request, a queued step
-     * and a second click may come together, and would check the same pages
-     * twice. While another step runs, this one leaves the report as it is.
+     * Renders and reads the next chunk of pages, and finishes the report after
+     * the last one. Only one step runs at a time per report, because a progress
+     * request, a queued step and a second click may come together and would check
+     * the same pages twice. While another step runs, this one leaves the report as it is.
      */
     public function step(Report $report): Report
     {
@@ -132,13 +133,13 @@ class Runner
 
         $stepped = self::stepLock($report, self::STEP_LOCK_SECONDS)->get(fn () => $this->stepIfRunning($report));
 
-        // False: another process holds the step; the report is as that process leaves it.
+        // False means another process holds the step, so the report is as that process leaves it.
         return $stepped ?: $report->refresh();
     }
 
     /**
-     * Steps the report, if it is still running once the lock is held: a step
-     * that just ended may have finished it.
+     * Steps the report if it is still running once the lock is held, because a
+     * step that just ended may have finished it.
      */
     private function stepIfRunning(Report $report): Report
     {
@@ -207,8 +208,8 @@ class Runner
     }
 
     /**
-     * Marks a running report failed, as a step that failed for good leaves
-     * it. The message is generic: the error itself is in the log.
+     * Marks a running report as failed, which is how a step that failed for good
+     * leaves it. The message is generic, because the error itself is in the log.
      */
     public function fail(Report $report): void
     {
@@ -219,9 +220,9 @@ class Runner
     /**
      * Queues the next step of a report on a queue worker that has stood
      * still for RESUME_MINUTES with no step running, as when a worker was
-     * killed mid-step and so queued nothing. For the progress request: the
-     * control panel polls it while the report is open. Once per
-     * RESUME_MINUTES, however many are polling.
+     * killed mid-step and so queued nothing. The progress request calls this,
+     * since the control panel polls it while the report is open. It queues a step
+     * at most once per RESUME_MINUTES, however many requests are polling.
      */
     public function resumeIfStalled(Report $report): bool
     {
@@ -247,7 +248,7 @@ class Runner
     }
 
     /**
-     * Held while a step of the report runs.
+     * Gets the lock that is held while a step of the report runs.
      */
     private static function stepLock(Report $report, int $seconds): Lock
     {
@@ -255,8 +256,8 @@ class Runner
     }
 
     /**
-     * Every remaining step, for the command line and the scheduler. While
-     * another process holds the step, it waits a moment before asking again.
+     * Runs every remaining step, for the command line and the scheduler. While
+     * another process holds the step, this waits a moment before asking again.
      *
      * @param  (callable(Report): void)|null  $progress
      */
@@ -312,7 +313,7 @@ class Runner
 
         $report->pages()->lazyById(200)->each(fn (ReportPage $page) => $this->score($page, $rules, $site, $totals));
 
-        // Only a report still running: one marked failed meanwhile (a step that timed out) stays failed.
+        // Only a running report is updated, so one marked failed meanwhile (by a step that timed out) stays failed.
         Report::query()->whereKey($report->id)->where('status', Report::RUNNING)->update([
             'status' => Report::DONE,
             'score' => $totals->score(),
@@ -326,8 +327,8 @@ class Runner
 
     /**
      * Runs the checks on one page, stores its results and score, and adds
-     * them to the site's totals. A page that didn't render fails the
-     * `render` check alone and scores zero.
+     * them to the site's totals. A page that didn't render fails only the
+     * `render` check and scores zero.
      *
      * @param  list<Rule>  $rules
      */
@@ -361,7 +362,7 @@ class Runner
             $possible += $rule->weight();
         }
 
-        // A page search engines are told to skip is listed, not scored.
+        // A page that search engines are told to skip is listed but not scored.
         $score = $facts->noindex() || $possible === 0 ? null : (int) round(100 * $earned / $possible);
         $totals->addPage($results, $score, $facts->noindex());
 
@@ -375,17 +376,17 @@ class Runner
     {
         $stale = Report::query()->ofSite($site)->where('status', '!=', Report::RUNNING)->orderByDesc('id')->skip(max(1, $keep))->take(PHP_INT_MAX)->pluck('id');
 
-        // Pages first: SQLite only cascades with foreign keys switched on.
+        // The pages are deleted first, because SQLite only cascades when foreign keys are switched on.
         ReportPage::query()->whereIn('report_id', $stale)->delete();
         Report::query()->whereIn('id', $stale)->delete();
     }
 
     /**
-     * Published entries and terms with an address, in the order they're
-     * checked, as the rows of the report's pages. Protected pages are left
-     * out, as from the sitemap: they aren't public, and rendering one only
-     * answers with the way to sign in. Entries are read in chunks
-     * and kept as rows, so a big site's entries needn't all be in memory.
+     * Lists the published entries and terms that have an address, in the order
+     * they're checked, as the rows of the report's pages. Protected pages are left
+     * out, as they are from the sitemap, because they aren't public and rendering
+     * one only answers with the way to sign in. Entries are read in chunks and
+     * kept as rows, so a big site's entries needn't all be in memory.
      *
      * @return Collection<int, array{url: string, content_type: string, content_id: string, title: string}>
      */
@@ -427,8 +428,8 @@ class Runner
     }
 
     /**
-     * A title as its column holds it: MySQL (strict) and Postgres refuse more
-     * than 255 characters, which would stop the report.
+     * Cuts a title to the length its column holds, because MySQL (in strict mode)
+     * and Postgres refuse more than 255 characters, which would stop the report.
      */
     private static function title(?string $title): ?string
     {

@@ -11,16 +11,17 @@ use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Tags\Tags;
 
 /**
- * `<s:mt:head />` in the <head>, after <meta charset>, and `<s:mt:body />` right after
- * <body> (`{{ mt:head }}`, `{{ mt:body }}` in Antlers): everything the
- * addon adds to a page. The head is the Consent Mode defaults and tracking
- * tags, which must come before anything else that loads Google's tags, then
- * the meta tags, then the icons' links; the body is the tags' <noscript>
- * fallbacks, then the front-end toolbar's guard, the same for every visitor.
- * `<s:mt:favicons />` is the icons' links alone, and `<s:mt:toolbar />` the
- * toolbar's guard alone, before </body>, for a layout without `mt:body`.
+ * This tag prints everything the addon adds to a page. Place `<s:mt:head />` in the <head>, after
+ * <meta charset>, and `<s:mt:body />` right after <body> (`{{ mt:head }}` and
+ * `{{ mt:body }}` in Antlers). The head prints the Consent Mode defaults and
+ * tracking tags, which must come before anything else that loads Google's
+ * tags, then the meta tags, and then the icons' links. The body prints the
+ * tags' <noscript> fallbacks and then the front-end toolbar's guard, which is
+ * the same for every visitor. `<s:mt:favicons />` prints the icons' links
+ * alone, and `<s:mt:toolbar />` prints the toolbar's guard alone, before
+ * </body>, for a layout without `mt:body`.
  *
- * `<s:mt:meta />` is the meta tags alone. The parameters are in docs/developers.md ("The tag").
+ * `<s:mt:meta />` prints the meta tags alone. The parameters are in docs/developers.md ("The tag").
  */
 final class Mt extends Tags
 {
@@ -33,7 +34,7 @@ final class Mt extends Tags
     }
 
     /**
-     * The icons' <link> tags and theme colour, when Brand has an icon.
+     * Prints the icons' <link> tags and theme colour when Brand has an icon.
      */
     public function favicons(): string
     {

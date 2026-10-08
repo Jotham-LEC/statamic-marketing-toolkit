@@ -23,13 +23,13 @@ final class PreviewController
     {
         $content = Draft::fromRequest($request);
 
-        // Worked out on the content's site: its brand values, its locale, its address.
+        // The payload is worked out on the content's site, with its brand values, its locale and its address.
         return response()->json(Sites::as($content->locale(), fn () => $payload->forContent($content)));
     }
 
     /**
-     * The generated card for the form as it stands. Drawn every time and
-     * never cached: each draft differs, and only saved entries go public.
+     * Returns the generated card for the form as it stands. It is drawn every time
+     * and never cached, because each draft differs and only saved entries go public.
      */
     public function card(Request $request, Generator $generator): Response
     {
@@ -37,7 +37,7 @@ final class PreviewController
 
         abort_unless($content instanceof Entry && Features::on('share_cards') && $generator->available(), 404);
 
-        // card() works the card out on the entry's site, as the public card's route does.
+        // The card() method works the card out on the entry's site, as the public card's route does.
         $png = $generator->template($content)->image($generator->card($content))->toString();
 
         return new Response($png, 200, [

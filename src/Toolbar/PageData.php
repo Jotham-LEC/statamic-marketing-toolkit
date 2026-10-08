@@ -31,16 +31,19 @@ use Statamic\Sites\Site as SiteObject;
 use Statamic\Structures\Page;
 
 /**
- * What the front-end toolbar shows about one page, for one user: one JSON
- * shape, each part null when the user may not see it. Built on the page's
- * own site (ToolbarController runs it under Sites::as()), with that site's
- * report, redirects, 404s and Search Console numbers, as the control panel
- * shows them with the site selected. Sentences come ready, in the user's
- * language; the script only fills in what the browser knows (consent).
+ * Builds what the front-end toolbar shows about one page for one user, as one
+ * JSON shape in which each part is null when the user may not see it. It is built
+ * on the page's own site (ToolbarController runs it under Sites::as()), with that
+ * site's report, redirects, 404s and Search Console numbers, as the control panel
+ * shows them with the site selected. Sentences come ready in the user's language,
+ * and the script only fills in what the browser knows (consent).
  */
 final class PageData
 {
-    /** Checks about what the page's HTML holds (links, headings, images, markup): fixed in the content, so they lead to the report. */
+    /**
+     * These checks cover what the page's HTML holds (links, headings, images, markup). They are fixed in the
+     * content, so they lead to the report.
+     */
     public const array REPORT_RULES = ['broken_links', 'external_links', 'image_alt', 'json_ld', 'orphan_pages', 'single_h1'];
 
     private Entry|Term|null $content;
@@ -49,7 +52,7 @@ final class PageData
 
     private SiteObject $site;
 
-    /** Whether the user may work on the page's site: its report, redirects, 404s and tracking are that site's. */
+    /** Whether the user may work on the page's site, whose report, redirects, 404s and tracking these are. */
     private bool $viewsSite;
 
     public function __construct(
@@ -62,7 +65,7 @@ final class PageData
         $found = Data::findByRequestUrl($url);
         $found = $found instanceof Page ? $found->entry() : $found;
         // Content the user may not view in the control panel (another collection's, another site's, a draft there)
-        // is no content here: its title, status and SEO stay as private as on its edit screen.
+        // is treated as no content here, so its title, status and SEO stay as private as on its edit screen.
         $this->content = ($found instanceof Entry || $found instanceof Term) && $this->viewsSite && $user->can('view', $found) ? $found : null;
         $this->path = Uris::normalizePath($url);
     }
@@ -94,9 +97,9 @@ final class PageData
     }
 
     /**
-     * The user's control panel theme (Preferences → Theme), as the colours
-     * the toolbar draws with: the page's background, panels, borders, text,
-     * the accent and the focus ring, for light and dark.
+     * Returns the user's control panel theme (Preferences → Theme) as the colours
+     * the toolbar draws with, which are the page's background, panels, borders,
+     * text, the accent and the focus ring, for light and dark.
      *
      * @return array{light: array<string, string>, dark: array<string, string>}
      */
@@ -113,8 +116,8 @@ final class PageData
     }
 
     /**
-     * A theme colour, with any `var(--theme-color-…)` it refers to filled in:
-     * the toolbar's Shadow DOM doesn't have the control panel's variables.
+     * Returns a theme colour with any `var(--theme-color-…)` it refers to filled
+     * in, because the toolbar's Shadow DOM doesn't have the control panel's variables.
      *
      * @param  array<string, string>  $palette
      */
@@ -126,14 +129,14 @@ final class PageData
             $color = str_replace($match[0], (string) ($palette[$match[1]] ?? ''), $color);
         }
 
-        // Printed into a style property: a colour, never anything that could end it.
+        // The value is printed into a style property, so it must be a colour and never anything that could end it.
         return $color !== null && $color !== '' && ! preg_match('/[;{}<>]/', $color) ? $color : null;
     }
 
     /**
-     * Whether Statamic answers this address with a 404: as the browser saw
-     * it, else when no content has it and the 404 log has counted it. A
-     * draft's address is missing too, for everyone but the control panel.
+     * Determines whether Statamic answers this address with a 404. It uses the status
+     * the browser saw, or else checks that no content has the address and the 404 log
+     * has counted it. A draft's address is missing too, for everyone but the control panel.
      */
     private function missing(): bool
     {
@@ -172,9 +175,9 @@ final class PageData
     }
 
     /**
-     * The edit screen open on the tab holding the `seo` field, by its handle
-     * in this content's blueprint (whatever the site renamed it to); the
-     * screen opens on its first tab when no tab holds it.
+     * Returns the edit screen, open on the tab that holds the `seo` field, found by
+     * its handle in this content's blueprint (whatever the site renamed the tab to).
+     * The screen opens on its first tab when no tab holds the field.
      */
     private function seoUrl(Entry|Term $content): string
     {
@@ -184,8 +187,8 @@ final class PageData
     }
 
     /**
-     * The SEO panel: this page's row in the site's latest report, its checks
-     * worst first, and its Search Console numbers.
+     * Builds the SEO panel, with this page's row in the site's latest report, its
+     * checks worst first, and its Search Console numbers.
      *
      * @return array<string, mixed>
      */
@@ -224,7 +227,7 @@ final class PageData
 
         $finished = $report->finished_at ?? $report->updated_at;
         $saved = $this->content?->lastModified();
-        // Saved on the day of the report: the times say which came first.
+        // When the page was saved on the day of the report, the times say which came first.
         $sameDay = $saved && $saved->isSameDay($finished);
         $messages = [$saved && $saved->gt($finished)
             ? __('marketing-toolkit::toolbar.seo.changed', ['saved' => $this->date($saved, $sameDay), 'date' => $this->date($finished, $sameDay)])
@@ -240,8 +243,8 @@ final class PageData
     }
 
     /**
-     * The checks this page fails or warns about, failures first, then by the
-     * check's weight, each in the reader's language and with where to fix it.
+     * Lists the checks this page fails or warns about, failures first and then by
+     * the check's weight, each in the reader's language and with where to fix it.
      *
      * @return list<array{label: string, status: string, message: string, url: ?string}>
      */
@@ -267,7 +270,7 @@ final class PageData
     }
 
     /**
-     * One sentence of Search Console's numbers for this page, once it is set up for the site.
+     * Returns one sentence of Search Console's numbers for this page, once it is set up for the site.
      */
     private function search(): ?string
     {
@@ -286,13 +289,13 @@ final class PageData
             'days' => (int) config('marketing-toolkit.search_console.days', 28),
             'clicks' => Number::format($stat->clicks, locale: $this->locale()),
             'impressions' => Number::format($stat->impressions, locale: $this->locale()),
-            // Rounded as the overview rounds it (ICU would round half to even).
+            // The position is rounded as the overview rounds it, because ICU would round half to even.
             'position' => Number::format(round($stat->position, 1), maxPrecision: 1, locale: $this->locale()),
         ]);
     }
 
     /**
-     * The Preview panel: the search result and the share card, as the SEO
+     * Builds the Preview panel, with the search result and the share card as the SEO
      * tab's preview draws them, and the indexing facts as sentences.
      *
      * @return array<string, mixed>
@@ -333,8 +336,8 @@ final class PageData
     }
 
     /**
-     * The Redirects panel: rules that send visitors here, one from this
-     * address that a page here overrides, and on a missing page, its 404s.
+     * Builds the Redirects panel, with the rules that send visitors here, any rule
+     * from this address that a page here overrides, and on a missing page, its 404s.
      *
      * @return array<string, mixed>|null
      */
@@ -395,8 +398,8 @@ final class PageData
     }
 
     /**
-     * Active rules on this site whose target is this page: its path on the
-     * site (as rules store targets) or its full address.
+     * Finds the active rules on this site whose target is this page, either by its
+     * path on the site (as rules store targets) or by its full address.
      *
      * @return Collection<int, Redirect>
      */
@@ -416,7 +419,7 @@ final class PageData
     }
 
     /**
-     * An active rule from this address: it never applies while a page is here.
+     * Finds an active rule from this address, which never applies while a page is here.
      */
     private function redirectFromHere(): ?Redirect
     {
@@ -427,8 +430,8 @@ final class PageData
     }
 
     /**
-     * The Tracking panel: which tags load on this page, or why none do, and
-     * Consent Mode. The browser adds its own consent state.
+     * Builds the Tracking panel, which says which tags load on this page (or why none
+     * do) and describes Consent Mode. The browser adds its own consent state.
      *
      * @return array<string, mixed>
      */
@@ -482,8 +485,8 @@ final class PageData
     }
 
     /**
-     * The Sites panel: this page on each other site the user may see, with
-     * its status, its address and its edit screen, or that it isn't there yet.
+     * Builds the Sites panel, which shows this page on each other site the user may see,
+     * with its status, its address and its edit screen, or says that it isn't there yet.
      *
      * @return list<array<string, mixed>>|null
      */
@@ -523,7 +526,7 @@ final class PageData
     }
 
     /**
-     * @return array<string, Entry|Term> site handle => this content there
+     * @return array<string, Entry|Term> Maps each site handle to this content on that site.
      */
     private function versions(Entry|Term $content): array
     {
@@ -555,8 +558,8 @@ final class PageData
     }
 
     /**
-     * A control panel address, opened on this page's site: through
-     * `toolbar/go`, which selects the site first, on a multi-site install.
+     * Returns a control panel address that opens on this page's site. On a multi-site
+     * install, it goes through `toolbar/go`, which selects the site first.
      */
     private function cp(string $url, ?string $site = null): string
     {
@@ -580,7 +583,7 @@ final class PageData
     }
 
     /**
-     * "A, B and C", in the reader's language.
+     * Joins the items as "A, B and C", in the reader's language.
      *
      * @param  list<string>  $items
      */

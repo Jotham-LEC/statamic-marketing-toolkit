@@ -5,8 +5,8 @@ namespace JothamLec\MarketingToolkit\Reports;
 use JothamLec\MarketingToolkit\Support\Uris;
 
 /**
- * What the checks know about the whole run: its settings, and which titles
- * and descriptions more than one page uses.
+ * Holds what the checks know about the whole run, which is its settings and
+ * the titles and descriptions that more than one page uses.
  */
 final class SiteFacts
 {

@@ -8,15 +8,15 @@ use SimonHamp\TheOg\Layout\Layouts\Standard;
 use SimonHamp\TheOg\Theme;
 
 /**
- * the-og's Standard layout in the colours from Brand's Share cards tab: the
- * section up top, the title, the description, the site name along the
- * bottom, and the picture (logo or portrait) when one is set.
+ * Draws the-og's Standard layout in the colours from Brand's Share cards tab. It shows the
+ * section at the top, the title, the description, the site name along the bottom, and the
+ * picture (a logo or portrait) when one is set.
  */
 class DefaultTemplate extends Template
 {
     public function image(Card $card): Image
     {
-        // Start from the built-in light theme for its fonts, then colour every part.
+        // This starts from the built-in light theme for its fonts, then colours every part.
         $theme = Theme::Light->load()
             ->backgroundColor($card->background)
             ->baseColor($card->text)

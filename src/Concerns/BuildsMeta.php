@@ -12,8 +12,8 @@ use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Entries\Entry;
 
 /**
- * The page's meta tags: title, description, share image, canonical, robots
- * and the Open Graph extras.
+ * This trait builds the page's meta tags, which are the title, description,
+ * share image, canonical, robots, and the Open Graph extras.
  *
  * @phpstan-require-extends SiteSeo
  */
@@ -55,7 +55,7 @@ trait BuildsMeta
             ? $this->settings->separator().__('marketing-toolkit::frontend.page', ['n' => $context->page()], $this->contentSite($context)->lang())
             : '';
 
-        // The editor's SEO title is the whole <title>, as typed.
+        // The editor's SEO title is used as the whole <title>, exactly as typed.
         if ($title = $context->seo()['title'] ?? null) {
             return $title.$suffix;
         }
@@ -66,7 +66,7 @@ trait BuildsMeta
             return $site.$suffix;
         }
 
-        // A template's title, or one from the collection's title_fields, stands in for the content's own and gets the site name like it.
+        // A template's title, or one from the collection's title_fields, replaces the content's and gets the site name.
         $title = $context->override('title') ?? $fieldTitle ?? $this->contentTitle($context);
 
         if ($title === null) {
@@ -89,10 +89,11 @@ trait BuildsMeta
     }
 
     /**
-     * The page's title from a field the collection (or taxonomy) names in
-     * `title_fields`, before its own: e.g. the `meta_title` or `seo_title` a
-     * site kept from another SEO addon. The first that has text; a name with
-     * dots is a field in a Replicator's sets, as for description_fields.
+     * Returns the page's title from a field that the collection (or taxonomy)
+     * names in `title_fields`, ahead of its own title, for example the
+     * `meta_title` or `seo_title` a site kept from another SEO addon. The first
+     * field that has text wins, and a name with dots is a field in a
+     * Replicator's sets, as it is for description_fields.
      */
     protected function fieldTitle(Context $context): ?string
     {
@@ -110,7 +111,7 @@ trait BuildsMeta
     /** @api */
     public function description(Context $context): ?string
     {
-        // The meta tags and the JSON-LD nodes each ask; the body is read once per page.
+        // The meta tags and the JSON-LD nodes each ask for this, so the body is read only once per page.
         return $this->once($context, 'description', function () use ($context) {
             $text = $context->override('description')
                 ?? $context->seo()['description']
@@ -122,8 +123,9 @@ trait BuildsMeta
     }
 
     /**
-     * The share image: an override, the entry's uploaded one, an image field
-     * the collection names, the generated card, then the site default.
+     * Returns the share image. It tries an override, the entry's uploaded
+     * image, an image field the collection names, the generated card, and
+     * then the site default, in that order.
      *
      * @return array{url: string, width: int, height: int, alt: ?string}|null
      *
@@ -131,7 +133,7 @@ trait BuildsMeta
      */
     public function image(Context $context): ?array
     {
-        // Asked by the meta tags and the Article node: worked out once per page.
+        // The meta tags and the Article node both ask for this, so it is worked out once per page.
         return $this->once($context, 'image', function () use ($context) {
             if ($url = $context->override('image')) {
                 return ['url' => $this->absolute($url), 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => null];
@@ -141,7 +143,7 @@ trait BuildsMeta
                 return $this->cropped($asset);
             }
 
-            // The card shows the page's title, so that is what it says to someone who can't see it.
+            // The card shows the page's title, so its alt text gives that title to someone who can't see it.
             if ($context->entry && $context->status < 400 && $url = $this->generatedImageUrl($context->entry)) {
                 return ['url' => $url, 'width' => $this->imageWidth(), 'height' => $this->imageHeight(), 'alt' => $context->seo()['og_title'] ?? $this->contentTitle($context)];
             }
@@ -155,9 +157,10 @@ trait BuildsMeta
     }
 
     /**
-     * The page's own uploaded share image: its SEO image, else an image field
-     * the collection names. A name with dots is a field in a Replicator's sets
-     * (`sections.hero.image`, `*` for any set): the first visible set with one.
+     * Returns the page's own uploaded share image, which is its SEO image or
+     * else an image field the collection names. A name with dots is a field in
+     * a Replicator's sets (`sections.hero.image`, with `*` for any set), and
+     * the first visible set that has one is used.
      */
     public function shareAsset(Context $context): ?Asset
     {
@@ -173,15 +176,15 @@ trait BuildsMeta
     }
 
     /**
-     * The URL of the entry's generated card, or null when cards are off, this
-     * host can't draw them (no Imagick), or the entry is protected (its card
-     * would show what it protects). The
-     * `v` parameter changes with each edit, so link previews refetch it.
+     * Returns the URL of the entry's generated card. It returns null when cards
+     * are off, when this host can't draw them (without Imagick), or when the
+     * entry is protected, because its card would show what it protects. The
+     * `v` parameter changes with each edit, so link previews fetch it again.
      *
-     * On the root of the entry's domain, which serves the card routes, with
-     * the page's path from that root: /fr/a-propos's card is
-     * /og/fr/a-propos.png, and the controller finds the site from the path
-     * as Statamic finds a page's.
+     * The URL sits on the root of the entry's domain, which serves the card
+     * routes, followed by the page's path from that root. For example, the
+     * card for /fr/a-propos is /og/fr/a-propos.png, and the controller finds
+     * the site from the path in the same way Statamic finds a page's site.
      */
     public function generatedImageUrl(Entry $entry): ?string
     {
@@ -198,9 +201,10 @@ trait BuildsMeta
     }
 
     /**
-     * Where search engines should send the ranking: an override, the original
-     * a republished piece points at, else this page (with `?page=N` past the
-     * first page). `false` as an override prints no canonical at all.
+     * Returns where search engines should send the ranking. That is an
+     * override, the original a republished piece points at, or else this page
+     * (with `?page=N` after the first page). An override of `false` prints no
+     * canonical at all.
      *
      * @api
      */
@@ -220,8 +224,8 @@ trait BuildsMeta
     }
 
     /**
-     * This page's own address (og:url): the entry's, else the request's,
-     * never a query string other than `page`.
+     * Returns this page's own address (og:url), which is the entry's or else
+     * the request's, and never has a query string other than `page`.
      */
     public function url(Context $context): string
     {
@@ -241,14 +245,14 @@ trait BuildsMeta
             return implode(', ', ['noindex', $nofollow ? 'nofollow' : 'follow']);
         }
 
-        // Not following links leaves the snippet and image previews as they were.
+        // Not following links leaves the snippet and image preview rules as they were.
         return implode(', ', array_filter([$nofollow ? 'nofollow' : null, $this->snippetRules($context)]));
     }
 
     /**
-     * The default rules, with the page's own snippet limit: `nosnippet` keeps
-     * its text out of results and of Google's AI Overviews and AI Mode; a
-     * maximum length caps what is quoted.
+     * Returns the default rules with the page's own snippet limit applied.
+     * `nosnippet` keeps the page's text out of results and out of Google's AI
+     * Overviews and AI Mode, while a maximum length caps what is quoted.
      *
      * @api
      */
@@ -271,9 +275,10 @@ trait BuildsMeta
     }
 
     /**
-     * Whether search engines are kept off this copy of the site: every page
-     * noindexed and robots.txt disallowing all, unless APP_ENV is production
-     * (config `marketing-toolkit.robots.noindex_outside_production`).
+     * Determines whether search engines are kept off this copy of the site,
+     * with every page noindexed and robots.txt disallowing all. This applies
+     * unless APP_ENV is production (config
+     * `marketing-toolkit.robots.noindex_outside_production`).
      *
      * @api
      */
@@ -283,8 +288,9 @@ trait BuildsMeta
     }
 
     /**
-     * Site-wide reasons to keep a page out of the index. Override to add your
-     * own (an empty taxonomy listing, a thank-you page).
+     * Checks the site-wide reasons to keep a page out of the index. Override
+     * this method to add your own, such as an empty taxonomy listing or a
+     * thank-you page.
      *
      * @api
      */

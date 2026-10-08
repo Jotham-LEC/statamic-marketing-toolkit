@@ -7,17 +7,17 @@ use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\Support\Features;
 
 /**
- * The tracking tags of the current site, and its Consent Mode defaults: IDs from
- * the "Tracking" tab of the Marketing settings global, with config/marketing-toolkit.php (and so
- * .env) winning over it. Printed by <s:mt:head /> and <s:mt:body />, in
- * production only and never in Live Preview.
+ * Provides the tracking tags of the current site and its Consent Mode defaults. The IDs come from
+ * the "Tracking" tab of the Marketing settings global, and config/marketing-toolkit.php (and so
+ * .env) wins over it. <s:mt:head /> and <s:mt:body /> print them, in production only and never
+ * in Live Preview.
  *
- * Override a method in a subclass bound in its place in the container:
- * e.g. ids() to read them from somewhere else.
+ * To change it, override a method in a subclass bound in its place in the container, for
+ * example ids() to read the IDs from somewhere else.
  */
 class Tracking
 {
-    /** Tracker => what an ID looks like. Anything else is ignored, never printed. */
+    /** Maps each tracker to what its ID looks like. Anything else is ignored and never printed. */
     public const array PATTERNS = [
         'gtm' => '/^GTM-[A-Z0-9]{4,12}$/',
         'ga4' => '/^G-[A-Z0-9]{4,16}$/',
@@ -27,8 +27,8 @@ class Tracking
     ];
 
     /**
-     * Tracker => its key: the field's handle in the global's Tracking tab, the
-     * key under `marketing-toolkit.tracking`, and in .env MT_ followed by the key in capitals.
+     * Maps each tracker to its key, which is the field's handle in the global's Tracking tab and the
+     * key under `marketing-toolkit.tracking`. In .env, it is MT_ followed by the key in capitals.
      */
     public const array FIELDS = [
         'gtm' => 'gtm_id',
@@ -38,13 +38,13 @@ class Tracking
         'linkedin' => 'linkedin_partner_id',
     ];
 
-    /** The four Consent Mode v2 signals. */
+    /** These are the four Consent Mode v2 signals. */
     public const array SIGNALS = ['ad_storage', 'analytics_storage', 'ad_user_data', 'ad_personalization'];
 
-    /** The region choice that stands for the EEA, the UK and Switzerland. */
+    /** This region choice stands for the EEA, the UK and Switzerland. */
     public const string EEA = 'EEA';
 
-    /** EU, EEA, UK and Switzerland: where consent comes before tracking. */
+    /** These are the EU, EEA, UK and Swiss country codes, where consent comes before tracking. */
     public const array EEA_REGIONS = [
         'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
         'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'GB', 'CH',
@@ -53,8 +53,8 @@ class Tracking
     public function __construct(protected Settings $settings) {}
 
     /**
-     * Whether the tags print on this request: in the environments
-     * `marketing-toolkit.tracking.environments` lists (production), never in Live Preview.
+     * Determines whether the tags print on this request. They print in the environments that
+     * `marketing-toolkit.tracking.environments` lists (production), and never in Live Preview.
      */
     public function enabled(): bool
     {
@@ -64,8 +64,8 @@ class Tracking
     }
 
     /**
-     * Each tracker's ID, or null where it has none (or one that doesn't look
-     * like an ID: it is printed into a script).
+     * Returns each tracker's ID, or null where it has none. It is also null where the entry doesn't
+     * look like an ID, because the ID is printed into a script.
      *
      * @return array{gtm: ?string, ga4: ?string, posthog: ?string, meta: ?string, linkedin: ?string}
      */
@@ -75,7 +75,7 @@ class Tracking
     }
 
     /**
-     * Trackers with something entered that isn't an ID, and so isn't printed:
+     * Returns the trackers with something entered that isn't an ID, and so isn't printed, as
      * tracker => what was entered.
      *
      * @return array<string, string>
@@ -86,7 +86,7 @@ class Tracking
     }
 
     /**
-     * Which trackers come from config/marketing-toolkit.php (or .env), and so can't be
+     * Returns which trackers come from config/marketing-toolkit.php (or .env), and so can't be
      * changed in the control panel.
      *
      * @return array<string, bool>
@@ -97,7 +97,7 @@ class Tracking
     }
 
     /**
-     * What each tracker has, from the config or else the global, tidied but not checked.
+     * Returns what each tracker has, from the config or else the global, tidied but not checked.
      *
      * @return array<string, ?string>
      */
@@ -111,7 +111,7 @@ class Tracking
     }
 
     /**
-     * PostHog's API host: the project's region, `https://us.i.posthog.com` unless set.
+     * Returns PostHog's API host for the project's region, which is `https://us.i.posthog.com` unless set.
      */
     public function posthogHost(): string
     {
@@ -121,8 +121,8 @@ class Tracking
     }
 
     /**
-     * PostHog's app, for its toolbar and links back to it: set, for a proxy
-     * as the host; else, on PostHog's own cloud, the host without `.i`; else null.
+     * Returns the address of PostHog's app, for its toolbar and links back to it. It is the value set
+     * for a proxy, as with the host, or else, on PostHog's own cloud, the host without `.i`, or else null.
      */
     public function posthogUiHost(): ?string
     {
@@ -138,8 +138,8 @@ class Tracking
     }
 
     /**
-     * Trackers loaded beside Google Tag Manager, which then counts each visit
-     * twice if GTM loads them as well: names, for a warning.
+     * Returns the names of the trackers loaded beside Google Tag Manager, for a warning, because each
+     * visit is counted twice if GTM loads them as well.
      *
      * @return list<string>
      */
@@ -158,8 +158,8 @@ class Tracking
     }
 
     /**
-     * Consent Mode v2 defaults, for a cookie banner that updates them;
-     * null while Consent Mode is off. With regions, the
+     * Returns the Consent Mode v2 defaults for a cookie banner that updates them, or
+     * null while Consent Mode is off. When regions are set, the
      * defaults apply there, and everything is granted elsewhere.
      *
      * @return array{defaults: array<string, string>, regions: list<string>, wait_for_update: int}|null
@@ -182,7 +182,7 @@ class Tracking
     }
 
     /**
-     * ISO 3166-1 or 3166-2 codes (`FR`, `US-CA`), with EEA standing for the EEA, the UK and Switzerland.
+     * Returns ISO 3166-1 or 3166-2 codes (`FR`, `US-CA`), with EEA standing for the EEA, the UK and Switzerland.
      *
      * @return list<string>
      */
@@ -197,7 +197,7 @@ class Tracking
     }
 
     /**
-     * What goes high in the <head>, after <meta charset>: Consent Mode defaults, then the tags.
+     * Returns what goes high in the <head>, after <meta charset>, which is the Consent Mode defaults and then the tags.
      */
     public function head(): string
     {
@@ -205,7 +205,7 @@ class Tracking
     }
 
     /**
-     * What goes right after <body>: the tags' <noscript> fallbacks.
+     * Returns what goes right after <body>, which is the tags' <noscript> fallbacks.
      */
     public function body(): string
     {
@@ -237,7 +237,8 @@ class Tracking
                 'opt_out_capturing_by_default' => $bridge ?: null,
                 'persistence' => $bridge ? 'memory' : null,
             ]),
-            // Where PostHog's snippet loads its library from, for the bridge to load it once analytics is granted.
+            // This is where PostHog's snippet loads its library from, so the bridge can load it
+            // once analytics is granted.
             'posthogScript' => str_replace('.i.posthog.com', '-assets.i.posthog.com', $host).'/static/array.js',
             'conversions' => $this->conversions() && array_filter($ids) !== [],
             'linkedinConversion' => $this->linkedinConversion(),
@@ -247,7 +248,7 @@ class Tracking
     }
 
     /**
-     * Whether a form submission is sent to the tools as a lead.
+     * Determines whether a form submission is sent to the tools as a lead.
      */
     public function conversions(): bool
     {
@@ -255,7 +256,7 @@ class Tracking
     }
 
     /**
-     * The LinkedIn conversion a form submission counts as, if any.
+     * Returns the LinkedIn conversion that a form submission counts as, if there is one.
      */
     public function linkedinConversion(): ?string
     {
@@ -265,7 +266,7 @@ class Tracking
     }
 
     /**
-     * Whether to remember where each visitor first came from, for their submissions.
+     * Determines whether to remember where each visitor first came from, for their submissions.
      */
     public function attribution(): bool
     {
@@ -273,10 +274,10 @@ class Tracking
     }
 
     /**
-     * The gtag('consent', 'default', …) commands: the defaults everywhere,
-     * or, with regions, everything granted and the defaults in those regions.
-     * Both wait for the banner: a visitor outside the regions who declined
-     * is denied by its update, which must arrive before the first hit.
+     * Builds the gtag('consent', 'default', …) commands. Without regions, the defaults apply everywhere;
+     * with regions, everything is granted and the defaults apply in those regions. Both wait for the
+     * banner, because a visitor outside the regions who declined is denied by its update, which must
+     * arrive before the first hit.
      *
      * @param  array{defaults: array<string, string>, regions: list<string>, wait_for_update: int}|null  $consent
      * @return list<array<string, mixed>>

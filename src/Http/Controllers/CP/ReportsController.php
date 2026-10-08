@@ -24,15 +24,15 @@ use Statamic\Fields\Field;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Marketing → Reports: the list, "Run report", one report's checks and
- * pages, and the progress endpoint a running report's screen polls. Without
- * a queue worker that endpoint also does the work for whoever may run
- * reports, one step per request, so a report finishes on the sync queue
- * without any request timing out. On a multi-site install the list, "Run
- * report" and a report's screens are of the selected site.
+ * Shows Marketing → Reports. It serves the list, "Run report", one report's
+ * checks and pages, and the progress endpoint that a running report's screen
+ * polls. Without a queue worker, that endpoint also does the work for whoever
+ * may run reports, one step per request, so a report finishes on the sync queue
+ * without any request timing out. On a multi-site install, the list, "Run
+ * report" and a report's screens are for the selected site.
  *
  * Reports keep their checks' names and messages as translation keys (or
- * plain text, in reports from before messages were translated); they're
+ * plain text, in reports from before messages were translated), and they are
  * translated here, on their way to the screen.
  */
 final class ReportsController
@@ -46,7 +46,7 @@ final class ReportsController
             'reports' => Report::query()->shownOn(Site::selected()->handle())->latest('id')->limit(50)->get()->map(fn (Report $report) => $this->summary($report))->all(),
             'canRun' => (bool) User::current()?->can(Permissions::REPORTS),
             'runUrl' => cp_route('mt.reports.run'),
-            // The Settings tab, for whoever may change the addon's settings.
+            // The Settings tab is only shown to whoever may change the addon's settings.
             'settings' => $fields ? [
                 'blueprint' => $addon->settingsBlueprint()->toPublishArray(),
                 'values' => $fields->values()->all(),
@@ -57,9 +57,9 @@ final class ReportsController
     }
 
     /**
-     * Saves the Settings tab. Only its own fields are set: the addon's
-     * settings also keep the Features switches and the Search Console setup,
-     * hidden fields in the blueprint that their own screens change, so a
+     * Saves the Settings tab. Only the tab's own fields are set, because the
+     * addon's settings also keep the Features switches and the Search Console
+     * setup as hidden fields in the blueprint that their own screens change, so a
      * stale copy of them in this form must not overwrite them.
      */
     public function saveSettings(Request $request): JsonResponse
@@ -84,8 +84,8 @@ final class ReportsController
     }
 
     /**
-     * A report's pages as CSV: each page's address, title and score, with the
-     * checks it failed and those it only warns about.
+     * Exports a report's pages as CSV, with each page's address, title and score,
+     * the checks it failed, and those it only warns about.
      */
     public function export(Report $report): StreamedResponse
     {
@@ -111,8 +111,8 @@ final class ReportsController
     }
 
     /**
-     * A cell a spreadsheet won't run as a formula: page titles come from the
-     * pages themselves.
+     * Returns a cell that a spreadsheet won't run as a formula, because page
+     * titles come from the pages themselves.
      */
     private static function cell(mixed $value): mixed
     {
@@ -126,8 +126,8 @@ final class ReportsController
     {
         $report = $runner->start(site: Site::selected()->handle());
 
-        // Only a report this click started gets its queued steps: one already
-        // running has its own (a second chain would step it twice over).
+        // Only a report that this click started gets its queued steps, because one
+        // already running has its own (a second chain would step it twice over).
         if ($report->wasRecentlyCreated && $report->isRunning() && RunReportStep::usesWorker()) {
             RunReportStep::dispatch($report->id);
         }
@@ -136,8 +136,8 @@ final class ReportsController
     }
 
     /**
-     * Where the report stands. Only someone who may run reports moves it on:
-     * anyone else watching it reads the progress the runner makes.
+     * Returns where the report stands. Only someone who may run reports moves it
+     * on, and anyone else watching it reads the progress the runner makes.
      *
      * @return array<string, mixed>
      */
@@ -145,7 +145,7 @@ final class ReportsController
     {
         $this->authorizeSite($report);
 
-        // Without a worker, whoever may run reports moves it on; with one, a step
+        // Without a worker, whoever may run reports moves it on. With one, a step
         // whose worker died is queued again once the report has stood still.
         if ($report->isRunning() && User::current()?->can(Permissions::REPORTS)) {
             RunReportStep::usesWorker() ? $runner->resumeIfStalled($report) : $report = $runner->step($report);
@@ -166,7 +166,7 @@ final class ReportsController
 
         return Inertia::render('marketing-toolkit::Report', [
             'report' => $this->summary($report),
-            // Every count, also for a report that failed before it had any.
+            // Every count is present, even for a report that failed before it had any.
             'counts' => [...['scored' => 0, 'noindex' => 0, 'errors' => 0], ...array_intersect_key($report->summary ?? [], array_flip(['scored', 'noindex', 'errors']))],
             'rules' => $rules,
             'listingUrl' => cp_route('mt.reports.pages', $report),
@@ -197,7 +197,7 @@ final class ReportsController
             ['score' => __('marketing-toolkit::reports.cp.score'), 'title' => __('marketing-toolkit::reports.cp.page'), 'in_sitemap' => __('marketing-toolkit::reports.cp.in_sitemap')],
             ['title', 'url'],
             function (Collection $pages) use ($labels) {
-                // Looked up for the whole page of rows at once.
+                // The edit links are looked up for the whole page of rows at once.
                 $editUrls = $this->editUrls($pages);
                 $rows = collect();
 
@@ -221,9 +221,9 @@ final class ReportsController
     }
 
     /**
-     * A page's failed and warned checks, the failures first.
+     * Lists a page's failed and warned checks, with the failures first.
      *
-     * @param  array<string, string>  $labels  check => its name
+     * @param  array<string, string>  $labels  Maps each check to its name.
      * @return list<array{label: string, status: string, message: string}>
      */
     private function issues(ReportPage $page, array $labels): array
@@ -255,24 +255,24 @@ final class ReportsController
             'finished_at' => $report->finished_at?->toIso8601String(),
             'url' => cp_route('mt.reports.show', $report),
             'progress_url' => cp_route('mt.reports.progress', $report),
-            // Whether watching it moves it on: false for a running report on the
-            // sync queue watched by someone who may not run reports (see progress()).
+            // This says whether watching it moves it on. It is false for a running report on
+            // the sync queue watched by someone who may not run reports (see progress()).
             'advancing' => $report->isRunning() && (RunReportStep::usesWorker() || (bool) User::current()?->can(Permissions::REPORTS)),
         ];
     }
 
     /**
-     * Where to fix each page, for those the user may edit: one query for the
-     * entries and one for the terms.
+     * Returns where to fix each page that the user may edit, using one query for
+     * the entries and one for the terms.
      *
      * @param  Collection<int, ReportPage>  $pages
-     * @return array<int, string> report page id => edit URL
+     * @return array<int, string> Maps each report page ID to its edit URL.
      */
     private function editUrls($pages): array
     {
         $ids = fn (string $type) => $pages->where('content_type', $type)->pluck('content_id')->all();
         $entries = Entry::query()->whereIn('id', $ids('entry'))->get()->keyBy->id();
-        // A term is listed once for each of its sites; the first, as Term::find() gives it.
+        // A term is listed once for each of its sites, so this keeps the first, as Term::find() gives it.
         $terms = Term::query()->whereIn('id', $ids('term'))->get()->unique->id()->keyBy->id();
 
         return $pages
@@ -283,8 +283,8 @@ final class ReportsController
     }
 
     /**
-     * A report is seen only while its site is selected, as the list shows it:
-     * Statamic keeps the selected site one the user may see.
+     * Allows a report only while its site is selected, as the list shows it,
+     * because Statamic keeps the selected site one that the user may see.
      */
     private function authorizeSite(Report $report): void
     {
@@ -292,7 +292,7 @@ final class ReportsController
     }
 
     /**
-     * Each check's label, by its handle, and the render failure's.
+     * Returns each check's label by its handle, along with the render failure's label.
      *
      * @return array<string, string>
      */

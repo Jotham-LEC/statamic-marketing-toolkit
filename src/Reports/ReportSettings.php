@@ -8,13 +8,13 @@ use Statamic\Facades\Blueprint;
 use Statamic\Facades\YAML;
 
 /**
- * The report settings editors set on the Settings tab of Marketing → Reports,
- * with the defaults in resources/blueprints/settings.yaml for anything not
- * saved yet.
+ * The report settings that editors set on the Settings tab of Marketing →
+ * Reports. Anything not saved yet takes its default from
+ * resources/blueprints/settings.yaml.
  */
 class ReportSettings
 {
-    /** `schedule_day`'s options, each at its index in Carbon's days of the week. */
+    /** The options for `schedule_day`, each at its index in Carbon's days of the week. */
     public const array DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
     /** @var array<string, mixed> */
@@ -24,7 +24,7 @@ class ReportSettings
     private static ?array $defaults = null;
 
     /**
-     * @param  array<string, mixed>|null  $values  null: read the saved addon settings
+     * @param  array<string, mixed>|null  $values  the settings, or null to read the saved addon settings
      */
     public function __construct(?array $values = null)
     {
@@ -63,9 +63,9 @@ class ReportSettings
     }
 
     /**
-     * Each setting's default, from the settings blueprint (Statamic registers
-     * the same file as the addon's settings blueprint). Read from the file, so
-     * it works before Statamic has booted the addon too.
+     * Gets each setting's default from the settings blueprint, which Statamic
+     * also registers as the addon's settings blueprint. The defaults are read
+     * from the file, so this works even before Statamic has booted the addon.
      *
      * @return array<string, mixed>
      */
@@ -88,7 +88,7 @@ class ReportSettings
         try {
             return Addon::get(Package::NAME)?->settings()->all() ?? [];
         } catch (\Throwable) {
-            // Before Statamic has booted the addon (an early config read).
+            // This happens before Statamic has booted the addon, such as during an early config read.
             return [];
         }
     }

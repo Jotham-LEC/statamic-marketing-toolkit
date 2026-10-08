@@ -3,7 +3,7 @@
 namespace JothamLec\MarketingToolkit\Support;
 
 /**
- * The addon's permissions, as roles store them: renaming one takes away what roles were given.
+ * Lists the addon's permissions as roles store them, so renaming one takes away what roles were given.
  */
 final class Permissions
 {

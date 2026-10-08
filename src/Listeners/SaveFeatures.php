@@ -8,11 +8,10 @@ use Statamic\Events\GlobalVariablesSaved;
 use Statamic\Facades\Site;
 
 /**
- * The Features tab of Marketing settings, saved: its switches go to the
- * addon's settings (`features_off`), which Features::apply() reads at boot,
- * so a request never reads a global set to know what is on. Only the default
- * site's localization has the tab (ShowFeaturesTab). A module that
- * config/marketing-toolkit.php switches off stays as it was.
+ * When the Features tab of Marketing settings is saved, this listener copies its switches to the addon's
+ * settings (`features_off`), which Features::apply() reads at boot, so a request never has to read a
+ * global set to know what is on. Only the default site's localization has the tab (see ShowFeaturesTab).
+ * A module that config/marketing-toolkit.php switches off stays as it was.
  */
 final class SaveFeatures
 {
@@ -26,7 +25,7 @@ final class SaveFeatures
 
         $data = $variables->data();
 
-        // Saved before the tab existed, or by code that didn't touch it.
+        // We skip a save made before the tab existed, or by code that didn't touch it.
         if (! collect(Features::MODULES)->keys()->contains(fn (string $module) => $data->has('feature_'.$module))) {
             return;
         }
@@ -40,8 +39,8 @@ final class SaveFeatures
     }
 
     /**
-     * The default site's switches, as the addon's settings have them: for a
-     * set made by `mt:install` or the update that moved the settings here.
+     * Sets the default site's switches as the addon's settings have them. This is for a set made by
+     * `mt:install`, or by the update that moved the settings here.
      */
     public static function seed(GlobalSet $set): void
     {

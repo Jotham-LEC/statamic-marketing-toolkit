@@ -12,14 +12,14 @@ use Statamic\Facades\Site;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Whether a path on the current site leads somewhere, without fetching it:
- * a page Statamic knows there, a file in public/, an asset, a route the app
- * registers (other than Statamic's catch-all), or a redirect rule that
- * applies there.
+ * Checks whether a path on the current site leads somewhere, without fetching
+ * it. The path may be a page Statamic knows there, a file in public/, an asset,
+ * or a route the app registers (other than Statamic's catch-all), or a redirect
+ * rule may apply there.
  */
 class LinkChecker
 {
-    /** @var array<string, string> site and path => ok, redirect or broken */
+    /** @var array<string, string> the answer (ok, redirect or broken) for each site and path */
     private array $known = [];
 
     public function __construct(private Router $router, private Matcher $redirects) {}
@@ -37,7 +37,7 @@ class LinkChecker
 
     private function resolve(string $path, string $site): string
     {
-        // A page's link names its path from the domain's root (/fr/a-propos); Statamic
+        // A page's link names its path from the domain's root (/fr/a-propos), but Statamic
         // finds the page by its address within the site (/a-propos).
         $within = Sites::within($path, $site) ?? $path;
 
@@ -45,7 +45,7 @@ class LinkChecker
             return 'ok';
         }
 
-        // Only inside public/: a `..` in a link would ask about files beyond it.
+        // Only files inside public/ count, because a `..` in a link would ask about files beyond it.
         if ($path !== '/' && ! in_array('..', explode('/', $path), true) && is_file(public_path(ltrim($path, '/')))) {
             return 'ok';
         }
@@ -69,7 +69,7 @@ class LinkChecker
             return false;
         }
 
-        // Statamic's front-end catch-all matches anything; it says nothing about the path.
+        // Statamic's front-end catch-all matches anything, so a match on it says nothing about the path.
         return ! str_contains($route->uri(), '{segments');
     }
 }

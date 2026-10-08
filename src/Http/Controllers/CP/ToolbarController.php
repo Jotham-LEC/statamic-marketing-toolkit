@@ -8,10 +8,10 @@ use Statamic\Facades\Site;
 use Statamic\Facades\User;
 
 /**
- * Where the front-end toolbar's links into the control panel go first on a
- * multi-site install: the page's site is selected, then the screen opens, so
- * it shows that site's report, redirects and settings. Statamic's own
- * select-site route only returns to where the user came from.
+ * Handles the front-end toolbar's links into the control panel on a multi-site
+ * install. It selects the page's site and then opens the screen, so the screen
+ * shows that site's report, redirects and settings. Statamic's own select-site
+ * route only returns to where the user came from.
  */
 final class ToolbarController
 {
@@ -21,7 +21,7 @@ final class ToolbarController
         $to = $request->string('to')->toString();
         $cp = '/'.trim((string) config('statamic.cp.route', 'cp'), '/');
 
-        // A control panel path, and only that: never another host (`//evil.test`, `/\evil.test`).
+        // The target must be a control panel path and never another host (`//evil.test`, `/\evil.test`).
         abort_unless(($to === $cp || str_starts_with($to, $cp.'/')) && ! preg_match('#[\\\\\x00-\x1F]|//#', $to), 404);
         abort_unless($site && User::current()?->can('view', $site), 403);
 

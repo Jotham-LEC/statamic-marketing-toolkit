@@ -8,10 +8,9 @@ use Statamic\Facades\Site;
 
 /**
  * Replaces the stored numbers with Search Console's for the last
- * `marketing-toolkit.search_console.days` days, one row per page. On a multi-site install,
- * a site's own rows from its own property, keeping only its own pages (a
- * property may be shared by every site, and sites may share a domain, one
- * under another's path).
+ * `marketing-toolkit.search_console.days` days, one row per page. On a multi-site install, it
+ * replaces a site's own rows from its own property and keeps only its own pages, because a
+ * property may be shared by every site, and sites may share a domain, one under another's path.
  */
 class Importer
 {
@@ -21,14 +20,14 @@ class Importer
     public function __construct(private Client $client) {}
 
     /**
-     * @param  ?string  $site  a site handle; null: the current site
+     * @param  ?string  $site  a site handle, or null for the current site
      * @return int the pages imported
      */
     public function import(?string $site = null): int
     {
         $site ??= Site::current()->handle();
         $stored = Sites::scope($site);
-        $to = now('America/Los_Angeles')->toDateString(); // Search Console's dates are Pacific time.
+        $to = now('America/Los_Angeles')->toDateString(); // Search Console's dates are in Pacific time.
         $from = now('America/Los_Angeles')->subDays(max(1, (int) config('marketing-toolkit.search_console.days')) - 1)->toDateString();
         $rows = $this->client->pages($from, $to, $site);
         $now = now();
@@ -60,9 +59,8 @@ class Importer
     }
 
     /**
-     * The site a page belongs to: the one whose address is the longest start
-     * of it (`example.test/fr/` before `example.test/`), whatever the scheme
-     * or a `www.`.
+     * Returns the site a page belongs to, which is the one whose address is the longest start of
+     * the page's (`example.test/fr/` before `example.test/`), whatever the scheme or a `www.`.
      */
     private function siteOf(string $url): ?string
     {
@@ -82,7 +80,8 @@ class Importer
     }
 
     /**
-     * An address as host and path, ending in a slash: `https://www.Example.test/fr` → `example.test/fr/`.
+     * Returns an address as host and path, ending in a slash, so that `https://www.Example.test/fr`
+     * becomes `example.test/fr/`.
      */
     private static function comparable(string $url): string
     {

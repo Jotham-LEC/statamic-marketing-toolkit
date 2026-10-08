@@ -9,16 +9,15 @@ use Statamic\Contracts\Assets\Asset;
 use Statamic\Facades\Site;
 
 /**
- * The site's icons, made from one image in the Brand global (`favicon`):
- * favicon.ico, the SVG as it is, the Apple touch icon, two PNGs for
- * site.webmanifest, and the manifest itself, named after the site in the
- * brand's colours. Made once per version of the image and colours, kept in
- * storage/app/marketing-toolkit/favicons/{site}, and served by
+ * Makes the site's icons from one image in the Brand global (`favicon`). They are favicon.ico,
+ * the SVG as it is, the Apple touch icon, two PNGs for site.webmanifest, and the manifest itself,
+ * which is named after the site and uses the brand's colours. The icons are made once per version
+ * of the image and colours, kept in storage/app/marketing-toolkit/favicons/{site}, and served by
  * Http\Controllers\FaviconController without a session.
  */
 class Favicons
 {
-    /** Address => content type. */
+    /** Maps each file's address to its content type. */
     public const array FILES = [
         'favicon.ico' => 'image/x-icon',
         'favicon.svg' => 'image/svg+xml',
@@ -28,7 +27,7 @@ class Favicons
         'site.webmanifest' => 'application/manifest+json',
     ];
 
-    /** version(), worked out once: false until then. */
+    /** This caches version(), which is worked out once, and it is false until then. */
     private string|false|null $version = false;
 
     public function __construct(protected Settings $settings, protected Raster $raster) {}
@@ -39,8 +38,8 @@ class Favicons
     }
 
     /**
-     * What the icons are made from, as a short hash: a new image, or new
-     * colours or name, is a new version.
+     * Returns what the icons are made from as a short hash, so a new image, or new
+     * colours or name, makes a new version.
      */
     public function version(): ?string
     {
@@ -56,9 +55,9 @@ class Favicons
     }
 
     /**
-     * A file's bytes, made first if need be; null when there is no image or
-     * this file can't be made from it (an SVG on a host without Imagick
-     * becomes favicon.svg alone).
+     * Returns a file's bytes, making the files first if need be. It returns null when there is no
+     * image or this file can't be made from it; for example, an SVG on a host without Imagick
+     * becomes favicon.svg alone.
      */
     public function file(string $name): ?string
     {
@@ -74,7 +73,7 @@ class Favicons
     }
 
     /**
-     * The <link> tags, each with the version, so browsers fetch new icons.
+     * Returns the <link> tags, each with the version, so browsers fetch new icons.
      *
      * @return list<array{rel: string, href: string, type?: string, sizes?: string}>
      */
@@ -87,7 +86,7 @@ class Favicons
         }
 
         $href = fn (string $name) => '/'.$name.'?v='.$this->version();
-        // Whether a file was made, without reading it: this runs on every page.
+        // This checks whether a file was made without reading it, because this runs on every page.
         $has = fn (string $name) => File::exists($directory.'/'.$name);
 
         return array_values(array_filter([
@@ -104,7 +103,7 @@ class Favicons
     }
 
     /**
-     * Behind the Apple touch icon and the manifest's splash screen; white unless set.
+     * Returns the colour behind the Apple touch icon and the manifest's splash screen, which is white unless set.
      */
     public function backgroundColor(): string
     {
@@ -132,7 +131,7 @@ class Favicons
     }
 
     /**
-     * The directory of this version's files, made first if need be; null
+     * Returns the directory of this version's files, making them first if need be, or null
      * when there is no image.
      */
     private function madeDirectory(): ?string
@@ -158,7 +157,7 @@ class Favicons
         if ($this->raster->canRead($source)) {
             $pngs = array_filter(array_map(fn (int $size) => $this->raster->square($source, $size), [16 => 16, 32 => 32, 48 => 48]));
             $files['favicon.ico'] = $pngs === [] ? null : Ico::fromPngs($pngs);
-            // iOS shows transparency as black: on the brand's background, with a margin.
+            // iOS shows transparency as black, so this icon sits on the brand's background with a margin.
             $files['apple-touch-icon.png'] = $this->raster->square($source, 180, $this->backgroundColor(), 0.08);
             $files['icon-192.png'] = $this->raster->square($source, 192);
             $files['icon-512.png'] = $this->raster->square($source, 512);
@@ -167,7 +166,8 @@ class Favicons
         $files = array_filter($files);
         $files['site.webmanifest'] = json_encode($this->manifest($files), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        // Into a fresh directory, then moved into place, so a request never reads half the files.
+        // The files are written into a fresh directory and then moved into place, so a request
+        // never reads half of them.
         File::ensureDirectoryExists(dirname($directory));
         $temporary = $directory.'.'.Str::random(8);
         File::ensureDirectoryExists($temporary);

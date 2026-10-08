@@ -9,10 +9,9 @@ use Statamic\Facades\Addon;
 use Statamic\Facades\Site;
 
 /**
- * The Features tab of Marketing settings is for the whole install: shown on
- * the default site's localization only, to whoever may change the addon's
- * settings. A module config/marketing-toolkit.php switches off is shown off
- * and can't be switched on there.
+ * The Features tab of Marketing settings is for the whole install, so it is shown only on the default
+ * site's localization, to whoever may change the addon's settings. A module that
+ * config/marketing-toolkit.php switches off is shown as off and can't be switched on there.
  */
 final class ShowFeaturesTab
 {

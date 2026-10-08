@@ -10,10 +10,10 @@ use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Facades\Site;
 
 /**
- * What a search result and a share card show for an entry or a term, worked
- * out by the same SiteSeo rules the page uses: for the SEO tab's preview
- * (the form as it stands) and the front-end toolbar (the page as saved).
- * Run it on the content's site (Sites::as()).
+ * Works out what a search result and a share card show for an entry or a term,
+ * using the same SiteSeo rules that the page uses. It serves the SEO tab's preview
+ * (the form as it stands) and the front-end toolbar (the page as saved). You
+ * should run it on the content's site (Sites::as()).
  */
 final class MetaPayload
 {
@@ -39,17 +39,17 @@ final class MetaPayload
             'image' => $meta->image === null ? null : [
                 'url' => $meta->image['url'],
                 'alt' => $meta->image['alt'],
-                // A generated card is drawn from the form by card(); its public URL
-                // would show the saved entry's card instead. Compared without the
-                // ?v= stamp: an unsaved entry's is "now", read twice.
+                // A generated card is drawn from the form by card(), because its public URL
+                // would show the saved entry's card instead. The URLs are compared without the
+                // ?v= stamp, because an unsaved entry's stamp is "now", read twice.
                 'generated' => $generated !== null && strtok($meta->image['url'], '?') === strtok($generated, '?'),
             ],
         ];
     }
 
     /**
-     * The rules fall back to the request's URL when the content has none; for
-     * a draft that would be the control panel's route, so give them the page's
+     * The rules fall back to the request's URL when the content has none. For a
+     * draft that would be the control panel's route, so this gives them the page's
      * own address instead (or where a new page would land).
      */
     public static function context(Entry|Term $content): Context

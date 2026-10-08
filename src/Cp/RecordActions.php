@@ -9,8 +9,8 @@ use Statamic\Actions\Action;
 use Statamic\Facades\User;
 
 /**
- * The actions the redirects and 404 listings offer: the addon's own, never
- * every action registered on the site.
+ * Lists the actions that the redirects and 404 listings offer. These are the
+ * addon's own actions, never every action registered on the site.
  *
  * Statamic's `Action::for()` asks each registered action whether it applies to
  * a row, and some do not ask safely: Runway's Publish and Unpublish call

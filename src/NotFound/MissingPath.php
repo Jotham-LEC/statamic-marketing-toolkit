@@ -10,9 +10,9 @@ use JothamLec\MarketingToolkit\Models\Concerns\BelongsToSite;
 use Statamic\Facades\Site;
 
 /**
- * A path visitors asked for and got a 404: one row per path, with how often
- * and when, and the last page that linked to it. On a multi-site install,
- * one row per path per site.
+ * This model records a path that visitors asked for and got a 404. There is one row per path, holding how
+ * often and when it was missed, and the last page that linked to it. On a multi-site install, there is one
+ * row per path per site.
  *
  * @property int $id
  * @property ?string $site null on a single site
@@ -33,8 +33,8 @@ class MissingPath extends Model
     protected $guarded = ['id'];
 
     /**
-     * The paths most recently missed that the control panel shows while $site
-     * is selected, for the overview and the dashboard widget.
+     * Returns the most recently missed paths that the control panel shows while $site is selected, for the
+     * overview and the dashboard widget.
      *
      * @return list<array{path: string, hits: int}>
      */
@@ -46,7 +46,7 @@ class MissingPath extends Model
     }
 
     /**
-     * The most paths the log keeps (`marketing-toolkit.not_found.max_rows`).
+     * Returns the largest number of paths the log keeps (`marketing-toolkit.not_found.max_rows`).
      */
     public static function maxRows(): int
     {
@@ -54,17 +54,15 @@ class MissingPath extends Model
     }
 
     /**
-     * The rows beyond maxRows(), for Laravel's `model:prune`, which the
-     * addon schedules daily. One-off misses go first (one hit, and no page of
-     * the site linking there: what a flood of made-up addresses looks like),
-     * so they can't push out the broken links. Then go the others first seen
-     * within the last day, so a flood of addresses each asked for twice can't
-     * either. Within each group, the least recently seen go first.
+     * Returns the rows beyond maxRows() for Laravel's `model:prune`, which the addon schedules daily.
+     * One-off misses go first (one hit, and no page of the site linking there, which is what a flood of
+     * made-up addresses looks like), so they can't push out the broken links. The other rows first seen
+     * within the last day go next, so a flood of addresses that are each asked for twice can't push them
+     * out either. Within each group, the least recently seen rows go first.
      *
-     * Only the site's own pages count as linking: a Referer header is whatever
-     * the request says, so a flood could name any other. This is best effort:
-     * hits and the Referer are the client's to send, and a flood kept up for
-     * days still wins in the end.
+     * Only the site's own pages count as linking, because a Referer header says whatever the request
+     * wants, so a flood could name any other page. This is a best effort, because the client controls the
+     * hits and the Referer, and a flood that is kept up for days still wins in the end.
      *
      * @return Builder<self>
      */
@@ -83,9 +81,9 @@ class MissingPath extends Model
             ->values()->all();
         $recurs = 'hits > 1'.str_repeat(' or referrer like ?', count($internal));
 
-        // Worked out once: model:prune deletes in chunks until nothing is left to delete.
+        // We work out the IDs once, because model:prune deletes in chunks until nothing is left to delete.
         $stale = self::query()
-            // A null referrer makes the test null, not false: hence `case when … else 0`.
+            // A null referrer makes the test null rather than false, which is why we use `case when … else 0`.
             ->orderByRaw("case when {$recurs} then (case when first_seen_at > ? then 1 else 2 end) else 0 end", [...$internal, now()->subDay()])
             ->orderBy('last_seen_at')
             ->orderBy('id')

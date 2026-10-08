@@ -16,12 +16,11 @@ use Statamic\Sites\Site as SiteObject;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * For a request the site answers with a 404: send it on if a redirect rule
- * matches, else count it in the 404 log. A page that exists always wins over
- * a rule, so a page that comes back takes its address back. The bookkeeping
- * (hit counts, the log) runs in terminate(), after the response has gone out.
- * Not Laravel's defer(): it runs only where the app has Laravel 11's
- * InvokeDeferredCallbacks middleware, which a site keeping the older
+ * When the site answers a request with a 404, this middleware sends the visitor on if a redirect rule
+ * matches, and otherwise counts the request in the 404 log. A page that exists always wins over a rule,
+ * so a page that comes back takes its address back. The bookkeeping (hit counts and the log) runs in
+ * terminate(), after the response has gone out. We don't use Laravel's defer(), because it runs only
+ * where the app has Laravel 11's InvokeDeferredCallbacks middleware, which a site that keeps the older
  * app/Http/Kernel.php may lack, and the log would then stay empty.
  */
 final class HandleMissing
@@ -40,18 +39,19 @@ final class HandleMissing
             return $response;
         }
 
-        // A stored copy would be served without coming through here: a redirect
-        // added later would never apply, and the log would count one visit.
+        // A cached copy would be served without coming through here, so a redirect added later would
+        // never apply, and the log would count only one visit.
         $response->headers->set('X-Statamic-Uncacheable', 'true');
 
         $site = Site::current();
-        // As requested, from the domain's root: the matcher takes the site's folder off itself.
+        // The path is taken as requested, from the domain's root, because the matcher removes the site's folder itself.
         $path = '/'.trim($request->decodedPath(), '/');
-        // The lookup reads the rules table. Missing (the addon installed, `migrate` not yet run) or
-        // failing, it is reported and the address answers its 404 as before, not a 500.
+        // The lookup reads the rules table. If the table is missing (the addon is installed, but `migrate`
+        // hasn't run yet) or the lookup fails, the error is reported and the address answers its 404 as
+        // before, rather than a 500.
         $rule = Features::on('redirects') ? rescue(fn () => $this->matcher->match($path, (string) $request->getQueryString(), $site->handle()), null) : null;
 
-        // A rule back to the address asked for would loop; the address is simply missing.
+        // A rule back to the requested address would loop, so we treat the address as simply missing.
         if ($rule && $rule['target'] !== null && str_starts_with($rule['target'], '/') && Redirect::normalize(self::fromRoot($rule['target'], $site)) === $path) {
             $rule = null;
         }
@@ -65,20 +65,19 @@ final class HandleMissing
         $request->attributes->set('mt.redirect_hit', $rule['id']);
 
         if ($rule['status'] === 410 || $rule['target'] === null) {
-            // The site's own error page, saying the page is gone for good.
+            // We return the site's own error page with a 410 status, which says the page is gone for good.
             return $response->setStatusCode(410);
         }
 
-        // Built by hand: Laravel's redirect() would trim a trailing slash the site wants.
+        // We build the response by hand, because Laravel's redirect() would trim a trailing slash the site wants.
         return new RedirectResponse(self::location($rule['target'], $site), $rule['status']);
     }
 
     /**
-     * A target path as requested, from the domain's root. Targets are paths
-     * within the site, as sources are (see Matcher): `/qui-sommes-nous` on a
-     * site at example.com/fr/ is `/fr/qui-sommes-nous`. One that already starts
-     * with the site's folder was typed from the domain's root, as one had to
-     * before, and is kept as it is.
+     * Returns a target path as it would be requested, from the domain's root. Targets are paths within the
+     * site, as sources are (see Matcher), so `/qui-sommes-nous` on a site at example.com/fr/ becomes
+     * `/fr/qui-sommes-nous`. A target that already starts with the site's folder was typed from the
+     * domain's root, as it had to be before, so it is kept as it is.
      */
     private static function fromRoot(string $target, SiteObject $site): string
     {
@@ -88,11 +87,10 @@ final class HandleMissing
     }
 
     /**
-     * Where a rule sends the visitor: another site's address as typed; a path
-     * on the site's own address, never the request's Host header, which a
-     * client can set to anything. A site whose URL is relative (`url: '/'`)
-     * has no address but the request's, so it gets the path alone, which the
-     * browser takes on the host it asked.
+     * Returns where a rule sends the visitor. Another site's address is used as typed. A path is placed on
+     * the site's own address, never on the request's Host header, which a client can set to anything. A
+     * site whose URL is relative (`url: '/'`) has no address other than the request's, so it gets the path
+     * alone, which the browser resolves on the host it asked.
      */
     private static function location(string $target, SiteObject $site): string
     {
@@ -100,7 +98,7 @@ final class HandleMissing
             return $target;
         }
 
-        // The site's address without its folder: the domain, and the folder the app is installed in.
+        // This is the site's address without its folder, which leaves the domain and the app's install folder.
         $root = rtrim($site->absoluteUrl(), '/');
         $root = substr($root, 0, strlen($root) - strlen(Sites::folder($site->handle())));
         $location = $root.self::fromRoot($target, $site);
@@ -109,13 +107,13 @@ final class HandleMissing
             return $location;
         }
 
-        // Never `//host`: a browser would read a path that starts so as another site.
+        // We never return `//host`, because a browser would read a path that starts that way as another site.
         return '/'.ltrim((string) preg_replace('#^https?://[^/]*#i', '', $location), '/');
     }
 
     public function terminate(Request $request, Response $response): void
     {
-        // Bookkeeping after the response has gone out: a failure is reported, not thrown.
+        // This bookkeeping runs after the response has gone out, so a failure is reported rather than thrown.
         if ($id = $request->attributes->get('mt.redirect_hit')) {
             rescue(fn () => Redirect::query()->whereKey($id)->increment('hits', 1, ['last_hit_at' => now()]));
         }

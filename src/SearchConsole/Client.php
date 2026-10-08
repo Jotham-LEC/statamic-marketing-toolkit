@@ -7,11 +7,10 @@ use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 /**
- * Google Search Console's Search Analytics API, signed in as a service
- * account: a JSON key from Google Cloud whose email is a user of the
- * property. No client library: a JWT signed with the key buys an access
- * token, kept until shortly before it expires. The property is the
- * site's (Connection::property()); a null site is the current one.
+ * Calls Google Search Console's Search Analytics API, signed in as a service account, which is a
+ * JSON key from Google Cloud whose email is a user of the property. It uses no client library;
+ * instead, a JWT signed with the key buys an access token, which is kept until shortly before it
+ * expires. The property is the site's (Connection::property()), and a null site means the current one.
  */
 class Client
 {
@@ -21,7 +20,7 @@ class Client
 
     private const string TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
-    /** The most rows the Search Analytics API returns at once. */
+    /** This is the most rows the Search Analytics API returns at once. */
     private const int ROW_LIMIT = 25000;
 
     public function configured(?string $site = null): bool
@@ -30,7 +29,7 @@ class Client
     }
 
     /**
-     * Whether any site can be imported: the key, and a property for one site at least.
+     * Determines whether any site can be imported, which needs the key and a property for at least one site.
      */
     public function configuredForAnySite(): bool
     {
@@ -38,7 +37,7 @@ class Client
     }
 
     /**
-     * Clicks, impressions, CTR and position per page between two dates.
+     * Returns the clicks, impressions, CTR and position per page between two dates.
      *
      * @return list<array{keys: list<string>, clicks: int|float, impressions: int|float, ctr: float, position: float}>
      */
@@ -47,7 +46,7 @@ class Client
         $property = rawurlencode((string) (new Connection)->property($site));
         $rows = [];
 
-        // At most ROW_LIMIT rows an answer: a site with more pages is read in turns.
+        // Each answer holds at most ROW_LIMIT rows, so a site with more pages is read in turns.
         do {
             $batch = Http::withToken($this->token())
                 ->timeout(30)
@@ -69,8 +68,8 @@ class Client
     }
 
     /**
-     * The property as Search Console describes it, with the key's access to it:
-     * a cheap call that fails as an import would.
+     * Returns the property as Search Console describes it, with the key's access to it. It is a cheap
+     * call that fails in the same way an import would.
      *
      * @return array{siteUrl: string, permissionLevel: string}
      */
@@ -86,8 +85,8 @@ class Client
     }
 
     /**
-     * An access token, kept for most of its hour. Kept per key, not per account:
-     * a new key for the same account (the old one revoked) gets a new token.
+     * Returns an access token, which is kept for most of its hour. It is kept per key rather than per
+     * account, so a new key for the same account (with the old one revoked) gets a new token.
      */
     private function token(): string
     {
@@ -110,7 +109,7 @@ class Client
                 'assertion' => implode('.', [...$segments, $this->base64($signature)]),
             ])->throw()->json('access_token');
 
-            // Not kept: an empty token would fail every request for the next 50 minutes.
+            // An empty token is not kept, because it would fail every request for the next 50 minutes.
             if (! is_string($token) || $token === '') {
                 throw new RuntimeException('Google answered without an access token for the Search Console key.');
             }
@@ -120,7 +119,7 @@ class Client
     }
 
     /**
-     * The service account key: a path to its JSON file, or the JSON itself.
+     * Returns the service account key, which is configured as a path to its JSON file or as the JSON itself.
      *
      * @return array{client_email: string, private_key: string, private_key_id?: string}
      */

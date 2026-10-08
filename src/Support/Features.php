@@ -6,15 +6,14 @@ use Statamic\Facades\Addon;
 use Throwable;
 
 /**
- * The modules, each switched on by one config key. A site can switch them
- * off in config/marketing-toolkit.php or under Features in the control
- * panel, kept in the addon settings (`features_off`). A module that's off is set off in the config at boot,
- * before the routes, listeners and middleware register, so it costs nothing
- * on a request.
+ * Lists the modules, each of which is switched on by one config key. A site can switch them off
+ * in config/marketing-toolkit.php or under Features in the control panel, which keeps them in the
+ * addon settings (`features_off`). A module that's off is set off in the config at boot, before
+ * the routes, listeners and middleware register, so it costs nothing on a request.
  */
 final class Features
 {
-    /** Module => the config key that switches it on. */
+    /** Maps each module to the config key that switches it on. */
     public const array MODULES = [
         'sitemap' => 'marketing-toolkit.sitemap.enabled',
         'robots_txt' => 'marketing-toolkit.robots_txt.enabled',
@@ -41,7 +40,7 @@ final class Features
     }
 
     /**
-     * The modules switched off, as saved.
+     * Returns the modules switched off, as saved.
      *
      * @return list<string>
      */
@@ -50,7 +49,7 @@ final class Features
         try {
             $saved = Addon::get(Package::NAME)?->settings()->get(self::SETTING);
         } catch (Throwable $exception) {
-            // Asked while booting: logged, but never in the way of it.
+            // This is asked while booting, so the error is logged but never gets in the way of the boot.
             rescue(fn () => report($exception), report: false);
 
             return [];
@@ -60,8 +59,8 @@ final class Features
     }
 
     /**
-     * The modules config/marketing-toolkit.php switches off, rather than this screen: shown
-     * off there, and locked, since a switch can't turn them back on.
+     * Returns the modules that config/marketing-toolkit.php switches off, rather than this screen. They
+     * are shown as off there, and locked, since a switch can't turn them back on.
      *
      * @return list<string>
      */
@@ -74,8 +73,8 @@ final class Features
     }
 
     /**
-     * Sets the modules switched off, off in the config. At every boot rather than in the merged config,
-     * which isn't merged once it is cached.
+     * Sets the switched-off modules to off in the config. This runs at every boot rather than in the
+     * merged config, which isn't merged once it is cached.
      */
     public static function apply(): void
     {

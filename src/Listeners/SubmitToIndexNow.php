@@ -12,11 +12,10 @@ use Statamic\Events\TermDeleted;
 use Statamic\Events\TermSaved;
 
 /**
- * Queues the address of published content that was saved, went live on
- * schedule, was deleted or was unpublished (so engines see it gone) for
- * IndexNow. Drafts and protected pages (SiteSeo::isProtected()) are never
- * sent. A page's old address, once it moves, is sent by RedirectChangedUris
- * with its redirect.
+ * This listener queues the address of published content for IndexNow when it is saved, goes live on
+ * schedule, is deleted, or is unpublished (so search engines see that it is gone). Drafts and protected
+ * pages (SiteSeo::isProtected()) are never sent. Once a page moves, RedirectChangedUris sends its old
+ * address along with its redirect.
  */
 final class SubmitToIndexNow
 {
@@ -28,7 +27,7 @@ final class SubmitToIndexNow
             return;
         }
 
-        // Unpublished: told while saving, when Statamic still knows it was live.
+        // An unpublished entry is sent while saving, when Statamic still knows that it was live.
         if ($event instanceof EntrySaving) {
             $entry = $event->entry;
 
@@ -41,7 +40,8 @@ final class SubmitToIndexNow
 
         $content = $event instanceof TermSaved || $event instanceof TermDeleted ? $event->term : $event->entry;
 
-        // Deleted too only if it was live: a draft's address was never public, nor a protected page's.
+        // Deleted content is also sent only if it was live, because a draft's address was never public,
+        // and neither was a protected page's.
         if ((! method_exists($content, 'status') || $content->status() === 'published') && ! app(SiteSeo::class)->isProtected($content)) {
             $this->indexNow->queue($content->absoluteUrl());
         }

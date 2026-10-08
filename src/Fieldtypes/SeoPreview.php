@@ -7,8 +7,8 @@ use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Fields\Fieldtype;
 
 /**
- * The search result and the share cards this entry will produce, drawn live
- * from the publish form. It shows; it stores nothing.
+ * Shows the search result and the share cards that this entry will produce,
+ * drawn live from the publish form. The field only displays them and stores nothing.
  */
 final class SeoPreview extends Fieldtype
 {
@@ -33,7 +33,7 @@ final class SeoPreview extends Fieldtype
                 'meta' => cp_route('mt.preview.meta'),
                 'card' => cp_route('mt.preview.card'),
             ],
-            // The report's thresholds (Marketing → Reports → Settings), so the counters and the reports agree.
+            // These are the report's thresholds (Marketing → Reports → Settings), so the counters and reports agree.
             'limits' => [
                 'title' => [$settings->int('title_min'), $settings->int('title_max')],
                 'description' => [$settings->int('description_min'), $settings->int('description_max')],

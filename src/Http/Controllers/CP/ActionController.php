@@ -19,10 +19,10 @@ use Symfony\Component\HttpFoundation\Response;
 final class ActionController extends StatamicActionController
 {
     /**
-     * Only the addon's actions run here: Statamic's `run()` would run any
-     * registered action on our rows, and asks only that action to authorize.
-     * The class the handle resolves to is checked, not the handle: Statamic
-     * maps handles to classes and the last registration wins, so another
+     * Runs only the addon's actions, because Statamic's `run()` would run any
+     * registered action on our rows and asks only that action to authorize. It
+     * checks the class that the handle resolves to, not the handle, because
+     * Statamic maps handles to classes and the last registration wins, so another
      * addon's action could take one of ours.
      *
      * @return array<string, mixed>|Response
@@ -38,7 +38,7 @@ final class ActionController extends StatamicActionController
     }
 
     /**
-     * Only the addon's actions; see RecordActions.
+     * Lists only the addon's actions, as RecordActions explains.
      *
      * @return Collection<int, Action>
      */
@@ -55,9 +55,9 @@ final class ActionController extends StatamicActionController
     }
 
     /**
-     * The selected rows, from those the listing shows this user: a 404 row on
-     * the selected site, a redirect on a site they may work on. Any other is
-     * as if it didn't exist.
+     * Finds the selected rows among those the listing shows this user, which are
+     * 404 rows on the selected site and redirects on sites they may work on. Any
+     * other row is treated as if it didn't exist.
      *
      * @param  Collection<int, mixed>  $items
      * @param  array<string, mixed>  $context

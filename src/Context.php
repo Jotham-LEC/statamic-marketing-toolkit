@@ -8,14 +8,15 @@ use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Structures\Page;
 
 /**
- * What a page's SEO is worked out from: the entry or term being shown (if
- * any), the request, and values the template passes in to override the rules
- * (a controller page's title, a 404's status).
+ * This class holds what a page's SEO is worked out from. That is the entry or
+ * term being shown (if there is one), the request, and the values the template
+ * passes in to override the rules, such as a controller page's title or a 404's
+ * status.
  */
 final readonly class Context
 {
     /**
-     * @param  array<string, mixed>  $overrides  title, description, canonical, image, og_type, noindex
+     * @param  array<string, mixed>  $overrides  the title, description, canonical, image, og_type, and noindex
      */
     public function __construct(
         public ?Entry $entry,
@@ -30,7 +31,7 @@ final readonly class Context
      */
     public static function make(mixed $content, ?Request $request = null, array $overrides = [], int $status = 200): self
     {
-        // A page in a structured collection arrives as the tree's Page wrapping its entry.
+        // A page in a structured collection arrives as the tree's Page, which wraps its entry.
         $content = $content instanceof Page ? $content->entry() : $content;
 
         return new self(
@@ -53,10 +54,10 @@ final readonly class Context
     }
 
     /**
-     * The entry's `seo` group, without the fields left empty: an override
-     * cleared in the control panel counts as not set. A translation that has
-     * no group of its own takes its origin's, as the control panel shows it
-     * (a group is linked to its origin, or not, as a whole).
+     * Returns the entry's `seo` group without the fields left empty, so an
+     * override cleared in the control panel counts as not set. A translation
+     * that has no group of its own takes its origin's, as the control panel
+     * shows it, because a group is linked to its origin, or not, as a whole.
      *
      * @return array<string, mixed>
      */

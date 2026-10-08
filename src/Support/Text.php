@@ -7,8 +7,8 @@ use Illuminate\Support\Str;
 class Text
 {
     /**
-     * Plain text from HTML: tags gone, entities decoded, every run of
-     * whitespace (non-breaking spaces included) one space.
+     * Returns plain text from HTML, with the tags removed, the entities decoded, and every run of
+     * whitespace (non-breaking spaces included) turned into one space.
      */
     public static function plain(?string $html): string
     {
@@ -16,9 +16,9 @@ class Text
     }
 
     /**
-     * At most $length characters, cut at a word boundary with an ellipsis.
-     * Not Str::limit(): that counts display width, adds the ellipsis past
-     * $length, and leaves trailing punctuation before it.
+     * Returns at most $length characters, cut at a word boundary with an ellipsis.
+     * It doesn't use Str::limit(), because that counts display width, adds the ellipsis
+     * past $length, and leaves trailing punctuation before it.
      */
     public static function limit(string $text, int $length): string
     {
@@ -33,7 +33,7 @@ class Text
     }
 
     /**
-     * The text of the first paragraph of an HTML body that says something.
+     * Returns the text of the first paragraph of an HTML body that says something.
      */
     public static function firstParagraph(string $html): ?string
     {

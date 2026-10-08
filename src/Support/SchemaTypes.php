@@ -3,16 +3,16 @@
 namespace JothamLec\MarketingToolkit\Support;
 
 /**
- * What kind of thing a schema.org type is, so the publisher node only prints
- * properties its types accept: a Person has a job title but no logo or price
- * range; an Organization has a logo, address and area served; a LocalBusiness
+ * Tells what kind of thing a schema.org type is, so the publisher node only prints
+ * properties its types accept. A Person has a job title but no logo or price
+ * range, an Organization has a logo, address and area served, and a LocalBusiness
  * (a Store, a Restaurant…) also has opening hours, coordinates and a price
  * range. A type not listed here is taken as an Organization subtype, which
  * most remaining schema.org types are (EducationalOrganization, NGO…).
  */
 final class SchemaTypes
 {
-    /** LocalBusiness and its common subtypes (schema.org/LocalBusiness); stores go by their name. */
+    /** These are LocalBusiness and its common subtypes (schema.org/LocalBusiness); stores go by their name. */
     private const array LOCAL_BUSINESSES = [
         'LocalBusiness', 'AnimalShelter', 'ArchiveOrganization', 'AutomotiveBusiness', 'ChildCare',
         'Dentist', 'DryCleaningOrLaundry', 'EmergencyService', 'EmploymentAgency', 'EntertainmentBusiness',
@@ -42,7 +42,7 @@ final class SchemaTypes
     }
 
     /**
-     * A LocalBusiness, or a store of any kind (BookStore, GardenStore…).
+     * Determines whether the types include a LocalBusiness or a store of any kind (BookStore, GardenStore…).
      *
      * @param  list<string>  $types
      */

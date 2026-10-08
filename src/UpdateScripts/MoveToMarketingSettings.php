@@ -9,14 +9,14 @@ use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 
 /**
- * 0.21 splits "SEO & brand" in two: Brand keeps the brand, publisher, shop
+ * Version 0.21 splits "SEO & brand" in two. Brand keeps the brand, publisher, shop
  * and share-card fields, and the new Marketing settings set takes the
  * tracking tags, Consent Mode, leads and crawlers. This creates Marketing
  * settings on the sites Brand is on, moves each localization's values of
  * those fields across, takes the fields out of Brand's blueprint (a field the
  * site added itself stays where it is), and renames "SEO & brand" to "Brand".
- * Statamic runs it on `composer update` from before 0.21; commit the files
- * it changes. Updating from 0.21 or later it doesn't run, so a field the
+ * Statamic runs it on `composer update` from before 0.21, and you should commit the files
+ * it changes. It doesn't run when updating from 0.21 or later, so a field the
  * site puts back in Brand stays there. It still runs, with `php please
  * updates:run 0.20.0 --package=jotham-lec/statamic-marketing-toolkit`, while
  * Brand holds values of those fields, as on a server whose globals are in
@@ -58,11 +58,11 @@ final class MoveToMarketingSettings extends UpdateScript
             $set->sites($brandSet->origins()->all());
             $set->save();
             $set = GlobalSet::findByHandle($handle);
-            // Its Features tab, as the addon's settings have the switches.
+            // This fills its Features tab from the switches in the addon's settings.
             SaveFeatures::seed($set);
         }
 
-        // Each localization's own values (not those it takes from its origin) move across.
+        // Each localization's own values move across, but not those it takes from its origin.
         foreach ($brandSet?->localizations() ?? [] as $site => $variables) {
             $values = $variables->data()->only($moved)->all();
 
@@ -72,7 +72,7 @@ final class MoveToMarketingSettings extends UpdateScript
 
             $target = $set->in($site) ?? $set->makeLocalization($site);
 
-            // A value already in Marketing settings (saved there since) is newer: the one left in Brand goes.
+            // A value already in Marketing settings (saved there since) is newer, so the one left in Brand goes.
             foreach ($values as $key => $value) {
                 if (! $target->data()->has($key)) {
                     $target->set($key, $value);
@@ -95,7 +95,7 @@ final class MoveToMarketingSettings extends UpdateScript
     }
 
     /**
-     * The handles of the fields Marketing settings holds.
+     * Returns the handles of the fields that Marketing settings holds.
      *
      * @return list<string>
      */
@@ -110,7 +110,7 @@ final class MoveToMarketingSettings extends UpdateScript
     }
 
     /**
-     * A blueprint's contents without the moved fields, and without the
+     * Returns a blueprint's contents without the moved fields, and without the
      * sections and tabs they leave empty.
      *
      * @param  array<string, mixed>  $contents

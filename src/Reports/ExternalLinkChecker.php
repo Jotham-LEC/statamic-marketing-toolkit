@@ -15,35 +15,35 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Asks other sites whether the addresses a page links to still exist: a
- * HEAD request (a GET where HEAD isn't allowed), several at a time, each
- * answer kept for a day so a link many pages share is asked once. Only a
- * clear miss counts as broken: a 404 or 410, or a host that doesn't
- * resolve. A refusal (401, 403, 429), a server error or a timeout says
- * nothing about the link and is left alone.
+ * Asks other sites whether the addresses a page links to still exist. It sends
+ * a HEAD request (or a GET where HEAD isn't allowed), several at a time, and
+ * keeps each answer for a day, so a link that many pages share is asked about
+ * once. Only a clear miss counts as broken, which means a 404 or 410, or a host
+ * that doesn't resolve. A refusal (401, 403, 429), a server error or a timeout
+ * says nothing about the link, so it is left alone.
  *
  * Only the public internet is asked. A link (or a redirect) to this machine
- * or a private network is not followed, and each request goes to the
+ * or to a private network is not followed, and each request goes to the
  * address that was checked, so a page's links can't reach the server's own
  * network.
  *
- * A page's links get BUDGET seconds between them; those still waiting after
- * that are left unchecked (not broken, and asked again next time), so a page
- * of slow sites can't hold a report's step past the queue worker's timeout.
- * Where HEAD is refused, the GET is cut off once its headers are in: only
- * the status and any redirect matter, not the body.
+ * A page's links share BUDGET seconds between them. Those still waiting after
+ * that are left unchecked (not broken, and asked about again next time), so a
+ * page of slow sites can't hold a report's step past the queue worker's timeout.
+ * Where HEAD is refused, the GET is cut off once its headers are in, because
+ * only the status and any redirect matter, not the body.
  */
 class ExternalLinkChecker
 {
-    /** Most links checked per page. */
+    /** The most links checked per page. */
     private const int LIMIT = 50;
 
     private const int TIMEOUT = 8;
 
-    /** Seconds for all of one page's links. */
+    /** The seconds allowed for all of one page's links. */
     private const int BUDGET = 30;
 
-    /** followed()'s answer when the budget ran out first. */
+    /** The answer followed() gives when the budget ran out first. */
     private const string UNCHECKED = 'unchecked';
 
     private const int MAX_REDIRECTS = 5;
@@ -63,7 +63,7 @@ class ExternalLinkChecker
         $this->deadline = now()->addSeconds(self::BUDGET);
 
         foreach ($urls as $url) {
-            // Looking hosts up takes time too: the links after the budget runs out stay unchecked.
+            // Looking hosts up takes time too, so the links left when the budget runs out stay unchecked.
             if ($this->secondsLeft() < 1) {
                 break;
             }
@@ -75,10 +75,11 @@ class ExternalLinkChecker
             $address = $this->address($url);
 
             if ($address === null) {
-                // A host that doesn't resolve is broken, but asked again sooner: DNS may have failed for a moment.
+                // A host that doesn't resolve is broken, but it is asked about again sooner,
+                // because DNS may have failed for a moment.
                 $this->remember($url, true, now()->addHour());
             } elseif ($address === false) {
-                // A private address is never asked.
+                // A private address is never asked, so it is remembered as fine.
                 $this->remember($url, false);
             } else {
                 $addresses[$url] = $address;
@@ -105,8 +106,8 @@ class ExternalLinkChecker
     }
 
     /**
-     * The IP addresses a host name resolves to (IPv4 from the hosts file and
-     * DNS, IPv6 from DNS).
+     * Gets the IP addresses that a host name resolves to, with IPv4 from the
+     * hosts file and DNS, and IPv6 from DNS.
      *
      * @return list<string>
      */
@@ -118,8 +119,8 @@ class ExternalLinkChecker
     }
 
     /**
-     * The address to ask for $url: null when its host doesn't resolve, false
-     * when it isn't on the public internet (or isn't http or https).
+     * Gets the address to ask for $url. It returns null when the host doesn't
+     * resolve, and false when it isn't on the public internet (or isn't http or https).
      */
     private function address(string $url): string|false|null
     {
@@ -146,12 +147,12 @@ class ExternalLinkChecker
     }
 
     /**
-     * Whether $ip is on the public internet. PHP's global range takes the
-     * NAT64 prefix 64:ff9b::/96 as public, but a NAT64 gateway passes it on
-     * to the IPv4 address in its last 32 bits, which may be this machine's
-     * (64:ff9b::7f00:1 is 127.0.0.1): that address is judged instead. The
-     * local-use prefix 64:ff9b:1::/48 may embed one anywhere, so is refused.
-     * (6to4, 2002::/16, PHP refuses already.)
+     * Determines whether $ip is on the public internet. PHP's global range treats
+     * the NAT64 prefix 64:ff9b::/96 as public, but a NAT64 gateway passes such an
+     * address on to the IPv4 address in its last 32 bits, which may be this
+     * machine's (64:ff9b::7f00:1 is 127.0.0.1), so that IPv4 address is judged
+     * instead. The local-use prefix 64:ff9b:1::/48 may embed an IPv4 address
+     * anywhere, so it is refused. PHP already refuses 6to4 (2002::/16).
      */
     private static function isPublic(string $ip): bool
     {
@@ -177,9 +178,9 @@ class ExternalLinkChecker
     }
 
     /**
-     * The last answer for $url: asked again with GET where HEAD was refused,
-     * and redirects followed one by one, each to a public address. UNCHECKED
-     * when the page's budget runs out on the way.
+     * Gets the last answer for $url. It asks again with GET where HEAD was
+     * refused, and follows redirects one by one, each to a public address. It
+     * returns UNCHECKED when the page's budget runs out on the way.
      */
     private function followed(string $url, mixed $response): mixed
     {
@@ -204,7 +205,8 @@ class ExternalLinkChecker
     }
 
     /**
-     * @return Response|Throwable|string|false|null null: the host doesn't resolve; false: not asked; UNCHECKED: no time left
+     * @return Response|Throwable|string|false|null null when the host doesn't resolve, false when
+     *                                              it isn't asked, or UNCHECKED when no time is left
      */
     private function send(string $method, string $url): Response|Throwable|string|false|null
     {
@@ -224,7 +226,7 @@ class ExternalLinkChecker
         $request = $this->request(Http::createPendingRequest(), $url, $address)->timeout(min(self::TIMEOUT, $left));
 
         if ($method === 'get') {
-            // Throwing here stops curl before the body: the headers are all the check reads.
+            // Throwing here stops curl before the body, because the headers are all the check reads.
             $request->withOptions(['on_headers' => function (ResponseInterface $response) use (&$headers) {
                 $headers = $response;
 
@@ -240,11 +242,12 @@ class ExternalLinkChecker
     }
 
     /**
-     * A request pinned to the address that was checked, so DNS can't answer
-     * differently when the connection is made. Never through a proxy: on the
-     * command line (a queue worker) Guzzle takes one from HTTP_PROXY and
-     * HTTPS_PROXY, and a proxy looks the host up again itself; an empty
-     * proxy also stops curl reading those variables on its own.
+     * Builds a request pinned to the address that was checked, so DNS can't
+     * answer differently when the connection is made. The request never goes
+     * through a proxy, because on the command line (such as a queue worker)
+     * Guzzle takes one from HTTP_PROXY and HTTPS_PROXY, and a proxy looks the
+     * host up again itself. An empty proxy also stops curl from reading those
+     * variables on its own.
      */
     private function request(PendingRequest $request, string $url, string $address): PendingRequest
     {
@@ -260,7 +263,7 @@ class ExternalLinkChecker
     }
 
     /**
-     * The seconds left of the page's budget.
+     * Gets the seconds left of the page's budget.
      */
     private function secondsLeft(): int
     {

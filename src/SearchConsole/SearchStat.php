@@ -7,9 +7,9 @@ use Illuminate\Support\Carbon;
 use JothamLec\MarketingToolkit\Models\Concerns\BelongsToSite;
 
 /**
- * One page's numbers from Google Search Console over the last import's
- * period: clicks, impressions, click-through rate and average position.
- * On a multi-site install, from the property of the site it names.
+ * Holds one page's numbers from Google Search Console over the last import's period, which are
+ * its clicks, impressions, click-through rate and average position. On a multi-site install, the
+ * numbers come from the property of the site that the row names.
  *
  * @property ?string $site null on a single site
  * @property string $url

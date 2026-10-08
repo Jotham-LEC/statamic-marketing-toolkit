@@ -12,16 +12,16 @@ use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Facades\Site;
 
 /**
- * Counts a 404 against its path (and its site, where there are several). Bots (by user agent) and scanner probes (by
- * path) are left out, and the table keeps about `marketing-toolkit.not_found.max_rows`
- * paths, dropping one-off misses first, then paths first seen in the last day,
- * each the least recently seen first (see MissingPath::prunable()).
+ * This class counts a 404 against its path (and its site, where there are several). Bots (known by their
+ * user agent) and scanner probes (known by their path) are left out. The table keeps about
+ * `marketing-toolkit.not_found.max_rows` paths, dropping one-off misses first and then paths first seen
+ * in the last day, with the least recently seen first in each group (see MissingPath::prunable()).
  */
 class Recorder
 {
     public function shouldRecord(Request $request): bool
     {
-        // HandleMissing only asks about GET and HEAD.
+        // HandleMissing only asks about GET and HEAD requests, so the method isn't checked here.
         if (! Features::on('not_found')) {
             return false;
         }
@@ -37,8 +37,8 @@ class Recorder
         $path = $this->path($request);
         $ignore = (array) config('marketing-toolkit.not_found.ignore_paths');
 
-        // Postgres refuses text that isn't UTF-8, and a probe is all such a path can be.
-        // A probe is known by the path within the site (`/fr/.env` is `/.env` there) or as requested.
+        // Postgres refuses text that isn't UTF-8, and such a path can only be a probe. A probe is recognised
+        // by the path within the site (`/fr/.env` is `/.env` there) or by the path as requested.
         return self::isText($path) && ! Str::is($ignore, $path) && ! Str::is($ignore, '/'.trim($request->decodedPath(), '/'));
     }
 
@@ -67,7 +67,7 @@ class Recorder
         try {
             MissingPath::query()->create(['site' => $site, 'path' => $path, 'hits' => 1, 'referrer' => $referrer, 'first_seen_at' => $now, 'last_seen_at' => $now]);
         } catch (UniqueConstraintViolationException) {
-            // Another request recorded the same path a moment ago.
+            // Another request recorded the same path a moment ago, so we add to its count instead.
             MissingPath::query()->ofSite($site)->where('path', $path)->increment('hits', 1, ['last_seen_at' => $now]);
 
             return;
@@ -77,10 +77,9 @@ class Recorder
     }
 
     /**
-     * The path missed, within the current site (without its folder), as
-     * redirects take their sources: a row's "Create redirect" makes a rule
-     * that matches it. Rows logged before kept the folder (`/fr/old`); the
-     * matcher still takes a source like that.
+     * Returns the missed path within the current site (without its folder), in the form that redirects take
+     * their sources, so a row's "Create redirect" makes a rule that matches it. Rows logged earlier kept
+     * the folder (`/fr/old`), and the matcher still accepts a source like that.
      */
     public function path(Request $request): string
     {
@@ -90,8 +89,8 @@ class Recorder
     }
 
     /**
-     * An http(s) address fit to store and to link to, or null: the referrer is
-     * whatever the request says, `javascript:` included.
+     * Returns an http(s) address that is fit to store and to link to, or null. We check it because the
+     * referrer is whatever the request says, including a `javascript:` address.
      */
     public static function webAddress(?string $url): ?string
     {
@@ -104,11 +103,10 @@ class Recorder
     }
 
     /**
-     * The fallback for a site without the scheduler, which prunes the log
-     * daily (`model:prune`): counting the rows on every new path would cost a
-     * full count per 404, so only one new path in a tenth of the cap trims (a
-     * lottery, as Laravel sweeps sessions). The log runs over by about a
-     * tenth, and a small cap is kept exactly.
+     * Trims the log on a site without the scheduler, which otherwise prunes it daily (`model:prune`).
+     * Counting the rows for every new path would cost a full count per 404, so only one new path in a
+     * tenth of the cap trims the log, as a lottery, in the same way Laravel sweeps sessions. The log can
+     * run over by about a tenth, and a small cap is kept exactly.
      */
     private function trim(): void
     {

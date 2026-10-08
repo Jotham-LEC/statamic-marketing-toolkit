@@ -8,18 +8,18 @@ use Illuminate\Support\Carbon;
 use JothamLec\MarketingToolkit\Models\Concerns\BelongsToSite;
 
 /**
- * One run over the site: its settings when it started, how far it has got,
- * and, once done, the site's score and a count of pages failing each check.
- * On a multi-site install each report is of one site.
+ * One run over the site. It holds the settings it started with, how far it
+ * has got, and, once done, the site's score and a count of the pages failing
+ * each check. On a multi-site install, each report covers one site.
  *
  * @property int $id
- * @property ?string $site null on a single site
+ * @property ?string $site null on a single-site install
  * @property string $status running, done or failed
  * @property int $pages_total
  * @property int $pages_done
  * @property ?int $score
  * @property array<string, mixed> $settings
- * @property ?array{rules: array<string, array<string, mixed>>, scored?: int, noindex?: int, errors?: int} $summary as SiteTotals::summary() gives it; scored and the counts after it are missing from older reports
+ * @property ?array{rules: array<string, array<string, mixed>>, scored?: int, noindex?: int, errors?: int} $summary as SiteTotals::summary() returns it; older reports lack scored and the counts after it
  * @property ?string $error
  * @property ?Carbon $finished_at
  * @property Carbon $created_at
@@ -65,8 +65,8 @@ class Report extends Model
     }
 
     /**
-     * The latest finished report the control panel shows while $site is
-     * selected, for the overview and the dashboard widget.
+     * Gets the latest finished report that the control panel shows while $site
+     * is selected, for the overview and the dashboard widget.
      */
     public static function latestDone(string $site): ?self
     {
@@ -74,8 +74,9 @@ class Report extends Model
     }
 
     /**
-     * The pages the score is of: those scored (not a noindex page), or every
-     * page in a report from before they were counted apart.
+     * Gets the number of pages that the score covers. This is the scored pages
+     * (not the noindex ones) or, in a report from before they were counted
+     * separately, every page.
      */
     public function scoredPages(): int
     {

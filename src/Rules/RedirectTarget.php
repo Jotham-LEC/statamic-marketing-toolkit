@@ -11,21 +11,21 @@ use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
- * A redirect's target makes sense with its source: it uses no more `$1`,
- * `$2`… than the source has `*`, it puts none of them in the domain, and it
- * doesn't send visitors round in a circle through the other rules.
+ * This rule checks that a redirect's target makes sense with its source. The target may use no more of
+ * `$1`, `$2`, and so on than the source has `*`, it may put none of them in the domain, and it must not
+ * send visitors round in a circle through the other rules.
  */
 final readonly class RedirectTarget implements ValidationRule
 {
-    /** How far a chain of rules is followed when looking for a loop. */
+    /** This sets how far a chain of rules is followed when looking for a loop. */
     private const int MAX_HOPS = 10;
 
     /**
      * @param  string  $source  the rule's source, as typed
-     * @param  ?string  $site  the rule's site; null: a rule for every site
+     * @param  ?string  $site  the rule's site, or null for a rule for every site
      * @param  ?int  $ignoreId  the rule being edited, which stands aside for its new version
-     * @param  ?Collection<int, Redirect>  $active  the active rules, when the caller
-     *                                              has them at hand; null: read them
+     * @param  ?Collection<int, Redirect>  $active  the active rules when the caller has
+     *                                              them at hand, or null to read them
      */
     public function __construct(private string $source, private ?string $site = null, private ?int $ignoreId = null, private ?Collection $active = null) {}
 
@@ -37,7 +37,8 @@ final readonly class RedirectTarget implements ValidationRule
         if ($used[1] !== [] && max(array_map('intval', $used[1])) > substr_count($this->source, '*')) {
             $fail(__('marketing-toolkit::validation.redirect.target_number'));
         } elseif (preg_match('#^https?://[^/]*\$\d#i', $target)) {
-            // What a visitor typed would choose the site they are sent to (`https://example.com$1` → example.com.evil.test).
+            // We refuse this, because a visitor's input would choose the site they are sent to
+            // (`https://example.com$1` → example.com.evil.test).
             $fail(__('marketing-toolkit::validation.redirect.target_number_domain'));
         } elseif ($loop = $this->loop($target)) {
             $fail($loop);
@@ -45,11 +46,10 @@ final readonly class RedirectTarget implements ValidationRule
     }
 
     /**
-     * Why a rule from $source to $target would send visitors round in a
-     * circle, or null. A target under a wildcard's own source (`/blog/*` to
-     * `/blog/new/$1`) is allowed: the pages there usually exist. A rule for
-     * one site is followed through that site's rules; one for every site,
-     * through each site's.
+     * Explains why a rule from $source to $target would send visitors round in a circle, or returns null.
+     * A target under a wildcard's own source (`/blog/*` to `/blog/new/$1`) is allowed, because the pages
+     * there usually exist. A rule for one site is followed through that site's rules, and a rule for every
+     * site is followed through each site's rules.
      */
     private function loop(string $target): ?string
     {
@@ -79,14 +79,12 @@ final readonly class RedirectTarget implements ValidationRule
     }
 
     /**
-     * Follows the rules from the target, as a visitor on $site would be sent
-     * on (null: a single site, every rule), and sees whether they come back.
-     * Each step looks only at the rules that could match (an exact source, the
-     * wildcards): among $active when given, else read for that step rather than
-     * from the cached set, which an import would rebuild after every row. The
-     * rule being edited stands aside for its new version. Ignoring case, an
-     * exact source can't be looked up in SQL (see forSource()), so all are
-     * read once.
+     * Follows the rules from the target, as a visitor on $site would be sent on (null means a single site
+     * and every rule), and checks whether they come back. Each step looks only at the rules that could
+     * match (an exact source and the wildcards). These come from $active when it is given; otherwise they
+     * are read for that step rather than from the cached set, which an import would rebuild after every
+     * row. The rule being edited stands aside for its new version. When ignoring case, an exact source
+     * can't be looked up in SQL (see forSource()), so all the rules are read once.
      */
     private function loopOn(string $source, string $target, ?string $site): ?string
     {
