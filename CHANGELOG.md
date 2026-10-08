@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.22.3 – 2026-10-08
+
+### Fixed
+- **The front-end toolbar is drawn under a Content Security Policy whose `style-src` doesn't allow inline styles** (a nonce-only one, say). Its styles were a `<style>` element in its shadow root, which such a policy blocks, so it showed unstyled. They are now a constructed stylesheet the shadow root adopts, which a policy doesn't govern: no `'unsafe-inline'`, nonce or hash is needed for them. Browsers without constructable stylesheets (Safari before 16.4) still get the `<style>` element. The script `<s:mt:body />` prints is unchanged, and so is its hash.
+
 ## 0.22.2 – 2026-10-08
 
 ### Fixed
