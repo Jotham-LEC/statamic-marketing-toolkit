@@ -154,6 +154,24 @@ describe('json-ld', function () {
         expect($graph['FAQPage']['mainEntity'][0]['acceptedAnswer']['text'])->toBe('<p>Because <strong>so</strong>.</p>');
     });
 
+    test('a Bard answer is rendered as Bard renders it, without its sets; an answer of another shape leaves its question out', function () {
+        config(['marketing-toolkit.collections.pages' => ['faq_field' => 'faqs']]);
+        $bard = [
+            ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Because '], ['type' => 'text', 'text' => 'so', 'marks' => [['type' => 'bold']]], ['type' => 'text', 'text' => '.']]],
+            ['type' => 'set', 'attrs' => ['id' => 'a1', 'values' => ['type' => 'image']]],
+        ];
+
+        $faq = collect(metaFor(entryIn('pages', 'help', ['faqs' => [
+            ['question' => 'Why?', 'answer' => $bard],
+            ['question' => 'Only a set?', 'answer' => [['type' => 'set', 'attrs' => ['id' => 'a2', 'values' => []]]]],
+            ['question' => 'A map?', 'answer' => ['text' => 'No']],
+            ['question' => ['not' => 'text'], 'answer' => 'Hidden.'],
+        ]]))->graph)->keyBy('@type')['FAQPage'];
+
+        expect(collect($faq['mainEntity'])->pluck('name')->all())->toBe(['Why?'])
+            ->and($faq['mainEntity'][0]['acceptedAnswer']['text'])->toBe('<p>Because <strong>so</strong>.</p>');
+    });
+
     test('extra JSON-LD typed in the entry is added; text that does not parse is ignored', function () {
         $types = fn ($entry) => collect(metaFor($entry)->graph)->pluck('@type')->all();
 

@@ -12,6 +12,8 @@ use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Query\Builder;
 use Statamic\Facades\Entry as Entries;
 use Statamic\Facades\Markdown;
+use Statamic\Fieldtypes\Bard;
+use Statamic\Fieldtypes\Bard\Augmentor;
 use Statamic\Structures\Page;
 
 /**
@@ -501,7 +503,8 @@ trait BuildsSchema
      * FAQPage from a grid of question / answer rows (config `faq_field`), or
      * from that grid in each visible set of a Replicator (`sections.faq.faqs`),
      * in the page's order. Answers are rendered from Markdown, as the page
-     * shows them.
+     * shows them, or from Bard; a row whose question isn't text, or whose
+     * answer is neither, is left out.
      *
      * @return array<string, mixed>|null
      *
@@ -514,11 +517,13 @@ trait BuildsSchema
         $rows = $field && $content ? $this->rawValues($content, $field)->flatMap(fn ($rows) => is_array($rows) ? $rows : []) : collect();
 
         $questions = $rows
-            ->filter(fn ($row) => is_array($row) && filled($row['question'] ?? null) && filled($row['answer'] ?? null))
+            ->filter(fn ($row) => is_array($row) && is_string($row['question'] ?? null) && filled($row['question']))
+            ->map(fn (array $row) => ['question' => $row['question'], 'answer' => $this->answerHtml($row['answer'] ?? null)])
+            ->filter(fn (array $row) => filled($row['answer']))
             ->map(fn (array $row) => [
                 '@type' => 'Question',
                 'name' => Text::plain($row['question']),
-                'acceptedAnswer' => ['@type' => 'Answer', 'text' => trim(Markdown::parse((string) $row['answer']))],
+                'acceptedAnswer' => ['@type' => 'Answer', 'text' => $row['answer']],
             ])
             ->values();
 
@@ -527,6 +532,26 @@ trait BuildsSchema
             '@id' => $this->url($context).'#faq',
             'mainEntity' => $questions->all(),
         ];
+    }
+
+    /**
+     * An FAQ answer as HTML: a text (Markdown, or Bard saved as HTML) parsed
+     * as Markdown, or a Bard field's stored nodes rendered as Bard renders
+     * them, without its sets. Null for anything else.
+     */
+    protected function answerHtml(mixed $answer): ?string
+    {
+        if (is_string($answer)) {
+            return trim(Markdown::parse($answer));
+        }
+
+        if (! is_array($answer) || ! array_is_list($answer)) {
+            return null;
+        }
+
+        $nodes = array_values(array_filter($answer, fn ($node) => is_array($node) && is_string($node['type'] ?? null) && $node['type'] !== 'set'));
+
+        return $nodes === [] ? null : trim((string) (new Augmentor(new Bard))->convertToHtml($nodes));
     }
 
     /**

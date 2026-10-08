@@ -41,7 +41,7 @@ These two shape what the site prints. The report's title and description checks,
         'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage: about the entry, as a Person)
         'description_fields' => ['intro'], // tried before the body's first paragraph
         'image_fields' => ['hero'],        // tried before the generated card
-        'faq_field' => 'faqs',             // a grid of question / answer rows → FAQPage (valid markup; Google shows no FAQ results since 2026)
+        'faq_field' => 'faqs',             // a grid of question / answer rows (answer: Markdown, text or Bard) → FAQPage (valid markup; Google shows no FAQ results since 2026)
         'author_field' => 'authors',       // an entries or users field → the Article's authors (else the publisher)
         'product' => [                     // a Product + Offer from these fields (needs a price above 0 and a currency)
             'price_field' => 'price', 'availability_field' => 'in_stock', // a toggle, or InStock/PreOrder…
