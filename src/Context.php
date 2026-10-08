@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit;
 
 use Illuminate\Http\Request;
+use JothamLec\MarketingToolkit\Support\Fields;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
 use Statamic\Structures\Page;
@@ -54,6 +55,18 @@ final readonly class Context
     }
 
     /**
+     * Returns a field's stored value as the page shows it: the form's unsaved
+     * value in a Live Preview of this content, or else the saved one (a
+     * translation's own, or its origin's).
+     */
+    public function value(string $handle): mixed
+    {
+        $content = $this->content();
+
+        return $content ? Fields::value($content, $handle) : null;
+    }
+
+    /**
      * Returns the entry's `seo` group without the fields left empty, so an
      * override cleared in the control panel counts as not set. A translation
      * that has no group of its own takes its origin's, as the control panel
@@ -63,7 +76,7 @@ final readonly class Context
      */
     public function seo(): array
     {
-        $values = $this->content()?->value('seo');
+        $values = $this->value('seo');
 
         return array_filter(is_array($values) ? $values : [], fn ($value) => filled($value));
     }

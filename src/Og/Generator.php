@@ -53,6 +53,15 @@ class Generator
     }
 
     /**
+     * Draws the card without the cache, for a Live Preview, whose unsaved values change with
+     * each keystroke and must not stand in for the saved card.
+     */
+    public function draw(Entry $entry): string
+    {
+        return $this->template($entry)->image($this->card($entry))->toString();
+    }
+
+    /**
      * Works out what the card says with the entry's site as the current one (for its brand values
      * and colours), wherever it is asked for.
      */
@@ -72,7 +81,7 @@ class Generator
         $mount = $mount?->in($entry->locale()) ?? $mount;
 
         return new Card(
-            title: $overrides['og_title'] ?? (string) $entry->value('title'),
+            title: $overrides['og_title'] ?? (string) $context->value('title'),
             // A long subtitle may be typed on several lines, but the card draws it as one paragraph.
             description: isset($overrides['og_subtitle']) ? Str::squish((string) $overrides['og_subtitle']) : $seo->description($context),
             label: $mount ? (string) $mount->value('title') : $settings->siteName(),

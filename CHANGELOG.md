@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.24.1 – 2026-10-08
+
+### Fixed
+- **The title, description, share tags, JSON-LD and share card follow Live Preview.** In Live Preview the page's body showed the unsaved edits while its `<head>` printed what was saved: `<title>`, the description, `og:*`, the JSON-LD (the page, article and FAQ nodes) and the card. They now read the form's values: the SEO tab, the fields a collection names in `title_fields`, `description_fields` and `faq_field`, and a field cleared in the form, which reads as cleared. The card's address carries the preview's token, so the card is drawn from those values (a draft's too) and isn't cached; any other entry, and the same page outside its preview, keeps what was saved.
+- **The toolbar gives a translation its origin's SEO, as the page's `<head>` does.** A translation without an SEO group of its own showed "hidden because of a rule" where its origin's SEO tab hides it from search engines.
+
 ## 0.24.0 – 2026-10-08
 
 Fixes for reports on queue workers, CSV imports on Postgres and cached files, the toolbar's keyboard shortcut fixed at Alt+Shift+M, and a tidier codebase that leans on Laravel's and Statamic's own tools.

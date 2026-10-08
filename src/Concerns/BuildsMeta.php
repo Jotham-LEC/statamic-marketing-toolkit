@@ -7,6 +7,7 @@ use JothamLec\MarketingToolkit\Meta;
 use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Fields;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Entries\Entry;
@@ -180,6 +181,8 @@ trait BuildsMeta
      * are off, when this host can't draw them (without Imagick), or when the
      * entry is protected, because its card would show what it protects. The
      * `v` parameter changes with each edit, so link previews fetch it again.
+     * In a Live Preview of the entry, the URL carries the preview's token, so
+     * the card shows the unsaved values, and a draft has one too.
      *
      * The URL sits on the root of the entry's domain, which serves the card
      * routes, followed by the page's path from that root. For example, the
@@ -188,7 +191,9 @@ trait BuildsMeta
      */
     public function generatedImageUrl(Entry $entry): ?string
     {
-        if (! Features::on('share_cards') || $entry->status() !== 'published' || ! $entry->url() || $this->isProtected($entry)
+        $previewed = Fields::isPreviewed($entry);
+
+        if (! Features::on('share_cards') || (! $previewed && $entry->status() !== 'published') || ! $entry->url() || $this->isProtected($entry)
             || ! app(Generator::class)->available()) {
             return null;
         }
@@ -196,8 +201,9 @@ trait BuildsMeta
         $absolute = (string) $entry->absoluteUrl();
         $path = trim((string) parse_url($absolute, PHP_URL_PATH), '/');
         $route = $path === '' ? 'og.png' : 'og/'.$path.'.png';
+        $token = $previewed ? '&token='.request()->statamicToken()?->token() : '';
 
-        return self::domainRoot($absolute).'/'.$route.'?v='.$entry->lastModified()->timestamp;
+        return self::domainRoot($absolute).'/'.$route.'?v='.$entry->lastModified()->timestamp.$token;
     }
 
     /**

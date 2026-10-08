@@ -148,6 +148,8 @@ At the top is a live preview:
 
 It updates as you type, before you save. Values you leave empty show the defaults the site will really use, so what you see is what people get.
 
+Statamic's **Live Preview** shows your unsaved changes in the page's own `<head>` too: its title, description, share tags and structured data, and the share card it points to, which is drawn from what you typed, even for a draft.
+
 Above the Google result are two counters:
 
 - **Title**: Google shows about 60 characters; longer titles get cut off with "…".

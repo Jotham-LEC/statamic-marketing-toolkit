@@ -16,6 +16,7 @@ use JothamLec\MarketingToolkit\SearchConsole\Client;
 use JothamLec\MarketingToolkit\SearchConsole\SearchStat;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Fields;
 use JothamLec\MarketingToolkit\Support\Permissions;
 use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Uris;
@@ -166,7 +167,7 @@ final class PageData
 
         return [
             'type' => $content instanceof Entry ? 'entry' : ($content instanceof Term ? 'term' : null),
-            'title' => $content ? (string) $content->value('title') : null,
+            'title' => $content ? (string) Fields::value($content, 'title') : null,
             'status' => $content instanceof Entry ? $content->status() : ($content ? 'published' : null),
             'missing' => $this->missing(),
             'edit_url' => $editable ? $this->cp($content->editUrl()) : null,
@@ -326,7 +327,8 @@ final class PageData
 
     private function noindexReason(Entry|Term $content): string
     {
-        $seo = $content->get('seo');
+        // A translation without a group of its own takes its origin's, as its <head> does.
+        $seo = Fields::value($content, 'seo');
 
         if (is_array($seo) && ($seo['noindex'] ?? false)) {
             return 'page';

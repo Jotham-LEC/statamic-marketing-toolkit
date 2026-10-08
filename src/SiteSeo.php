@@ -9,6 +9,7 @@ use JothamLec\MarketingToolkit\Concerns\BuildsSchema;
 use JothamLec\MarketingToolkit\Concerns\InteractsWithContent;
 use JothamLec\MarketingToolkit\Concerns\ResolvesAlternates;
 use JothamLec\MarketingToolkit\Sitemap\Sitemap;
+use JothamLec\MarketingToolkit\Support\Fields;
 use JothamLec\MarketingToolkit\TextFiles\TextFiles;
 use Statamic\Contracts\Entries\Entry;
 use Statamic\Contracts\Taxonomies\Term;
@@ -103,7 +104,7 @@ class SiteSeo
     public function inSitemap(Entry|Term $content): bool
     {
         // This reads a translation's own group, or its origin's group when it has none.
-        $seo = $content->value('seo');
+        $seo = Fields::value($content, 'seo');
         $seo = is_array($seo) ? $seo : [];
         $canonical = $seo['canonical'] ?? null;
 

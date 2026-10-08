@@ -8,6 +8,7 @@ use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Settings;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Assets;
+use JothamLec\MarketingToolkit\Support\Fields;
 use JothamLec\MarketingToolkit\Support\Text;
 use Statamic\Auth\Protect\Protection;
 use Statamic\Auth\Protect\Protectors\NullProtector;
@@ -81,7 +82,7 @@ trait InteractsWithContent
     protected function contentTitle(Context $context): ?string
     {
         $content = $context->content();
-        $title = $content instanceof Term ? $content->title() : $content?->value('title');
+        $title = $content instanceof Term ? (Fields::value($content, 'title') ?? $content->slug()) : $context->value('title');
 
         return filled($title) ? (string) $title : null;
     }
@@ -154,19 +155,19 @@ trait InteractsWithContent
     /**
      * Returns the stored value of a field as a list, with one value for a plain
      * field and one per visible matching set for a path into a Replicator. It
-     * reads a translation's own value, or else its origin's, so it calls
-     * value(), because get() reads only the translation's own.
+     * reads a translation's own value, or else its origin's, and in a Live
+     * Preview of the content, the form's unsaved value (see Support\Fields).
      *
      * @return Collection<int, mixed>
      */
     protected function rawValues(Entry|Term $content, string $field): Collection
     {
         if ($set = $this->setPath($field)) {
-            return $this->visibleSets($content->value($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
+            return $this->visibleSets(Fields::value($content, $set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
         }
 
         /** @var mixed $value */
-        $value = $content->value($field);
+        $value = Fields::value($content, $field);
 
         return collect([$value]);
     }

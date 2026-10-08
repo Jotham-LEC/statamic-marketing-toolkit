@@ -412,6 +412,15 @@ test('the preview: the search result and share card, and the indexing facts', fu
     toolbarFor('/copy')->assertJsonPath('preview.facts.0', 'This page names https://example.test/about as its main address, so search engines will show that address instead.');
 });
 
+test('a translation without SEO of its own gives its origin\'s noindex as the reason, as its head does', function () {
+    multilang();
+    $origin = entryIn('pages', 'hidden', ['seo' => ['noindex' => true]]);
+    translationOf($origin, 'fr', 'cache');
+    $this->actingAs(cpUser(super: true));
+
+    toolbarFor('https://example.test/fr/cache')->assertJsonPath('preview.facts.0', 'Search engines are asked not to list this page, because its SEO tab says so.');
+});
+
 test('on a multi-site install: the page on its own site, that site\'s report, links that select the site, and its other sites', function () {
     multilang();
     $about = Entry::findByUri('/about');

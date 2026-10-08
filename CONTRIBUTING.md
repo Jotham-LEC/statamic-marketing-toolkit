@@ -35,7 +35,7 @@ Everything is under `src/`, in the `JothamLec\MarketingToolkit` namespace.
 | `Cp/`, `Actions/`, `Fieldtypes/`, `Widgets/`, `Preview/` | The control panel's nav and listings, row actions, the SEO preview and heading fieldtypes, the dashboard widget, and the unsaved-entry preview. |
 | `Commands/`, `Listeners/`, `UpdateScripts/` | `php please mt:*` commands, event listeners, and the update scripts Statamic runs on `composer update`. |
 | `Models/Concerns/` | What the addon's Eloquent models share. |
-| `Support/` | Small helpers: sites, text, URIs, assets, permissions, the Features switches, the package name, config merging. |
+| `Support/` | Small helpers: sites, text, URIs, assets, field values in Live Preview, permissions, the Features switches, the package name, config merging. |
 | `Legacy/` | Code that keeps sites set up for older versions working; all of it goes in 1.0 (docs/upgrading.md, "Removed in 1.0"). |
 
 The front end is in `resources/js`: Vue pages and components for the control panel (`addon.js`), and the toolbar in plain JavaScript (`toolbar/`). Views are in `resources/views`, blueprints and fieldsets in `resources/blueprints`, `resources/fieldsets` and `resources/install`, and translations in `lang/en`.
