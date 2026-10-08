@@ -28,6 +28,9 @@ class Favicons
         'site.webmanifest' => 'application/manifest+json',
     ];
 
+    /** version(), worked out once: false until then. */
+    private string|false|null $version = false;
+
     public function __construct(protected Settings $settings, protected Raster $raster) {}
 
     public function source(): ?Asset
@@ -41,9 +44,13 @@ class Favicons
      */
     public function version(): ?string
     {
+        if ($this->version !== false) {
+            return $this->version;
+        }
+
         $source = $this->source();
 
-        return $source === null ? null : substr(md5(implode('|', [
+        return $this->version = $source === null ? null : substr(md5(implode('|', [
             $source->id(), $source->size(), $source->lastModified()->timestamp, $this->themeColor(), $this->backgroundColor(), $this->settings->siteName(),
         ])), 0, 10);
     }
@@ -55,14 +62,10 @@ class Favicons
      */
     public function file(string $name): ?string
     {
-        $directory = $this->directory();
+        $directory = $this->madeDirectory();
 
         if ($directory === null || ! array_key_exists($name, self::FILES)) {
             return null;
-        }
-
-        if (! File::exists($directory.'/.made')) {
-            $this->make($directory);
         }
 
         $path = $directory.'/'.$name;
@@ -77,14 +80,15 @@ class Favicons
      */
     public function links(): array
     {
-        $version = $this->version();
+        $directory = $this->madeDirectory();
 
-        if ($version === null) {
+        if ($directory === null) {
             return [];
         }
 
-        $href = fn (string $name) => '/'.$name.'?v='.$version;
-        $has = fn (string $name) => $this->file($name) !== null;
+        $href = fn (string $name) => '/'.$name.'?v='.$this->version();
+        // Whether a file was made, without reading it: this runs on every page.
+        $has = fn (string $name) => File::exists($directory.'/'.$name);
 
         return array_values(array_filter([
             $has('favicon.ico') ? ['rel' => 'icon', 'href' => $href('favicon.ico'), 'sizes' => '32x32'] : null,
@@ -125,6 +129,21 @@ class Favicons
         $version = $this->version();
 
         return $version === null ? null : self::root().'/'.Site::current()->handle().'/'.$version;
+    }
+
+    /**
+     * The directory of this version's files, made first if need be; null
+     * when there is no image.
+     */
+    private function madeDirectory(): ?string
+    {
+        $directory = $this->directory();
+
+        if ($directory !== null && ! File::exists($directory.'/.made')) {
+            $this->make($directory);
+        }
+
+        return $directory;
     }
 
     protected function make(string $directory): void

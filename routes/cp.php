@@ -32,7 +32,8 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
     Route::post('actions', [ActionController::class, 'run'])->name('actions.run');
     Route::post('actions/list', [ActionController::class, 'bulkActions'])->name('actions.bulk');
 
-    Route::post('preview/card', [PreviewController::class, 'card'])->name('preview.card');
+    // Drawing a card takes Imagick a moment: at most 30 a minute per user.
+    Route::post('preview/card', [PreviewController::class, 'card'])->middleware('throttle:30,1')->name('preview.card');
 
     // Asked on every save of an entry or term: answers "no change" without the permission.
     Route::post('redirects/check', [RedirectsController::class, 'check'])->name('redirects.check');

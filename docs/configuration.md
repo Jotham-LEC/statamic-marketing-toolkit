@@ -249,6 +249,8 @@ The **Settings** tab of **Marketing → Reports**, for whoever may change the ad
 | Reports to keep | 10 | Older reports are deleted when a new one finishes. |
 | Run a report | Only by hand | Or daily or weekly, on the day and at the time you choose (app timezone). Needs the scheduler. `marketing-toolkit.reports.enabled` (or the Features switch) off stops the schedule. |
 
+**On a queue worker** (`QUEUE_CONNECTION` other than `sync`), each step of a report is one job. A step takes no new page after 45 seconds, and the job times out after 75. Keep your queue connection's `retry_after` (in `config/queue.php`) above 75 seconds; Laravel's default is 90. With a lower `retry_after`, the queue hands a step that is still running to a second worker, and the report is checked twice at once.
+
 The Search Console property is kept here too (`search_console_property`, and `search_console_properties` for the other sites), but set on **Marketing → Search Console**. `MT_SEARCH_CONSOLE_PROPERTY` wins over them.
 
 ## Permissions

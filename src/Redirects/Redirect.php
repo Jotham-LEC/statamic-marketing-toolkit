@@ -220,11 +220,18 @@ class Redirect extends Model
      */
     private static function rules(string $source, ?string $site, ?int $ignoreId, ?bool $taken, ?Collection $active, array $sites): array
     {
+        // Before the other checks: a regex on text that isn't UTF-8 fails, and Postgres refuses it.
+        $utf8 = function (string $attribute, mixed $value, Closure $fail) {
+            if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
+                $fail(__('marketing-toolkit::validation.redirect.encoding'));
+            }
+        };
+
         return [
             'site' => [Rule::requiredIf(Sites::multiple() && array_diff(Sites::handles(), $sites) !== []), 'nullable', 'string', Rule::in($sites)],
             'source' => [
                 // Control characters would go into the Location header (a line break starts a new header).
-                'required', 'string', 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
+                'required', 'string', 'bail', $utf8, 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
                 function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId, $taken) {
                     if ($taken ?? self::forSource((string) $value, $ignoreId, $site)) {
                         $fail(__('marketing-toolkit::validation.redirect.source_taken'));
@@ -232,7 +239,7 @@ class Redirect extends Model
                 },
             ],
             'target' => [
-                'nullable', 'required_unless:status,410', 'string', 'max:2048', 'regex:#^(/|https?://)#i', 'not_regex:/[\x00-\x1F\x7F]/',
+                'nullable', 'required_unless:status,410', 'string', 'bail', $utf8, 'max:2048', 'regex:#^(/|https?://)#i', 'not_regex:/[\x00-\x1F\x7F]/',
                 function (string $attribute, mixed $value, Closure $fail) use ($source, $site, $ignoreId, $active) {
                     $wildcards = substr_count($source, '*');
                     preg_match_all('/\$(\d+)/', (string) $value, $used);

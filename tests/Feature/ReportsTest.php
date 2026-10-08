@@ -105,14 +105,14 @@ test('a report runs in steps of the chunk size', function () {
         ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
 });
 
-test('a step of slow pages stops after five minutes and leaves the rest of its chunk to the next', function () {
+test('a step of slow pages stops after 45 seconds and leaves the rest of its chunk to the next', function () {
     reportSettings(['chunk_size' => 5]);
     foreach (['a', 'b', 'c', 'd', 'e'] as $slug) {
         entryIn('pages', $slug);
     }
     Carbon::setTestNow('2026-10-07 12:00:00');
-    // Each page takes three minutes to render.
-    View::composer('default', fn () => Carbon::setTestNow(now()->addMinutes(3)));
+    // Each page takes 30 seconds to render.
+    View::composer('default', fn () => Carbon::setTestNow(now()->addSeconds(30)));
 
     $runner = app(Runner::class);
     $report = $runner->start();
@@ -120,6 +120,41 @@ test('a step of slow pages stops after five minutes and leaves the rest of its c
     expect($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'running', 'pages_done' => 2])
         ->and($runner->step($report)->pages_done)->toBe(4)
         ->and($runner->step($report)->only(['status', 'pages_done']))->toBe(['status' => 'done', 'pages_done' => 5]);
+});
+
+test('a queued step ends before the queue would hand it to a second worker', function () {
+    $step = new RunReportStep(1);
+
+    // 90 seconds is Laravel's default `retry_after`; the step's last page may start just before its budget ends.
+    expect($step->timeout)->toBeLessThan(90)
+        ->and($step->timeout)->toBeGreaterThan(Runner::STEP_SECONDS)
+        ->and($step->tries)->toBe(1);
+});
+
+test('a report that failed while its last step ran stays failed', function () {
+    entryIn('pages', 'about');
+    $runner = app(Runner::class);
+    $report = $runner->start();
+    $runner->fail($report);
+
+    $runner->finish($report);
+
+    expect($report->refresh()->status)->toBe(Report::FAILED);
+});
+
+test('pages render as a visitor sees them, not as whoever started the report', function () {
+    $user = cpUser(super: true);
+    $this->actingAs($user);
+    entryIn('pages', 'about');
+    $seen = null;
+    View::composer('default', function () use (&$seen) {
+        $seen = auth()->check();
+    });
+
+    fullReport();
+
+    expect($seen)->toBeFalse()
+        ->and(auth()->user()?->id())->toBe($user->id());
 });
 
 test('turned-off checks, left-out collections and the page limit', function () {

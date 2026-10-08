@@ -145,6 +145,21 @@ test('an entry whose scheduled date arrives is listed without waiting for the ne
     expect($this->get('https://example.test/sitemap.xml')->getContent())->toContain('https://example.test/news/soon');
 });
 
+test('without the scheduler, an entry drops out of the cached sitemap and llms.txt when its date passes', function () {
+    seoGlobal([]);
+    Collection::make('events')->routes('events/{slug}')->dated(true)->pastDateBehavior('private')->save();
+    entryIn('events', 'fair', date: now()->addDay()->format('Y-m-d'));
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->toContain('/events/fair')
+        ->and($this->get('https://example.test/llms.txt')->getContent())->toContain('/events/fair');
+
+    // No EntryScheduleReached: the cache ends at the entry's date by itself.
+    $this->travel(2)->days();
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->not->toContain('/events/fair')
+        ->and($this->get('https://example.test/llms.txt')->getContent())->not->toContain('/events/fair');
+});
+
 test('more entries than one read takes are all listed, once each', function () {
     foreach (range(1, 501) as $i) {
         Entry::make()->collection('pages')->slug('page-'.$i)->data(['title' => 'Page '.$i])->saveQuietly();

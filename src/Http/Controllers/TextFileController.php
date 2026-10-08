@@ -27,7 +27,7 @@ final class TextFileController
         $build = fn () => $seo->llmsTxt();
 
         // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
-        return $this->text(Sites::trustsHost($request) ? Cache::rememberForever(self::llmsCacheKey(Site::current()->handle()), $build) : $build());
+        return $this->text(Sites::trustsHost($request) ? Cache::remember(self::llmsCacheKey(Site::current()->handle()), SitemapController::cachedUntil(), $build) : $build());
     }
 
     public function ads(SiteSeo $seo): Response
@@ -40,9 +40,16 @@ final class TextFileController
         return $this->text($text);
     }
 
+    /**
+     * Per site, and per the settings that shape llms.txt (the collections the
+     * sitemap lists, and where descriptions come from), so a deploy that
+     * changes them doesn't serve the old file until the next save.
+     */
     public static function llmsCacheKey(string $site): string
     {
-        return self::LLMS_CACHE_KEY.':'.$site;
+        return self::LLMS_CACHE_KEY.':'.$site.':'.md5(serialize([
+            config('marketing-toolkit.sitemap'), config('marketing-toolkit.collections'), config('marketing-toolkit.llms_txt'),
+        ]));
     }
 
     private function text(string $body): Response

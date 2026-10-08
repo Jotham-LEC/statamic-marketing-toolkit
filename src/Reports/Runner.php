@@ -51,11 +51,19 @@ class Runner
     private const int STALE_MINUTES = 30;
 
     /**
-     * A step takes no new page after this many seconds, leaving the rest of
-     * its chunk to the next, so slow pages (or slow sites they link to) can't
-     * run it past a queue worker's timeout (RunReportStep::$timeout).
+     * A step takes no new page after this many seconds and leaves the rest of
+     * its chunk to the next step. Slow pages, or slow sites they link to, then
+     * can't run a step past the queue job's timeout (RunReportStep::$timeout),
+     * which stays below the 90 seconds Laravel's queues wait by default before
+     * they hand a job to another worker (`retry_after`).
      */
-    private const int STEP_SECONDS = 300;
+    public const int STEP_SECONDS = 45;
+
+    /**
+     * How long the lock a running step holds lasts. It outlasts the job's
+     * timeout, so a second step can't start while the first one still runs.
+     */
+    private const int STEP_LOCK_SECONDS = 120;
 
     /**
      * A report on a queue worker that hasn't moved for this long has lost its
@@ -122,7 +130,7 @@ class Runner
             return $report;
         }
 
-        return self::stepLock($report, 600)
+        return self::stepLock($report, self::STEP_LOCK_SECONDS)
             // Read again once the lock is held: a step that just ended may have finished it.
             ->get(fn () => $report->refresh()->isRunning() ? Sites::as($report->site, fn () => $this->stepInSite($report)) : $report)
             ?: $report->refresh();
@@ -320,11 +328,13 @@ class Runner
             $page->update(['results' => $results, 'score' => $score, 'failing' => $flagged === '' ? null : ','.$flagged.',']);
         });
 
-        $report->update([
+        // Only a report still running: one marked failed meanwhile (a step that timed out) stays failed.
+        Report::query()->whereKey($report->id)->where('status', Report::RUNNING)->update([
             'status' => Report::DONE,
             'score' => $scores === [] ? null : (int) round(array_sum($scores) / count($scores)),
-            'summary' => ['rules' => $summary, ...$counts],
+            'summary' => json_encode(['rules' => $summary, ...$counts]),
             'finished_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $this->prune($settings->int('keep_reports'), $report->site);

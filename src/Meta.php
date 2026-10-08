@@ -42,7 +42,8 @@ final readonly class Meta
 
         return json_encode(
             ['@context' => 'https://schema.org', '@graph' => $this->graph],
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR,
+            // Text that isn't UTF-8 (pasted from another program) becomes U+FFFD rather than failing the page.
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR,
         );
     }
 }

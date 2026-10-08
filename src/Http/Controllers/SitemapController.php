@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Http\Controllers;
 
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -10,13 +11,16 @@ use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
 use Statamic\Exceptions\NotFoundHttpException;
+use Statamic\Facades\Collection as Collections;
+use Statamic\Facades\Entry;
 use Statamic\Facades\Site;
 
 /**
  * /sitemap.xml: every published page search engines should index. Up to
  * `marketing-toolkit.sitemap.per_page` URLs it is one <urlset>; past that it becomes an
  * index of /sitemap_{n}.xml. Cached until an entry, term, tree, collection
- * or taxonomy is saved (JothamLec\MarketingToolkit\Listeners\FlushSitemap).
+ * or taxonomy is saved (JothamLec\MarketingToolkit\Listeners\FlushSitemap),
+ * and at most until the next dated entry is published or expires.
  */
 final class SitemapController
 {
@@ -60,7 +64,29 @@ final class SitemapController
         $build = fn () => $seo->sitemapUrls();
 
         // Cached only on a host the install names: the addresses may come from the Host header (Sites::trustsHost).
-        return Sites::trustsHost($request) ? Cache::rememberForever(self::cacheKey(Site::current()->handle()), $build) : $build();
+        return Sites::trustsHost($request) ? Cache::remember(self::cacheKey(Site::current()->handle()), self::cachedUntil(), $build) : $build();
+    }
+
+    /**
+     * When the sitemap and llms.txt stop being right by themselves: the next
+     * date of an entry in a collection that hides future or past dates, when
+     * that entry is published or expires. Statamic's scheduler flushes them
+     * then too (EntryScheduleReached), but only where the scheduler runs.
+     * Null: no such date, so they are cached until the next save.
+     */
+    public static function cachedUntil(): ?CarbonInterface
+    {
+        $collections = Collections::all()
+            ->filter(fn ($collection) => $collection->dated() && in_array('private', [$collection->futureDateBehavior(), $collection->pastDateBehavior()], true))
+            ->map->handle()
+            ->values()
+            ->all();
+
+        if ($collections === []) {
+            return null;
+        }
+
+        return Entry::query()->whereIn('collection', $collections)->where('date', '>', now())->orderBy('date')->first()?->date();
     }
 
     /**

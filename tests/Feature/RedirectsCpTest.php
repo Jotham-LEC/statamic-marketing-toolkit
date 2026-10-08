@@ -29,7 +29,9 @@ test('the redirects screen and its listing: search, sort, pagination, columns', 
         ->and($listing->json('meta'))->toMatchArray(['current_page' => 1, 'last_page' => 1, 'total' => 3])
         ->and($listing->json('meta.columns.*.field'))->toBe(['source', 'target', 'status', 'active', 'hits', 'last_hit_at']);
 
-    expect($this->getJson(cp_route('mt.redirects.listing', ['search' => 'b-n']))->json('data.*.source'))->toBe(['/b-old']);
+    expect($this->getJson(cp_route('mt.redirects.listing', ['search' => 'b-n']))->json('data.*.source'))->toBe(['/b-old'])
+        // In any letter case, on Postgres too.
+        ->and($this->getJson(cp_route('mt.redirects.listing', ['search' => 'B-OLD']))->json('data.*.source'))->toBe(['/b-old']);
     expect($this->getJson(cp_route('mt.redirects.listing', ['sort' => 'nope; drop table']))->json('data.*.source'))->toBe(['/a-old', '/b-old', '/gone']);
 });
 

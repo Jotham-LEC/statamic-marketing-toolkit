@@ -31,7 +31,8 @@ final class Listing
         if ($search = trim((string) $request->input('search'))) {
             $query->where(function (Builder $query) use ($searchable, $search) {
                 foreach ($searchable as $field) {
-                    $query->orWhere($field, 'like', '%'.$search.'%');
+                    // `ilike` on Postgres, whose `like` minds letter case.
+                    $query->orWhereLike($field, '%'.$search.'%', caseSensitive: false);
                 }
             });
         }

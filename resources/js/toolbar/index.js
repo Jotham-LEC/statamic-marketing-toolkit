@@ -99,6 +99,14 @@ const typing = (event) => {
 };
 
 let drawn = null;
+
+/** Takes the drawn bar away, with the listeners it put on the page. */
+function undraw() {
+    drawn?.toolbar.destroy();
+    drawn?.element.remove();
+    drawn = null;
+}
+
 let pressed = matcher(settings().shortcut);
 
 /** Draws a bar, then takes the one before it away, so nothing flickers between them. */
@@ -108,14 +116,14 @@ function draw(data) {
     const toolbar = bar(root, data, {
         shortcut: (shortcut) => (pressed = matcher(shortcut)),
         hidden: () => {
-            element.remove();
-            drawn = null;
+            undraw();
             notice(data.user.labels.hidden.replace(':keys', settings().shortcut));
         },
     });
 
     if (previous) {
         if (previous.toolbar.focused()) toolbar.focus();
+        previous.toolbar.destroy();
         previous.element.remove();
     }
 
@@ -159,13 +167,13 @@ async function load() {
     try {
         response = await answer;
     } catch {
-        drawn?.element.remove();
+        undraw();
         return;
     }
 
     // Signed out (or the toolbar was switched off): nothing more on this browser until the next sign-in.
     if (response.status === 401 || response.status === 404) {
-        drawn?.element.remove();
+        undraw();
         forget();
         if (response.status === 401) notice((await response.json().catch(() => ({}))).message ?? '');
         return;
@@ -177,7 +185,7 @@ async function load() {
         if (!response.ok) throw new Error();
         data = await response.json();
     } catch {
-        drawn?.element.remove();
+        undraw();
         notice(shell?.user.labels.error ?? 'The toolbar couldn’t load this page’s details. Reload the page to try again.');
         return;
     }

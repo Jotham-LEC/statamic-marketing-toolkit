@@ -63,19 +63,32 @@ class ExternalLinkChecker
         $this->deadline = now()->addSeconds(self::BUDGET);
 
         foreach ($urls as $url) {
+            // Looking hosts up takes time too: the links after the budget runs out stay unchecked.
+            if ($this->secondsLeft() < 1) {
+                break;
+            }
+
             if (Cache::get($this->key($url)) !== null) {
                 continue;
             }
 
             $address = $this->address($url);
 
-            // A host that doesn't resolve is decided already; a private one is never asked.
-            is_string($address) ? $addresses[$url] = $address : $this->remember($url, $address === null);
+            if ($address === null) {
+                // A host that doesn't resolve is broken, but asked again sooner: DNS may have failed for a moment.
+                $this->remember($url, true, now()->addHour());
+            } elseif ($address === false) {
+                // A private address is never asked.
+                $this->remember($url, false);
+            } else {
+                $addresses[$url] = $address;
+            }
         }
 
-        if ($addresses !== []) {
+        if ($addresses !== [] && $this->secondsLeft() >= 1) {
+            $timeout = min(self::TIMEOUT, $this->secondsLeft());
             $responses = Http::pool(fn (Pool $pool) => array_map(
-                fn (string $url) => $this->request($pool->as($url), $url, $addresses[$url])->head($url),
+                fn (string $url) => $this->request($pool->as($url), $url, $addresses[$url])->timeout($timeout)->head($url),
                 array_keys($addresses),
             ));
 
@@ -195,7 +208,7 @@ class ExternalLinkChecker
      */
     private function send(string $method, string $url): Response|Throwable|string|false|null
     {
-        $left = $this->deadline === null ? self::TIMEOUT : (int) now()->diffInSeconds($this->deadline, false);
+        $left = $this->secondsLeft();
 
         if ($left < 1) {
             return self::UNCHECKED;
@@ -246,14 +259,22 @@ class ExternalLinkChecker
             ->withOptions(['proxy' => '', 'curl' => [CURLOPT_RESOLVE => [trim((string) $parts['host'], '[]').":{$port}:{$ip}"]]]);
     }
 
+    /**
+     * The seconds left of the page's budget.
+     */
+    private function secondsLeft(): int
+    {
+        return $this->deadline === null ? self::TIMEOUT : (int) now()->diffInSeconds($this->deadline, false);
+    }
+
     private function isBroken(mixed $response): bool
     {
         return $response === null || ($response instanceof Response && in_array($response->status(), [404, 410], true));
     }
 
-    private function remember(string $url, bool $broken): void
+    private function remember(string $url, bool $broken, ?CarbonInterface $until = null): void
     {
-        Cache::put($this->key($url), $broken ? 'broken' : 'fine', now()->addDay());
+        Cache::put($this->key($url), $broken ? 'broken' : 'fine', $until ?? now()->addDay());
     }
 
     private function key(string $url): string

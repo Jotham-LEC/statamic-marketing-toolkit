@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\Meta;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Package;
 use JothamLec\MarketingToolkit\UpdateScripts\KeepSiteNameInTitles;
@@ -394,4 +395,14 @@ test('a brand image is found from its path and the field\'s container, and nothi
     expect($settings->asset('default_image')?->id())->toBe('assets::brand.png')
         ->and($settings->asset('publisher_logo')?->id())->toBe('assets::brand.png')
         ->and($settings->asset('favicon'))->toBeNull();
+});
+
+test('text that isn\'t UTF-8 can\'t fail the page: the JSON-LD prints a replacement character', function () {
+    $meta = new Meta(
+        title: 'Café', description: null, canonical: null, robots: 'index, follow', ogTitle: 'Café', ogType: 'website',
+        url: 'https://example.test/', siteName: 'Acme', locale: 'en_US', image: null, published: null, modified: null,
+        twitterSite: null, verification: [], graph: [['@type' => 'WebPage', 'name' => "Caf\xE9"]],
+    );
+
+    expect($meta->jsonLd())->toContain('"name":"Caf'."\u{FFFD}".'"');
 });

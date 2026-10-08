@@ -17,7 +17,7 @@ const props = defineProps({
 });
 
 const rule = ref(null);
-const url = computed(() => (rule.value ? `${props.listingUrl}?rule=${rule.value}` : props.listingUrl));
+const url = computed(() => (rule.value ? `${props.listingUrl}?${new URLSearchParams({ rule: rule.value })}` : props.listingUrl));
 const ruleLabel = computed(() => props.rules.find((item) => item.handle === rule.value)?.label);
 // As When shows it, but as text, so a translation can put it anywhere in the sentence.
 const finished = computed(() => (props.report.finished_at ? formatDate(props.report.finished_at) : '—'));

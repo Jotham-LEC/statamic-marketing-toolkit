@@ -51,6 +51,17 @@ test('llms.txt is cached, and forgotten when content is saved', function () {
     $this->get('https://example.test/llms.txt')->assertSee('/team');
 });
 
+test('llms.txt follows a change to the config, without waiting for a save', function () {
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    entryIn('essays', 'first');
+    $this->get('https://example.test/llms.txt')->assertSee('/first');
+
+    config(['marketing-toolkit.sitemap.exclude_collections' => ['essays']]);
+
+    $this->get('https://example.test/llms.txt')->assertSee('/about')->assertDontSee('/first');
+});
+
 test('ads.txt serves the lines from SEO & brand, and nothing until there are some', function () {
     seoGlobal([]);
     $this->get('https://example.test/ads.txt')->assertNotFound();

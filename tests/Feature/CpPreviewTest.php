@@ -134,6 +134,17 @@ test('the card route has nothing to draw for a term or with cards off', function
     previewOf('collections.pages.page', ['title' => 'About'], route: 'mt.preview.card')->assertNotFound();
 });
 
+test('the card route answers at most 30 times a minute per user', function () {
+    $this->actingAs(cpUser(super: true));
+    config(['marketing-toolkit.og.enabled' => false]);
+
+    foreach (range(1, 30) as $request) {
+        previewOf('collections.pages.page', ['title' => 'About'], route: 'mt.preview.card')->assertNotFound();
+    }
+
+    previewOf('collections.pages.page', ['title' => 'About'], route: 'mt.preview.card')->assertTooManyRequests();
+});
+
 test('only people who may see the content get its preview', function () {
     $entry = entryIn('pages', 'about');
 

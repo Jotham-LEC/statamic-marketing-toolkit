@@ -377,6 +377,40 @@ test('a CSV cell in quotes may hold a line break, and rows are counted as record
         ->and(Redirect::query()->pluck('source')->all())->toBe(['/two']);
 });
 
+test('a CSV row that isn\'t UTF-8 is reported by its number, and the other rows are imported', function () {
+    $result = app(Csv::class)->import("source,target,status,active\n/one,/1,301,1\n/caf\xE9,/cafe,301,1\n/two,/2,301,1\n");
+
+    expect($result['created'])->toBe(2)
+        ->and($result['errors'])->toBe(['Row 3: '.__('marketing-toolkit::validation.redirect.encoding')])
+        ->and(Redirect::query()->orderBy('source')->pluck('source')->all())->toBe(['/one', '/two']);
+});
+
+test('a CSV row the database refuses is reported, and the rows before and after it are kept', function () {
+    // On Postgres a failed statement aborts the transaction it is in: each row has its own savepoint.
+    Redirect::creating(function (Redirect $redirect) {
+        if ($redirect->source === '/bad') {
+            DB::select('select * from no_such_table');
+        }
+    });
+    Exceptions::fake();
+
+    $result = app(Csv::class)->import("/one,/1\n/bad,/x\n/two,/2\n");
+
+    expect($result['created'])->toBe(2)
+        ->and($result['errors'])->toBe([__('marketing-toolkit::validation.csv_row_failed', ['row' => 2])])
+        ->and(Redirect::query()->orderBy('source')->pluck('source')->all())->toBe(['/one', '/two']);
+    Exceptions::assertReported(QueryException::class);
+});
+
+test('a CSV import that updates an automatic redirect makes it the user\'s own, as the form does', function () {
+    $redirect = rule('/old', '/new');
+    $redirect->update(['automatic' => true]);
+
+    app(Csv::class)->import("/old,/newer\n");
+
+    expect($redirect->fresh()->only(['target', 'automatic']))->toBe(['target' => '/newer', 'automatic' => false]);
+});
+
 test('with case_sensitive off, a chain of rules that comes back in another letter case is refused', function () {
     config(['marketing-toolkit.redirects.case_sensitive' => false]);
     $validator = fn (string $source, string $target) => Redirect::validator(['source' => $source, 'target' => $target, 'status' => 301, 'active' => true]);

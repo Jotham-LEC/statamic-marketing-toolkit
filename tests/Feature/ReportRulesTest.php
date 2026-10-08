@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
@@ -258,6 +259,30 @@ test('a page’s links stop being checked when its time is up, and those left ar
     // Two redirects followed in the 30 seconds; the third link is left.
     expect($checker->broken($urls))->toBe(['https://slow.test/a', 'https://slow.test/b'])
         ->and($checker->broken($urls))->toBe($urls);
+});
+
+test('looking up hosts counts against a page\'s time, and a host that doesn\'t resolve is asked again after an hour', function () {
+    Carbon::setTestNow('2026-10-07 12:00:00');
+    Http::fake(['*' => Http::response('', 200)]);
+    // Each lookup takes 20 seconds; none resolves.
+    app()->instance(ExternalLinkChecker::class, new class extends ExternalLinkChecker
+    {
+        protected function resolve(string $host): array
+        {
+            Carbon::setTestNow(now()->addSeconds(20));
+
+            return [];
+        }
+    });
+    $checker = app(ExternalLinkChecker::class);
+    $urls = ['https://a.test/', 'https://b.test/', 'https://c.test/'];
+
+    // Two lookups in the 30 seconds; the third link is left unchecked.
+    expect($checker->broken($urls))->toBe(['https://a.test/', 'https://b.test/']);
+
+    Carbon::setTestNow(now()->addMinutes(61));
+    expect(Cache::has('mt:external-link:'.md5('https://a.test/')))->toBeFalse();
+    Http::assertNothingSent();
 });
 
 test('where HEAD is refused, the GET stops once its headers are in', function () {

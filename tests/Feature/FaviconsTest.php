@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\File;
 use JothamLec\MarketingToolkit\Favicons\Favicons;
 use JothamLec\MarketingToolkit\Favicons\Raster;
 use Statamic\Facades\AssetContainer;
@@ -109,4 +110,14 @@ test('saving SEO & brand makes the icons again, under a new version', function (
         ->and(File::exists(Favicons::root().'/default/'.$before))->toBeFalse()
         // Made on save, before anyone asks.
         ->and(File::exists(Favicons::root().'/default/'.$after.'/apple-touch-icon.png'))->toBeTrue();
+});
+
+test('the icon links on a page never read the icon files', function () {
+    iconGlobal('icon.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    // The first page makes the icons.
+    expect(app(Favicons::class)->links())->toHaveCount(3);
+
+    File::partialMock()->shouldNotReceive('get');
+
+    expect(app(Favicons::class)->links())->toHaveCount(3);
 });

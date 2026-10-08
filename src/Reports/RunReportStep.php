@@ -22,7 +22,18 @@ class RunReportStep implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
-    public int $timeout = 600;
+    /**
+     * Below the 90 seconds a queue waits by default before it hands a job to
+     * another worker (`retry_after`). A longer step would run twice at once.
+     * A step takes no new page after Runner::STEP_SECONDS.
+     */
+    public int $timeout = 75;
+
+    /**
+     * A step that fails isn't tried again: failed() marks the report failed,
+     * and the user can start a new one.
+     */
+    public int $tries = 1;
 
     /** How long a step waits when another process is stepping the report. */
     private const int RETRY_SECONDS = 30;
@@ -46,6 +57,10 @@ class RunReportStep implements ShouldQueue
         }
     }
 
+    /**
+     * Laravel calls this when the step threw or ran past its timeout. The
+     * report is marked failed, unless it finished in the meantime.
+     */
     public function failed(?Throwable $exception): void
     {
         $report = Report::query()->find($this->reportId);

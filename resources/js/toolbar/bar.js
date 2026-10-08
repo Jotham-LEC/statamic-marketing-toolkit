@@ -46,6 +46,8 @@ export function bar(root, data, hooks) {
     const buttons = {};
     const sections = {};
     let current = null;
+    // Ends the listeners this bar puts on the page, once another bar replaces it.
+    const listening = new AbortController();
 
     // What the More panel changes: kept in this browser, applied at once.
     const actions = {
@@ -108,7 +110,7 @@ export function bar(root, data, hooks) {
         if (!pending) {
             sections[name] = h(
                 'section',
-                { id, class: 'panel', role: 'dialog', 'aria-labelledby': id + '-title' },
+                { id, class: 'panel', role: 'region', 'aria-labelledby': id + '-title' },
                 h('header', {}, h('h2', { id: id + '-title', tabindex: '-1' }, t.panels[name]), h('button', { type: 'button', class: 'close', 'aria-label': t.close_panel, onclick: () => (open(null), buttons[name].focus()) }, '×')),
                 h('div', { class: 'body' }, PANELS[name](data, t, actions)),
             );
@@ -220,9 +222,13 @@ export function bar(root, data, hooks) {
     });
 
     // A click elsewhere on the page closes the open panel.
-    document.addEventListener('pointerdown', (event) => {
-        if (current && !event.composedPath().includes(nav) && !narrow.matches) open(null);
-    });
+    document.addEventListener(
+        'pointerdown',
+        (event) => {
+            if (current && !event.composedPath().includes(nav) && !narrow.matches) open(null);
+        },
+        { signal: listening.signal },
+    );
 
     root.append(nav);
     expand(settings().open, false);
@@ -235,5 +241,7 @@ export function bar(root, data, hooks) {
         focus: () => toggle.focus(),
         /** Whether focus is on the toggle, so the bar replacing this one can take it over. */
         focused: () => root.activeElement === toggle,
+        /** Takes the bar's listeners off the page, before the bar is removed. */
+        destroy: () => listening.abort(),
     };
 }

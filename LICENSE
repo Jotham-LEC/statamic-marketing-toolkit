@@ -19,12 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-## Third-party software
-
-The addon's repository contains no third-party code, fonts or images. The built control panel files in `resources/dist` hold the addon's own code and the CSS that Tailwind CSS (MIT licence) generates from it; Vue and Statamic's components are loaded from Statamic, not bundled.
-
-Composer installs these alongside it, each under its own licence:
-
-- [Statamic](https://statamic.com/license) (`statamic/cms`), under the Statamic licence.
-- [the-og](https://github.com/simonhamp/the-og) (`simonhamp/the-og`), which draws the share cards, under the MIT licence. It ships the Inter font (SIL Open Font License 1.1) and the Roboto Slab font (Apache License 2.0), and a few background images.

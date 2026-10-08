@@ -11,6 +11,7 @@ return [
         'source_query' => 'Leave out the query string (?…), because addresses are matched without it.',
         'source_taken' => 'Another redirect already starts from this address.',
         'control_characters' => 'An address can’t contain line breaks or other control characters.',
+        'encoding' => 'An address must be valid UTF-8 text. Save the CSV file as UTF-8 and import it again.',
         'target_required' => 'Enter where the redirect should go. Only “410 Gone” can be left without a destination.',
         'target_format' => 'Start with / for a page on this site, or https:// for another site.',
         'target_number' => 'The destination uses a $ number that has no matching * in the source.',
@@ -25,5 +26,6 @@ return [
 
     // A CSV row that fails those checks.
     'csv_row' => 'Row :row: :message',
+    'csv_row_failed' => 'Row :row: the database refused this row.',
 
 ];

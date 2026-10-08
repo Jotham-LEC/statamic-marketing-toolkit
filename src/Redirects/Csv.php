@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Redirects;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use JothamLec\MarketingToolkit\Support\Sites;
 use SplFileObject;
@@ -94,12 +95,24 @@ class Csv
                     continue;
                 }
 
+                try {
+                    // A savepoint per row: on Postgres a failed statement aborts the
+                    // whole transaction, and the rows before it would be lost with it.
+                    $saved = DB::transaction(fn () => $existing
+                        // An imported rule is the user's own, as one saved in the form is.
+                        ? tap($existing)->update([...$row, 'automatic' => false])
+                        : Redirect::query()->create($row));
+                } catch (QueryException $exception) {
+                    report($exception);
+                    $result['errors'][] = __('marketing-toolkit::validation.csv_row_failed', ['row' => $number]);
+
+                    continue;
+                }
+
                 if ($existing) {
-                    $existing->update($row);
-                    $saved = $existing;
                     $result['updated']++;
                 } else {
-                    $saved = $bySource[$row['site'] ?? ''][$key][] = Redirect::query()->create($row);
+                    $bySource[$row['site'] ?? ''][$key][] = $saved;
                     $result['created']++;
                 }
 

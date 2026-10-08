@@ -2,7 +2,9 @@
 
 namespace JothamLec\MarketingToolkit\Reports;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ViewErrorBag;
 use Statamic\Contracts\Entries\Entry;
@@ -18,6 +20,10 @@ use Throwable;
  *
  * While rendering, `noindex_outside_production` is off, so a report run on a
  * local or staging copy sees the robots tags production would print.
+ *
+ * The page renders as a visitor sees it: a report started from the control
+ * panel runs while someone is signed in, and a page could show them more
+ * (an `{{ if logged_in }}` block, the toolbar) than a visitor would get.
  */
 class Renderer
 {
@@ -44,6 +50,8 @@ class Renderer
         // validation errors views expect; an empty bag, as ShareErrorsFromSession gives.
         View::share('errors', View::shared('errors') ?? new ViewErrorBag);
 
+        $signedIn = $this->signOut();
+
         try {
             $response = $content->toResponse($request);
 
@@ -58,6 +66,40 @@ class Renderer
             app()->instance('request', $previous);
             $cascade->withRequest($previous);
             config(['marketing-toolkit.robots.noindex_outside_production' => $noindex]);
+            $this->signBackIn($signedIn);
+        }
+    }
+
+    /**
+     * Forgets the signed-in user of each guard the site's pages may ask, for
+     * the length of the render.
+     *
+     * @return array<string, Authenticatable> the users forgotten, by guard
+     */
+    private function signOut(): array
+    {
+        $guards = array_unique(array_filter([config('auth.defaults.guard'), config('statamic.users.guards.web'), config('statamic.users.guards.cp')]));
+        $users = [];
+
+        foreach ($guards as $name) {
+            $guard = Auth::guard($name);
+
+            if ($guard->hasUser() && method_exists($guard, 'forgetUser')) {
+                $users[$name] = $guard->user();
+                $guard->forgetUser();
+            }
+        }
+
+        return $users;
+    }
+
+    /**
+     * @param  array<string, Authenticatable>  $users
+     */
+    private function signBackIn(array $users): void
+    {
+        foreach ($users as $name => $user) {
+            Auth::guard($name)->setUser($user);
         }
     }
 }
