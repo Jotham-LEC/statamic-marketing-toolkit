@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.23.1 – 2026-10-08
+
+### Fixed
+- **The front-end toolbar shows a page's content only to someone who may view it in the control panel.** Its endpoint checked that the user may use the control panel, then answered about any address on the install: a user limited to one collection, or to one site, could read the title, status and SEO text of a draft elsewhere by its address. The page's entry or term now counts only when the user may view it (Statamic's `view {collection} entries` or `view {taxonomy} terms`, on a site they may access), and a site's report, redirects, 404s and tracking show only on a site they may access. Edit links already asked for `edit`.
+
+### Upgrading
+- **An editor who uses the toolbar on pages of a collection they can't view** no longer sees those pages' title, SEO or report in it. Give their role `view {collection} entries` if they should.
+
 ## 0.23.0 – 2026-10-08
 
 Titles, the publisher and PostHog fit sites that already have a brand, fields or a proxy of their own, and the 404 log and redirects keep one row per address on every database.
