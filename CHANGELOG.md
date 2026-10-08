@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.22.5 – 2026-10-08
+
+### Fixed
+- **A page whose FAQ answers are a Bard field renders again.** The FAQPage node read each answer as text, so a Bard answer (stored as Bard's nodes) failed with "Array to string conversion" and took the page's `<s:mt:head />` with it. A Bard answer is now rendered as Bard renders it, without its sets; Markdown and text answers are unchanged. A row whose question isn't text, or whose answer is of another shape, is left out rather than breaking the page.
+- **With Consent Mode regions, Google's tags wait for the banner outside the regions too.** The "granted everywhere else" default carried no `wait_for_update`, so a returning visitor outside the regions who had declined sent one granted hit before the banner's update denied it. Both default commands now carry **Wait for the banner**. Outside the regions, a banner that sends no update now holds the first hit for that long (500 ms by default).
+
 ## 0.22.3 – 2026-10-08
 
 ### Fixed
