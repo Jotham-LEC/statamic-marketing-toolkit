@@ -30,6 +30,7 @@ final class AddNewBrandFields extends UpdateScript
             'feature_favicons', 'feature_tracking', 'feature_leads',
         ],
         '0.22.0' => ['feature_toolbar'],
+        '0.23.0' => ['title_brand', 'legal_name', 'posthog_ui_host'],
     ];
 
     /** @var list<string>|null the fields this update brings, as shouldUpdate() found them */

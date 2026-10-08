@@ -140,6 +140,10 @@ test('updating to 0.22 adds the Front-end toolbar switch to the Features tab, an
     expect(Blueprint::find('globals.marketing')->fields()->all()->keys())->toContain('feature_toolbar')->not->toContain('gtm_id');
 });
 
+test('updating to 0.23 adds the name in titles, the legal name and PostHog\'s app address', function () {
+    expect(AddNewBrandFields::since('0.22.5', '0.23.0'))->toBe(['title_brand', 'legal_name', 'posthog_ui_host']);
+});
+
 test('every field mt:install writes is in 0.20 or listed by the version that brought it', function () {
     $fields = collect(['seo', 'marketing'])->flatMap(fn (string $file) => collect(Install::tabs('assets', $file))
         ->flatMap(fn (array $tab) => $tab['sections'])->flatMap(fn (array $section) => $section['fields'])->pluck('handle'));

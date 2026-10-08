@@ -29,6 +29,9 @@ tabs:
             handle: posthog_host
             field: { type: text, input_type: url, display: 'marketing-toolkit::fields.brand.posthog_host.display', width: 50, placeholder: 'https://us.i.posthog.com' }
           -
+            handle: posthog_ui_host
+            field: { type: text, input_type: url, display: 'marketing-toolkit::fields.brand.posthog_ui_host.display', instructions: 'marketing-toolkit::fields.brand.posthog_ui_host.instructions', width: 50, placeholder: 'https://us.posthog.com' }
+          -
             handle: meta_pixel_id
             field: { type: text, display: 'marketing-toolkit::fields.brand.meta_pixel_id.display', width: 50, validate: ['nullable', 'regex:/^\d{6,20}$/'] }
           -

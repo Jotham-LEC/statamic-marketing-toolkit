@@ -94,7 +94,7 @@ defineProps({
                         <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.overview.brand.site_name') }}</dt>
                         <dd>{{ siteName }}</dd>
                         <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.overview.brand.titles') }}</dt>
-                        <dd>{{ __('marketing-toolkit::cp.overview.brand.page_title') }}<template v-if="global.separator">{{ global.separator }}{{ siteName }}</template></dd>
+                        <dd>{{ __('marketing-toolkit::cp.overview.brand.page_title') }}<template v-if="global.separator">{{ global.separator }}{{ global.titleName }}</template></dd>
                         <dt class="text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.overview.brand.default_description') }}</dt>
                         <dd>{{ global.description ?? __('marketing-toolkit::cp.overview.brand.no_description') }}</dd>
                     </dl>

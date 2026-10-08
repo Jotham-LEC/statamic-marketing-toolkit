@@ -10,6 +10,7 @@ use Statamic\Facades\Blueprint;
 use Statamic\Facades\Entry;
 use Statamic\Facades\Fieldset;
 use Statamic\Facades\GlobalSet;
+use Statamic\Facades\Site;
 use Statamic\Facades\Taxonomy;
 use Statamic\Facades\Term;
 
@@ -40,6 +41,27 @@ describe('title', function () {
         config(['marketing-toolkit.title.max' => 20]);
 
         expect(metaFor(entryIn('pages', 'a-rather-long-page-title'))->title)->toBe('A rather long page title');
+    });
+
+    test('a shorter name for titles ends them in place of the site name, which the rest keeps', function () {
+        seoGlobal(['title_site_name' => true, 'title_brand' => 'Acme']);
+        Site::setSites(['default' => ['name' => 'Acme Industries Worldwide', 'url' => 'https://example.test/', 'locale' => 'en_US']]);
+        $meta = metaFor(entryIn('pages', 'about'));
+
+        expect($meta->title)->toBe('About · Acme')
+            ->and($meta->siteName)->toBe('Acme Industries Worldwide')
+            ->and(metaFor(entryIn('home', 'home'))->title)->toBe('Acme Industries Worldwide');
+    });
+
+    test('a field the collection names in title_fields titles the page before its own title, with the site name like it', function () {
+        seoGlobal(['title_site_name' => true]);
+        config(['marketing-toolkit.collections.pages.title_fields' => ['meta_title', 'seo_title']]);
+        $meta = metaFor(entryIn('pages', 'about', ['seo_title' => 'About our team', 'meta_title' => '']));
+
+        expect($meta->title)->toBe('About our team · Acme')
+            ->and($meta->ogTitle)->toBe('About our team')
+            ->and(metaFor(entryIn('pages', 'team'))->title)->toBe('Team · Acme')
+            ->and(metaFor(entryIn('pages', 'both', ['seo_title' => 'From the field', 'seo' => ['title' => 'Typed in SEO']]))->title)->toBe('Typed in SEO');
     });
 
     test('an SEO title replaces the whole title; an empty one counts as not set', function () {

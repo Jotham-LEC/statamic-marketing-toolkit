@@ -15,6 +15,9 @@ tabs:
             handle: title_separator
             field: { type: text, display: 'marketing-toolkit::fields.brand.title_separator.display', width: 50, placeholder: '·', if: { title_site_name: 'true' } }
           -
+            handle: title_brand
+            field: { type: text, display: 'marketing-toolkit::fields.brand.title_brand.display', instructions: 'marketing-toolkit::fields.brand.title_brand.instructions', width: 50, if: { title_site_name: 'true' } }
+          -
             handle: default_description
             field: { type: textarea, display: 'marketing-toolkit::fields.brand.default_description.display', character_limit: 160 }
           -
@@ -67,10 +70,13 @@ tabs:
             field: { type: text, display: 'marketing-toolkit::fields.brand.publisher_name.display', width: 50 }
           -
             handle: publisher_alternate_name
-            field: { type: text, display: 'marketing-toolkit::fields.brand.publisher_alternate_name.display', width: 50 }
+            field: { type: list, display: 'marketing-toolkit::fields.brand.publisher_alternate_name.display', width: 50 }
+          -
+            handle: legal_name
+            field: { type: text, display: 'marketing-toolkit::fields.brand.legal_name.display', instructions: 'marketing-toolkit::fields.brand.legal_name.instructions', width: 50 }
           -
             handle: founding_date
-            field: { type: date, display: 'marketing-toolkit::fields.brand.founding_date.display', width: 50 }
+            field: { type: text, display: 'marketing-toolkit::fields.brand.founding_date.display', instructions: 'marketing-toolkit::fields.brand.founding_date.instructions', width: 50, placeholder: '2014', validate: ['nullable', 'regex:/^\d{4}(-\d{2}(-\d{2})?)?$/'] }
           -
             handle: publisher_description
             field: { type: textarea, display: 'marketing-toolkit::fields.brand.publisher_description.display' }
@@ -88,7 +94,7 @@ tabs:
             field: { type: text, input_type: email, display: 'marketing-toolkit::fields.brand.email.display', width: 50 }
           -
             handle: area_served
-            field: { type: text, display: 'marketing-toolkit::fields.brand.area_served.display', width: 50 }
+            field: { type: list, display: 'marketing-toolkit::fields.brand.area_served.display', width: 50 }
           -
             handle: same_as
             field: { type: list, display: 'marketing-toolkit::fields.brand.same_as.display' }

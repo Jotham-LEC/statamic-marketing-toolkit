@@ -120,7 +120,7 @@ Helpers available in a subclass: `settings()` (the Brand and Marketing settings 
 
 ## Tracking from code
 
-`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `besideGtm()`, `head()` and `body()`. To change one rule, e.g. `ids()` to read the IDs from somewhere else, extend it and bind your class in a service provider of your own:
+`JothamLec\MarketingToolkit\Tracking\Tracking` works out the tags: `ids()`, `consent()`, `posthogHost()`, `posthogUiHost()`, `besideGtm()`, `head()` and `body()`. To change one rule, e.g. `ids()` to read the IDs from somewhere else, extend it and bind your class in a service provider of your own:
 
 ```php
 // app/Providers/AppServiceProvider.php, in register()

@@ -36,7 +36,7 @@ Before changing anything, start the site locally and save the rendered `<head>` 
 
 Write a plan for the user, and wait for their go-ahead. It should contain:
 
-- A field map: each old field (with its blueprint and handle) and the Marketing Toolkit field it becomes, inside the `seo` group: `title`, `description`, `image`, `og_title`, `og_subtitle`, `canonical`, `noindex`, `nofollow`, `nosnippet`, `max_snippet`, `sitemap` or `json_ld`. An existing `seo` group with `title`, `description` and `canonical` is read as it is.
+- A field map: each old field (with its blueprint and handle) and the Marketing Toolkit field it becomes, inside the `seo` group: `title`, `description`, `image`, `og_title`, `og_subtitle`, `canonical`, `noindex`, `nofollow`, `nosnippet`, `max_snippet`, `sitemap` or `json_ld`. An existing `seo` group with `title`, `description` and `canonical` is read as it is. Top-level title and description fields (`meta_title`, `seo_title`) can stay where they are instead, named in the collection's `title_fields` and `description_fields`; a title read that way gets the site name added.
 - Per-collection settings for `config/marketing-toolkit.php` under `collections`: `description_fields` and `image_fields` for fields that hold a summary or a main image, and `schema` and `og_type` where the site had structured data.
 - Where each site-wide value goes: the separator, default description and image, icon and publisher go to the Brand global set, and the tracking IDs, consent settings, verification codes, robots.txt rules and ads.txt lines go to the Marketing settings global set.
 - What happens to each redirect, each tracking snippet, each static file and each old add-on.

@@ -1,5 +1,11 @@
 # Upgrading
 
+## From 0.22: Brand fields, and one row per address
+
+- **Run `php artisan migrate`.** It adds a unique index so the 404 log keeps one row per path, and redirects one rule per address, also on a single site (rows without a site). 404 paths already logged twice are merged first, their hits added up. Redirects are never deleted: if two redirects for every site share a source, the migration stops before changing anything and names them. Check first under **Marketing → Redirects** (search for the address) and delete all but one of each; the newest active one is the one that applies today. On MySQL and MariaDB the index is on a new generated column, `site_key`.
+- **New fields**: `composer update` (or `php please updates:run`) adds **Name in page titles** and **Legal name** to Brand and **PostHog app address** to Marketing settings, as it adds every new field. Nothing else in your blueprints changes. Commit the blueprint files it lists.
+- **Several other names or areas, or a year alone for Founded** (optional): new installs get "Other names" and "Area served" as List fields and "Founded" as a Text field. Your blueprint keeps the field types it has, and the addon reads both. To switch, open **Fields → Blueprints → Brand** and change "Other names" and "Area served" to **List**, and "Founded" to **Text** (add the validation `regex:/^\d{4}(-\d{2}(-\d{2})?)?$/` if you like). A saved text becomes the list's first item, and a saved date stays as it was.
+
 ## From 0.21.4: redirects on multi-site installs
 
 Nothing to run. Two changes to check on a multi-site install:

@@ -143,6 +143,33 @@ class Settings
     }
 
     /**
+     * The name page titles end with: Brand's "Name in page titles", else the site's name.
+     */
+    public function titleName(): string
+    {
+        return $this->string('title_brand') ?? $this->siteName();
+    }
+
+    /**
+     * A field that is a list now and was one text before (other names, areas
+     * served): its items, or the text as the only one.
+     *
+     * @return list<string>
+     */
+    public function strings(string $key): array
+    {
+        $value = $this->value($key);
+
+        if (is_array($value)) {
+            return $this->list($key);
+        }
+
+        $text = $this->string($key);
+
+        return $text === null ? [] : [$text];
+    }
+
+    /**
      * The handles of the two sets, in the order a field is looked for:
      * Marketing settings, then Brand.
      *

@@ -46,6 +46,7 @@ return [
     |   'og_type' => 'article',            // og:type; default 'website'
     |   'schema' => 'Article',             // adds an Article / NewsArticle / BlogPosting node
     |   'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage: about the entry, as a Person)
+    |   'title_fields' => ['seo_title'],   // tried before the title for <title> and og:title (the site name still added)
     |   'description_fields' => ['intro'], // tried before the body's first paragraph
     |   'image_fields' => ['hero'],        // tried before the generated card
     |   'faq_field' => 'faqs',             // a grid of question / answer (Markdown, text or Bard) → FAQPage (valid markup; Google shows no FAQ results since 2026)
@@ -58,7 +59,7 @@ return [
     |   ],
     |   'og_template' => 'default',        // a key of og.templates
     |
-    | description_fields, image_fields and faq_field can name a field in a
+    | title_fields, description_fields, image_fields and faq_field can name a field in a
     | Replicator's sets as 'replicator.set.field' ('sections.hero.image'; `*`
     | for any set); sets switched off are passed over.
     |
@@ -72,8 +73,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | The same rules for a taxonomy's term pages, by taxonomy handle: og_type,
-    | page_schema (CollectionPage suits a listing), description_fields,
-    | image_fields and faq_field.
+    | page_schema (CollectionPage suits a listing), title_fields,
+    | description_fields, image_fields and faq_field.
     |
     */
 
@@ -264,6 +265,8 @@ return [
         'ga4_id' => env('MT_GA4_ID', env('SEO_GA4_ID')),
         'posthog_key' => env('MT_POSTHOG_KEY', env('SEO_POSTHOG_KEY')),
         'posthog_host' => env('MT_POSTHOG_HOST', env('SEO_POSTHOG_HOST')),
+        // With a proxy as posthog_host: PostHog's app (https://eu.posthog.com), for its toolbar.
+        'posthog_ui_host' => env('MT_POSTHOG_UI_HOST'),
         'meta_pixel_id' => env('MT_META_PIXEL_ID', env('SEO_META_PIXEL_ID')),
         'linkedin_partner_id' => env('MT_LINKEDIN_PARTNER_ID', env('SEO_LINKEDIN_PARTNER_ID')),
     ],

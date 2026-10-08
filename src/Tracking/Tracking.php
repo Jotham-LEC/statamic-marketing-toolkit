@@ -121,6 +121,23 @@ class Tracking
     }
 
     /**
+     * PostHog's app, for its toolbar and links back to it: set, for a proxy
+     * as the host; else, on PostHog's own cloud, the host without `.i`; else null.
+     */
+    public function posthogUiHost(): ?string
+    {
+        $host = rtrim(trim((string) (config('marketing-toolkit.tracking.posthog_ui_host') ?: $this->settings->string('posthog_ui_host'))), '/');
+
+        if (preg_match('#^https://[a-z0-9.-]+(:\d+)?$#i', $host)) {
+            return $host;
+        }
+
+        $api = $this->posthogHost();
+
+        return str_ends_with($api, '.i.posthog.com') ? str_replace('.i.posthog.com', '.posthog.com', $api) : null;
+    }
+
+    /**
      * Trackers loaded beside Google Tag Manager, which then counts each visit
      * twice if GTM loads them as well: names, for a warning.
      *
@@ -215,8 +232,7 @@ class Tracking
             'bridge' => $bridge,
             'posthogOptions' => array_filter([
                 'api_host' => $host,
-                // PostHog's own cloud: its app is at the same address without `.i`.
-                'ui_host' => str_ends_with($host, '.i.posthog.com') ? str_replace('.i.posthog.com', '.posthog.com', $host) : null,
+                'ui_host' => $this->posthogUiHost(),
                 'person_profiles' => 'identified_only',
                 'opt_out_capturing_by_default' => $bridge ?: null,
                 'persistence' => $bridge ? 'memory' : null,

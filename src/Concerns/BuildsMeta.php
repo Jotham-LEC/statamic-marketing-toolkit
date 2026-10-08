@@ -60,12 +60,14 @@ trait BuildsMeta
             return $title.$suffix;
         }
 
-        if ($context->isHome() && ! $context->override('title')) {
+        $fieldTitle = $this->fieldTitle($context);
+
+        if ($context->isHome() && ! $context->override('title') && $fieldTitle === null) {
             return $site.$suffix;
         }
 
-        // A template's title stands in for the content's own and gets the site name like it.
-        $title = $context->override('title') ?? $this->contentTitle($context);
+        // A template's title, or one from the collection's title_fields, stands in for the content's own and gets the site name like it.
+        $title = $context->override('title') ?? $fieldTitle ?? $this->contentTitle($context);
 
         if ($title === null) {
             return $site.$suffix;
@@ -75,7 +77,7 @@ trait BuildsMeta
             return $title.$suffix;
         }
 
-        $full = $title.$this->settings->separator().$site;
+        $full = $title.$this->settings->separator().$this->settings->titleName();
 
         return (mb_strlen($full.$suffix) <= (int) config('marketing-toolkit.title.max') ? $full : $title).$suffix;
     }
@@ -83,7 +85,26 @@ trait BuildsMeta
     /** @api */
     public function ogTitle(Context $context): string
     {
-        return $context->override('title') ?? $context->seo()['title'] ?? $this->contentTitle($context) ?? $this->settings->siteName();
+        return $context->override('title') ?? $context->seo()['title'] ?? $this->fieldTitle($context) ?? $this->contentTitle($context) ?? $this->settings->siteName();
+    }
+
+    /**
+     * The page's title from a field the collection (or taxonomy) names in
+     * `title_fields`, before its own: e.g. the `meta_title` or `seo_title` a
+     * site kept from another SEO addon. The first that has text; a name with
+     * dots is a field in a Replicator's sets, as for description_fields.
+     */
+    protected function fieldTitle(Context $context): ?string
+    {
+        $content = $context->content();
+
+        foreach ($content ? $this->contentConfig($context, 'title_fields', []) : [] as $field) {
+            if ($value = $this->rawValues($content, $field)->first(fn ($value) => is_string($value) && filled($value))) {
+                return trim($value);
+            }
+        }
+
+        return null;
     }
 
     /** @api */

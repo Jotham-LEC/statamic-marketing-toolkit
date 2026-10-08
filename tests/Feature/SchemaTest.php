@@ -50,6 +50,22 @@ describe('the publisher', function () {
         expect(publisherOf(['publisher_type' => ['GardenStore'], 'price_range' => '$'])['priceRange'])->toBe('$');
     });
 
+    test('an organisation has its legal name, and several other names or areas as a list; one stays a text', function () {
+        $organization = publisherOf([
+            'publisher_type' => ['Organization'],
+            'legal_name' => 'Acme Holdings Ltd',
+            'publisher_alternate_name' => ['Acme', 'ACME Co'],
+            'area_served' => ['Malaysia'],
+            'founding_date' => '2014',
+        ]);
+
+        expect($organization['legalName'])->toBe('Acme Holdings Ltd')
+            ->and($organization['alternateName'])->toBe(['Acme', 'ACME Co'])
+            ->and($organization['areaServed'])->toBe('Malaysia')
+            ->and($organization['foundingDate'])->toBe('2014')
+            ->and(publisherOf(['publisher_type' => 'Person', 'legal_name' => 'Acme Holdings Ltd', 'area_served' => ['Perth']]))->not->toHaveKeys(['legalName', 'areaServed']);
+    });
+
     test('a single type saved before types could be several still reads', function () {
         expect(publisherOf(['publisher_type' => 'LocalBusiness', 'price_range' => '$$'])['@type'])->toBe('LocalBusiness');
     });

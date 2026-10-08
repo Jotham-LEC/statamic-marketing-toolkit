@@ -62,6 +62,7 @@ final class OverviewController
                 'exists' => $variables !== null,
                 'url' => $variables && $user->can('edit', $variables) ? $variables->editUrl() : null,
                 'separator' => $this->seo->settings()->titleSiteName() ? $this->seo->settings()->separator() : null,
+                'titleName' => $this->seo->settings()->titleName(),
                 'description' => $this->seo->settings()->string('default_description'),
             ],
             'report' => $this->report($user, $site),

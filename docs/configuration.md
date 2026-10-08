@@ -39,6 +39,7 @@ These two shape what the site prints. The report's title and description checks,
         'og_type' => 'article',            // og:type (default 'website')
         'schema' => 'Article',             // adds an Article, NewsArticle or BlogPosting node
         'page_schema' => 'WebPage',        // the WebPage node's type (CollectionPage, ProfilePage: about the entry, as a Person)
+        'title_fields' => ['seo_title'],   // tried before the title for <title> and og:title (the site name still added)
         'description_fields' => ['intro'], // tried before the body's first paragraph
         'image_fields' => ['hero'],        // tried before the generated card
         'faq_field' => 'faqs',             // a grid of question / answer rows (answer: Markdown, text or Bard) → FAQPage (valid markup; Google shows no FAQ results since 2026)
@@ -56,7 +57,7 @@ These two shape what the site prints. The report's title and description checks,
 
 #### Fields in a page builder
 
-`description_fields`, `image_fields` and `faq_field` can name a field inside a Replicator's sets as `replicator.set.field`: the Replicator's handle, the set's type (`*` for any) and the field in the set. Statamic handles have no dots, so a plain name means what it always did.
+`title_fields`, `description_fields`, `image_fields` and `faq_field` can name a field inside a Replicator's sets as `replicator.set.field`: the Replicator's handle, the set's type (`*` for any) and the field in the set. Statamic handles have no dots, so a plain name means what it always did.
 
 ```php
 'pages' => [
@@ -70,7 +71,7 @@ A set switched off in the control panel isn't on the page, so it counts for noth
 
 ### Taxonomies
 
-`taxonomies` gives a taxonomy's term pages the same rules, by taxonomy handle: `og_type`, `page_schema`, `description_fields`, `image_fields` and `faq_field`. A term has none of its collections' rules.
+`taxonomies` gives a taxonomy's term pages the same rules, by taxonomy handle: `og_type`, `page_schema`, `title_fields`, `description_fields`, `image_fields` and `faq_field`. A term has none of its collections' rules.
 
 ```php
 'taxonomies' => [
@@ -185,7 +186,8 @@ Each ID can be set in the **Tracking** tab of Marketing settings (Marketing → 
 | `tracking.gtm_id` | `MT_GTM_ID` | Google Tag Manager container, `GTM-XXXXXXX`. |
 | `tracking.ga4_id` | `MT_GA4_ID` | Google Analytics 4 measurement ID, `G-XXXXXXXXXX`. |
 | `tracking.posthog_key` | `MT_POSTHOG_KEY` | PostHog project API key, `phc_…`. |
-| `tracking.posthog_host` | `MT_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. |
+| `tracking.posthog_host` | `MT_POSTHOG_HOST` | PostHog's API host: `https://eu.i.posthog.com` for an EU project; `https://us.i.posthog.com` unless set. A [reverse proxy](https://posthog.com/docs/advanced/proxy) of your own (`https://t.example.com`) works too. |
+| `tracking.posthog_ui_host` | `MT_POSTHOG_UI_HOST` | With a proxy as the host: PostHog's app, `https://us.posthog.com` or `https://eu.posthog.com`, for its toolbar and links back to it. On PostHog's own hosts it is worked out. |
 | `tracking.meta_pixel_id` | `MT_META_PIXEL_ID` | Meta Pixel ID (digits). |
 | `tracking.linkedin_partner_id` | `MT_LINKEDIN_PARTNER_ID` | LinkedIn Insight Tag partner ID (digits). |
 | `tracking.enabled` | | `true`. Off: no tags, Consent Mode or leads. |

@@ -92,6 +92,25 @@ test('PostHog\'s host must be an https address; anything else is the US cloud', 
     expect(app(Tracking::class)->posthogHost())->toBe('https://us.i.posthog.com');
 });
 
+test('behind a proxy, PostHog gets the app address set for its toolbar; on PostHog\'s cloud, the one its host implies', function () {
+    $key = 'phc_abcdefghijklmnopqrstuvwxyz0123';
+    $init = fn () => str(trackingHead())->match('/posthog\.init\([^,]+,(\{[^}]*\})\)/')->toString();
+
+    seoGlobal(['posthog_key' => $key, 'posthog_host' => 'https://t.example.test', 'posthog_ui_host' => 'https://eu.posthog.com/']);
+    expect(json_decode($init(), true))->toMatchArray(['api_host' => 'https://t.example.test', 'ui_host' => 'https://eu.posthog.com']);
+
+    seoGlobal(['posthog_key' => $key, 'posthog_host' => 'https://t.example.test', 'posthog_ui_host' => 'javascript:alert(1)']);
+    expect(json_decode($init(), true))->not->toHaveKey('ui_host');
+
+    seoGlobal(['posthog_key' => $key]);
+    config(['marketing-toolkit.tracking.posthog_ui_host' => 'https://us.posthog.com']);
+    expect(app(Tracking::class)->posthogUiHost())->toBe('https://us.posthog.com');
+
+    config(['marketing-toolkit.tracking.posthog_ui_host' => null]);
+    expect(app(Tracking::class)->posthogUiHost())->toBe('https://us.posthog.com')
+        ->and(json_decode($init(), true))->toMatchArray(['api_host' => 'https://us.i.posthog.com', 'ui_host' => 'https://us.posthog.com']);
+});
+
 test('nothing prints outside production, or in Live Preview', function () {
     seoGlobal(['gtm_id' => 'GTM-ABC1234']);
 

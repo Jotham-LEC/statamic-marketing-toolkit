@@ -86,7 +86,8 @@ trait BuildsSchema
             '@type' => count($types) === 1 ? $types[0] : $types,
             '@id' => $this->publisherId(),
             'name' => $this->settings->string('publisher_name') ?? $this->settings->siteName(),
-            'alternateName' => $this->settings->string('publisher_alternate_name'),
+            'alternateName' => $this->oneOrMany($this->settings->strings('publisher_alternate_name')),
+            'legalName' => $organization ? $this->settings->string('legal_name') : null,
             'description' => $this->settings->string('publisher_description'),
             'url' => $this->home(),
             'logo' => $organization ? $logoUrl : null,
@@ -95,7 +96,7 @@ trait BuildsSchema
             'telephone' => $this->settings->string('telephone'),
             'email' => $this->settings->string('email'),
             'address' => $this->postalAddress(),
-            'areaServed' => $organization ? $this->settings->string('area_served') : null,
+            'areaServed' => $organization ? $this->oneOrMany($this->settings->strings('area_served')) : null,
             'foundingDate' => $organization ? $this->settings->string('founding_date') : null,
             'contactPoint' => $organization ? $this->contactPoints() : null,
             'priceRange' => $local ? $this->settings->string('price_range') : null,
@@ -105,6 +106,22 @@ trait BuildsSchema
             'hasMerchantReturnPolicy' => $organization ? $this->returnPolicy() : null,
             'hasShippingService' => $organization ? $this->shippingService() : null,
         ], fn ($value) => $value !== null && $value !== []);
+    }
+
+    /**
+     * One value as itself, several as a list, none as null: a publisher with
+     * one other name keeps the markup it had while that field was a text.
+     *
+     * @param  list<string>  $values
+     * @return string|list<string>|null
+     */
+    protected function oneOrMany(array $values): string|array|null
+    {
+        return match (count($values)) {
+            0 => null,
+            1 => $values[0],
+            default => $values,
+        };
     }
 
     /**

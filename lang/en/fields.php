@@ -209,6 +209,10 @@ return [
         'posthog_host' => [
             'display' => 'PostHog host',
         ],
+        'posthog_ui_host' => [
+            'display' => 'PostHog app address',
+            'instructions' => 'Only with a proxy as the host: your PostHog app (https://us.posthog.com or https://eu.posthog.com), for the toolbar and links back to it.',
+        ],
         'meta_pixel_id' => ['display' => 'Meta Pixel ID'],
         'linkedin_partner_id' => ['display' => 'LinkedIn Insight Tag partner ID'],
         'consent_mode' => [
@@ -239,6 +243,10 @@ return [
         'title_separator' => [
             'display' => 'Title separator',
         ],
+        'title_brand' => [
+            'display' => 'Name in page titles',
+            'instructions' => 'A shorter name for the end of page titles. Empty: the site\'s name.',
+        ],
         'default_description' => [
             'display' => 'Default description',
         ],
@@ -267,9 +275,16 @@ return [
         ],
         'publisher_name' => ['display' => 'Name'],
         'publisher_alternate_name' => [
-            'display' => 'Other name',
+            'display' => 'Other names',
         ],
-        'founding_date' => ['display' => 'Founded'],
+        'legal_name' => [
+            'display' => 'Legal name',
+            'instructions' => 'The registered name, where it differs from the name.',
+        ],
+        'founding_date' => [
+            'display' => 'Founded',
+            'instructions' => 'A year (2014), a month (2014-03) or a day (2014-03-01).',
+        ],
         'publisher_description' => ['display' => 'Description'],
         'publisher_logo' => ['display' => 'Logo or portrait'],
         'job_title' => ['display' => 'Job title'],
