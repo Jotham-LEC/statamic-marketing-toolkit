@@ -77,7 +77,7 @@ Next steps are in [Getting started](https://github.com/Jotham-LEC/statamic-marke
 
 ## Where things are
 
-Everything is in the **Marketing** section of the control panel, after Fields:
+Everything is in the **Marketing** section of the control panel, after Statamic's own sections (each user can move it under Preferences → Nav):
 
 | Screen | What's there |
 |---|---|

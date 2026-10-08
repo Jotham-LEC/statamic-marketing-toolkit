@@ -16,6 +16,6 @@ final class IndexNowKeyController
     {
         throw_unless(Features::on('indexnow'), NotFoundHttpException::class);
 
-        return new Response($indexNow->key(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        return response($indexNow->key())->header('Content-Type', 'text/plain; charset=UTF-8');
     }
 }

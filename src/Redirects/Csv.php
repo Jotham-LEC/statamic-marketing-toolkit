@@ -87,7 +87,7 @@ class Csv
                 $key = Redirect::key(Redirect::normalize($row['source']));
                 $matches = $bySource[$row['site'] ?? ''][$key] ?? [];
                 $existing = $matches[0] ?? null;
-                $validator = Redirect::validator($row, $existing?->id, count($matches) > 1, $active, $sites);
+                $validator = Redirect::validator($row, ignoreId: $existing?->id, taken: count($matches) > 1, active: $active, sites: $sites);
 
                 if ($validator->fails()) {
                     $result['errors'][] = __('marketing-toolkit::validation.csv_row', ['row' => $number, 'message' => $validator->errors()->first()]);

@@ -13,9 +13,8 @@ use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
  * cookie naming its form. The next page, or the page itself after an AJAX
  * submission, reads it in <s:mt:head />'s script and sends the lead to
  * each tracking tool. A cookie rather than the session, so it works on a
- * page served from the static cache. Not registered with leads
- * off (ServiceProvider::leaveOutUnused()); the check here covers a queue
- * worker or Octane process booted before leads were switched off.
+ * page served from the static cache. It does nothing while the leads
+ * module is off.
  *
  * Host-only on path /, not the session cookie's domain and path that
  * Cookie::make() would give it: the script clears it with `Path=/` and no

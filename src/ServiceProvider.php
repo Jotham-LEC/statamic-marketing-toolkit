@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\Facades\Queue;
@@ -10,14 +11,10 @@ use JothamLec\MarketingToolkit\Cp\Navigation;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
 use JothamLec\MarketingToolkit\Http\Middleware\MarkToolbarUser;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
-use JothamLec\MarketingToolkit\Listeners\AttributeSubmission;
 use JothamLec\MarketingToolkit\Listeners\CountConversion;
 use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
 use JothamLec\MarketingToolkit\Listeners\RedirectChangedUris;
-use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
-use JothamLec\MarketingToolkit\Listeners\SubmitToIndexNow;
-use JothamLec\MarketingToolkit\Listeners\ToolbarSignIn;
-use JothamLec\MarketingToolkit\Listeners\ToolbarSignOut;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Reports\ReportSettings;
 use JothamLec\MarketingToolkit\SearchConsole\Client as SearchConsoleClient;
 use JothamLec\MarketingToolkit\SearchConsole\Connection;
@@ -87,9 +84,6 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $subscribe = [RedirectChangedUris::class];
 
-    /** @var list<class-string> listeners and middleware of modules that are off (leaveOutUnused) */
-    private array $unused = [];
-
     public function register(): void
     {
         parent::register();
@@ -126,51 +120,11 @@ class ServiceProvider extends AddonServiceProvider
 
     public function boot()
     {
-        // Ahead of the parent's own callback, which registers the commands,
-        // widget, actions, listeners and middleware of the modules that are on.
-        Statamic::booted(fn () => $this->bootFeatures());
+        // Ahead of the parent's own callback, which registers the routes, listeners and
+        // middleware: each listener and middleware asks whether its module is on itself.
+        Statamic::booted(fn () => Features::apply());
 
         parent::boot();
-    }
-
-    protected function bootFeatures(): void
-    {
-        Features::apply();
-
-        $this->leaveOutUnused();
-    }
-
-    /**
-     * Listeners and middleware of modules that are off aren't registered at
-     * all, so they cost nothing on a request or a save.
-     */
-    protected function leaveOutUnused(): void
-    {
-        $this->unused = array_keys(array_filter([
-            FlushSitemap::class => ! Features::on('sitemap') && ! Features::on('llms_txt'),
-            SubmitToIndexNow::class => ! Features::on('indexnow'),
-            RemakeFavicons::class => ! Features::on('favicons'),
-            AttributeSubmission::class => ! Features::on('leads'),
-            CountConversion::class => ! Features::on('leads'),
-            RedirectChangedUris::class => ! Features::on('automatic_redirects'),
-            HandleMissing::class => ! Features::on('redirects') && ! Features::on('not_found'),
-            MarkToolbarUser::class => ! Features::on('toolbar'),
-            ToolbarSignIn::class => ! Features::on('toolbar'),
-            ToolbarSignOut::class => ! Features::on('toolbar'),
-        ]));
-
-        $this->listen = array_filter(array_map(fn (array $listeners) => array_values(array_diff($listeners, $this->unused)), $this->listen));
-        $this->subscribe = array_values(array_diff($this->subscribe, $this->unused));
-        $this->middlewareGroups = array_filter(array_map(fn (array $middleware) => array_values(array_diff($middleware, $this->unused)), $this->middlewareGroups));
-    }
-
-    /**
-     * Statamic also registers every command, widget, action and listener in
-     * their folders: none registers one of a module that's off.
-     */
-    protected function autoloadFilesFromFolder($folder, $requiredClass = null)
-    {
-        return array_values(array_diff(parent::autoloadFilesFromFolder($folder, $requiredClass), $this->unused));
     }
 
     public function bootAddon(): void
@@ -222,23 +176,20 @@ class ServiceProvider extends AddonServiceProvider
      * 15 to 25 ms there (Statamic parses each default value as Antlers), spent
      * only to learn that reports are off. The schedule is needed only by the
      * commands that run it, list it, or finish a background event of it.
-     * Overrides Statamic's AddonServiceProvider::bootSchedule(), an internal
-     * method: check it still exists, and still only calls schedule(), on a
-     * Statamic upgrade.
      */
-    protected function bootSchedule()
+    protected function schedule($schedule)
     {
-        if ($this->app->runningConsoleCommand(['schedule:run', 'schedule:work', 'schedule:test', 'schedule:list', 'schedule:finish'])) {
-            // A key set up in the control panel, which bootAddon() would only apply after this.
-            Connection::apply();
-
-            parent::bootSchedule();
+        if (! $this->app->runningConsoleCommand(['schedule:run', 'schedule:work', 'schedule:test', 'schedule:list', 'schedule:finish'])) {
+            return;
         }
 
-        return $this;
+        // A key set up in the control panel, which bootAddon() would only apply after this.
+        Connection::apply();
+
+        $this->scheduleJobs($schedule);
     }
 
-    protected function schedule($schedule)
+    private function scheduleJobs(Schedule $schedule): void
     {
         $settings = app(ReportSettings::class);
         // Off under Features (or in config/marketing-toolkit.php): reports run only by hand.
@@ -261,6 +212,11 @@ class ServiceProvider extends AddonServiceProvider
 
         if (app(SearchConsoleClient::class)->configuredForAnySite()) {
             $schedule->command('statamic:mt:search-console')->dailyAt('04:30')->withoutOverlapping();
+        }
+
+        // Keeps the 404 log to `not_found.max_rows` (MissingPath::prunable()).
+        if (Features::on('not_found')) {
+            $schedule->command('model:prune', ['--model' => [MissingPath::class]])->daily();
         }
     }
 }

@@ -4,11 +4,9 @@ namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Listeners\SaveFeatures;
-use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
-use Statamic\UpdateScripts\UpdateScript;
 
 /**
  * 0.21 splits "SEO & brand" in two: Brand keeps the brand, publisher, shop
@@ -28,7 +26,7 @@ final class MoveToMarketingSettings extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {
-        if (! Version::before((string) $oldVersion, '0.21.0')) {
+        if (! self::before((string) $oldVersion, '0.21.0')) {
             return false;
         }
 

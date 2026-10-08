@@ -17,6 +17,6 @@ final class RobotsController
     {
         throw_unless(Features::on('robots_txt'), NotFoundHttpException::class);
 
-        return new Response($seo->robotsTxt(), 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        return response($seo->robotsTxt())->header('Content-Type', 'text/plain; charset=UTF-8');
     }
 }

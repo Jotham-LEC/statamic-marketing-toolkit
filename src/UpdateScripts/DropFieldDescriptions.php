@@ -4,9 +4,7 @@ namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use Illuminate\Support\Facades\Lang;
 use JothamLec\MarketingToolkit\Settings;
-use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\Blueprint;
-use Statamic\UpdateScripts\UpdateScript;
 
 /**
  * 0.21 shows no descriptions under the fields of Brand and Marketing
@@ -30,7 +28,7 @@ final class DropFieldDescriptions extends UpdateScript
     {
         $blueprints = collect(Settings::handles())->map(fn (string $handle) => Blueprint::find('globals.'.$handle))->filter();
 
-        if (! Version::before((string) $oldVersion, '0.21.2') && ! $blueprints->contains(fn ($blueprint) => self::hasOldNames($blueprint->contents()))) {
+        if (! self::before((string) $oldVersion, '0.21.2') && ! $blueprints->contains(fn ($blueprint) => self::hasOldNames($blueprint->contents()))) {
             return false;
         }
 

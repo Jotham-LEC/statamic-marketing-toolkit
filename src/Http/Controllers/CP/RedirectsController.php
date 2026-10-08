@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Cp\Listing;
 use JothamLec\MarketingToolkit\Cp\RecordActions;
+use JothamLec\MarketingToolkit\Http\Requests\SaveRedirect;
 use JothamLec\MarketingToolkit\Preview\Draft;
 use JothamLec\MarketingToolkit\Redirects\AutoRedirects;
 use JothamLec\MarketingToolkit\Redirects\Campaign;
@@ -19,10 +20,8 @@ use JothamLec\MarketingToolkit\Support\Sites;
 use JothamLec\MarketingToolkit\Support\Uris;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Contracts\Taxonomies\Term as TermContract;
-use Statamic\Facades\Blueprint;
 use Statamic\Facades\Site;
 use Statamic\Facades\User;
-use Statamic\Fields\Blueprint as BlueprintObject;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -92,9 +91,9 @@ final class RedirectsController
         );
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(SaveRedirect $request): JsonResponse
     {
-        $redirect = Redirect::query()->create($this->validated($request));
+        $redirect = Redirect::query()->create($request->validated());
 
         return response()->json(['redirect' => cp_route('mt.redirects.edit', $redirect)]);
     }
@@ -106,12 +105,12 @@ final class RedirectsController
         return $this->form($redirect, title: $redirect->source, submitUrl: cp_route('mt.redirects.update', $redirect), method: 'patch');
     }
 
-    public function update(Request $request, Redirect $redirect): JsonResponse
+    public function update(SaveRedirect $request, Redirect $redirect): JsonResponse
     {
         abort_unless($redirect->isAccessible(), 404);
 
         // Edited by hand, it is no longer one the content made.
-        $redirect->update([...$this->validated($request, $redirect->id), 'automatic' => false]);
+        $redirect->update([...$request->validated(), 'automatic' => false]);
 
         return response()->json(['saved' => true]);
     }
@@ -161,12 +160,12 @@ final class RedirectsController
         Uris::forget();
         $from = $stored->uri();
 
-        $draft = Draft::fromRequest(Request::create('/', 'POST', [
+        $draft = Draft::from([
             'blueprint' => $stored->blueprint()->fullyQualifiedHandle(),
             'reference' => $request->input('reference'),
             'site' => $stored->locale(),
             'values' => (array) $request->input('values', []),
-        ]));
+        ]);
 
         Uris::forget();
         $to = $draft->uri();
@@ -204,25 +203,6 @@ final class RedirectsController
     }
 
     /**
-     * @return array<string, mixed>
-     */
-    private function validated(Request $request, ?int $ignoreId = null): array
-    {
-        $all = $this->blueprint()->fields()->addValues($request->all())->process()->values();
-        $values = $all->only(['source', 'target', 'status', 'active', 'site'])->all();
-        // A campaign link's UTM tags, kept as the target's query string.
-        $values['target'] = is_string($values['target'] ?? null) && $values['target'] !== ''
-            ? Campaign::withTags($values['target'], $all->only(Campaign::TAGS)->all())
-            : ($values['target'] ?? null);
-        $values['status'] = (int) ($values['status'] ?? 301);
-        $values['active'] = (bool) ($values['active'] ?? false);
-        // Without a choice (or on a single site): every site.
-        $values['site'] = is_string($values['site'] ?? null) && $values['site'] !== '' && Sites::multiple() ? $values['site'] : null;
-
-        return Redirect::validator($values, $ignoreId, sites: Sites::accessible())->validate();
-    }
-
-    /**
      * The site a new rule is for when the form names none: every site (null),
      * unless the user may not work on every site.
      */
@@ -239,7 +219,7 @@ final class RedirectsController
 
     private function form(Redirect $redirect, string $title, string $submitUrl, string $method): Response
     {
-        $fields = $this->blueprint()->fields()->addValues([
+        $fields = SaveRedirect::blueprint()->fields()->addValues([
             ...Campaign::tags((string) $redirect->target),
             'source' => $redirect->source,
             'target' => $redirect->target,
@@ -250,7 +230,7 @@ final class RedirectsController
 
         return Inertia::render('marketing-toolkit::RedirectForm', [
             'title' => $title,
-            'blueprint' => $this->blueprint()->toPublishArray(),
+            'blueprint' => SaveRedirect::blueprint()->toPublishArray(),
             'values' => $fields->values()->all(),
             'meta' => $fields->meta()->all(),
             'submitUrl' => $submitUrl,
@@ -258,41 +238,5 @@ final class RedirectsController
             'listingUrl' => cp_route('mt.redirects.index'),
             'stats' => $redirect->exists ? ['hits' => $redirect->hits, 'last_hit_at' => $redirect->last_hit_at?->toIso8601String(), 'automatic' => $redirect->automatic] : null,
         ]);
-    }
-
-    private function blueprint(): BlueprintObject
-    {
-        // A campaign link's UTM tags, added to the target when saved.
-        $campaign = [[
-            'display' => __('marketing-toolkit::cp.redirect_form.campaign'),
-            'collapsible' => true,
-            'collapsed' => true,
-            'fields' => array_map(fn (string $tag) => ['handle' => $tag, 'field' => [
-                'type' => 'text', 'display' => $tag, 'width' => $tag === 'utm_campaign' ? 100 : 50,
-            ]], Campaign::TAGS),
-        ]];
-
-        return Blueprint::make('seo_redirect')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
-            ['handle' => 'source', 'field' => [
-                'type' => 'text', 'display' => __('marketing-toolkit::cp.redirect_form.source'),
-            ]],
-            ['handle' => 'target', 'field' => [
-                'type' => 'text', 'display' => __('marketing-toolkit::cp.redirect_form.target'),
-            ]],
-            ['handle' => 'status', 'field' => [
-                'type' => 'button_group', 'display' => __('marketing-toolkit::cp.redirect_form.status'), 'width' => 66, 'default' => '301',
-                'options' => [
-                    '301' => __('marketing-toolkit::cp.redirect_form.status_301'),
-                    '302' => __('marketing-toolkit::cp.redirect_form.status_302'),
-                    '410' => __('marketing-toolkit::cp.redirect_form.status_410'),
-                ],
-            ]],
-            ['handle' => 'active', 'field' => ['type' => 'toggle', 'display' => __('marketing-toolkit::cp.redirect_form.active'), 'width' => 33, 'default' => true]],
-            ...(Sites::multiple() ? [['handle' => 'site', 'field' => [
-                // Every site (none chosen) only for someone who may work on every site.
-                'type' => 'select', 'display' => __('marketing-toolkit::cp.redirect_form.site'), 'options' => array_intersect_key(Sites::options(), array_flip(Sites::accessible())), 'clearable' => Sites::accessesAll(),
-                'placeholder' => Sites::accessesAll() ? __('marketing-toolkit::cp.redirect_form.all_sites') : null,
-            ]]] : []),
-        ]], ...$campaign]]]]);
     }
 }

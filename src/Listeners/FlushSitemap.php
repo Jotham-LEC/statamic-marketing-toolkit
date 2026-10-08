@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Listeners;
 use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\Http\Controllers\SitemapController;
 use JothamLec\MarketingToolkit\Http\Controllers\TextFileController;
+use JothamLec\MarketingToolkit\Support\Features;
 use Statamic\Facades\Site;
 
 /**
@@ -18,6 +19,10 @@ final class FlushSitemap
 {
     public function handle(): void
     {
+        if (! Features::on('sitemap') && ! Features::on('llms_txt')) {
+            return;
+        }
+
         foreach (Site::all() as $site) {
             Cache::forget(SitemapController::cacheKey($site->handle()));
             Cache::forget(TextFileController::llmsCacheKey($site->handle()));

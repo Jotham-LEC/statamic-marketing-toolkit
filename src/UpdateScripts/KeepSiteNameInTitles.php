@@ -3,7 +3,6 @@
 namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use Statamic\Facades\GlobalSet;
-use Statamic\UpdateScripts\UpdateScript;
 
 /**
  * 0.18.2 stopped adding the site name to page titles unless the new

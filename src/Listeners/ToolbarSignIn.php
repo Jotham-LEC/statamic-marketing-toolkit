@@ -10,7 +10,7 @@ use Statamic\Facades\User;
 /**
  * Signing in, through the control panel or a front-end form, sets the
  * toolbar's marker cookie for a user who gets the toolbar. Only on Statamic's
- * own guards. Not registered with the toolbar off (ServiceProvider::leaveOutUnused()).
+ * own guards. With the toolbar off, Toolbar::wants() is false for everyone.
  */
 final class ToolbarSignIn
 {

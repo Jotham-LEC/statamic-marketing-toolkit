@@ -13,6 +13,10 @@ final class ToolbarSignOut
 {
     public function handle(Logout $event): void
     {
+        if (! Toolbar::enabled()) {
+            return;
+        }
+
         Cookie::queue(Toolbar::forget());
     }
 }

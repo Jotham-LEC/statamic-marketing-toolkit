@@ -20,6 +20,9 @@ use Symfony\Component\HttpFoundation\Response;
  * matches, else count it in the 404 log. A page that exists always wins over
  * a rule, so a page that comes back takes its address back. The bookkeeping
  * (hit counts, the log) runs in terminate(), after the response has gone out.
+ * Not Laravel's defer(): it runs only where the app has Laravel 11's
+ * InvokeDeferredCallbacks middleware, which a site keeping the older
+ * app/Http/Kernel.php may lack, and the log would then stay empty.
  */
 final class HandleMissing
 {
@@ -27,6 +30,10 @@ final class HandleMissing
 
     public function handle(Request $request, Closure $next): Response
     {
+        if (! Features::on('redirects') && ! Features::on('not_found')) {
+            return $next($request);
+        }
+
         $response = $next($request);
 
         if ($response->getStatusCode() !== 404 || ! in_array($request->getMethod(), ['GET', 'HEAD'], true) || StatamicRoutes::owns($request->getPathInfo())) {
@@ -35,11 +42,7 @@ final class HandleMissing
 
         // A stored copy would be served without coming through here: a redirect
         // added later would never apply, and the log would count one visit.
-        // Each module is asked here, not only at boot (leaveOutUnused): either
-        // may be off alone, and an Octane worker outlives a switch.
-        if (Features::on('redirects') || Features::on('not_found')) {
-            $response->headers->set('X-Statamic-Uncacheable', 'true');
-        }
+        $response->headers->set('X-Statamic-Uncacheable', 'true');
 
         $site = Site::current();
         // As requested, from the domain's root: the matcher takes the site's folder off itself.

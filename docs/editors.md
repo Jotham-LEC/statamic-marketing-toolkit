@@ -6,7 +6,7 @@ This guide is for the people who write and look after the site's pages. It expla
 
 ## The Marketing section
 
-Everything the addon adds to the control panel is in its own **Marketing** section of the sidebar, between Fields and Tools. Its items are **Overview**, **Reports**, **Redirects**, **404s**, **Search Console**, **Brand** and **Settings**. The fields carry no descriptions in the control panel, so this page is where each one is explained. You see only the items your role allows: someone who may not manage redirects has no Redirects item, for example.
+Everything the addon adds to the control panel is in its own **Marketing** section of the sidebar, after Statamic's own sections; each user can move it under **Preferences → Nav**. Its items are **Overview**, **Reports**, **Redirects**, **404s**, **Search Console**, **Brand** and **Settings**. The fields carry no descriptions in the control panel, so this page is where each one is explained. You see only the items your role allows: someone who may not manage redirects has no Redirects item, for example.
 
 With more than one site, the overview, the 404s, the reports, Brand, Settings and the dashboard card are of the site chosen in the control panel's site menu. Redirects list every site's, with a Site column.
 

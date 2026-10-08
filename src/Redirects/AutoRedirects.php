@@ -72,10 +72,10 @@ class AutoRedirects
             (Redirect::forSource($source, site: $site) ?? new Redirect)
                 ->fill(['site' => $site, 'source' => $source, 'target' => $target, 'status' => 301, 'active' => true, 'automatic' => true])
                 ->save();
-        });
 
-        // Bulk deletes bypass the model events that clear the cache.
-        Matcher::flush();
+            // The bulk delete above bypasses the model events that clear the cache.
+            DB::afterCommit(fn () => Matcher::flush());
+        });
     }
 
     /**

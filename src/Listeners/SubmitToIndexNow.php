@@ -24,6 +24,10 @@ final class SubmitToIndexNow
 
     public function handle(EntrySaving|EntrySaved|EntryDeleted|EntryScheduleReached|TermSaved|TermDeleted $event): void
     {
+        if (! $this->indexNow->enabled()) {
+            return;
+        }
+
         // Unpublished: told while saving, when Statamic still knows it was live.
         if ($event instanceof EntrySaving) {
             $entry = $event->entry;

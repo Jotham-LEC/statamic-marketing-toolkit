@@ -109,6 +109,19 @@ test('an import refuses a row that loops back through an earlier row of the same
         ]);
 });
 
+test('a CSV row and the form refuse a loop with the same message', function () {
+    $this->actingAs(cpUser(['manage marketing toolkit redirects']));
+    Redirect::query()->create(['source' => '/a', 'target' => '/b']);
+
+    $form = $this->postJson(cp_route('mt.redirects.store'), ['source' => '/b', 'target' => '/a', 'status' => '301', 'active' => true])
+        ->assertUnprocessable()
+        ->json('errors.target.0');
+    $csv = $this->post(cp_route('mt.redirects.import'), ['file' => UploadedFile::fake()->createWithContent('r.csv', "/b,/a\n")])->json('errors.0');
+
+    expect($form)->toBe(__('marketing-toolkit::validation.redirect.loop'))
+        ->and($csv)->toBe('Row 1: '.$form);
+});
+
 test('the checks, the import report and the listing speak the editor\'s language', function () {
     $this->actingAs(cpUser(['manage marketing toolkit redirects']));
     Redirect::query()->create(['source' => '/a', 'target' => '/b']);

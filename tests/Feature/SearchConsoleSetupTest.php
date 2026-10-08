@@ -268,7 +268,7 @@ test('on several sites, someone who may only view SEO sees whether the sites the
 test('the daily import is scheduled once it is set up, however that was done', function () {
     $scheduled = function () {
         $schedule = new Schedule;
-        (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
+        (fn () => $this->scheduleJobs($schedule))->call(app()->getProvider(ServiceProvider::class));
 
         return collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'mt:search-console'));
     };

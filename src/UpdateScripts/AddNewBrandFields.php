@@ -3,10 +3,8 @@
 namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use JothamLec\MarketingToolkit\Commands\Install;
-use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
-use Statamic\UpdateScripts\UpdateScript;
 
 /**
  * An update adds to the Brand and Marketing settings blueprints the fields
@@ -70,16 +68,16 @@ final class AddNewBrandFields extends UpdateScript
      */
     public static function since(string $oldVersion, string $newVersion): ?array
     {
-        if (! Version::isRelease($oldVersion)) {
+        if (! self::isRelease($oldVersion)) {
             return [];
         }
 
-        if (Version::before($oldVersion, '0.20.0')) {
+        if (self::before($oldVersion, '0.20.0')) {
             return null;
         }
 
         return collect(self::FIELDS)
-            ->filter(fn (array $fields, string $version) => Version::after($version, $oldVersion) && ! Version::after($version, $newVersion))
+            ->filter(fn (array $fields, string $version) => self::after($version, $oldVersion) && ! self::after($version, $newVersion))
             ->flatten()
             ->values()
             ->all();

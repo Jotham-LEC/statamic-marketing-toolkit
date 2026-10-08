@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit;
 use JothamLec\MarketingToolkit\Support\Assets;
 use Statamic\Contracts\Assets\Asset;
 use Statamic\Contracts\Globals\Variables;
+use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
 use Statamic\Facades\Site;
@@ -89,25 +90,23 @@ class Settings
 
         $container = $this->container($key);
 
-        // A field the blueprint doesn't name a container for (imported): augmented, which finds it.
-        return Assets::from($container === null ? $variables?->augmentedValue($key) : $container.'::'.$path);
+        return $container === null ? null : Assets::from($container.'::'.$path);
     }
 
     /**
      * The asset container an assets field of either set's blueprint names,
-     * read from the blueprint as saved (an imported field isn't looked into).
+     * a field imported from a fieldset included. A field that names none
+     * uses the site's only container, as Statamic's assets field does.
      */
     private function container(string $key): ?string
     {
-        $tabs = collect(self::handles())->flatMap(fn (string $handle) => Blueprint::find('globals.'.$handle)?->contents()['tabs'] ?? [])->all();
+        foreach (self::handles() as $handle) {
+            $field = Blueprint::find('globals.'.$handle)?->field($key);
 
-        foreach ($tabs as $tab) {
-            foreach ($tab['sections'] ?? [] as $section) {
-                foreach ($section['fields'] ?? [] as $field) {
-                    if (($field['handle'] ?? null) === $key && is_string($field['field']['container'] ?? null)) {
-                        return $field['field']['container'];
-                    }
-                }
+            if ($field !== null) {
+                $containers = AssetContainer::all();
+
+                return $field->get('container') ?? ($containers->count() === 1 ? $containers->first()->handle() : null);
             }
         }
 

@@ -1,9 +1,11 @@
 <?php
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
+use JothamLec\MarketingToolkit\ServiceProvider;
 
 test('a 404 is logged once per path, with hits, dates and the last referrer', function () {
     $this->get('/missing', ['Referer' => 'https://elsewhere.test/a', 'User-Agent' => 'Mozilla/5.0']);
@@ -99,6 +101,23 @@ test('only a link from one of the site\'s own pages keeps a one-off miss: any re
     }
 
     expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/linked', '/random-3', '/random-4']);
+});
+
+test('model:prune trims the log to its cap, keeping the newest and most-hit rows, and runs daily', function () {
+    config(['marketing-toolkit.not_found.max_rows' => 2]);
+
+    foreach (['/old' => 1, '/popular' => 5, '/new' => 1] as $path => $hits) {
+        $this->travel(1)->minutes();
+        MissingPath::query()->create(['path' => $path, 'hits' => $hits, 'first_seen_at' => now()->subDays(2), 'last_seen_at' => now()]);
+    }
+
+    $this->artisan('model:prune', ['--model' => [MissingPath::class]])->assertSuccessful();
+
+    expect(MissingPath::query()->orderBy('path')->pluck('path')->all())->toBe(['/new', '/popular']);
+
+    $schedule = new Schedule;
+    (fn () => $this->scheduleJobs($schedule))->call(app()->getProvider(ServiceProvider::class));
+    expect(collect($schedule->events())->contains(fn ($event) => str_contains((string) $event->command, 'model:prune') && $event->expression === '0 0 * * *'))->toBeTrue();
 });
 
 test('logging can be turned off', function () {

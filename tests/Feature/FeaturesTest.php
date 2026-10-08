@@ -1,12 +1,22 @@
 <?php
 
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Routing\RouteCollection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Route;
 use JothamLec\MarketingToolkit\Commands\Install;
-use JothamLec\MarketingToolkit\Listeners\RemakeFavicons;
-use JothamLec\MarketingToolkit\ServiceProvider;
+use JothamLec\MarketingToolkit\Http\Controllers\SitemapController;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
+use JothamLec\MarketingToolkit\Listeners\SubmitToIndexNow;
+use JothamLec\MarketingToolkit\Listeners\ToolbarSignOut;
+use JothamLec\MarketingToolkit\NotFound\MissingPath;
+use JothamLec\MarketingToolkit\Redirects\Redirect;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Package;
+use JothamLec\MarketingToolkit\Toolbar\Toolbar;
+use Statamic\Events\EntrySaved;
 use Statamic\Facades\Addon;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
@@ -22,7 +32,7 @@ afterEach(function () {
  */
 function rebootFeatures(): void
 {
-    (fn () => $this->bootFeatures())->call(app()->getProvider(ServiceProvider::class));
+    Features::apply();
 }
 
 /**
@@ -133,19 +143,46 @@ test('a site\'s own route for one of the addresses keeps it, and robots.txt stil
     $this->get('https://example.test/robots.txt')->assertOk()->assertSee('Sitemap: https://example.test/sitemap.xml');
 });
 
-test('listeners and middleware of modules that are off aren\'t registered', function () {
-    Features::save(['favicons', 'sitemap', 'llms_txt', 'redirects', 'not_found', 'automatic_redirects', 'toolbar']);
-    $provider = app()->getProvider(ServiceProvider::class);
-    rebootFeatures();
+test('with the sitemap and llms.txt off, a save leaves their cache alone', function () {
+    config(['marketing-toolkit.sitemap.enabled' => false, 'marketing-toolkit.llms_txt.enabled' => false]);
+    Cache::forever(SitemapController::cacheKey('default'), 'kept');
 
-    $listen = (fn () => $this->listen)->call($provider);
-    $middleware = (fn () => $this->middlewareGroups)->call($provider);
-    $discovered = (fn () => $this->autoloadFilesFromFolder('Listeners'))->call($provider);
+    app(FlushSitemap::class)->handle();
 
-    expect($listen)->toBe([])
-        ->and($discovered)->not->toContain(RemakeFavicons::class)
-        ->and($middleware)->toBe([])
-        ->and((fn () => $this->subscribe)->call($provider))->toBe([]);
+    expect(Cache::get(SitemapController::cacheKey('default')))->toBe('kept');
+});
+
+test('with IndexNow off, a save queues nothing', function () {
+    config(['marketing-toolkit.indexnow.enabled' => false]);
+    $entry = entryIn('pages', 'about');
+
+    app(SubmitToIndexNow::class)->handle(new EntrySaved($entry));
+
+    expect((fn () => $this->urls)->call(app(IndexNow::class)))->toBe([]);
+});
+
+test('with the toolbar off, signing out queues no cookie', function () {
+    config(['marketing-toolkit.toolbar.enabled' => false]);
+
+    app(ToolbarSignOut::class)->handle(new Logout('web', cpUser()));
+
+    expect(Cookie::getQueuedCookies())->toBe([]);
+});
+
+test('with redirects and the 404 log off, a missing page is neither redirected nor logged', function () {
+    Redirect::query()->create(['source' => '/old', 'target' => '/new']);
+    config(['marketing-toolkit.redirects.enabled' => false, 'marketing-toolkit.not_found.enabled' => false]);
+
+    $this->get('/old', ['User-Agent' => 'Mozilla/5.0'])->assertNotFound()->assertHeaderMissing('X-Statamic-Uncacheable');
+
+    expect(MissingPath::query()->count())->toBe(0);
+});
+
+test('with the toolbar off, the control panel clears a toolbar cookie left from before', function () {
+    config(['marketing-toolkit.toolbar.enabled' => false]);
+    $this->actingAs(cpUser(super: true));
+
+    $this->withCookie(Toolbar::COOKIE, '1')->get(cp_route('index'))->assertCookieExpired(Toolbar::COOKIE);
 });
 
 test('a module config/marketing-toolkit.php switches off is locked in the tab, and a save leaves it be', function () {

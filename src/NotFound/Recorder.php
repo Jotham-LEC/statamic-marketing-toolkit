@@ -15,7 +15,7 @@ use Statamic\Facades\Site;
  * Counts a 404 against its path (and its site, where there are several). Bots (by user agent) and scanner probes (by
  * path) are left out, and the table keeps about `marketing-toolkit.not_found.max_rows`
  * paths, dropping one-off misses first, then paths first seen in the last day,
- * each the least recently seen first (see trim()).
+ * each the least recently seen first (see MissingPath::prunable()).
  */
 class Recorder
 {
@@ -104,44 +104,18 @@ class Recorder
     }
 
     /**
-     * Counting the rows on every new path would cost a full count per 404, so
-     * only one new path in a tenth of the cap trims (a lottery, as Laravel
-     * sweeps sessions): the log runs over by about a tenth, and a
-     * small cap is kept exactly.
+     * The fallback for a site without the scheduler, which prunes the log
+     * daily (`model:prune`): counting the rows on every new path would cost a
+     * full count per 404, so only one new path in a tenth of the cap trims (a
+     * lottery, as Laravel sweeps sessions). The log runs over by about a
+     * tenth, and a small cap is kept exactly.
      */
     private function trim(): void
     {
-        $max = max(1, (int) config('marketing-toolkit.not_found.max_rows'));
+        $max = MissingPath::maxRows();
 
-        if (random_int(1, max(1, intdiv($max, 10))) !== 1) {
-            return;
-        }
-
-        $excess = MissingPath::query()->count() - $max;
-
-        if ($excess > 0) {
-            // One-off misses go first (one hit, no page of the site's linking there: what
-            // a flood of made-up addresses looks like), so they can't push out the broken
-            // links; then the others first seen within the last day, so a flood of addresses each
-            // asked for twice can't either. Only the site's own pages count: a Referer header
-            // is whatever the request says, so a flood could name any other. Best effort:
-            // hits and the Referer are the client's to send, and a flood kept up for days
-            // still wins in the end.
-            $internal = Site::all()
-                ->map(fn ($site) => strtolower((string) parse_url((string) $site->absoluteUrl(), PHP_URL_HOST)))
-                ->filter()->unique()
-                ->flatMap(fn (string $host) => ["http://{$host}/%", "https://{$host}/%"])
-                ->values()->all();
-            $recurs = 'hits > 1'.str_repeat(' or referrer like ?', count($internal));
-
-            $stale = MissingPath::query()
-                // A null referrer makes the test null, not false: hence `case when … else 0`.
-                ->orderByRaw("case when {$recurs} then (case when first_seen_at > ? then 1 else 2 end) else 0 end", [...$internal, now()->subDay()])
-                ->orderBy('last_seen_at')
-                ->orderBy('id')
-                ->limit($excess)
-                ->pluck('id');
-            MissingPath::query()->whereIn('id', $stale)->delete();
+        if (random_int(1, max(1, intdiv($max, 10))) === 1 && MissingPath::query()->count() > $max) {
+            (new MissingPath)->pruneAll();
         }
     }
 }

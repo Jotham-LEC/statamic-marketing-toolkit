@@ -334,7 +334,7 @@ test('reports run on the schedule set in the addon settings', function () {
     $events = function (array $settings) {
         reportSettings($settings);
         $schedule = new Schedule;
-        (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
+        (fn () => $this->scheduleJobs($schedule))->call(app()->getProvider(ServiceProvider::class));
 
         return collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'mt:report'))->map(fn ($event) => $event->expression)->values()->all();
     };
@@ -640,7 +640,7 @@ test('turned off under Features, reports run only by hand', function () {
     reportSettings(['schedule' => 'daily']);
     config(['marketing-toolkit.reports.enabled' => false]);
     $schedule = new Schedule;
-    (fn () => $this->schedule($schedule))->call(app()->getProvider(ServiceProvider::class));
+    (fn () => $this->scheduleJobs($schedule))->call(app()->getProvider(ServiceProvider::class));
 
     expect(collect($schedule->events())->filter(fn ($event) => str_contains((string) $event->command, 'mt:report'))->all())->toBe([]);
 });

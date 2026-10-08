@@ -107,6 +107,6 @@ final class SitemapController
 
     private function xml(string $body): Response
     {
-        return new Response($body, 200, ['Content-Type' => 'text/xml; charset=UTF-8']);
+        return response($body)->header('Content-Type', 'text/xml; charset=UTF-8');
     }
 }

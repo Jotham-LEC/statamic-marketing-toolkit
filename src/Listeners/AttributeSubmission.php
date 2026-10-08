@@ -9,9 +9,7 @@ use Statamic\Events\FormSubmitted;
 
 /**
  * Copies where the lead came from into the submission, before it is
- * saved. Not registered with leads off (ServiceProvider::leaveOutUnused());
- * the check here covers a queue worker or Octane process booted before
- * leads were switched off.
+ * saved. It does nothing while the leads module is off.
  */
 final class AttributeSubmission
 {

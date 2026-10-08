@@ -4,9 +4,7 @@ namespace JothamLec\MarketingToolkit\UpdateScripts;
 
 use Illuminate\Support\Facades\File;
 use JothamLec\MarketingToolkit\Support\Permissions;
-use JothamLec\MarketingToolkit\Support\Version;
 use Statamic\Facades\Role;
-use Statamic\UpdateScripts\UpdateScript;
 use Symfony\Component\Finder\SplFileInfo;
 
 /**
@@ -47,7 +45,7 @@ final class RenameFromSeo extends UpdateScript
 
     public function shouldUpdate($newVersion, $oldVersion)
     {
-        return Version::before((string) $oldVersion, '0.20.0') || $this->hasOldNames();
+        return self::before((string) $oldVersion, '0.20.0') || $this->hasOldNames();
     }
 
     public function update()

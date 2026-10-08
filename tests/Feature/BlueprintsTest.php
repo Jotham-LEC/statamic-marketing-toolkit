@@ -32,16 +32,21 @@ test('the report settings have a switch for each check the runner knows, and no 
     expect($switches)->toEqualCanonicalizing($rules);
 });
 
-test('the report settings blueprint has the defaults ReportSettings falls back to', function () {
-    $fields = settingsFields();
+test('the report settings fall back to the blueprint\'s defaults', function () {
+    $defaults = (new ReportSettings([]))->all();
 
-    foreach (ReportSettings::DEFAULTS as $key => $default) {
-        expect($fields)->toHaveKey($key);
-
-        if (array_key_exists('default', $fields[$key])) {
-            expect($fields[$key]['default'])->toBe($default, $key);
-        }
-    }
+    expect($defaults)->toMatchArray([
+        // Off until asked for: it sends requests to the sites a page links to.
+        'rule_external_links' => false,
+        'rule_title_length' => true,
+        'title_min' => 30,
+        'title_max' => 60,
+        'chunk_size' => 25,
+        'keep_reports' => 10,
+        'schedule' => 'off',
+        'schedule_day' => 'monday',
+        'schedule_time' => '03:00',
+    ]);
 
     expect(array_keys(settingsFields()['schedule_day']['options']))->toEqualCanonicalizing(ReportSettings::DAYS);
 });

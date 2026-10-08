@@ -16,8 +16,6 @@ final class RemakeFavicons
 {
     public function handle(GlobalVariablesSaved $event): void
     {
-        // Not registered with favicons off (ServiceProvider::leaveOutUnused()); asked again
-        // for a queue worker or Octane process booted before they were switched off.
         if ($event->variables->handle() !== config('marketing-toolkit.global') || ! Features::on('favicons')) {
             return;
         }

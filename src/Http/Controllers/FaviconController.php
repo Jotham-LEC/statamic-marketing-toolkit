@@ -23,7 +23,7 @@ final class FaviconController
         $bytes = $favicons->file($name);
         throw_if($bytes === null, NotFoundHttpException::class);
 
-        return new Response($bytes, 200, array_filter([
+        return response($bytes)->withHeaders(array_filter([
             'Content-Type' => Favicons::FILES[$name],
             // Browsers ask for /favicon.ico without the version: a day, then they check again.
             'Cache-Control' => 'public, max-age=86400',

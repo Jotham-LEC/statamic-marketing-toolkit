@@ -397,6 +397,21 @@ test('a brand image is found from its path and the field\'s container, and nothi
         ->and($settings->asset('favicon'))->toBeNull();
 });
 
+test('a brand image in a field imported from a fieldset is found from its path too', function () {
+    AssetContainer::find('assets')->disk()->put('brand.png', file_get_contents(__DIR__.'/../fixtures/share.png'));
+    Fieldset::make('brand_images')->setContents(['fields' => [
+        ['handle' => 'default_image', 'field' => ['type' => 'assets', 'container' => 'assets', 'max_files' => 1]],
+    ]])->save();
+    seoGlobal(['default_image' => ['brand.png']]);
+    Blueprint::make('seo')->setNamespace('globals')->setContents(['tabs' => ['main' => ['sections' => [['fields' => [
+        ['import' => 'brand_images'],
+    ]]]]]])->save();
+
+    expect(app(SiteSeo::class)->settings()->asset('default_image')?->id())->toBe('assets::brand.png');
+
+    Fieldset::find('brand_images')->delete();
+});
+
 test('text that isn\'t UTF-8 can\'t fail the page: the JSON-LD prints a replacement character', function () {
     $meta = new Meta(
         title: 'Café', description: null, canonical: null, robots: 'index, follow', ogTitle: 'Café', ogType: 'website',

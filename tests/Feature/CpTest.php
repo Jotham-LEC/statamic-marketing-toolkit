@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
@@ -21,7 +22,7 @@ test('the addon registers its permissions in an SEO group', function () {
     expect($permissions)->toBe(['view marketing toolkit', 'manage marketing toolkit redirects', 'run marketing toolkit reports']);
 });
 
-test('the Marketing section, between Fields and Tools, opens the overview and links to Brand and Settings', function () {
+test('the Marketing section, after Statamic\'s own, opens the overview and links to Brand and Settings', function () {
     seoGlobal([]);
     GlobalSet::make('marketing')->title('Marketing settings')->save();
     $this->actingAs(cpUser(super: true));
@@ -34,7 +35,13 @@ test('the Marketing section, between Fields and Tools, opens the overview and li
         ->and($nav->get('Settings')->url())->toBe(GlobalSet::findByHandle('marketing')->in('default')->editUrl());
 
     $sections = collect(Nav::build())->pluck('display')->all();
-    expect(array_slice($sections, array_search('Fields', $sections), 3))->toBe(['Fields', 'Marketing', 'Tools']);
+    expect(end($sections))->toBe('Marketing');
+
+    // The section's own address opens the overview, which is highlighted on its own page only.
+    $this->get(cp_route('index').'/marketing-toolkit')->assertRedirect(cp_route('mt.index'));
+    app()->instance('request', Request::create(cp_route('mt.reports.index')));
+    expect($nav->get('Overview')->isActive())->toBeFalse()
+        ->and($nav->get('Reports')->isActive())->toBeTrue();
 
     $this->get(cp_route('mt.index'))
         ->assertOk()

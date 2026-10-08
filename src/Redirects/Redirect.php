@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use JothamLec\MarketingToolkit\Rules\RedirectTarget;
+use JothamLec\MarketingToolkit\Rules\UniqueSource;
 use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
@@ -37,9 +40,6 @@ class Redirect extends Model
     /** The longest source: MySQL's unique index on site and source must stay under 3072 bytes. */
     public const int MAX_SOURCE = 736;
 
-    /** How far a chain of rules is followed when looking for a loop. */
-    private const int MAX_HOPS = 10;
-
     protected $table = 'mt_redirects';
 
     protected $guarded = ['id'];
@@ -65,8 +65,9 @@ class Redirect extends Model
             $redirect->target = $redirect->status === 410 ? null : self::normalizeTarget($redirect->target);
         });
 
-        static::saved(fn () => Matcher::flush());
-        static::deleted(fn () => Matcher::flush());
+        // After the transaction, if there is one: a request in between could cache the old rules again.
+        static::saved(fn () => DB::afterCommit(fn () => Matcher::flush()));
+        static::deleted(fn () => DB::afterCommit(fn () => Matcher::flush()));
     }
 
     /**
@@ -183,13 +184,13 @@ class Redirect extends Model
     }
 
     /**
-     * Checks a redirect's fields, from the form or a CSV row. $taken: whether
-     * another rule already starts from the source, and $active: the active
-     * rules, when the caller has them at hand (an import, which reads them
-     * once rather than for every row); else they are looked up. $sites: the
-     * handles a rule may name (the CP passes the user's own); every site's
-     * when not given. Only with every site among them may a rule name none
-     * (be for every site).
+     * Checks a redirect's fields, from a CSV row; the form checks them with
+     * the same rules() and messages() (Http\Requests\SaveRedirect). $taken:
+     * whether another rule already starts from the source, and $active: the
+     * active rules, when the caller has them at hand (an import, which reads
+     * them once rather than for every row); else they are looked up. $sites:
+     * the handles a rule may name (the CP passes the user's own); every
+     * site's when not given.
      *
      * @param  array<string, mixed>  $data
      * @param  ?Collection<int, self>  $active
@@ -199,27 +200,21 @@ class Redirect extends Model
     {
         $site = is_string($data['site'] ?? null) && $data['site'] !== '' ? $data['site'] : null;
 
-        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId, $taken, $active, $sites ?? Sites::handles()), [
-            'source.required' => __('marketing-toolkit::validation.redirect.source_required'),
-            'source.starts_with' => __('marketing-toolkit::validation.redirect.source_starts_with'),
-            'source.not_regex' => __('marketing-toolkit::validation.redirect.source_query'),
-            'source.regex' => __('marketing-toolkit::validation.redirect.control_characters'),
-            'target.required_unless' => __('marketing-toolkit::validation.redirect.target_required'),
-            'target.regex' => __('marketing-toolkit::validation.redirect.target_format'),
-            'target.not_regex' => __('marketing-toolkit::validation.redirect.control_characters'),
-            'status.in' => __('marketing-toolkit::validation.redirect.status'),
-            'site.in' => __('marketing-toolkit::validation.redirect.site'),
-            'site.required' => __('marketing-toolkit::validation.redirect.site_required'),
-        ]);
+        return Validator::make($data, self::rules((string) ($data['source'] ?? ''), $site, $ignoreId, $taken, $active, $sites), self::messages());
     }
 
     /**
+     * The checks a redirect's fields pass, from the form or a CSV row. Only
+     * with every site among $sites may a rule name none (be for every site).
+     *
      * @param  ?Collection<int, self>  $active
-     * @param  list<string>  $sites
+     * @param  ?list<string>  $sites  the handles a rule may name; null: every site's
      * @return array<string, mixed>
      */
-    private static function rules(string $source, ?string $site, ?int $ignoreId, ?bool $taken, ?Collection $active, array $sites): array
+    public static function rules(string $source, ?string $site, ?int $ignoreId = null, ?bool $taken = null, ?Collection $active = null, ?array $sites = null): array
     {
+        $sites ??= Sites::handles();
+
         // Before the other checks: a regex on text that isn't UTF-8 fails, and Postgres refuses it.
         $utf8 = function (string $attribute, mixed $value, Closure $fail) {
             if (is_string($value) && ! mb_check_encoding($value, 'UTF-8')) {
@@ -232,27 +227,11 @@ class Redirect extends Model
             'source' => [
                 // Control characters would go into the Location header (a line break starts a new header).
                 'required', 'string', 'bail', $utf8, 'max:'.self::MAX_SOURCE, 'starts_with:/', 'not_regex:/[?#]/', 'regex:/^[^\x00-\x1F\x7F]*$/',
-                function (string $attribute, mixed $value, Closure $fail) use ($site, $ignoreId, $taken) {
-                    if ($taken ?? self::forSource((string) $value, $ignoreId, $site)) {
-                        $fail(__('marketing-toolkit::validation.redirect.source_taken'));
-                    }
-                },
+                new UniqueSource($site, $ignoreId, $taken),
             ],
             'target' => [
                 'nullable', 'required_unless:status,410', 'string', 'bail', $utf8, 'max:2048', 'regex:#^(/|https?://)#i', 'not_regex:/[\x00-\x1F\x7F]/',
-                function (string $attribute, mixed $value, Closure $fail) use ($source, $site, $ignoreId, $active) {
-                    $wildcards = substr_count($source, '*');
-                    preg_match_all('/\$(\d+)/', (string) $value, $used);
-
-                    if ($used[1] !== [] && max(array_map('intval', $used[1])) > $wildcards) {
-                        $fail(__('marketing-toolkit::validation.redirect.target_number'));
-                    } elseif (preg_match('#^https?://[^/]*\$\d#i', (string) $value)) {
-                        // What a visitor typed would choose the site they are sent to (`https://example.com$1` → example.com.evil.test).
-                        $fail(__('marketing-toolkit::validation.redirect.target_number_domain'));
-                    } elseif ($loop = self::loop($source, (string) $value, $site, $ignoreId, $active)) {
-                        $fail($loop);
-                    }
-                },
+                new RedirectTarget($source, $site, $ignoreId, $active),
             ],
             'status' => ['required', Rule::in(self::STATUSES)],
             'active' => ['boolean'],
@@ -260,87 +239,22 @@ class Redirect extends Model
     }
 
     /**
-     * Why a rule from $source to $target would send visitors round in a
-     * circle, or null. A target under a wildcard's own source (`/blog/*` to
-     * `/blog/new/$1`) is allowed: the pages there usually exist. A rule for
-     * one site is followed through that site's rules; one for every site,
-     * through each site's.
-     *
-     * @param  ?Collection<int, self>  $active
+     * @return array<string, string>
      */
-    private static function loop(string $source, string $target, ?string $site, ?int $ignoreId, ?Collection $active): ?string
+    public static function messages(): array
     {
-        if (! str_starts_with($target, '/') || $source === '') {
-            return null;
-        }
-
-        if (self::pointsBack($source, $target)) {
-            return __('marketing-toolkit::validation.redirect.points_back');
-        }
-
-        $source = self::normalize($source);
-
-        if (str_contains($source, '*')) {
-            return null;
-        }
-
-        foreach ($site !== null ? [$site] : (Sites::multiple() ? Sites::handles() : [null]) as $on) {
-            if ($loop = self::loopOn($source, $target, $on, $ignoreId, $active)) {
-                return $loop;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Follows the rules from the target, as a visitor on $site would be sent
-     * on (null: a single site, every rule), and sees whether they come back.
-     * Each step looks only at the rules that could match (an exact source, the
-     * wildcards): among $active when given, else read for that step rather than
-     * from the cached set, which an import would rebuild after every row. The
-     * rule being edited stands aside for its new version. Ignoring case, an
-     * exact source can't be looked up in SQL (see forSource()), so all are
-     * read once.
-     *
-     * @param  ?Collection<int, self>  $active
-     */
-    private static function loopOn(string $source, string $target, ?string $site, ?int $ignoreId, ?Collection $active): ?string
-    {
-        if ($active !== null) {
-            $rules = $active->reject(fn (self $rule) => $rule->id === $ignoreId)
-                ->when($site, fn (Collection $rules, string $site) => $rules->filter(fn (self $rule) => $rule->site === $site || $rule->site === null));
-            $candidates = fn (string $path) => $rules->filter(fn (self $rule) => $rule->isWildcard() || self::key(self::normalize($rule->source)) === self::key($path));
-        } else {
-            $query = fn () => self::query()->where('active', true)->whereKeyNot($ignoreId ?? 0)
-                ->when($site, fn (Builder $query, string $site) => $query->appliesOn($site))
-                ->select(['id', 'site', 'source', 'target', 'status']);
-            $everything = self::ignoresCase() ? $query()->get() : null;
-            $wildcards = $everything ?? $query()->where('source', 'like', '%*%')->get();
-            $candidates = fn (string $path) => $everything ?? $query()->where('source', $path)->get()->merge($wildcards);
-        }
-
-        $path = self::normalize($target);
-        $seen = [];
-
-        for ($hops = 1; $hops <= self::MAX_HOPS && ! isset($seen[self::key($path)]); $hops++) {
-            $seen[self::key($path)] = true;
-            $next = app(Matcher::class)->matchAmong($candidates($path), $path, $site);
-
-            if ($next === null || $next['target'] === null || ! str_starts_with($next['target'], '/')) {
-                return null;
-            }
-
-            $path = self::normalize($next['target']);
-
-            if (self::key($path) === self::key($source)) {
-                return $hops === 1
-                    ? __('marketing-toolkit::validation.redirect.loop')
-                    : __('marketing-toolkit::validation.redirect.loop_steps', ['steps' => $hops]);
-            }
-        }
-
-        return null;
+        return [
+            'source.required' => __('marketing-toolkit::validation.redirect.source_required'),
+            'source.starts_with' => __('marketing-toolkit::validation.redirect.source_starts_with'),
+            'source.not_regex' => __('marketing-toolkit::validation.redirect.source_query'),
+            'source.regex' => __('marketing-toolkit::validation.redirect.control_characters'),
+            'target.required_unless' => __('marketing-toolkit::validation.redirect.target_required'),
+            'target.regex' => __('marketing-toolkit::validation.redirect.target_format'),
+            'target.not_regex' => __('marketing-toolkit::validation.redirect.control_characters'),
+            'status.in' => __('marketing-toolkit::validation.redirect.status'),
+            'site.in' => __('marketing-toolkit::validation.redirect.site'),
+            'site.required' => __('marketing-toolkit::validation.redirect.site_required'),
+        ];
     }
 
     /**

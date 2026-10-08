@@ -29,22 +29,33 @@ class Draft
 
     public static function fromRequest(Request $request): EntryContract|TermContract
     {
-        $blueprint = Blueprint::find((string) $request->input('blueprint'));
+        return self::from($request->all());
+    }
+
+    /**
+     * @param  array<string, mixed>  $input  what a publish form sends: `blueprint` (its
+     *                                       fully qualified handle), `site`, `values`, and
+     *                                       `reference` when it edits saved content
+     */
+    public static function from(array $input): EntryContract|TermContract
+    {
+        $blueprint = Blueprint::find((string) ($input['blueprint'] ?? ''));
 
         abort_unless($blueprint instanceof BlueprintObject, 422, 'Unknown blueprint.');
 
-        $site = Site::get((string) $request->input('site')) ?? Site::default();
+        $site = Site::get((string) ($input['site'] ?? '')) ?? Site::default();
         // The form's site gives the preview its site's values. Statamic's term
         // policy doesn't ask about the site, so it is asked here for every form.
         Gate::authorize('view', $site);
-        $values = (array) $request->input('values', []);
+        $values = (array) ($input['values'] ?? []);
+        $reference = (string) ($input['reference'] ?? '');
         $data = Arr::except($blueprint->fields()->addValues($values)->process()->values()->all(), self::PROPERTIES);
         $slug = is_string($values['slug'] ?? null) && $values['slug'] !== '' ? $values['slug'] : null;
         [$kind, $handle] = array_pad(explode('.', (string) $blueprint->namespace(), 2), 2, null);
 
         return match ($kind) {
-            'collections' => self::entry($request, $handle, $site->handle(), $data, $slug),
-            'taxonomies' => self::term($request, $handle, $site->handle(), $data, $slug),
+            'collections' => self::entry($reference, $handle, $site->handle(), $data, $slug),
+            'taxonomies' => self::term($reference, $handle, $site->handle(), $data, $slug),
             default => abort(422, 'Only entries and terms have a preview.'),
         };
     }
@@ -52,12 +63,12 @@ class Draft
     /**
      * @param  array<string, mixed>  $data
      */
-    private static function entry(Request $request, ?string $handle, string $site, array $data, ?string $slug): EntryContract
+    private static function entry(string $reference, ?string $handle, string $site, array $data, ?string $slug): EntryContract
     {
         $collection = Collection::findByHandle((string) $handle);
         abort_unless($collection !== null, 422, 'Unknown collection.');
 
-        $existing = self::stored((string) $request->input('reference'));
+        $existing = self::stored($reference);
         $existing = $existing instanceof EntryContract ? $existing : null;
 
         if ($existing) {
@@ -86,12 +97,12 @@ class Draft
     /**
      * @param  array<string, mixed>  $data
      */
-    private static function term(Request $request, ?string $handle, string $site, array $data, ?string $slug): TermContract
+    private static function term(string $reference, ?string $handle, string $site, array $data, ?string $slug): TermContract
     {
         $taxonomy = Taxonomy::findByHandle((string) $handle);
         abort_unless($taxonomy !== null, 422, 'Unknown taxonomy.');
 
-        $existing = self::stored((string) $request->input('reference'), $site);
+        $existing = self::stored($reference, $site);
         $existing = $existing instanceof TermContract ? $existing : null;
 
         if ($existing) {

@@ -14,7 +14,9 @@ use JothamLec\MarketingToolkit\Support\Permissions;
 // Permissions are checked here (Statamic's permissions answer Laravel's Gate);
 // a controller checks only what a route can't say, such as editing the addon's settings.
 Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
-    Route::get('/', OverviewController::class)->middleware('can:'.Permissions::VIEW)->name('index');
+    // The overview has its own address under the section's, so its nav item isn't highlighted on the other screens.
+    Route::get('/', fn () => redirect(cp_route('mt.index')));
+    Route::get('overview', OverviewController::class)->middleware('can:'.Permissions::VIEW)->name('index');
     Route::post('preview', [PreviewController::class, 'meta'])->name('preview.meta');
 
     Route::middleware('can:'.Permissions::REDIRECTS)->group(function () {

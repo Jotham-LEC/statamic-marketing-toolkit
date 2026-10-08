@@ -54,6 +54,6 @@ final class TextFileController
 
     private function text(string $body): Response
     {
-        return new Response($body, 200, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        return response($body)->header('Content-Type', 'text/plain; charset=UTF-8');
     }
 }

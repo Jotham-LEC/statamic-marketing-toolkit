@@ -4,41 +4,31 @@ namespace JothamLec\MarketingToolkit\Reports;
 
 use JothamLec\MarketingToolkit\Support\Package;
 use Statamic\Facades\Addon;
+use Statamic\Facades\Blueprint;
+use Statamic\Facades\YAML;
 
 /**
- * The report settings editors set on the Settings tab of Marketing → Reports, with the
- * blueprint's defaults for anything not saved yet.
+ * The report settings editors set on the Settings tab of Marketing → Reports,
+ * with the defaults in resources/blueprints/settings.yaml for anything not
+ * saved yet.
  */
 class ReportSettings
 {
-    public const array DEFAULTS = [
-        // Off until asked for: it sends requests to the sites a page links to.
-        'rule_external_links' => false,
-        'title_min' => 30,
-        'title_max' => 60,
-        'description_min' => 50,
-        'description_max' => 160,
-        'excluded_collections' => [],
-        'max_pages' => 0,
-        'chunk_size' => 25,
-        'keep_reports' => 10,
-        'schedule' => 'off',
-        'schedule_day' => 'monday',
-        'schedule_time' => '03:00',
-    ];
-
     /** `schedule_day`'s options, each at its index in Carbon's days of the week. */
     public const array DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
     /** @var array<string, mixed> */
     private array $values;
 
+    /** @var array<string, mixed>|null the blueprint's defaults, read once */
+    private static ?array $defaults = null;
+
     /**
      * @param  array<string, mixed>|null  $values  null: read the saved addon settings
      */
     public function __construct(?array $values = null)
     {
-        $this->values = [...self::DEFAULTS, ...array_filter($values ?? $this->saved(), fn ($value) => $value !== null)];
+        $this->values = [...self::defaults(), ...array_filter($values ?? $this->saved(), fn ($value) => $value !== null)];
     }
 
     public function get(string $key): mixed
@@ -70,6 +60,24 @@ class ReportSettings
     public function all(): array
     {
         return $this->values;
+    }
+
+    /**
+     * Each setting's default, from the settings blueprint (Statamic registers
+     * the same file as the addon's settings blueprint). Read from the file, so
+     * it works before Statamic has booted the addon too.
+     *
+     * @return array<string, mixed>
+     */
+    public static function defaults(): array
+    {
+        return self::$defaults ??= Blueprint::make()
+            ->setContents(YAML::file(__DIR__.'/../../resources/blueprints/settings.yaml')->parse())
+            ->fields()
+            ->all()
+            ->map
+            ->defaultValue()
+            ->all();
     }
 
     /**
