@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Vite;
 use Inertia\Testing\AssertableInertia;
-use JothamLec\MarketingToolkit\Support\Config;
+use JothamLec\MarketingToolkit\Legacy\OldConfig;
 use JothamLec\MarketingToolkit\Tracking\Tracking;
 use Statamic\Facades\Blueprint;
 use Statamic\Facades\GlobalSet;
@@ -61,7 +61,7 @@ test('.env wins over the control panel', function () {
 });
 
 test('a config/marketing-toolkit.php published with the old tracking keys keeps working', function () {
-    expect(Config::upgrade(['tracking' => ['gtm' => 'GTM-OLDKEY1', 'linkedin' => '1234567', 'ga4_id' => 'G-NEWKEY123', 'ga4' => 'G-OLDKEY123'], 'robots_txt' => false]))
+    expect(OldConfig::upgrade(['tracking' => ['gtm' => 'GTM-OLDKEY1', 'linkedin' => '1234567', 'ga4_id' => 'G-NEWKEY123', 'ga4' => 'G-OLDKEY123'], 'robots_txt' => false]))
         ->toBe(['tracking' => ['ga4_id' => 'G-NEWKEY123', 'gtm_id' => 'GTM-OLDKEY1', 'linkedin_partner_id' => '1234567'], 'robots_txt' => ['enabled' => false]]);
 });
 

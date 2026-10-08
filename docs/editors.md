@@ -210,7 +210,7 @@ While you're signed in to the control panel, the live site shows a small button 
 
 Each panel shows only what your role may see in the control panel. The toolbar takes the colours of your control panel theme, remembers whether you left it open, and closes with Escape. Between pages it stays where it was while the new page's details load. It never shows in Live Preview.
 
-The toolbar's settings are in **Toolbar settings**, and are kept in your browser: its **Corner** (bottom left unless you choose bottom right, top left or top right), its **Shortcut** (**Change**, then press the new keys, or **Turn off**), and **Hide the toolbar**. Minimise keeps the button in its corner; hiding takes the button away too, on every page in this browser, until you press the shortcut, so hiding needs one. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
+The toolbar's settings are in **Toolbar settings**, and are kept in your browser: its **Corner** (bottom left unless you choose bottom right, top left or top right), and **Hide the toolbar**. **Alt+Shift+M** opens and closes it (Option+Shift+M on a Mac). Minimise keeps the button in its corner; hiding takes the button away too, on every page in this browser, until you press **Alt+Shift+M**. Someone who may change the addon's settings can switch the toolbar off for everyone under [Features](#features).
 
 ## When a page's address changes
 

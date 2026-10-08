@@ -572,7 +572,7 @@ function storedReport(array $rules, array $results): Report
     return $report;
 }
 
-test('a report from before messages were translated, or from a site’s own check, shows its text as it is', function () {
+test('a report from before messages were translated shows its text as it is', function () {
     $report = storedReport(
         ['title_length' => ['label' => 'Title length', 'weight' => 2, 'fail' => 1, 'warn' => 0], 'house_style' => ['label' => 'House style', 'weight' => 1, 'fail' => 1, 'warn' => 0]],
         ['title_length' => ['status' => 'fail', 'message' => 'Old English text.'], 'house_style' => ['status' => 'fail', 'message' => 'Says “colour”, not “color”: 50% of the time.']],

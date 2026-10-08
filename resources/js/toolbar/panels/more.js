@@ -1,9 +1,9 @@
 import { fill, h } from '../dom.js';
-import { POSITIONS, combinationOf, settings } from '../settings.js';
+import { POSITIONS, SHORTCUT, settings } from '../settings.js';
 
 /**
- * The toolbar's own settings, for this browser: its corner, its shortcut,
- * and hiding it (the shortcut brings it back, so hiding needs one).
+ * The toolbar's own settings, for this browser: its corner, and hiding it
+ * (the shortcut brings it back).
  */
 export default function more(data, t, actions) {
     const current = settings();
@@ -25,67 +25,15 @@ export default function more(data, t, actions) {
         ),
     );
 
-    // Shortcut: what it is, Change (press the new keys), Turn off.
-    const said = h('p', { class: 'muted' });
-    const hide = h('button', { type: 'button', class: 'choice', onclick: () => actions.hide() }, t.hide);
-    const hideExplained = h('p', { class: 'muted' });
-    const hideNote = h('p', { class: 'muted' }, t.hide_needs_shortcut);
-
-    const show = (shortcut) => {
-        said.textContent = shortcut ? fill(t.shortcut_is, { keys: shortcut }) : t.no_shortcut;
-        hideExplained.textContent = shortcut ? fill(t.hide_explained, { keys: shortcut }) : '';
-        hideExplained.hidden = !shortcut;
-        hide.hidden = !shortcut;
-        hideNote.hidden = Boolean(shortcut);
-    };
-
-    const change = h(
-        'button',
-        {
-            type: 'button',
-            class: 'choice',
-            onclick: (event) => {
-                const button = event.currentTarget;
-                said.textContent = t.recording;
-                button.setAttribute('aria-pressed', 'true');
-
-                const listen = (key) => {
-                    if (key.key === 'Escape' || key.key === 'Tab') {
-                        // Escape stops recording only; the panel stays open.
-                        if (key.key === 'Escape') key.stopPropagation();
-                        stop();
-                        show(settings().shortcut);
-                        return;
-                    }
-
-                    const combination = combinationOf(key);
-                    if (!combination) return;
-
-                    key.preventDefault();
-                    key.stopPropagation();
-                    stop();
-                    actions.shortcut(combination);
-                    show(combination);
-                };
-                const stop = () => {
-                    button.removeEventListener('keydown', listen);
-                    button.setAttribute('aria-pressed', 'false');
-                };
-
-                button.addEventListener('keydown', listen);
-            },
-        },
-        t.change_shortcut,
-    );
-
-    const off = h('button', { type: 'button', class: 'choice', onclick: () => (actions.shortcut(null), show(null)) }, t.remove_shortcut);
-
-    show(current.shortcut);
-
     return [
         h('p', { class: 'muted' }, t.settings_note),
         h('fieldset', { class: 'setting' }, h('legend', {}, t.corner), h('div', { class: 'choices' }, corners)),
-        h('fieldset', { class: 'setting' }, h('legend', {}, t.shortcut), said, h('div', { class: 'choices' }, change, off)),
-        h('div', { class: 'setting' }, hideExplained, h('div', { class: 'choices' }, hide), hideNote),
+        h('div', { class: 'setting' }, h('h3', {}, t.shortcut), h('p', { class: 'muted' }, fill(t.shortcut_is, { keys: SHORTCUT }))),
+        h(
+            'div',
+            { class: 'setting' },
+            h('p', { class: 'muted' }, fill(t.hide_explained, { keys: SHORTCUT })),
+            h('div', { class: 'choices' }, h('button', { type: 'button', class: 'choice', onclick: () => actions.hide() }, t.hide)),
+        ),
     ];
 }

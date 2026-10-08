@@ -11,6 +11,7 @@ use JothamLec\MarketingToolkit\Cp\Navigation;
 use JothamLec\MarketingToolkit\Http\Middleware\HandleMissing;
 use JothamLec\MarketingToolkit\Http\Middleware\MarkToolbarUser;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
+use JothamLec\MarketingToolkit\Legacy\OldConfig;
 use JothamLec\MarketingToolkit\Listeners\CountConversion;
 use JothamLec\MarketingToolkit\Listeners\FlushSitemap;
 use JothamLec\MarketingToolkit\Listeners\RedirectChangedUris;
@@ -115,7 +116,7 @@ class ServiceProvider extends AddonServiceProvider
         }
 
         $config = $this->app->make('config');
-        $config->set($key, Config::merge(require $path, Config::upgrade((array) $config->get($key, []))));
+        $config->set($key, Config::merge(require $path, OldConfig::upgrade((array) $config->get($key, []))));
     }
 
     public function boot()

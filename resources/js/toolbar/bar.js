@@ -55,10 +55,6 @@ export function bar(root, data, hooks) {
             save({ position });
             nav.dataset.position = position;
         },
-        shortcut: (shortcut) => {
-            save({ shortcut });
-            hooks.shortcut(shortcut);
-        },
         hide: () => {
             save({ hidden: true, open: false });
             hooks.hidden();

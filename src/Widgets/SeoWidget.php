@@ -2,7 +2,6 @@
 
 namespace JothamLec\MarketingToolkit\Widgets;
 
-use Illuminate\Support\Facades\Schema;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Reports\Report;
 use JothamLec\MarketingToolkit\Support\Permissions;
@@ -40,10 +39,6 @@ final class SeoWidget extends Widget
      */
     protected function latestReport(): ?array
     {
-        if (! Schema::hasTable('mt_reports')) {
-            return null;
-        }
-
         $report = Report::latestDone(Site::selected()->handle());
 
         return $report === null ? null : [
@@ -59,10 +54,6 @@ final class SeoWidget extends Widget
      */
     protected function recentNotFound(): array
     {
-        if (! Schema::hasTable('mt_404s')) {
-            return [];
-        }
-
         return MissingPath::recent(Site::selected()->handle(), (int) $this->config('limit', 5));
     }
 }

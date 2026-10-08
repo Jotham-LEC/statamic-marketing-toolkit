@@ -25,7 +25,6 @@ class Generator
      * GD), and PHP's imagick extension is only suggested, so a host may lack
      * it. Without it the meta tags fall back to the default image rather
      * than point at a card that fails, and the card routes answer 404.
-     * Override (and bind) to check more, or to switch cards off in tests.
      */
     public function available(): bool
     {

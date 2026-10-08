@@ -32,7 +32,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * report" and a report's screens are of the selected site.
  *
  * Reports keep their checks' names and messages as translation keys (or
- * plain text, from a site's own checks and older reports); they're
+ * plain text, in reports from before messages were translated); they're
  * translated here, on their way to the screen.
  */
 final class ReportsController

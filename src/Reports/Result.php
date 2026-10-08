@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Lang;
 /**
  * One check's verdict on one page. Its message is a translation key and its
  * parameters, kept as they are and translated when shown, so a report reads
- * in the language of whoever opens it. Plain text works as well: a site's
- * own rules may pass English, and older reports hold nothing else.
+ * in the language of whoever opens it. Reports from before messages were
+ * translated hold plain text, which is shown as it is.
  *
  * A parameter may itself be a message, as `['message' => ..., 'params' => [...]]`
  * (a list that ends "and 3 more"), translated along with the message.

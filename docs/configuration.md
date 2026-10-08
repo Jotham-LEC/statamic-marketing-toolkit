@@ -208,7 +208,7 @@ With a Content Security Policy whose `script-src` doesn't allow inline scripts, 
 
 The cookie is set when someone who may access the control panel signs in, and on their control panel requests, and removed when they sign out. It holds `1` and nothing else: the toolbar then asks `/!/marketing-toolkit/toolbar` about the page, which checks the session and each permission. It is set on the session's domain (`SESSION_DOMAIN`) for the session's lifetime. If the control panel is on another domain than the site (`admin.example.com` and `www.example.com`), set `SESSION_DOMAIN=.example.com` so one sign-in covers both; on unrelated domains, sign in on each.
 
-Its corner (any of the four), its shortcut (`Alt+Shift+M` unless changed) and whether it is hidden are set in the toolbar's own **Toolbar settings** panel (the gear) and kept in each browser; the server keeps nothing of them. A hidden toolbar makes no request until its shortcut brings it back.
+Its corner (any of the four) and whether it is hidden are set in the toolbar's own **Toolbar settings** panel (the gear) and kept in each browser; the server keeps nothing of them. **Alt+Shift+M** opens and closes it. A hidden toolbar makes no request until that shortcut brings it back.
 
 ## llms.txt and ads.txt
 

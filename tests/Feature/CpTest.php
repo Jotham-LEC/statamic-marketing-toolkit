@@ -5,9 +5,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia;
+use JothamLec\MarketingToolkit\Legacy\CoSeoSettings;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Og\Generator;
-use JothamLec\MarketingToolkit\Support\LegacySettings;
 use JothamLec\MarketingToolkit\Widgets\SeoWidget;
 use Statamic\Facades\Addon;
 use Statamic\Facades\CP\Nav;
@@ -149,11 +149,11 @@ test('Co-SEO\'s addon settings are carried over once, under the new slug', funct
     file_put_contents($old, "search_console_property: 'sc-domain:example.test'\n");
 
     try {
-        LegacySettings::carryOver();
+        CoSeoSettings::carryOver();
         expect(file_get_contents($new))->toContain('sc-domain:example.test');
 
         file_put_contents($old, "search_console_property: 'sc-domain:old.test'\n");
-        LegacySettings::carryOver();
+        CoSeoSettings::carryOver();
         expect(file_get_contents($new))->toContain('sc-domain:example.test');
     } finally {
         @unlink($old);
@@ -172,7 +172,7 @@ test('Co-SEO\'s addon settings in the database (Eloquent driver) are carried ove
     TestAddonSettings::query()->create(['addon' => 'jotham-lec/statamic-co-seo', 'settings' => ['search_console_property' => 'sc-domain:example.test', 'features_off' => ['old']]]);
     TestAddonSettings::query()->create(['addon' => 'jotham-lec/statamic-marketing-toolkit', 'settings' => ['features_off' => ['sitemap']]]);
 
-    LegacySettings::carryOver();
+    CoSeoSettings::carryOver();
 
     expect(TestAddonSettings::query()->where('addon', 'jotham-lec/statamic-marketing-toolkit')->sole()->settings)
         ->toBe(['search_console_property' => 'sc-domain:example.test', 'features_off' => ['sitemap']]);

@@ -11,12 +11,15 @@ use Statamic\Facades\GlobalSet;
  * there, so the next save of SEO & brand dropped the site name. Each
  * localization with a separator saved and no toggle gets the toggle on,
  * which is what its titles already do.
+ *
+ * Added in 0.18.3. Removed in 1.0: see docs/upgrading.md, "Removed in 1.0".
  */
 final class KeepSiteNameInTitles extends UpdateScript
 {
     public function shouldUpdate($newVersion, $oldVersion)
     {
-        return $this->isUpdatingTo('0.18.3');
+        // Also from Co-SEO, whose docs have its sites run `updates:run 0.17.0`.
+        return self::before((string) $oldVersion, '0.18.3');
     }
 
     public function update()

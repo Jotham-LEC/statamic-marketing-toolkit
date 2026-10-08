@@ -1,5 +1,5 @@
 import { bar, panelsOf } from './bar.js';
-import { matcher, save, settings } from './settings.js';
+import { SHORTCUT, pressed, save, settings } from './settings.js';
 import styles from './styles.css?inline';
 
 /*
@@ -51,23 +51,15 @@ let sheet = null;
  * The styles as a constructed stylesheet the shadow root adopts: built through
  * the CSSOM, which a Content Security Policy doesn't govern, so a `style-src`
  * without 'unsafe-inline' (a nonce-only one) still lets the toolbar be drawn.
- * Browsers without constructable stylesheets (Safari before 16.4) get a
- * <style>, which such a policy blocks.
+ * One sheet, shared by every bar drawn on the page.
  */
 function styled(root) {
-    if ('adoptedStyleSheets' in ShadowRoot.prototype && 'replaceSync' in CSSStyleSheet.prototype) {
-        if (!sheet) {
-            sheet = new CSSStyleSheet();
-            sheet.replaceSync(styles);
-        }
-        root.adoptedStyleSheets = [sheet];
-
-        return;
+    if (!sheet) {
+        sheet = new CSSStyleSheet();
+        sheet.replaceSync(styles);
     }
 
-    const style = document.createElement('style');
-    style.textContent = styles;
-    root.append(style);
+    root.adoptedStyleSheets = [sheet];
 }
 
 function host() {
@@ -107,17 +99,14 @@ function undraw() {
     drawn = null;
 }
 
-let pressed = matcher(settings().shortcut);
-
 /** Draws a bar, then takes the one before it away, so nothing flickers between them. */
 function draw(data) {
     const previous = drawn;
     const { element, root } = host();
     const toolbar = bar(root, data, {
-        shortcut: (shortcut) => (pressed = matcher(shortcut)),
         hidden: () => {
             undraw();
-            notice(data.user.labels.hidden.replace(':keys', settings().shortcut));
+            notice(data.user.labels.hidden.replace(':keys', SHORTCUT));
         },
     });
 

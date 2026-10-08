@@ -1,5 +1,15 @@
 # Upgrading
 
+## Removed in 1.0
+
+Version 1.0 drops what keeps sites set up for older versions working. Before you update to 1.0, update to the last 0.x release and check each of these:
+
+- **`SEO_*` environment variables.** Rename each to its `MT_*` name (`SEO_GTM_ID` to `MT_GTM_ID`). Until 1.0 both are read.
+- **A `config/marketing-toolkit.php` published up to 0.19.** Its old keys (`tracking.gtm`, `tracking.ga4`, `tracking.meta_pixel`, `tracking.linkedin`, and `robots_txt`, `llms_txt` or `ads_txt` set to `true` or `false`) are read in today's names until 1.0 (`src/Legacy/OldConfig.php`). Rename them as the addon's own config file names them now.
+- **The `marketing-toolkit.class` config key.** Bind your `SiteSeo` subclass in a service provider instead (see [developers.md](developers.md)).
+- **Co-SEO's addon settings** (`resources/addons/seo.yaml`, or its `addon_settings` row) are copied to Marketing Toolkit's by a migration until 1.0 (`src/Legacy/CoSeoSettings.php`). Run `php artisan migrate` on 0.x first.
+- **Update scripts for sites coming from before 0.21.** `RenameFromSeo`, `MoveToMarketingSettings`, `DropFieldDescriptions` and `KeepSiteNameInTitles` move a site's files and settings from older versions. Run `composer update` to the last 0.x release (or `php please updates:run 0.17.0 --package=jotham-lec/statamic-marketing-toolkit` from Co-SEO) and commit what they change.
+
 ## From 0.22: Brand fields, and one row per address
 
 - **Run `php artisan migrate`.** It adds a unique index so the 404 log keeps one row per path, and redirects one rule per address, also on a single site (rows without a site). 404 paths already logged twice are merged first, their hits added up. Redirects are never deleted: if two redirects for every site share a source, the migration stops before changing anything and names them. Check first under **Marketing → Redirects** (search for the address) and delete all but one of each; the newest active one is the one that applies today. On MySQL and MariaDB the index is on a new generated column, `site_key`.

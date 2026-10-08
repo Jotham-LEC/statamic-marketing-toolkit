@@ -2,6 +2,12 @@
 
 use JothamLec\MarketingToolkit\Og\DefaultTemplate;
 
+/*
+ * Until 1.0, every environment variable below is also read under its name up
+ * to 0.19, with SEO_ in place of MT_ (SEO_GTM_ID for MT_GTM_ID, and so on):
+ * the `env('SEO_…')` defaults. Rename them in .env before 1.0, which drops them.
+ */
+
 return [
 
     /*
