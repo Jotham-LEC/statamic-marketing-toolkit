@@ -259,6 +259,8 @@ class Tracking
     /**
      * The gtag('consent', 'default', …) commands: the defaults everywhere,
      * or, with regions, everything granted and the defaults in those regions.
+     * Both wait for the banner: a visitor outside the regions who declined
+     * is denied by its update, which must arrive before the first hit.
      *
      * @param  array{defaults: array<string, string>, regions: list<string>, wait_for_update: int}|null  $consent
      * @return list<array<string, mixed>>
@@ -273,6 +275,6 @@ class Tracking
 
         return $consent['regions'] === []
             ? [[...$consent['defaults'], ...$wait]]
-            : [array_fill_keys(self::SIGNALS, 'granted'), [...$consent['defaults'], 'region' => $consent['regions'], ...$wait]];
+            : [[...array_fill_keys(self::SIGNALS, 'granted'), ...$wait], [...$consent['defaults'], 'region' => $consent['regions'], ...$wait]];
     }
 }

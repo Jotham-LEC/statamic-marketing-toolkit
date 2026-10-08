@@ -63,7 +63,7 @@ Turn on **Use Consent Mode** in the Consent tab of Marketing → Settings and ch
 
 **Wait for the banner** (`wait_for_update`, 500 ms by default) is how long Google's tags hold their first hit for the banner's answer before using the defaults.
 
-**Only in these regions**: country or region codes (`FR`, `DE`, `US-CA`), or **EEA, UK and Switzerland**. The defaults apply to visitors there; everyone else is granted everything. Google works out the visitor's region.
+**Only in these regions**: country or region codes (`FR`, `DE`, `US-CA`), or **EEA, UK and Switzerland**. The defaults apply to visitors there; everyone else is granted everything. Google works out the visitor's region. Google's tags wait for the banner everywhere, so a visitor outside the regions who declined is denied by the banner's update before the first hit.
 
 The page then starts with:
 

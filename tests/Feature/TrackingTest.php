@@ -155,9 +155,15 @@ test('regions (Pro): granted everywhere, the defaults in those regions, and the 
     $head = trackingHead();
 
     expect($consent['regions'])->toContain('FR', 'GB', 'CH', 'NO', 'US-CA')->not->toContain('NONSENSE!')
-        ->and($head)->toContain("gtag('consent','default',{\"ad_storage\":\"granted\",\"analytics_storage\":\"granted\",\"ad_user_data\":\"granted\",\"ad_personalization\":\"granted\"});")
+        ->and($head)->toContain("gtag('consent','default',{\"ad_storage\":\"granted\",\"analytics_storage\":\"granted\",\"ad_user_data\":\"granted\",\"ad_personalization\":\"granted\",\"wait_for_update\":500});")
         ->toContain('"region":["AT",')
         ->toContain('r=true');
+});
+
+test('regions: outside them, Google\'s tags still wait for the banner, so a visitor who declined sends no granted hit', function () {
+    seoGlobal(['consent_mode' => true, 'consent_regions' => ['EEA'], 'consent_wait_for_update' => 1500]);
+
+    expect(substr_count(trackingHead(), '"wait_for_update":1500'))->toBe(2);
 });
 
 test('the bridge hands the banner\'s update to Google\'s tags before its own callbacks, and a callback that throws is skipped', function () {
