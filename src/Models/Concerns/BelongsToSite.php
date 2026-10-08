@@ -1,8 +1,9 @@
 <?php
 
-namespace JothamLec\MarketingToolkit\Support;
+namespace JothamLec\MarketingToolkit\Models\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
+use JothamLec\MarketingToolkit\Support\Sites;
 
 /**
  * A row with a `site` column: a site's handle, or null on a single site

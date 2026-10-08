@@ -6,8 +6,9 @@ import { useAxios } from '../util.js';
 const props = defineProps({ report: { type: Object, required: true } });
 const emit = defineEmits(['done']);
 
-// Failed requests in a row before giving up; a 4xx (an expired session, a
-// deleted report) gives up at once, as asking again won't change it.
+// This is how many failed requests in a row are allowed before giving up. A 4xx
+// response (an expired session, or a deleted report) gives up at once, as asking
+// again won't change it.
 const ATTEMPTS = 3;
 
 const axios = useAxios();
@@ -38,8 +39,8 @@ async function poll() {
             continue;
         }
 
-        // Someone who may not run reports only watches: on the sync queue it
-        // moves on while someone who may has it open, so ask less often.
+        // A user who may not run reports can only watch. On the sync queue, the report
+        // moves on while a user who may run reports has it open, so we ask less often.
         if (current.value.status === 'running') await wait(current.value.advancing === false ? 5000 : 800);
     }
 

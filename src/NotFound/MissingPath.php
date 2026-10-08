@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use JothamLec\MarketingToolkit\Support\BelongsToSite;
+use JothamLec\MarketingToolkit\Models\Concerns\BelongsToSite;
 use Statamic\Facades\Site;
 
 /**

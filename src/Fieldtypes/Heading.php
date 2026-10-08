@@ -12,12 +12,16 @@ use Statamic\Fields\Fieldtype;
  */
 final class Heading extends Fieldtype
 {
+    /** @var string */
     protected static $handle = 'mt_heading';
 
+    /** @var string */
     protected static $title = 'marketing-toolkit::fields.seo.heading.title';
 
+    /** @var list<string> */
     protected $categories = ['special'];
 
+    /** @var bool */
     protected $selectable = false;
 
     /**
@@ -32,11 +36,19 @@ final class Heading extends Fieldtype
         return ['display' => (string) __((string) $this->config('display'))];
     }
 
+    /**
+     * @param  mixed  $data
+     * @return null
+     */
     public function process($data)
     {
         return null;
     }
 
+    /**
+     * @param  mixed  $data
+     * @return null
+     */
     public function preProcess($data)
     {
         return null;

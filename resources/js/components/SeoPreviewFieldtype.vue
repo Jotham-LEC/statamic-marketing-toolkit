@@ -23,7 +23,7 @@ let unmounted = false;
 const seo = computed(() => values.value?.seo ?? {});
 const filled = (value) => typeof value === 'string' && value.trim() !== '';
 
-// What the editor typed shows at once; the rules' fallbacks follow from the server.
+// What the editor typed shows at once, and the rules' fallbacks follow from the server.
 const title = computed(() => (filled(seo.value.title) ? seo.value.title : resolved.value?.title) ?? '');
 const ogTitle = computed(() => (filled(seo.value.title) ? seo.value.title : resolved.value?.og_title) ?? '');
 const description = computed(() => (filled(seo.value.description) ? seo.value.description : resolved.value?.description) ?? '');
@@ -55,8 +55,9 @@ function payload() {
 }
 
 /**
- * Only the latest of a kind of request counts: starting one cancels the one
- * before it, so a slow, stale answer never overwrites a newer one.
+ * Tracks requests of one kind so that only the latest one counts. Starting a
+ * request cancels the one before it, so a slow, stale answer never overwrites a
+ * newer one.
  */
 function latest() {
     let controller = null;
@@ -67,7 +68,7 @@ function latest() {
             controller = new AbortController();
             return controller;
         },
-        // Whether this request's answer still counts.
+        // This returns whether this request's answer still counts.
         current: (mine) => !unmounted && mine === controller,
         cancel: () => controller?.abort(),
     };
@@ -109,7 +110,7 @@ const fetchCard = debounce(async () => {
     }
 }, 300);
 
-// Where the share image goes while there is none to show.
+// This text takes the share image's place while there is no image to show.
 const placeholder = computed(() => {
     if (cardLoading.value) return __('marketing-toolkit::cp.preview.drawing');
     if (cardFailed.value && resolved.value?.image?.generated) return __('marketing-toolkit::cp.preview.card_failed');
@@ -118,7 +119,7 @@ const placeholder = computed(() => {
 
 watch(values, fetchMeta, { deep: true, immediate: true });
 
-// The card is slower to draw, so redraw it only when its own words change.
+// The card is slower to draw, so we redraw it only when its own words change.
 const cardKey = computed(() =>
     resolved.value?.image?.generated
         ? JSON.stringify([ogTitle.value, description.value, seo.value.og_title, seo.value.og_subtitle])
@@ -140,7 +141,8 @@ onBeforeUnmount(() => {
     <div v-if="blueprint?.fqh" class="space-y-6">
         <Description v-if="failed" class="text-(--theme-color-danger)">{{ __('marketing-toolkit::cp.preview.failed') }}</Description>
 
-        <!-- Until the first answer: the rules' fallbacks, the address and the image aren't known yet. -->
+        <!-- Skeletons show until the first answer, because the rules' fallbacks, the address and the image
+             aren't known yet. -->
         <template v-if="!resolved && !failed">
             <Skeleton class="h-32" />
             <div class="grid gap-6 lg:grid-cols-2">
@@ -194,7 +196,8 @@ onBeforeUnmount(() => {
                         <img v-if="image" :src="image" :alt="resolved?.image?.alt ?? ''" class="size-full object-cover" />
                         <span v-else class="absolute inset-0 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">{{ placeholder }}</span>
                     </div>
-                    <!-- The title under the picture rather than over it, where it covered the card's own text. -->
+                    <!-- The title sits under the picture rather than over it, because over it the title
+                         covered the card's own text. -->
                     <p class="mt-1.5 truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ogTitle }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.preview.from', { host }) }}<template v-if="resolved?.twitter_site"> · {{ resolved.twitter_site }}</template></p>
                 </section>

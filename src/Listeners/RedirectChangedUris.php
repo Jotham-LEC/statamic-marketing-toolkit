@@ -39,6 +39,9 @@ final class RedirectChangedUris
 
     public function __construct(private AutoRedirects $redirects) {}
 
+    /**
+     * @return array<class-string, string>
+     */
     public function subscribe(Dispatcher $events): array
     {
         return [
@@ -244,6 +247,7 @@ final class RedirectChangedUris
      */
     private function termUris(Term $term): array
     {
+        /** @var \Illuminate\Support\Collection<int, string> $sites */
         $sites = $term->taxonomy()?->sites() ?? collect([Site::default()->handle()]);
 
         return collect($sites)

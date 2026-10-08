@@ -4,16 +4,16 @@ import { SHORTCUT, pressed, save, settings } from './settings.js';
 import styles from './styles.css?inline';
 
 /*
- * Loaded by the guard <s:mt:body /> prints, only while the mt_toolbar cookie
- * says a control panel user is signed in. Asks the endpoint about this page,
- * then draws the toolbar in a Shadow DOM, so the site's CSS and the
- * toolbar's never meet.
+ * The guard that <s:mt:body /> prints loads this script, but only while the
+ * mt_toolbar cookie says a control panel user is signed in. The script asks the
+ * endpoint about this page, then draws the toolbar in a Shadow DOM, so the
+ * site's CSS and the toolbar's never meet.
  *
- * Every page load starts afresh, so the bar is drawn at once from what the
- * last page kept (its theme, labels and items, nothing about a page), and
- * replaced by this page's as soon as the endpoint answers. Hidden (More →
- * Hide the toolbar), it asks nothing and draws nothing until its shortcut
- * is pressed.
+ * Every page load starts afresh, so the bar is drawn at once from what the last
+ * page kept (its theme, labels and items, but nothing about a page). It is then
+ * replaced by this page's bar as soon as the endpoint answers. When the toolbar
+ * is hidden (with More → Hide the toolbar), it asks nothing and draws nothing
+ * until its shortcut is pressed.
  */
 const script = document.currentScript;
 const endpoint = script?.dataset.endpoint;
@@ -33,7 +33,7 @@ const stored = () => {
     }
 };
 
-/** What the next page draws while it loads: the user's settings and labels, and which items there were. */
+/** Returns what the next page draws while it loads: the user's settings and labels, and which items there were. */
 const shellOf = (data) => ({
     user: { ...data.user, csrf: null },
     page: { type: data.page.type, edit_url: Boolean(data.page.edit_url), seo_url: Boolean(data.page.seo_url) },
@@ -49,10 +49,10 @@ const forget = () => {
 let sheet = null;
 
 /*
- * The styles as a constructed stylesheet the shadow root adopts: built through
- * the CSSOM, which a Content Security Policy doesn't govern, so a `style-src`
- * without 'unsafe-inline' (a nonce-only one) still lets the toolbar be drawn.
- * One sheet, shared by every bar drawn on the page.
+ * Gives the shadow root the styles as a constructed stylesheet. The sheet is
+ * built through the CSSOM, which a Content Security Policy doesn't govern, so a
+ * `style-src` without 'unsafe-inline' (a nonce-only one) still lets the toolbar
+ * be drawn. Every bar drawn on the page shares the one sheet.
  */
 function styled(root) {
     if (!sheet) {
@@ -73,14 +73,14 @@ function host() {
     return { element, root };
 }
 
-/** A short message in the corner, read out, that goes away by itself. */
+/** Shows a short message in the corner, which is read out and goes away by itself. */
 function notice(text) {
     const { element, root } = host();
     const p = document.createElement('p');
     p.className = 'notice';
     p.setAttribute('role', 'status');
     root.append(p);
-    // Filled after it is in the page, so screen readers announce it.
+    // The text is filled in after the element is in the page, so screen readers announce it.
     setTimeout(() => (p.textContent = text), 50);
     setTimeout(() => element.remove(), 6000);
 }
@@ -128,7 +128,7 @@ document.addEventListener('keydown', (event) => {
     if (drawn) {
         drawn.toolbar.toggle();
     } else if (settings().hidden) {
-        // Hidden: the shortcut brings it back, open.
+        // When the toolbar is hidden, the shortcut brings it back, open.
         save({ hidden: false, open: true });
         load();
     }
@@ -146,7 +146,7 @@ async function load() {
     const query = new URLSearchParams({ url: location.href });
     if (status) query.set('status', status);
 
-    // Asked first, then the bar drawn while the answer is on its way.
+    // The request is sent first, and the bar is drawn while the answer is on its way.
     const answer = fetch(endpoint + '?' + query, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
     const shell = stored();
 
@@ -161,7 +161,8 @@ async function load() {
         return;
     }
 
-    // Signed out (or the toolbar was switched off): nothing more on this browser until the next sign-in.
+    // When the user is signed out (or the toolbar was switched off), this browser shows nothing more
+    // until the next sign-in.
     if (response.status === 401 || response.status === 404) {
         undraw();
         forget();

@@ -11,12 +11,12 @@ const props = defineProps({
     reports: { type: Array, required: true },
     canRun: { type: Boolean, required: true },
     runUrl: { type: String, required: true },
-    // The Settings tab: null for whoever may not change the addon's settings.
+    // This holds the Settings tab. It is null for users who may not change the addon's settings.
     settings: { type: Object, default: null },
 });
 
 const { busy, send } = useRequests(__('marketing-toolkit::reports.cp.could_not_start'));
-// Settings opens straight from a link to #settings.
+// The Settings tab opens straight away from a link to #settings.
 const tab = ref(props.settings && window.location.hash === '#settings' ? 'settings' : 'reports');
 const started = ref(null);
 const running = computed(() => started.value ?? props.reports.find((report) => report.status === 'running'));

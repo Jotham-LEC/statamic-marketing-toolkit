@@ -17,6 +17,7 @@ use Statamic\Widgets\Widget;
  */
 final class SeoWidget extends Widget
 {
+    /** @var string */
     protected static $handle = 'mt';
 
     public function component(): ?VueComponent

@@ -6,9 +6,10 @@ import { computed, ref } from 'vue';
 import { useRequests } from '../util.js';
 
 /*
- * Connecting Google Search Console, step by step, on Marketing → Search Console: a key from
- * Google Cloud, its email added as a user of the property, the property, a
- * check; the import is the page's. What .env sets is shown and can't be changed here.
+ * This walks through connecting Google Search Console, step by step, on Marketing → Search
+ * Console. The steps are a key from Google Cloud, adding its email as a user of the
+ * property, the property itself, and a check. The import belongs to the page, not to this
+ * component. Values that .env sets are shown, but they can't be changed here.
  */
 const props = defineProps({ setup: { type: Object, required: true } });
 
@@ -60,7 +61,7 @@ async function check() {
     result.value = await send('check', (axios) => axios.post(props.setup.urls.check));
 }
 
-// The clipboard is only there on https (or localhost), and the browser may refuse.
+// The clipboard is only available on https (or localhost), and the browser may refuse access.
 async function copyEmail() {
     try {
         if (!navigator.clipboard) throw new Error('No clipboard');
@@ -109,7 +110,7 @@ async function copyEmail() {
                     <Button v-else size="sm" variant="ghost" :text="__('marketing-toolkit::cp.search_console.setup.remove')" :loading="busy === 'forget'" @click="forgetKey" />
                 </div>
                 <template v-else-if="keyFromEnv">
-                    <p class="text-red-600 dark:text-red-400">{{ __('marketing-toolkit::cp.search_console.setup.env_key_invalid') }}</p>
+                    <p class="text-(--theme-color-danger)">{{ __('marketing-toolkit::cp.search_console.setup.env_key_invalid') }}</p>
                 </template>
                 <div v-else class="space-y-2">
                     <input ref="fileInput" type="file" accept=".json,application/json" class="hidden" @change="uploadKey" />
@@ -158,7 +159,7 @@ async function copyEmail() {
             <li class="space-y-2">
                 <p><strong class="me-1">{{ __('marketing-toolkit::cp.search_console.setup.step_check') }}</strong>{{ __('marketing-toolkit::cp.search_console.setup.step_check_body') }}</p>
                 <Button :text="__('marketing-toolkit::cp.search_console.setup.check')" :disabled="!setup.configured" :loading="busy === 'check'" @click="check" />
-                <p role="status" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
+                <p role="status" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-(--theme-color-danger)'">{{ result?.message }}</p>
                 <p class="text-gray-500 dark:text-gray-400" v-html="__('marketing-toolkit::cp.search_console.setup.schedule', { command: '<code>php artisan schedule:run</code>' })" />
             </li>
         </ol>

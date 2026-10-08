@@ -2,19 +2,20 @@ import { dateFormatter, toast } from '@statamic/cms/api';
 import { ref } from 'vue';
 
 /**
- * Statamic's axios, with the control panel's CSRF token. @statamic/cms/api
- * doesn't export it, so it comes from the app.
+ * Returns Statamic's axios instance, which sends the control panel's CSRF token.
+ * @statamic/cms/api doesn't export it, so it comes from the app.
  */
 export const useAxios = () => Statamic.$app.config.globalProperties.$axios;
 
 /**
- * A date and time as the control panel shows them, in the user's locale.
+ * Formats a date and time as the control panel shows them, in the user's locale.
  */
 export const formatDate = (value) => dateFormatter.format(value, { dateStyle: 'medium', timeStyle: 'short' });
 
 /**
- * Requests behind buttons: `busy` names the one running, and a failure shows
- * what the server said (or `failed`) as a toast, and resolves null.
+ * Sends the requests behind buttons. `busy` names the one that is running. When
+ * a request fails, it shows what the server said (or `failed`) as a toast and
+ * resolves with null.
  */
 export function useRequests(failed) {
     const axios = useAxios();

@@ -1,6 +1,7 @@
 <script setup>
 import { Widget } from '@statamic/cms/ui';
 import Gauge from './Gauge.vue';
+import RecentNotFound from './RecentNotFound.vue';
 import When from './When.vue';
 
 defineProps({
@@ -28,12 +29,7 @@ defineProps({
                 <h3 class="mb-1 text-xs font-medium uppercase text-gray-500 dark:text-gray-400">
                     <a :href="notFoundUrl">{{ __('marketing-toolkit::cp.widget.recent_404s') }}</a>
                 </h3>
-                <ul v-if="notFound.length" class="space-y-1 text-sm">
-                    <li v-for="(row, index) in notFound" :key="`${index}:${row.path}`" class="flex justify-between gap-2">
-                        <span class="truncate font-mono text-xs">{{ row.path }}</span>
-                        <span class="shrink-0 text-gray-500 dark:text-gray-400">{{ row.hits }}×</span>
-                    </li>
-                </ul>
+                <RecentNotFound v-if="notFound.length" :rows="notFound" />
                 <p v-else class="text-sm text-gray-500 dark:text-gray-400">{{ __('marketing-toolkit::cp.widget.none') }}</p>
             </section>
         </div>

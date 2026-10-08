@@ -2,7 +2,7 @@ includes:
     - vendor/larastan/larastan/extension.neon
 
 parameters:
-    level: 5
+    level: 6
     paths:
         - src
         - routes
@@ -10,7 +10,7 @@ parameters:
         # Statamic's contracts don't declare most methods its classes implement (Entry::absoluteUrl, Term::in, User::can…).
         -
             identifier: method.notFound
-            message: '#Statamic\\(Contracts|CP)\\#'
+            message: '#Statamic\\Contracts\\(Assets\\Asset|Auth\\User|Entries\\(Collection|Entry|QueryBuilder)|Globals\\(GlobalSet|Variables)|Query\\Builder|Taxonomies\\Term)\b#'
         # Larastan doesn't know views in an addon's namespace (marketing-toolkit::meta).
         -
             identifier: argument.type

@@ -2,13 +2,13 @@ import { fill, h } from '../dom.js';
 import { POSITIONS, SHORTCUT, settings } from '../settings.js';
 
 /**
- * The toolbar's own settings, for this browser: its corner, and hiding it
- * (the shortcut brings it back).
+ * Builds the panel for the toolbar's own settings in this browser: its corner,
+ * and hiding it (the shortcut brings it back).
  */
 export default function more(data, t, actions) {
     const current = settings();
 
-    // Corner: a button for each, the current one pressed.
+    // Each corner gets a button, and the current one is shown pressed.
     const corners = POSITIONS.map((position) =>
         h(
             'button',

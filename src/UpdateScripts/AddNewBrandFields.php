@@ -41,7 +41,7 @@ final class AddNewBrandFields extends UpdateScript
         return $this->fields !== [] && Blueprint::find('globals.'.config('marketing-toolkit.global')) !== null;
     }
 
-    public function update()
+    public function update(): void
     {
         $container = Install::containerOf(Blueprint::find('globals.'.config('marketing-toolkit.global'))) ?? AssetContainer::all()->first()?->handle();
 

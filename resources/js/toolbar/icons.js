@@ -1,7 +1,8 @@
 /*
- * Icons from Lucide (lucide.dev, ISC licence), drawn inline at 16 px: the
- * toolbar's mark and one per item of the bar. Each sits beside a label that
- * says what it does (aria-label and a tooltip, or visible text in the sheet).
+ * These icons come from Lucide (lucide.dev, ISC licence) and are drawn inline at
+ * 16 px. They are the toolbar's mark and one icon per item of the bar. Each icon
+ * sits beside a label that says what it does (an aria-label and a tooltip, or
+ * visible text in the sheet).
  */
 const PATHS = {
     mark: '<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',

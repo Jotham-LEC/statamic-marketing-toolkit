@@ -19,7 +19,7 @@ const props = defineProps({
 const rule = ref(null);
 const url = computed(() => (rule.value ? `${props.listingUrl}?${new URLSearchParams({ rule: rule.value })}` : props.listingUrl));
 const ruleLabel = computed(() => props.rules.find((item) => item.handle === rule.value)?.label);
-// As When shows it, but as text, so a translation can put it anywhere in the sentence.
+// This formats the date as When shows it, but as text, so a translation can put it anywhere in the sentence.
 const finished = computed(() => (props.report.finished_at ? formatDate(props.report.finished_at) : '—'));
 
 function toggle(handle) {
@@ -73,7 +73,8 @@ function toggle(handle) {
                     <TableColumn>{{ __('marketing-toolkit::reports.cp.warnings') }}</TableColumn>
                 </TableColumns>
                 <TableRows>
-                    <!-- The whole row filters; the button's click bubbles up to it, and is how the keyboard gets there. -->
+                    <!-- Clicking anywhere on the row filters by its check. The button's click bubbles up to the
+                         row, and the button is how keyboard users reach it. -->
                     <TableRow
                         v-for="item in rules"
                         :key="item.handle"

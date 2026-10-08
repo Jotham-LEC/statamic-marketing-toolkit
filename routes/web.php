@@ -14,28 +14,29 @@ use JothamLec\MarketingToolkit\Http\Controllers\TextFileController;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 
 /*
- * Statamic registers these with its front-end routes (the `web` group), ahead
- * of the catch-all. They aren't pages: Statamic's own `statamic.web`
- * middleware, static caching included, runs only for the catch-all. None of
- * them needs a session or a CSRF token, and a Set-Cookie header would stop
- * Cloudflare and browsers from caching the images and the sitemap.
+ * Statamic registers these routes with its front-end routes (the `web` group),
+ * ahead of the catch-all. They aren't pages, because Statamic's own
+ * `statamic.web` middleware, static caching included, runs only for the
+ * catch-all. None of them needs a session or a CSRF token, and a Set-Cookie
+ * header would stop Cloudflare and browsers from caching the images and the
+ * sitemap.
  */
 Route::withoutMiddleware([
     StartSession::class,
     ShareErrorsFromSession::class,
     AddQueuedCookiesToResponse::class,
-    // Laravel 13's CSRF middleware, and its older names; Statamic's own routes list the same three.
+    // These are Laravel 13's CSRF middleware and its older names. Statamic's own routes list the same three.
     'Illuminate\\Foundation\\Http\\Middleware\\PreventRequestForgery',
     'Illuminate\\Foundation\\Http\\Middleware\\VerifyCsrfToken',
     'App\\Http\\Middleware\\VerifyCsrfToken',
 ])
     ->name('mt.')
     ->group(function () {
-        // Registered whatever the config says, so cached routes follow a module switched on
-        // or off later: each controller answers 404 while its module is off. A file of the
-        // same name in public/ wins, since the web server serves it before Laravel runs, and
-        // so does a route of the site's own for the address (its own sitemap.xml, say):
-        // $get registers a route only for an address the site hasn't taken, and returns
+        // These routes are registered whatever the config says, so cached routes follow a module
+        // switched on or off later, and each controller answers 404 while its module is off. A
+        // file of the same name in public/ wins, since the web server serves it before Laravel
+        // runs. So does a route of the site's own for the address (its own sitemap.xml, say),
+        // because $get registers a route only for an address the site hasn't taken. It returns
         // null for one it has, which the `?->` after each call then skips.
         $taken = fn (string $uri) => array_key_exists($uri, Route::getRoutes()->get('GET'));
         $get = fn (string $uri, array|string $action) => $taken($uri) ? null : Route::get($uri, $action);

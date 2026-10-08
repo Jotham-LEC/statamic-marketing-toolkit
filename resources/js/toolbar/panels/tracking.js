@@ -3,8 +3,8 @@ import { fill, h, link, list, say } from '../dom.js';
 const SIGNALS = ['ad_storage', 'analytics_storage', 'ad_user_data', 'ad_personalization'];
 
 /**
- * This browser's Consent Mode state, from what the page pushed to
- * dataLayer: the defaults, then each update in order.
+ * Works out this browser's Consent Mode state from what the page pushed to
+ * dataLayer: the defaults first, then each update in order.
  */
 function consentState() {
     const state = {};

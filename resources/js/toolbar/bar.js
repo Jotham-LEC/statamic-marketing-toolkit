@@ -10,12 +10,13 @@ import { save, settings } from './settings.js';
 
 const PANELS = { seo, preview, redirects, tracking, sites, more };
 
-/** The panels this data has something for, in the bar's order. */
+/** Returns the panels this data has something for, in the bar's order. */
 export const panelsOf = (data) => Object.keys(PANELS).filter((name) => (name === 'sites' ? data.sites?.length : name === 'more' || data[name]));
 
 /**
- * The user's control panel theme on the bar: each colour as a variable the
- * stylesheet reads, light and dark, with its own colours where one is missing.
+ * Applies the user's control panel theme to the bar. Each colour, light and
+ * dark, becomes a variable the stylesheet reads, and the stylesheet uses its own
+ * colours where one is missing.
  */
 function paint(nav, theme) {
     for (const mode of ['light', 'dark']) {
@@ -26,16 +27,17 @@ function paint(nav, theme) {
 }
 
 /**
- * The bar: a toggle in its corner (the mark and the score) and, once open, a
- * bar as wide as its items beside it, each an icon (its name as a tooltip
- * and to screen readers): the edit links, a button per panel, and Minimise.
- * Open, the score itself opens the SEO panel. Panels are disclosures, one
- * open at a time, opening away from the corner (any of the four). Below
- * 640 px the open bar is a bottom sheet with every panel in it, its items
- * named in full.
+ * Draws the bar. It has a toggle in its corner (the mark and the score) and,
+ * once open, a bar as wide as its items beside it. Each item is an icon, with
+ * its name as a tooltip and for screen readers: the edit links, a button per
+ * panel, and Minimise. While the bar is open, the score itself opens the SEO
+ * panel. Panels are disclosures, so only one is open at a time, and they open
+ * away from the corner (which can be any of the four). Below 640 px, the open
+ * bar is a bottom sheet with every panel in it, and its items are named in full.
  *
- * Pending (`data.pending`), it is drawn from the last page's items, disabled,
- * while this page's details load: the bar stays where it was between pages.
+ * While pending (`data.pending`), the bar is drawn from the last page's items,
+ * disabled, while this page's details load, so the bar stays where it was
+ * between pages.
  */
 export function bar(root, data, hooks) {
     const t = data.user.labels;
@@ -46,10 +48,10 @@ export function bar(root, data, hooks) {
     const buttons = {};
     const sections = {};
     let current = null;
-    // Ends the listeners this bar puts on the page, once another bar replaces it.
+    // This ends the listeners this bar puts on the page, once another bar replaces it.
     const listening = new AbortController();
 
-    // What the More panel changes: kept in this browser, applied at once.
+    // These are the changes the More panel makes. They are kept in this browser and applied at once.
     const actions = {
         position: (position) => {
             save({ position });
@@ -93,14 +95,14 @@ export function bar(root, data, hooks) {
         }
     };
 
-    /** An item of the bar: its icon, its name as a tooltip and, in the sheet, as text. */
+    /** Creates an item of the bar: its icon, and its name as a tooltip and, in the sheet, as text. */
     const item = (tag, name, label, attrs) =>
         h(tag, { 'aria-label': label, 'data-tip': label, ...attrs }, icon(name), h('span', { class: 'label', 'aria-hidden': 'true' }, label));
 
     for (const name of panels) {
         const id = 'mt-panel-' + name;
 
-        // The score badge opens the SEO panel: no button of its own.
+        // The score badge opens the SEO panel, so the panel has no button of its own.
         buttons[name] = name === 'seo' ? toggle : item('button', name, t.panels[name], pending ? { type: 'button', disabled: true } : { type: 'button', 'aria-expanded': 'false', 'aria-controls': id, onclick: () => open(name) });
 
         if (!pending) {
@@ -118,7 +120,7 @@ export function bar(root, data, hooks) {
         ['seo_tab', t.seo, page.seo_url],
     ].filter(([, , url]) => (pending ? url : safe(url)));
 
-    // A short answer beside the bar, read out: what Refresh this page's cache did.
+    // This shows a short answer beside the bar, which is read out, saying what Refresh this page's cache did.
     const toast = h('p', { class: 'toast', role: 'status' });
     let quiet;
     const say = (text) => {
@@ -146,8 +148,8 @@ export function bar(root, data, hooks) {
         }
     };
 
-    // By how often each is wanted, from the score outwards: the control panel and this
-    // page's edit screens, the panels about the page, then refreshing its cache and the settings.
+    // The items are ordered by how often each is wanted, from the score outwards: the control panel
+    // and this page's edit screens, the panels about the page, then refreshing its cache and the settings.
     const dashboard = data.more?.dashboard_url
         ? h('li', { class: 'link' }, pending ? item('button', 'dashboard', t.dashboard, { type: 'button', disabled: true }) : item('a', 'dashboard', t.dashboard, { href: safe(data.more.dashboard_url) }))
         : null;
@@ -165,7 +167,8 @@ export function bar(root, data, hooks) {
             cache,
             panels.includes('more') ? h('li', { class: 'tab' }, buttons.more) : null,
         ),
-        // Minimise: the bar folds back to its corner button, which stays on every page (Hide, in More, takes that away too).
+        // Minimise folds the bar back to its corner button, which stays on every page. Hide, in More,
+        // takes that button away too.
         h('button', { type: 'button', class: 'minimise', 'aria-label': t.close, 'data-tip': t.minimise, onclick: () => expand(false) }, icon('minimise')),
         h('div', { class: 'panels' }, panels.filter((name) => sections[name]).map((name) => sections[name])),
     );
@@ -175,7 +178,7 @@ export function bar(root, data, hooks) {
 
     const narrow = matchMedia('(max-width: 639.98px)');
 
-    // Open, the toggle is the SEO panel's button (on a wide screen, where there is one).
+    // While the bar is open, the toggle is the SEO panel's button (on a wide screen, where there is one).
     const scoreButton = () => Boolean(sections.seo) && !narrow.matches;
 
     const expand = (expanded, focus = true) => {
@@ -202,7 +205,7 @@ export function bar(root, data, hooks) {
         else expand(false);
     });
 
-    // Escape closes the open panel, back to its button; then the bar.
+    // Escape closes the open panel and returns focus to its button. Pressed again, it closes the bar.
     nav.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
 
@@ -235,7 +238,7 @@ export function bar(root, data, hooks) {
             toggle.focus();
         },
         focus: () => toggle.focus(),
-        /** Whether focus is on the toggle, so the bar replacing this one can take it over. */
+        /** Returns whether focus is on the toggle, so the bar replacing this one can take it over. */
         focused: () => root.activeElement === toggle,
         /** Takes the bar's listeners off the page, before the bar is removed. */
         destroy: () => listening.abort(),

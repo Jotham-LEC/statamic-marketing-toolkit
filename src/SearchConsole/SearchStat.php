@@ -4,7 +4,7 @@ namespace JothamLec\MarketingToolkit\SearchConsole;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use JothamLec\MarketingToolkit\Support\BelongsToSite;
+use JothamLec\MarketingToolkit\Models\Concerns\BelongsToSite;
 
 /**
  * One page's numbers from Google Search Console over the last import's

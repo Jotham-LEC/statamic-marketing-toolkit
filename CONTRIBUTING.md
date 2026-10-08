@@ -5,7 +5,7 @@ composer install && npm install
 npm run build      # Vue → resources/dist/build; commit the build, sites don't run npm
 composer test      # Pest, in parallel (about half a minute); the share-card tests skip without PHP's imagick extension
 composer lint      # Pint; `vendor/bin/pint` fixes what it finds
-composer analyse   # Larastan, level 5, with the 1 GB it needs; phpstan.neon says why each ignored error is ignored
+composer analyse   # Larastan, level 6, with the 1 GB it needs; phpstan.neon says why each ignored error is ignored
 ```
 
 One file or one test, without the parallel runner (so `dump()` and `dd()` show):
@@ -14,6 +14,37 @@ One file or one test, without the parallel runner (so `dump()` and `dd()` show):
 vendor/bin/pest tests/Feature/SitemapTest.php
 vendor/bin/pest --filter="adds URLs that are not entries"
 ```
+
+## Where things live
+
+Everything is under `src/`, in the `JothamLec\MarketingToolkit` namespace.
+
+| Folder or file | What it holds |
+|---|---|
+| `ServiceProvider.php` | Registers the config, routes, listeners, middleware, permissions, nav and schedule. |
+| `SiteSeo.php`, `Concerns/` | The rules for each value a page prints (title, description, robots, JSON-LD, alternates). Sites extend `SiteSeo`; its `@api` methods are listed in `PublicApiTest`. |
+| `Context.php`, `Meta.php`, `Settings.php` | One page being rendered; everything its `<head>` prints; the Brand and Marketing settings globals. |
+| `Tags/Mt.php` | The `mt` tag: `<s:mt:head />`, `<s:mt:body />` and the rest. |
+| `Sitemap/`, `TextFiles/` | The sitemap's URLs, and robots.txt, llms.txt and ads.txt. |
+| `Http/` | Controllers for the public files and the control panel, the middleware, and form requests. |
+| `Redirects/`, `NotFound/`, `Rules/` | Redirect rules and how a path is matched, the 404 log, and the validation rules for a redirect. |
+| `Reports/` | Site reports: the runner, the page renderer, the HTML reader, and one class per check in `Reports/Rules/`. |
+| `Toolbar/` | The front-end toolbar's cookie, guard script and page data. |
+| `Tracking/`, `Conversions/` | Tracking tags and Consent Mode; leads and where they came from. |
+| `SearchConsole/`, `IndexNow/`, `Og/`, `Favicons/` | Google Search Console, IndexNow, share cards and favicons. |
+| `Cp/`, `Actions/`, `Fieldtypes/`, `Widgets/`, `Preview/` | The control panel's nav and listings, row actions, the SEO preview and heading fieldtypes, the dashboard widget, and the unsaved-entry preview. |
+| `Commands/`, `Listeners/`, `UpdateScripts/` | `php please mt:*` commands, event listeners, and the update scripts Statamic runs on `composer update`. |
+| `Models/Concerns/` | What the addon's Eloquent models share. |
+| `Support/` | Small helpers: sites, text, URIs, assets, permissions, the Features switches, the package name, config merging. |
+| `Legacy/` | Code that keeps sites set up for older versions working; all of it goes in 1.0 (docs/upgrading.md, "Removed in 1.0"). |
+
+The front end is in `resources/js`: Vue pages and components for the control panel (`addon.js`), and the toolbar in plain JavaScript (`toolbar/`). Views are in `resources/views`, blueprints and fieldsets in `resources/blueprints`, `resources/fieldsets` and `resources/install`, and translations in `lang/en`.
+
+### How a request gets its answer
+
+- **A page's `<title>`.** The layout's `<s:mt:head />` calls `Tags\Mt::head()`, which builds a `Context` for the page and asks `SiteSeo::meta()`. That calls `title()`, which tries the SEO fields, the collection's `title_fields` and the entry's title, then adds the site's name. `resources/views/meta.blade.php` prints the result.
+- **A redirect.** The site answers a missing page with a 404. `Http\Middleware\HandleMissing`, in Statamic's `statamic.web` group, sees the 404 and asks `Redirects\Matcher::match()` for a rule. The matcher reads the site's rules from the cache, looks the path up exactly, then tries the wildcards. A match becomes a 301, 302 or 410; no match is counted in the 404 log by `NotFound\Recorder`, after the response has gone out.
+- **A report run.** **Run report** posts to `ReportsController::run()`, which calls `Reports\Runner::start()` to list the pages. Each step (`Runner::step()`) renders a chunk of pages with `Renderer` and reads them with `HtmlInspector`. On a queue worker each step is a `RunReportStep` job; without one, the report's screen asks for the next step while it is open. The last step runs each check in `Reports/Rules/` on every page and scores the site.
 
 ## Tests
 

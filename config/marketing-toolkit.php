@@ -3,9 +3,10 @@
 use JothamLec\MarketingToolkit\Og\DefaultTemplate;
 
 /*
- * Until 1.0, every environment variable below is also read under its name up
- * to 0.19, with SEO_ in place of MT_ (SEO_GTM_ID for MT_GTM_ID, and so on):
- * the `env('SEO_…')` defaults. Rename them in .env before 1.0, which drops them.
+ * Until 1.0, every environment variable below is also read under the name it
+ * had up to 0.19, with SEO_ in place of MT_ (SEO_GTM_ID for MT_GTM_ID, and so
+ * on). The `env('SEO_…')` defaults do this. Rename them in .env before 1.0,
+ * which drops them.
  */
 
 return [
@@ -15,12 +16,13 @@ return [
     | Brand and defaults
     |--------------------------------------------------------------------------
     |
-    | The two global sets editors fill in, each with its own values per site
-    | (create them with `php please mt:install`). `global` is Brand: the title
-    | separator, default description and image, the publisher for JSON-LD, the
-    | shop and the share-card colours. `settings_global` is Marketing settings:
-    | tracking tags, Consent Mode, leads, verification codes and robots.txt.
-    | The site's name is Statamic's own (Settings → Sites, else APP_NAME).
+    | These are the two global sets editors fill in, each with its own values
+    | per site (create them with `php please mt:install`). `global` is Brand,
+    | which holds the title separator, the default description and image, the
+    | publisher for JSON-LD, the shop and the share-card colours.
+    | `settings_global` is Marketing settings, which holds tracking tags,
+    | Consent Mode, leads, verification codes and robots.txt. The site's name
+    | is Statamic's own (from Settings → Sites, or else APP_NAME).
     |
     */
 
@@ -29,16 +31,16 @@ return [
     'settings_global' => 'marketing',
 
     'title' => [
-        // With "Add the site name to page titles" on (Brand), the title
+        // When "Add the site name to page titles" is on (in Brand), the title
         // becomes "{title}{separator}{site name}" only when the result fits.
-        // The report's title check uses its own limit; the defaults match.
+        // The report's title check uses its own limit, but the defaults match.
         'max' => 60,
     ],
 
     'description' => [
-        // A description taken from the page is cut to this, on a word. The
-        // report's checks and the preview's counters use their own limits
-        // (Marketing → Reports → Settings); the defaults match.
+        // A description taken from the page is cut to this length, at a word
+        // boundary. The report's checks and the preview's counters use their own
+        // limits (in Marketing → Reports → Settings), but the defaults match.
         'length' => 160,
     ],
 
@@ -47,7 +49,7 @@ return [
     | Collections
     |--------------------------------------------------------------------------
     |
-    | Per collection handle, all keys optional:
+    | Each collection is configured by its handle, and all keys are optional:
     |
     |   'og_type' => 'article',            // og:type; default 'website'
     |   'schema' => 'Article',             // adds an Article / NewsArticle / BlogPosting node
@@ -66,8 +68,8 @@ return [
     |   'og_template' => 'default',        // a key of og.templates
     |
     | title_fields, description_fields, image_fields and faq_field can name a field in a
-    | Replicator's sets as 'replicator.set.field' ('sections.hero.image'; `*`
-    | for any set); sets switched off are passed over.
+    | Replicator's sets as 'replicator.set.field' (such as 'sections.hero.image', with
+    | `*` for any set). Sets that are switched off are passed over.
     |
     */
 
@@ -78,8 +80,8 @@ return [
     | Taxonomies
     |--------------------------------------------------------------------------
     |
-    | The same rules for a taxonomy's term pages, by taxonomy handle: og_type,
-    | page_schema (CollectionPage suits a listing), title_fields,
+    | A taxonomy's term pages take the same rules, keyed by taxonomy handle:
+    | og_type, page_schema (CollectionPage suits a listing), title_fields,
     | description_fields, image_fields and faq_field.
     |
     */
@@ -93,14 +95,14 @@ return [
     */
 
     'robots' => [
-        // Keep staging and local copies out of search results.
+        // This keeps staging and local copies out of search results.
         'noindex_outside_production' => true,
 
         // A request carrying any of these query parameters is noindexed
         // (filtered or sorted listings), e.g. ['sort', 'search', 'tag'].
         'noindex_params' => [],
 
-        // Route names to noindex, e.g. ['thank-you'].
+        // These are route names to noindex, e.g. ['thank-you'].
         'noindex_routes' => [],
 
         'default' => 'max-snippet:-1, max-image-preview:large, max-video-preview:-1',
@@ -115,15 +117,15 @@ return [
     'sitemap' => [
         'enabled' => true,
 
-        // null: every collection that has a route.
+        // When this is null, the sitemap lists every collection that has a route.
         'collections' => null,
 
         'exclude_collections' => [],
 
-        // Taxonomies whose terms are listed (only terms with published entries).
+        // These are the taxonomies whose terms are listed (only terms with published entries).
         'taxonomies' => [],
 
-        // Above this many URLs, /sitemap.xml becomes an index of /sitemap_{n}.xml.
+        // When there are more URLs than this, /sitemap.xml becomes an index of /sitemap_{n}.xml.
         'per_page' => 1000,
     ],
 
@@ -131,12 +133,12 @@ return [
         'enabled' => true,
     ],
 
-    // /llms.txt: the site's pages as a Markdown list for AI assistants (llmstxt.org).
+    // /llms.txt lists the site's pages as Markdown for AI assistants (llmstxt.org).
     'llms_txt' => [
         'enabled' => true,
     ],
 
-    // /ads.txt: the lines in Marketing settings → Crawlers, when there are any.
+    // /ads.txt serves the lines in Marketing settings → Crawlers, when there are any.
     'ads_txt' => [
         'enabled' => true,
     ],
@@ -147,11 +149,11 @@ return [
     |--------------------------------------------------------------------------
     |
     | With several sites, a page links to itself in each other language its
-    | entry (or term) is published in: <link rel="alternate" hreflang> tags
-    | and the same in the sitemap. The code is the site's language (`fr`),
-    | or its full locale (`en-GB`) where two sites share a language.
-    | `x_default` names the site whose version everyone else gets: null for
-    | the default site, a site handle, or false for none.
+    | entry (or term) is published in, using <link rel="alternate" hreflang>
+    | tags and the same links in the sitemap. The code is the site's language
+    | (`fr`), or its full locale (`en-GB`) where two sites share a language.
+    | `x_default` names the site whose version everyone else gets. Use null
+    | for the default site, a site handle, or false for none.
     |
     */
 
@@ -165,12 +167,12 @@ return [
     | Redirects
     |--------------------------------------------------------------------------
     |
-    | Rules managed under Marketing → Redirects, applied only to addresses the
-    | site would answer with a 404. `automatic` adds a 301 when an entry's or
-    | a term's address changes (its slug, its date, its place in a tree).
-    | `case_sensitive` false matches a rule's From in any letter case
-    | (`/ABOUT-US` as `/about-us`), for a site moved off one whose addresses
-    | worked in any case (Wix, IIS).
+    | Redirect rules are managed under Marketing → Redirects, and they apply
+    | only to addresses the site would answer with a 404. `automatic` adds a
+    | 301 when an entry's or a term's address changes (its slug, its date, or
+    | its place in a tree). Setting `case_sensitive` to false matches a rule's
+    | From in any letter case (`/ABOUT-US` as `/about-us`), which helps a site
+    | moved off one whose addresses worked in any case (Wix, IIS).
     |
     */
 
@@ -187,9 +189,9 @@ return [
     | 404 log
     |--------------------------------------------------------------------------
     |
-    | One row per missing path, under Marketing → 404s. Requests from these
-    | user agents (matched case-insensitively, anywhere in the string) and to
-    | these paths (`*` matches anything) are not logged.
+    | The log keeps one row per missing path, under Marketing → 404s. Requests
+    | from these user agents (matched case-insensitively, anywhere in the
+    | string) and to these paths (`*` matches anything) are not logged.
     |
     */
 
@@ -207,8 +209,8 @@ return [
             '*.php', '*.asp', '*.aspx', '*.cgi', '/wp-*', '/wordpress*', '/.env*',
             '/.git*', '/.well-known/*', '/cgi-bin/*', '/vendor/*', '/xmlrpc*',
             '*.map',
-            // What browsers and crawlers ask for on their own: at max_rows they
-            // would push the broken links out.
+            // Browsers and crawlers ask for these on their own. If they were logged,
+            // at max_rows they would push the broken links out.
             '/favicon.ico', '/robots.txt', '/sitemap.xml', '/apple-touch-icon*', '/build/*',
             '*.js', '*.css', '*.png', '*.jpg', '*.jpeg', '*.gif', '*.svg', '*.webp', '*.ico',
             '*.woff', '*.woff2', '*.ttf', '*.eot',
@@ -220,10 +222,10 @@ return [
     | IndexNow
     |--------------------------------------------------------------------------
     |
-    | Tells Bing, Yandex and the other IndexNow engines (not Google) which
-    | addresses changed when published content is saved or deleted, in
-    | production only. The key is served at /{key}.txt; left null, it is
-    | derived from APP_KEY.
+    | IndexNow tells Bing, Yandex and the other IndexNow engines (not Google)
+    | which addresses changed when published content is saved or deleted, in
+    | production only. The key is served at /{key}.txt, and when it is left
+    | null, it is derived from APP_KEY.
     |
     */
 
@@ -237,10 +239,10 @@ return [
     | Google Search Console
     |--------------------------------------------------------------------------
     |
-    | Clicks, impressions, CTR and position per page on Marketing → Overview, imported
-    | daily (`php please mt:search-console`). `credentials` is a service
-    | account's JSON key, or the path to it; `property` is the property as
-    | Search Console names it: `sc-domain:example.com` or `https://example.com/`.
+    | Marketing → Overview shows clicks, impressions, CTR and position per page,
+    | imported daily (`php please mt:search-console`). `credentials` is a service
+    | account's JSON key, or the path to it. `property` is the property as Search
+    | Console names it, such as `sc-domain:example.com` or `https://example.com/`.
     |
     */
 
@@ -255,10 +257,10 @@ return [
     | Tracking
     |--------------------------------------------------------------------------
     |
-    | Google Tag Manager, Google Analytics 4, PostHog, the Meta Pixel and the
-    | LinkedIn Insight Tag, printed by <s:mt:head /> and <s:mt:body />. Set
-    | them in the Tracking tab of Marketing settings, or here (.env),
-    | which wins. They print only in these environments, never in Live Preview.
+    | <s:mt:head /> and <s:mt:body /> print Google Tag Manager, Google Analytics
+    | 4, PostHog, the Meta Pixel and the LinkedIn Insight Tag. Set them in the
+    | Tracking tab of Marketing settings, or here (.env), which wins. They print
+    | only in these environments, and never in Live Preview.
     |
     */
 
@@ -266,12 +268,12 @@ return [
         'enabled' => true,
         'environments' => ['production'],
         // Each key is the field's handle in the Tracking tab, and MT_ + the key in .env.
-        // (SEO_ + the key, the name up to 0.19, is read too until 1.0.)
+        // SEO_ + the key, the name used up to 0.19, is also read until 1.0.
         'gtm_id' => env('MT_GTM_ID', env('SEO_GTM_ID')),
         'ga4_id' => env('MT_GA4_ID', env('SEO_GA4_ID')),
         'posthog_key' => env('MT_POSTHOG_KEY', env('SEO_POSTHOG_KEY')),
         'posthog_host' => env('MT_POSTHOG_HOST', env('SEO_POSTHOG_HOST')),
-        // With a proxy as posthog_host: PostHog's app (https://eu.posthog.com), for its toolbar.
+        // When posthog_host is a proxy, set this to PostHog's app (https://eu.posthog.com) for its toolbar.
         'posthog_ui_host' => env('MT_POSTHOG_UI_HOST'),
         'meta_pixel_id' => env('MT_META_PIXEL_ID', env('SEO_META_PIXEL_ID')),
         'linkedin_partner_id' => env('MT_LINKEDIN_PARTNER_ID', env('SEO_LINKEDIN_PARTNER_ID')),
@@ -282,9 +284,10 @@ return [
     | Leads
     |--------------------------------------------------------------------------
     |
-    | Form submissions sent to your tools as leads, and where each lead came
-    | from saved with its submission, as set in the Leads tab of Marketing
-    | settings. Off here (or under Features), neither happens.
+    | Form submissions are sent to your tools as leads, and where each lead
+    | came from is saved with its submission, as set in the Leads tab of
+    | Marketing settings. When this is off here (or under Features), neither
+    | happens.
     |
     */
 
@@ -297,10 +300,10 @@ return [
     | Favicons
     |--------------------------------------------------------------------------
     |
-    | /favicon.ico, /favicon.svg, /apple-touch-icon.png, /icon-192.png,
-    | /icon-512.png and /site.webmanifest, made from the icon in Brand,
-    | and their <link> tags in <s:mt:head />. A file of the same name in
-    | public/ wins.
+    | The addon makes /favicon.ico, /favicon.svg, /apple-touch-icon.png,
+    | /icon-192.png, /icon-512.png and /site.webmanifest from the icon in
+    | Brand, and prints their <link> tags in <s:mt:head />. A file of the same
+    | name in public/ wins.
     |
     */
 
@@ -313,12 +316,13 @@ return [
     | Front-end toolbar
     |--------------------------------------------------------------------------
     |
-    | A small bar on the site for signed-in control panel users: the page's
-    | score and failing checks, its search and share preview, redirects and
-    | 404s, tracking and consent, and its other sites. <s:mt:body /> prints
-    | the same tiny script for every visitor, which loads the toolbar only
-    | when the `mt_toolbar` cookie says a control panel user is signed in, so
-    | pages stay safe to cache. Each user can hide or move it under Preferences.
+    | The toolbar is a small bar on the site for signed-in control panel users.
+    | It shows the page's score and failing checks, its search and share
+    | preview, redirects and 404s, tracking and consent, and its other sites.
+    | <s:mt:body /> prints the same tiny script for every visitor, which loads
+    | the toolbar only when the `mt_toolbar` cookie says a control panel user
+    | is signed in, so pages stay safe to cache. Each user can hide or move it
+    | under Preferences.
     |
     */
 
@@ -332,8 +336,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Which checks a report runs, their thresholds and its schedule are set
-    | under Marketing → Reports → Settings. Off here (or under Features), no
-    | report runs on the schedule; one can still run by hand.
+    | under Marketing → Reports → Settings. When this is off here (or under
+    | Features), no report runs on the schedule, but one can still run by hand.
     |
     */
 
@@ -347,9 +351,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | A page without an uploaded share image gets a card drawn at
-    | /og/{uri}.png (home: /og.png) by simonhamp/the-og. Editors change the
-    | card's text per entry in the SEO fieldset, or replace it outright with
-    | an uploaded image; a collection picks a template with `og_template`.
+    | /og/{uri}.png (or /og.png for the home page) by simonhamp/the-og. Editors
+    | change the card's text per entry in the SEO fieldset, or replace it
+    | outright with an uploaded image. A collection picks a template with
+    | `og_template`.
     |
     */
 

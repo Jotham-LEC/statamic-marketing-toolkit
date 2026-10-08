@@ -15,11 +15,12 @@ import Redirects from './pages/Redirects.vue';
 import { useAxios } from './util.js';
 
 /**
- * The current Inertia page: the one the CP loaded with, then each one it
- * navigates to. (Inertia 2's router doesn't expose it outside components.)
- * Relies on Statamic internals: the [data-page] element Inertia boots from,
- * and the edit pages' `collection`/`taxonomy` and `reference` props, which
- * referenceFor() reads. Check them after a Statamic update.
+ * This holds the current Inertia page. It starts as the page the CP loaded with
+ * and is replaced by each page the CP navigates to, because Inertia 2's router
+ * doesn't expose the page outside components. It relies on Statamic internals:
+ * the [data-page] element Inertia boots from, and the edit pages' `collection`,
+ * `taxonomy` and `reference` props, which referenceFor() reads. Check them after
+ * a Statamic update.
  */
 let page = (() => {
     const element = document.querySelector('[data-page]');
@@ -32,11 +33,12 @@ let page = (() => {
 })();
 
 /**
- * The saved entry or term the form being saved belongs to. Statamic's
- * `saving` hook carries only the handle and the values, so the reference
- * comes from the edit page, when the form is that page's own. A form in a
- * stack on top of it (a related entry, perhaps of the same collection) can't
- * be told apart, so it isn't asked about; its save adds the redirect.
+ * Returns the saved entry or term that the form being saved belongs to.
+ * Statamic's `saving` hook carries only the handle and the values, so the
+ * reference comes from the edit page when the form is that page's own. A form
+ * in a stack on top of it (a related entry, perhaps of the same collection)
+ * can't be told apart, so the user isn't asked about it, and its save adds
+ * the redirect.
  */
 function referenceFor(payload) {
     if (stacks.count() > 0) return null;
@@ -49,9 +51,10 @@ function referenceFor(payload) {
 }
 
 /**
- * Asks whether to leave a redirect from the old address to the new one.
- * Resolves with 'add', 'skip', or 'cancel' (the dialog was closed, or "not
- * yet"). The first answer counts: a double click doesn't answer twice.
+ * Asks whether to leave a redirect from the old address to the new one. The
+ * promise resolves with 'add', 'skip', or 'cancel' (when the dialog was closed,
+ * or the user chose "not yet"). Only the first answer counts, so a double click
+ * doesn't answer twice.
  */
 function askRedirect(from, to) {
     return new Promise((resolve) => {
@@ -71,16 +74,17 @@ function askRedirect(from, to) {
 }
 
 /**
- * Before an entry or term form saves: if its address will change, ask whether
- * to leave a 301 behind. The server reads the answer when the save arrives;
- * without one (a save from code), it adds the redirect.
+ * Runs before an entry or term form saves. If the item's address will change,
+ * it asks whether to leave a 301 redirect behind. The server reads the answer
+ * when the save arrives, and when there is no answer (as with a save from
+ * code), it adds the redirect.
  */
 async function confirmRedirect(payload) {
     const axios = useAxios();
     const reference = referenceFor(payload);
     const { automaticRedirects, urls } = config.get('marketingToolkit') ?? {};
 
-    // Automatic redirects switched off: nothing to ask.
+    // When automatic redirects are switched off, there is nothing to ask.
     if (!reference || !automaticRedirects) return;
 
     let check;
@@ -88,7 +92,7 @@ async function confirmRedirect(payload) {
     try {
         check = (await axios.post(urls.redirectCheck, { reference, values: payload.values })).data;
     } catch {
-        // A failed check never blocks a save; the server adds the redirect by default.
+        // A failed check never blocks a save, and the server adds the redirect by default.
         return;
     }
 
@@ -97,8 +101,8 @@ async function confirmRedirect(payload) {
     const choice = await askRedirect(check.from, check.to);
 
     if (choice === 'cancel') {
-        // Nothing is saved; the next save asks again. PipelineStopped is how Statamic's
-        // save stops quietly; anything else it reports as "Something went wrong".
+        // Nothing is saved, and the next save asks again. Throwing PipelineStopped is how
+        // Statamic's save stops quietly; it reports any other error as "Something went wrong".
         toast.info(__('marketing-toolkit::cp.confirm.not_saved'));
         throw new PipelineStopped();
     }
@@ -108,8 +112,8 @@ async function confirmRedirect(payload) {
     try {
         await axios.post(urls.redirectChoice, { reference, create });
     } catch {
-        // A failed answer leaves the default: the redirect is added. The save goes
-        // ahead, so say so when that isn't what was chosen.
+        // When sending the answer fails, the default applies and the redirect is added.
+        // The save goes ahead, so we tell the user when that isn't what they chose.
         if (!create) toast.error(__('marketing-toolkit::cp.confirm.choice_failed'), { duration: 10000 });
     }
 }
@@ -135,11 +139,12 @@ Statamic.booting(() => {
         hooks.on(`${type}.saving`, (resolve, reject, payload) => confirmRedirect(payload).then(resolve, reject));
     }
 
-    // The Tracking tab's warning, as its fields change, and a toast when the set holding it is saved.
+    // This shows the Tracking tab's warning as its fields change, and a toast when the set holding it is saved.
     conditions.add('mtTrackingOverlap', ({ root, values }) => trackingOverlaps(root ?? values));
 
-    // Worked out while saving, which has the values, and shown once saved, which
-    // only runs when the save worked (its payload has no values).
+    // The overlap is worked out while saving, because that hook has the values. The toast
+    // is shown once saved, because that hook only runs when the save worked, but its
+    // payload has no values.
     const overlapping = new Set();
 
     hooks.on('global-set.saving', (resolve, reject, payload) => {
@@ -159,8 +164,8 @@ Statamic.booting(() => {
 });
 
 /**
- * Google Tag Manager and another tracker both set (in the form, or in .env):
- * if GTM loads that tracker too, each visit counts twice.
+ * Returns whether Google Tag Manager and another tracker are both set, in the
+ * form or in .env. If GTM loads that tracker too, each visit counts twice.
  */
 function trackingOverlaps(values) {
     const { trackingFields: fields = {}, trackingFromConfig: env = {} } = config.get('marketingToolkit') ?? {};

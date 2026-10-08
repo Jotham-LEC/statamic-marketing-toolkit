@@ -22,7 +22,7 @@ final class KeepSiteNameInTitles extends UpdateScript
         return self::before((string) $oldVersion, '0.18.3');
     }
 
-    public function update()
+    public function update(): void
     {
         foreach (GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->localizations() ?? [] as $variables) {
             $data = $variables->data();

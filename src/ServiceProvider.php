@@ -119,6 +119,9 @@ class ServiceProvider extends AddonServiceProvider
         $config->set($key, Config::merge(require $path, OldConfig::upgrade((array) $config->get($key, []))));
     }
 
+    /**
+     * @return void
+     */
     public function boot()
     {
         // Ahead of the parent's own callback, which registers the routes, listeners and
@@ -177,6 +180,9 @@ class ServiceProvider extends AddonServiceProvider
      * 15 to 25 ms there (Statamic parses each default value as Antlers), spent
      * only to learn that reports are off. The schedule is needed only by the
      * commands that run it, list it, or finish a background event of it.
+     *
+     * @param  Schedule  $schedule
+     * @return void
      */
     protected function schedule($schedule)
     {

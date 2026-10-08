@@ -217,14 +217,4 @@ Two names, by one rule: `marketing-toolkit`, the addon's slug, wherever Statamic
 
 ## How the pieces fit
 
-| Piece | Where |
-|---|---|
-| Meta tags, JSON-LD | `SiteSeo`, `Meta`, `Tags/Seo.php`, `resources/views/meta.blade.php` |
-| Sitemap, robots.txt, share cards | `routes/web.php` (no session, no cookies), `Http/Controllers` |
-| Redirects, 404 log | `HandleMissing`, middleware in Statamic's `statamic.web` group (only acts on 404 responses, and keeps them out of Statamic's static cache, which would otherwise answer later visits without asking it). Redirect targets get a trailing slash when Statamic adds them (`URL::enforceTrailingSlashes()`) |
-| Automatic redirects | `Listeners/RedirectChangedUris` (entry, term and collection-tree events) |
-| Control panel | `routes/cp.php`, `Http/Controllers/CP`, Vue in `resources/js` (built with Vite to `resources/dist`) |
-| Reports | `Reports/` (Runner, Renderer, HtmlInspector, LinkChecker, Rules), `Commands/Report.php` |
-| Front-end toolbar | `Toolbar/` (the guard and cookie in `Toolbar`, the JSON in `PageData`), `routes/actions.php`, `Http/Controllers/ToolbarController.php`, `Http/Middleware/MarkToolbarUser.php`; plain JavaScript in `resources/js/toolbar`, built by `vite.toolbar.config.js` |
-
-Working on the addon itself (tests, builds, releases): see [CONTRIBUTING.md](../CONTRIBUTING.md).
+The code map, and the path a request takes for a page's title, a redirect and a report, are in [CONTRIBUTING.md](../CONTRIBUTING.md#where-things-live), with how to run the tests, build and release.

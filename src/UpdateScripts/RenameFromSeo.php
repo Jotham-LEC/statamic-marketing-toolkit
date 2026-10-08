@@ -48,7 +48,7 @@ final class RenameFromSeo extends UpdateScript
         return self::before((string) $oldVersion, '0.20.0') || $this->hasOldNames();
     }
 
-    public function update()
+    public function update(): void
     {
         $changed = [
             ...$this->rewrite([resource_path('blueprints'), resource_path('fieldsets')], '/\.yaml$/', [

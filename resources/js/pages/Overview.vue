@@ -3,11 +3,13 @@ import { dateFormatter, numberFormatter } from '@statamic/cms/api';
 import { Head } from '@statamic/cms/inertia';
 import { Alert, Button, Card, Description, Header, Heading, Table, TableCell, TableColumn, TableColumns, TableRow, TableRows } from '@statamic/cms/ui';
 import Gauge from '../components/Gauge.vue';
+import RecentNotFound from '../components/RecentNotFound.vue';
 import When from '../components/When.vue';
 
-// "A and B", "A, B, and C", or however the control panel's language lists them.
+// This joins tool names as "A and B", "A, B, and C", or however the control panel's language lists them.
 const toolList = (tools) => new Intl.ListFormat(numberFormatter.locale, { type: 'conjunction' }).format(tools);
-// A day (2026-09-01) as the control panel shows dates; read as a local date, so it isn't a day out.
+// This formats a day (2026-09-01) as the control panel shows dates. It reads the day as a local date,
+// so it isn't a day out.
 const formatDay = (value) => (value ? dateFormatter.format(new Date(`${value}T00:00:00`), { dateStyle: 'medium' }) : '');
 
 defineProps({
@@ -66,12 +68,7 @@ defineProps({
                 <Description v-if="!notFound.paths">{{ __('marketing-toolkit::cp.overview.not_found.none') }}</Description>
                 <template v-else>
                     <Description>{{ __n('marketing-toolkit::cp.overview.not_found.count', notFound.paths, { count: notFound.paths }) }}</Description>
-                    <ul class="space-y-1 text-sm">
-                        <li v-for="(row, index) in notFound.recent" :key="`${index}:${row.path}`" class="flex justify-between gap-4">
-                            <span class="truncate font-mono text-xs">{{ row.path }}</span>
-                            <span class="shrink-0 tabular-nums text-gray-500 dark:text-gray-400">{{ row.hits }}×</span>
-                        </li>
-                    </ul>
+                    <RecentNotFound :rows="notFound.recent" />
                 </template>
                 <div class="mt-auto"><Button :href="notFound.url" :text="__('marketing-toolkit::cp.overview.not_found.all')" /></div>
             </Card>

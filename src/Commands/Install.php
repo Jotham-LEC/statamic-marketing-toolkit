@@ -119,7 +119,7 @@ final class Install extends Command
         $routed = Collection::all()->filter(fn ($collection) => $collection->routes()->filter()->isNotEmpty());
         $new = $routed->filter(fn ($collection) => Blueprint::in('collections/'.$collection->handle())->isEmpty());
 
-        $without = $routed->diffKeys($new)->flatMap(fn ($collection) => $collection->entryBlueprints()
+        $without = $routed->diffKeys($new)->flatMap(fn ($collection): \Illuminate\Support\Collection => $collection->entryBlueprints()
             ->reject(fn (BlueprintContents $blueprint) => $blueprint->hasField('seo'))
             ->map(fn (BlueprintContents $blueprint) => $collection->title().' ('.$blueprint->title().')'))
             ->values();
@@ -398,7 +398,7 @@ final class Install extends Command
      * marketing: Marketing settings), with the asset container on each
      * assets field.
      *
-     * @return array<string, mixed>
+     * @return array<string, array{display: string, sections: list<array{display?: string, fields: list<array{handle: string, field: array<string, mixed>}>}>}>
      */
     public static function tabs(string $container, string $file = 'seo'): array
     {

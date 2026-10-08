@@ -6,7 +6,7 @@ defineProps({
     to: { type: String, required: true },
 });
 
-// Closing it (Escape, a click outside) is "not yet": nothing is saved, nothing decided.
+// Closing the dialog (with Escape, or a click outside) means "not yet", so nothing is saved or decided.
 const emit = defineEmits(['add', 'skip', 'cancel']);
 </script>
 

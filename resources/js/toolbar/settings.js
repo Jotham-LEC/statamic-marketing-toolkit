@@ -1,13 +1,13 @@
 /*
- * The toolbar's settings, kept in this browser (localStorage) and changed in
- * its More panel: its corner, whether it is hidden, and whether it was left
- * open. Nothing of them reaches the server.
+ * The toolbar's settings are kept in this browser (localStorage) and changed in
+ * its More panel. They hold its corner, whether it is hidden, and whether it was
+ * left open. None of them reaches the server.
  */
 const KEY = 'mt-toolbar';
 export const POSITIONS = ['bottom-left', 'bottom-right', 'top-left', 'top-right'];
 const DEFAULTS = { position: 'bottom-left', hidden: false, open: false };
 
-/** The keys that open and close the toolbar, and bring it back once hidden. */
+/** These are the keys that open and close the toolbar, and bring it back once hidden. */
 export const SHORTCUT = 'Alt+Shift+M';
 
 export function settings() {
@@ -33,7 +33,7 @@ export function save(changes) {
 }
 
 /**
- * Whether a keydown is the shortcut. By the key's place on the keyboard, not
- * the character it types, so Option+Shift+M on a Mac counts too.
+ * Returns whether a keydown is the shortcut. It checks the key's place on the
+ * keyboard, not the character it types, so Option+Shift+M on a Mac counts too.
  */
 export const pressed = (event) => event.code === 'KeyM' && event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey;

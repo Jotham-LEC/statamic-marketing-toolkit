@@ -2,6 +2,7 @@
 
 namespace JothamLec\MarketingToolkit\Concerns;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\SiteSeo;
@@ -98,11 +99,16 @@ trait ResolvesAlternates
     public function localizations(Entry|Term $content): array
     {
         if ($content instanceof Entry) {
+            /** @var Entry $root */
             $root = $content->root();
-            $versions = collect([$root, ...$root->descendants()->values()->all()])
+            /** @var list<Entry> $descendants */
+            $descendants = $root->descendants()->values()->all();
+            $versions = collect([$root, ...$descendants])
                 ->filter(fn (Entry $entry) => $entry->status() === 'published');
         } else {
-            $versions = collect($content->taxonomy()?->sites() ?? [])
+            /** @var ?Collection<int, string> $sites */
+            $sites = $content->taxonomy()?->sites();
+            $versions = collect($sites ?? [])
                 ->map(fn (string $site): Term => $content->in($site))
                 ->filter(fn (Term $term) => Sites::as($term->locale(), fn () => $this->termHasEntries($term)));
         }

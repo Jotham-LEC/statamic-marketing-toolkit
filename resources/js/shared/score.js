@@ -1,9 +1,9 @@
 /**
- * The score bands, shared by the control panel's Score badge and the
- * front-end toolbar: good from 90, fair from 70, poor below.
+ * These are the score bands, shared by the control panel's Score badge and the
+ * front-end toolbar. A score is good from 90, fair from 70, and poor below that.
  */
 export const GOOD = 90;
 export const FAIR = 70;
 
-/** A score's band: 'good', 'fair' or 'poor'. */
+/** Returns a score's band: 'good', 'fair' or 'poor'. */
 export const band = (score) => (score >= GOOD ? 'good' : score >= FAIR ? 'fair' : 'poor');

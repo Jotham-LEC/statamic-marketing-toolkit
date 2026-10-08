@@ -496,7 +496,8 @@ final class PageData
         }
 
         $versions = $this->versions($content);
-        $sites = $content instanceof Entry ? $content->collection()->sites() : collect($content->taxonomy()?->sites() ?? []);
+        /** @var ?Collection<int, string> $sites */
+        $sites = $content instanceof Entry ? $content->collection()->sites() : $content->taxonomy()?->sites();
 
         return Site::authorized()
             ->filter(fn ($site) => $site->handle() !== $content->locale() && collect($sites)->contains($site->handle()))
@@ -527,12 +528,18 @@ final class PageData
     private function versions(Entry|Term $content): array
     {
         if ($content instanceof Entry) {
+            /** @var Entry $root */
             $root = $content->root();
+            /** @var list<Entry> $descendants */
+            $descendants = $root->descendants()->values()->all();
 
-            return collect([$root, ...$root->descendants()->values()->all()])->keyBy(fn (Entry $entry) => $entry->locale())->all();
+            return collect([$root, ...$descendants])->keyBy(fn (Entry $entry): string => $entry->locale())->all();
         }
 
-        return collect($content->taxonomy()?->sites() ?? [])->mapWithKeys(fn (string $site) => [$site => $content->in($site)])->filter()->all();
+        /** @var ?Collection<int, string> $sites */
+        $sites = $content->taxonomy()?->sites();
+
+        return collect($sites ?? [])->keyBy(fn (string $site): string => $site)->map(fn (string $site): Term => $content->in($site))->filter()->all();
     }
 
     /**

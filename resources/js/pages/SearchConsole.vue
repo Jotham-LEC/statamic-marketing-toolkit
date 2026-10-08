@@ -7,8 +7,8 @@ import When from '../components/When.vue';
 import { useRequests } from '../util.js';
 
 /*
- * Marketing → Search Console: the steps to connect it, then where the
- * connection stands, with Import now and Disconnect.
+ * This is the Marketing → Search Console page. It shows the steps to connect
+ * Search Console, then where the connection stands, with Import now and Disconnect.
  */
 const props = defineProps({
     setup: { type: Object, required: true },
@@ -20,7 +20,7 @@ const props = defineProps({
 const { busy, send } = useRequests(__('marketing-toolkit::cp.search_console.setup.failed'));
 const result = ref(null);
 const confirming = ref(false);
-// Once connected and imported, the steps fold away behind a button.
+// Once Search Console is connected and imported, the steps fold away behind a button.
 const showSetup = ref(props.setup.can_set_up && !(props.setup.configured && props.imported.fetched_at));
 
 async function importNow() {
@@ -93,7 +93,7 @@ async function disconnect() {
                 </ul>
             </template>
 
-            <p role="status" class="text-sm" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'">{{ result?.message }}</p>
+            <p role="status" class="text-sm" :class="result?.ok ? 'text-green-700 dark:text-green-400' : 'text-(--theme-color-danger)'">{{ result?.message }}</p>
         </Card>
 
         <SearchConsoleSetup v-if="showSetup" :setup="setup" />

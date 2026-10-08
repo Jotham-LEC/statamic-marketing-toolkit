@@ -3,7 +3,6 @@
 namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * One page of a report: what the rendered HTML said (facts) and, once the

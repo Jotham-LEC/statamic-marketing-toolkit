@@ -10,6 +10,7 @@ use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Actions\Action;
 use Statamic\Facades\Site;
 use Statamic\Http\Controllers\CP\ActionController as StatamicActionController;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Runs Statamic actions on the redirects and 404 listings. The listing says
@@ -23,6 +24,8 @@ final class ActionController extends StatamicActionController
      * The class the handle resolves to is checked, not the handle: Statamic
      * maps handles to classes and the last registration wins, so another
      * addon's action could take one of ours.
+     *
+     * @return array<string, mixed>|Response
      */
     public function run(Request $request)
     {
@@ -48,19 +51,24 @@ final class ActionController extends StatamicActionController
 
         $context = $data['context'] ?? [];
 
-        return RecordActions::for($this->getSelectedItems(collect($data['selections']), $context), $context);
+        return RecordActions::for($this->getSelectedItems(collect((array) $data['selections']), $context), $context);
     }
 
     /**
      * The selected rows, from those the listing shows this user: a 404 row on
      * the selected site, a redirect on a site they may work on. Any other is
      * as if it didn't exist.
+     *
+     * @param  Collection<int, mixed>  $items
+     * @param  array<string, mixed>  $context
+     * @return \Illuminate\Database\Eloquent\Collection<int, MissingPath>|\Illuminate\Database\Eloquent\Collection<int, Redirect>
      */
     protected function getSelectedItems($items, $context)
     {
         $query = ($context['type'] ?? null) === '404s'
             ? MissingPath::query()->shownOn(Site::selected()->handle())
             : Redirect::query()->accessible();
+        /** @var \Illuminate\Database\Eloquent\Collection<int, MissingPath>|\Illuminate\Database\Eloquent\Collection<int, Redirect> $selected */
         $selected = $query->whereIn('id', $items->all())->get();
 
         abort_if($selected->count() < $items->unique()->count(), 404);

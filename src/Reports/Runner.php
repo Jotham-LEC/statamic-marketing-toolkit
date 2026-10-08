@@ -401,7 +401,7 @@ class Runner
             ->sortBy('url');
 
         $terms = collect((array) config('marketing-toolkit.sitemap.taxonomies'))
-            ->flatMap(fn (string $taxonomy) => Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
+            ->flatMap(fn (string $taxonomy): Collection => Term::query()->where('taxonomy', $taxonomy)->where('site', $site)->get())
             ->map(fn ($term) => $term->in($site))
             ->filter(fn ($term) => $term?->url() && $this->seo->termHasEntries($term) && ! $this->seo->isProtected($term))
             ->map(fn (TermContract $term) => $this->row($term))

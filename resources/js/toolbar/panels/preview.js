@@ -1,6 +1,6 @@
 import { h, link, say } from '../dom.js';
 
-/** The Google result and the share card, as the SEO tab's preview draws them. */
+/** Builds the Google result and the share card, as the SEO tab's preview draws them. */
 export default function preview(data, t) {
     const { preview, page } = data;
     let address = null;

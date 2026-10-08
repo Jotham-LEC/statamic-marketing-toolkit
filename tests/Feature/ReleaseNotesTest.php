@@ -73,4 +73,4 @@ test('every version from 0.24.0 on follows the CHANGELOG convention', function (
     foreach (array_filter($matches[1], fn (string $version) => version_compare($version, '0.24.0', '>=')) as $version) {
         expect(releaseNotes($changelog, $version))->toContain('Full notes:');
     }
-})->throwsNoExceptions();
+});

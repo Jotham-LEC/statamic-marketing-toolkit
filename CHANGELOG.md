@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.24.0 – 2026-10-08
+
+Fixes for reports on queue workers, CSV imports on Postgres and cached files, the toolbar's keyboard shortcut fixed at Alt+Shift+M, and a tidier codebase that leans on Laravel's and Statamic's own tools.
+
+### Changed
+- **The toolbar's shortcut is always Alt+Shift+M.** Toolbar settings no longer records a shortcut of your own or turns it off; a toolbar hidden in this browser comes back with Alt+Shift+M (Option+Shift+M on a Mac).
+- **The Marketing section of the control panel's sidebar comes after Statamic's own sections.** Each user can move it under Preferences → Nav. The Overview is at `/cp/marketing-toolkit/overview`, and `/cp/marketing-toolkit` opens it, so its nav item is no longer highlighted on the section's other screens.
+- **The 404 log is trimmed once a day by Laravel's `model:prune`, which the addon adds to the schedule.** Without the scheduler it is still trimmed now and then as paths are logged.
+- **A CSV row that updates an automatic redirect makes it your own, as saving it in the form does.** A later move of the page no longer rewrites it.
+
+### Fixed
+- **A report on a queue worker no longer runs a step twice at once.** A step could run for up to ten minutes, past the 90 seconds a queue waits by default before it hands a job to another worker. A step now takes no new page after 45 seconds and times out after 75, and a failed step isn't retried.
+- **A report that failed while its last step ran stays failed.** It was marked done afterwards.
+- **Reports render pages as a visitor sees them.** A report started from the control panel rendered pages as the signed-in user, so a page could show what only signed-in users see.
+- **Looking up the hosts of external links counts against a page's 30 seconds.** A host that doesn't resolve is asked again after an hour rather than a day.
+- **One bad row no longer loses a whole CSV import on Postgres.** Each row is saved on its own savepoint, a row the database refuses is reported by its number, and a row that isn't UTF-8 is refused with a message that says so.
+- **Searching redirects, 404s and report pages ignores letter case on Postgres, as it does on MySQL and SQLite.**
+- **llms.txt follows a change to the config at once, as the sitemap does.** It waited for the next save.
+- **The cached sitemap and llms.txt change when an entry's date makes it public or private.** This works even on a site that doesn't run Statamic's scheduler.
+- **Text that isn't UTF-8 can no longer break a page's JSON-LD.** It prints as a replacement character.
+- **The icons' links on every page no longer read the icon files.**
+- **The share-card preview in the control panel answers at most 30 times a minute per user.**
+- **The toolbar no longer leaves a listener on the page each time it is redrawn.** Its panels are announced as regions, not dialogs.
+- **The control panel clears a toolbar cookie left from before when the toolbar is switched off.**
+- **`LICENSE` is the MIT licence alone, so GitHub shows it as MIT.** The notes on other software are in `NOTICE`.
+
+### Upgrading
+- **Keep your queue's `retry_after` above 75 seconds if reports run on a queue worker.** That is any `QUEUE_CONNECTION` other than `sync`; Laravel's default is 90. See [configuration.md](docs/configuration.md#report-settings).
+- **Run the scheduler so the 404 log is trimmed daily.** That is `php artisan schedule:run` every minute; without it the log is still kept near its cap.
+- **Plan for 1.0, which drops what keeps older setups working.** It drops what keeps sites set up for older versions working: the `SEO_*` environment variables, config keys from 0.19, `marketing-toolkit.class`, Co-SEO's settings and the update scripts for sites from before 0.21. See [upgrading.md](docs/upgrading.md#removed-in-10) for the checklist.
+- **The `SiteSeo` methods marked `@api` are unchanged for code that extends the addon.** The sitemap and text files are now built by `Sitemap\Sitemap` and `TextFiles\TextFiles`, which ask the same `SiteSeo` hooks. `Support\Version` is gone (update scripts compare versions in their base class), the tag class is `Tags\Mt`, and the row action is `DeleteRecords`.
+
 ## 0.23.1 – 2026-10-08
 
 ### Fixed

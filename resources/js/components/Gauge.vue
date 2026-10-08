@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 
 /*
- * A score out of 100 as a half-circle gauge: ten bands from red to green,
- * a marker at the score, and the number in the middle.
+ * This shows a score out of 100 as a half-circle gauge. It has ten bands from
+ * red to green, a marker at the score, and the number in the middle.
  */
 const props = defineProps({
     value: { type: Number, default: null },
@@ -23,7 +23,7 @@ function point(radius, angle) {
     return [center.x + radius * Math.cos(radians), center.y - radius * Math.sin(radians)];
 }
 
-// Each band an arc segment, 180° (0) to 0° (100), with a small gap between them.
+// Each band is an arc segment from 180° (0) to 0° (100), with a small gap between them.
 const segments = computed(() =>
     Array.from({ length: bands }, (_, index) => {
         const from = 180 - (180 / bands) * index - 0.8;
@@ -48,7 +48,7 @@ const width = computed(() => ({ sm: 'w-28', md: 'w-44', lg: 'w-64' })[props.size
 
 <template>
     <figure :class="width" class="inline-block text-center" role="meter" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="clamped ?? undefined" :aria-label="label ?? __('marketing-toolkit::cp.gauge.label')">
-        <!-- The meter carries the value; the drawing is only its picture. -->
+        <!-- The meter element carries the value, and the drawing is only its picture. -->
         <svg viewBox="0 -12 200 118" class="w-full overflow-visible" aria-hidden="true">
             <path v-for="(segment, index) in segments" :key="index" :d="segment.d" :fill="segment.color" :opacity="clamped === null ? 0.25 : 1" />
             <template v-if="size !== 'sm'">

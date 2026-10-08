@@ -5,7 +5,7 @@ namespace JothamLec\MarketingToolkit\Reports;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use JothamLec\MarketingToolkit\Support\BelongsToSite;
+use JothamLec\MarketingToolkit\Models\Concerns\BelongsToSite;
 
 /**
  * One run over the site: its settings when it started, how far it has got,
@@ -19,7 +19,7 @@ use JothamLec\MarketingToolkit\Support\BelongsToSite;
  * @property int $pages_done
  * @property ?int $score
  * @property array<string, mixed> $settings
- * @property ?array<string, mixed> $summary
+ * @property ?array{rules: array<string, array<string, mixed>>, scored?: int, noindex?: int, errors?: int} $summary as SiteTotals::summary() gives it; scored and the counts after it are missing from older reports
  * @property ?string $error
  * @property ?Carbon $finished_at
  * @property Carbon $created_at

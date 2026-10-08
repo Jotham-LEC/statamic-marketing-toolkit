@@ -34,11 +34,11 @@ final class MoveToMarketingSettings extends UpdateScript
         $moved = self::moved();
 
         return $blueprint !== null && (array_intersect($moved, $blueprint->fields()->all()->keys()->all()) !== []
-            || collect(GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->localizations() ?? [])
+            || GlobalSet::findByHandle((string) config('marketing-toolkit.global'))?->localizations()
                 ->contains(fn ($variables) => $variables->data()->only($moved)->isNotEmpty()));
     }
 
-    public function update()
+    public function update(): void
     {
         $brandHandle = (string) config('marketing-toolkit.global');
         $handle = (string) config('marketing-toolkit.settings_global');

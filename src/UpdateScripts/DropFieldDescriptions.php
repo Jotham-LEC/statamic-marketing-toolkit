@@ -35,7 +35,7 @@ final class DropFieldDescriptions extends UpdateScript
         return $blueprints->contains(fn ($blueprint) => $this->without($blueprint->contents()) !== $blueprint->contents());
     }
 
-    public function update()
+    public function update(): void
     {
         foreach (Settings::handles() as $handle) {
             $blueprint = Blueprint::find('globals.'.$handle);

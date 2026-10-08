@@ -163,7 +163,10 @@ trait InteractsWithContent
             return $this->visibleSets($content->value($set['field']), $set['type'])->map(fn ($values) => $values[$set['key']] ?? null)->values();
         }
 
-        return collect([$content->value($field)]);
+        /** @var mixed $value */
+        $value = $content->value($field);
+
+        return collect([$value]);
     }
 
     /**

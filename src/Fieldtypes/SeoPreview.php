@@ -12,12 +12,18 @@ use Statamic\Fields\Fieldtype;
  */
 final class SeoPreview extends Fieldtype
 {
+    /** @var string */
     protected static $handle = 'mt_preview';
 
+    /** @var string */
     protected static $title = 'marketing-toolkit::fields.seo.seo_preview.title';
 
+    /** @var list<string> */
     protected $categories = ['special'];
 
+    /**
+     * @return array{urls: array{meta: string, card: string}, limits: array{title: array{int, int}, description: array{int, int}}, og: bool}
+     */
     public function preload(): array
     {
         $settings = app(ReportSettings::class);
@@ -36,11 +42,19 @@ final class SeoPreview extends Fieldtype
         ];
     }
 
+    /**
+     * @param  mixed  $data
+     * @return null
+     */
     public function process($data)
     {
         return null;
     }
 
+    /**
+     * @param  mixed  $data
+     * @return null
+     */
     public function preProcess($data)
     {
         return null;

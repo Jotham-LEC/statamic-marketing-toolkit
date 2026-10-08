@@ -11,10 +11,11 @@ use JothamLec\MarketingToolkit\Http\Controllers\CP\SearchConsoleController;
 use JothamLec\MarketingToolkit\Http\Controllers\CP\ToolbarController;
 use JothamLec\MarketingToolkit\Support\Permissions;
 
-// Permissions are checked here (Statamic's permissions answer Laravel's Gate);
-// a controller checks only what a route can't say, such as editing the addon's settings.
+// Permissions are checked here, because Statamic's permissions answer Laravel's Gate. A controller
+// checks only what a route can't say, such as whether the user may edit the addon's settings.
 Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
-    // The overview has its own address under the section's, so its nav item isn't highlighted on the other screens.
+    // The overview has its own address under the section's, so its nav item isn't highlighted on the
+    // other screens.
     Route::get('/', fn () => redirect(cp_route('mt.index')));
     Route::get('overview', OverviewController::class)->middleware('can:'.Permissions::VIEW)->name('index');
     Route::post('preview', [PreviewController::class, 'meta'])->name('preview.meta');
@@ -34,10 +35,11 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
     Route::post('actions', [ActionController::class, 'run'])->name('actions.run');
     Route::post('actions/list', [ActionController::class, 'bulkActions'])->name('actions.bulk');
 
-    // Drawing a card takes Imagick a moment: at most 30 a minute per user.
+    // Drawing a card takes Imagick a moment, so each user may draw at most 30 a minute.
     Route::post('preview/card', [PreviewController::class, 'card'])->middleware('throttle:30,1')->name('preview.card');
 
-    // Asked on every save of an entry or term: answers "no change" without the permission.
+    // The CP asks this on every save of an entry or term, and it answers "no change" to users without
+    // the permission.
     Route::post('redirects/check', [RedirectsController::class, 'check'])->name('redirects.check');
 
     Route::middleware('can:'.Permissions::VIEW)->group(function () {
@@ -50,7 +52,7 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
         Route::post('reports/{report}/progress', [ReportsController::class, 'progress'])->whereNumber('report')->name('reports.progress');
         Route::get('reports/{report}/pages', [ReportsController::class, 'pages'])->whereNumber('report')->name('reports.pages');
         Route::get('reports/{report}/export', [ReportsController::class, 'export'])->whereNumber('report')->name('reports.export');
-        // The Reports page's Settings tab: the controller checks the addon's settings permission.
+        // This saves the Reports page's Settings tab, and the controller checks the addon's settings permission.
         Route::post('reports/settings', [ReportsController::class, 'saveSettings'])->name('reports.settings');
 
         Route::get('search-console', [SearchConsoleController::class, 'index'])->name('search-console.index');
@@ -62,6 +64,7 @@ Route::name('mt.')->prefix('marketing-toolkit')->group(function () {
     Route::post('search-console/check', [SearchConsoleController::class, 'check'])->name('search-console.check');
     Route::post('search-console/import', [SearchConsoleController::class, 'import'])->name('search-console.import');
 
-    // The front-end toolbar's links, on a multi-site install: selects the page's site, then opens the screen.
+    // The front-end toolbar links here on a multi-site install. This selects the page's site, then opens
+    // the screen.
     Route::get('toolbar/go', [ToolbarController::class, 'go'])->name('toolbar.go');
 });
