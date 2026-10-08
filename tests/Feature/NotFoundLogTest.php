@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 
@@ -125,4 +127,50 @@ test('a path or referrer that is not valid UTF-8 is not logged (Postgres would r
     $this->get('/fine', ['User-Agent' => 'Mozilla/5.0', 'Referer' => "https://elsewhere.test/\xC3"]);
 
     expect(MissingPath::query()->pluck('referrer', 'path')->all())->toBe(['/fine' => null]);
+});
+
+describe('one row per address without a site', function () {
+    $migration = fn () => require __DIR__.'/../../database/migrations/2026_10_12_000001_unique_mt_rows_without_a_site.php';
+
+    test('a second 404 row or redirect for the same address without a site is refused, as a second one on a site is', function () {
+        MissingPath::query()->create(['path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()]);
+        Redirect::query()->create(['source' => '/old', 'target' => '/new']);
+
+        // Each in a savepoint: on Postgres a refused insert ends the test's transaction.
+        $insert = fn (Closure $insert) => fn () => DB::transaction($insert);
+
+        expect($insert(fn () => MissingPath::query()->create(['path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()])))->toThrow(UniqueConstraintViolationException::class)
+            ->and($insert(fn () => Redirect::query()->create(['source' => '/old', 'target' => '/other'])))->toThrow(UniqueConstraintViolationException::class)
+            ->and($insert(fn () => MissingPath::query()->create(['site' => 'default', 'path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()])))->not->toThrow(Throwable::class);
+    });
+
+    test('updating merges the 404 rows that already repeat, and stops, changing nothing, while redirects repeat', function () use ($migration) {
+        $migration()->down();
+        DB::table('mt_404s')->insert([
+            ['path' => '/gone', 'hits' => 2, 'referrer' => 'https://a.test/', 'first_seen_at' => '2026-10-01 00:00:00', 'last_seen_at' => '2026-10-02 00:00:00'],
+            ['path' => '/gone', 'hits' => 3, 'referrer' => 'https://b.test/', 'first_seen_at' => '2026-09-01 00:00:00', 'last_seen_at' => '2026-10-05 00:00:00'],
+            ['path' => '/other', 'hits' => 1, 'referrer' => null, 'first_seen_at' => '2026-10-01 00:00:00', 'last_seen_at' => '2026-10-01 00:00:00'],
+        ]);
+        DB::table('mt_redirects')->insert([
+            ['site' => null, 'source' => '/old', 'target' => '/a', 'active' => true],
+            ['site' => null, 'source' => '/old', 'target' => '/b', 'active' => true],
+            ['site' => 'default', 'source' => '/kept', 'target' => '/c', 'active' => true],
+            ['site' => null, 'source' => '/kept', 'target' => '/d', 'active' => true],
+        ]);
+
+        expect(fn () => $migration()->up())->toThrow(RuntimeException::class, 'Some redirects for every site share a source: /old.')
+            ->and(DB::table('mt_redirects')->count())->toBe(4)
+            ->and(DB::table('mt_404s')->count())->toBe(3);
+
+        DB::table('mt_redirects')->where('target', '/a')->delete();
+        $migration()->up();
+        $gone = DB::table('mt_404s')->where('path', '/gone')->sole();
+
+        expect((int) $gone->hits)->toBe(5)
+            ->and($gone->referrer)->toBe('https://b.test/')
+            ->and((string) $gone->first_seen_at)->toStartWith('2026-09-01')
+            ->and((string) $gone->last_seen_at)->toStartWith('2026-10-05')
+            ->and(DB::table('mt_404s')->count())->toBe(2)
+            ->and(DB::table('mt_redirects')->pluck('target')->sort()->values()->all())->toBe(['/b', '/c', '/d']);
+    });
 });

@@ -188,6 +188,9 @@ function tableMigrations(): array
 }
 
 test('rolling back the site of redirects and 404s refuses, before dropping anything, while two sites share an address', function () {
+    // Rolled back in order: the later index on a site that may be empty goes first.
+    $unique = require __DIR__.'/../../database/migrations/2026_10_12_000001_unique_mt_rows_without_a_site.php';
+    $unique->down();
     (require __DIR__.'/../../database/migrations/2026_10_10_000001_rename_seo_tables_to_mt.php')->down();
     DB::table('seo_redirects')->insert([['site' => 'default', 'source' => '/old', 'target' => '/a'], ['site' => 'fr', 'source' => '/old', 'target' => '/b']]);
     DB::table('seo_404s')->insert([['site' => 'default', 'path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()], ['site' => 'fr', 'path' => '/gone', 'first_seen_at' => now(), 'last_seen_at' => now()]]);
@@ -205,6 +208,7 @@ test('rolling back the site of redirects and 404s refuses, before dropping anyth
 
     $redirects->up();
     (require __DIR__.'/../../database/migrations/2026_10_10_000001_rename_seo_tables_to_mt.php')->up();
+    $unique->up();
 });
 
 test('where another package has a seo_ table, the addon makes its own as mt_ and leaves the other alone, both ways', function () {
