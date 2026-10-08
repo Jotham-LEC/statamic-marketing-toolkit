@@ -77,7 +77,7 @@ final class TextFiles
             $lines = [...$lines, '> '.Text::plain($description), ''];
         }
 
-        $sites = $this->sitemap->sites();
+        $sites = $seo->sitemapSites();
 
         foreach ($sites as $site) {
             $sections = Sites::as($site, fn () => $this->llmsSections($seo, $perCollection, $describe, named: count($sites) > 1));

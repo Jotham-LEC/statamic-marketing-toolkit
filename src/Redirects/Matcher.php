@@ -54,6 +54,24 @@ class Matcher
     }
 
     /**
+     * Picks between the rule whose source matches the path exactly and the
+     * one that matches it in another letter case. The exact one wins, unless
+     * only the other one is the site's own.
+     *
+     * @param  array<string, mixed>|null  $exact
+     * @param  array<string, mixed>|null  $folded
+     * @return array<string, mixed>|null
+     */
+    private static function pick(?array $exact, ?array $folded): ?array
+    {
+        if ($folded !== null && $folded['own'] && ! ($exact['own'] ?? 0)) {
+            return $folded;
+        }
+
+        return $exact ?? $folded;
+    }
+
+    /**
      * Returns the forms of a requested path that rules are matched against: first within the site (without
      * its folder), and then as requested. The path is already decoded and has no query string, so a `?`
      * here was a `%3F` that is part of the path.
@@ -83,7 +101,7 @@ class Matcher
             $exact = $rules['exact'][$path] ?? null;
             $folded = $rules['folded'][Redirect::key($path)] ?? null;
 
-            if ($rule = ($folded && $folded['own'] && ! ($exact['own'] ?? 0) ? $folded : null) ?? $exact ?? $folded) {
+            if ($rule = self::pick($exact, $folded)) {
                 return $this->resolved($rule, [], $query);
             }
         }

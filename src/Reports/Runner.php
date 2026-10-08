@@ -200,7 +200,9 @@ class Runner
 
         $report->update(['pages_done' => $report->pages()->where('checked', true)->count()]);
 
-        if ($pages->isEmpty() || ! $report->pages()->where('checked', false)->exists()) {
+        // Scoring every page takes time too: once the last page is read, the report is finished
+        // in this step only while it has time left, and otherwise in the next.
+        if ($pages->isEmpty() || (now()->lt($until) && ! $report->pages()->where('checked', false)->exists())) {
             $this->finish($report);
         }
 

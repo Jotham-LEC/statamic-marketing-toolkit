@@ -73,6 +73,8 @@ class SiteSeo
      * Returns the sites one sitemap lists, which are the current site and the others on its domain.
      *
      * @return list<string>
+     *
+     * @api
      */
     public function sitemapSites(): array
     {

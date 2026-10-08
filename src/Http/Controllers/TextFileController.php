@@ -4,7 +4,6 @@ namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Sites;
@@ -28,7 +27,7 @@ final class TextFileController
 
         // It is cached only on a host that the install names, because the addresses may come from
         // the Host header (Sites::trustsHost).
-        return $this->text(Sites::trustsHost($request) ? Cache::remember(self::llmsCacheKey(Site::current()->handle()), SitemapController::cachedUntil(), $build) : $build());
+        return $this->text(Sites::trustsHost($request) ? SitemapController::remember(self::llmsCacheKey(Site::current()->handle()), $build) : $build());
     }
 
     public function ads(SiteSeo $seo): Response

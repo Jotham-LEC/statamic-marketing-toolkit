@@ -4,6 +4,8 @@ namespace JothamLec\MarketingToolkit\Reports;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Illuminate\Session\ArraySessionHandler;
+use Illuminate\Session\Store;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ViewErrorBag;
@@ -70,10 +72,12 @@ class Renderer
     }
 
     /**
-     * Forgets the signed-in user of each guard that the site's pages may ask
-     * about, for as long as the render lasts.
+     * Signs everyone out for as long as the render lasts. Forgetting a guard's
+     * user isn't enough, because a session guard reads the user back from the
+     * session: the guards are rebuilt on an empty session instead, and the
+     * real session and the users signed in are put back afterwards.
      *
-     * @return array<string, Authenticatable> the forgotten users, keyed by guard
+     * @return array{session: mixed, users: array<string, Authenticatable>} what signBackIn() restores
      */
     private function signOut(): array
     {
@@ -81,23 +85,27 @@ class Renderer
         $users = [];
 
         foreach ($guards as $name) {
-            $guard = Auth::guard($name);
-
-            if ($guard->hasUser() && method_exists($guard, 'forgetUser')) {
-                $users[$name] = $guard->user();
-                $guard->forgetUser();
+            if ($user = Auth::guard($name)->user()) {
+                $users[$name] = $user;
             }
         }
 
-        return $users;
+        $session = app()->bound('session.store') ? app('session.store') : null;
+        app()->instance('session.store', new Store('mt-report', new ArraySessionHandler(1)));
+        Auth::forgetGuards();
+
+        return ['session' => $session, 'users' => $users];
     }
 
     /**
-     * @param  array<string, Authenticatable>  $users
+     * @param  array{session: mixed, users: array<string, Authenticatable>}  $signedIn
      */
-    private function signBackIn(array $users): void
+    private function signBackIn(array $signedIn): void
     {
-        foreach ($users as $name => $user) {
+        $signedIn['session'] === null ? app()->forgetInstance('session.store') : app()->instance('session.store', $signedIn['session']);
+        Auth::forgetGuards();
+
+        foreach ($signedIn['users'] as $name => $user) {
             Auth::guard($name)->setUser($user);
         }
     }

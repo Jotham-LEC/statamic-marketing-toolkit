@@ -77,7 +77,7 @@ final class Sitemap
      */
     private function entries(SiteSeo $seo): Collection
     {
-        $sites = $this->sites();
+        $sites = $seo->sitemapSites();
         $collections = $this->collections($sites)->map->handle()->all();
 
         if ($collections === []) {
@@ -108,7 +108,7 @@ final class Sitemap
     {
         $rows = [];
 
-        foreach ($this->sites() as $site) {
+        foreach ($seo->sitemapSites() as $site) {
             Sites::as($site, function () use ($seo, $site, &$rows) {
                 foreach ((array) config('marketing-toolkit.sitemap.taxonomies') as $taxonomy) {
                     foreach (Terms::query()->where('taxonomy', $taxonomy)->where('site', $site)->get() as $term) {

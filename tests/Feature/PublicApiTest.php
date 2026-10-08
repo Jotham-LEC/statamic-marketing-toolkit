@@ -44,6 +44,7 @@ const SITE_SEO_API = [
     'public function robotsTxt(): string',
     'public function settings(): JothamLec\\MarketingToolkit\\Settings',
     'public function shouldNoindex(JothamLec\\MarketingToolkit\\Context $context): bool',
+    'public function sitemapSites(): array',
     'protected function snippetRules(JothamLec\\MarketingToolkit\\Context $context): string',
     'public function termHasEntries(Statamic\\Contracts\\Taxonomies\\Term $term): bool',
     'public function title(JothamLec\\MarketingToolkit\\Context $context): string',

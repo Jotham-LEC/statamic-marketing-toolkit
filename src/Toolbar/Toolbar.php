@@ -37,8 +37,8 @@ final class Toolbar
 
     /**
      * Determines whether $user gets the toolbar, which is when the module is on and
-     * they may use the control panel. Its corner, its shortcut and whether it is
-     * hidden are kept in the browser, where the toolbar's More panel changes them.
+     * they may use the control panel. Its corner and whether it is hidden are kept
+     * in the browser, where the toolbar's More panel changes them.
      */
     public static function wants(?User $user): bool
     {

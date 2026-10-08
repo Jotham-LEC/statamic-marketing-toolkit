@@ -298,3 +298,20 @@ test('a subclass\'s protected llmsPerCollection() and hiddenOutsideProduction() 
         }
     })->robotsTxt())->toBe("User-agent: *\nDisallow: /\n");
 });
+
+test('a subclass\'s sitemapSites() decides which sites the sitemap and llms.txt list', function () {
+    multilang();
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    entryOn('fr', 'pages', 'a-propos');
+    app()->bind(SiteSeo::class, fn () => new class extends SiteSeo
+    {
+        public function sitemapSites(): array
+        {
+            return ['default'];
+        }
+    });
+
+    expect($this->get('https://example.test/sitemap.xml')->getContent())->not->toContain('/fr/a-propos')
+        ->and(app(SiteSeo::class)->llmsTxt())->not->toContain('/fr/a-propos');
+});

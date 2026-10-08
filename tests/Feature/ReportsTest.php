@@ -143,8 +143,12 @@ test('a report that failed while its last step ran stays failed', function () {
 });
 
 test('pages render as a visitor sees them, not as whoever started the report', function () {
+    // Signed in through the session, as in a control panel request: a guard reads the user back from it.
+    config(['auth.providers.users.driver' => 'statamic']);
+    auth()->forgetGuards();
     $user = cpUser(super: true);
-    $this->actingAs($user);
+    session()->put(auth()->guard()->getName(), $user->id());
+    expect(auth()->id())->toBe($user->id());
     entryIn('pages', 'about');
     $seen = null;
     View::composer('default', function () use (&$seen) {

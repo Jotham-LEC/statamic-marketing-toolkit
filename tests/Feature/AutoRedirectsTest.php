@@ -62,6 +62,15 @@ test('saving without a new address, a new entry or a draft adds nothing', functi
     expect(redirectMap())->toBe([]);
 });
 
+test('a draft published under a new slug in the same save leaves no redirect from an address that was never public', function () {
+    $draft = entryIn('pages', 'draft-a');
+    $draft->published(false)->save();
+
+    reloaded($draft)->slug('final')->published(true)->save();
+
+    expect(redirectMap())->toBe([]);
+});
+
 test('a chain collapses: A→B then B→C leaves A→C and B→C', function () {
     $entry = reloaded(entryIn('pages', 'a'));
     $entry->slug('b')->save();

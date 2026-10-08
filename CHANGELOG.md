@@ -23,6 +23,8 @@ Fixes for reports on queue workers, CSV imports on Postgres and cached files, th
 - **The icons' links on every page no longer read the icon files.**
 - **The share-card preview in the control panel answers at most 30 times a minute per user.**
 - **The toolbar no longer leaves a listener on the page each time it is redrawn.** Its panels are announced as regions, not dialogs.
+- **A draft published under a new slug in the same save no longer leaves a redirect from its old address.** That address was never public.
+- **The toolbar's shortcut works once, even when its script is loaded twice on a page.**
 - **The control panel clears a toolbar cookie left from before when the toolbar is switched off.**
 - **`LICENSE` is the MIT licence alone, so GitHub shows it as MIT.** The notes on other software are in `NOTICE`.
 
@@ -30,7 +32,7 @@ Fixes for reports on queue workers, CSV imports on Postgres and cached files, th
 - **Keep your queue's `retry_after` above 75 seconds if reports run on a queue worker.** That is any `QUEUE_CONNECTION` other than `sync`; Laravel's default is 90. See [configuration.md](docs/configuration.md#report-settings).
 - **Run the scheduler so the 404 log is trimmed daily.** That is `php artisan schedule:run` every minute; without it the log is still kept near its cap.
 - **Plan for 1.0, which drops what keeps older setups working.** It drops what keeps sites set up for older versions working: the `SEO_*` environment variables, config keys from 0.19, `marketing-toolkit.class`, Co-SEO's settings and the update scripts for sites from before 0.21. See [upgrading.md](docs/upgrading.md#removed-in-10) for the checklist.
-- **The `SiteSeo` methods marked `@api` are unchanged for code that extends the addon.** The sitemap and text files are now built by `Sitemap\Sitemap` and `TextFiles\TextFiles`, which ask the same `SiteSeo` hooks. `Support\Version` is gone (update scripts compare versions in their base class), the tag class is `Tags\Mt`, and the row action is `DeleteRecords`.
+- **The `SiteSeo` methods marked `@api` are unchanged for code that extends the addon, and `sitemapSites()` is now one of them.** The sitemap and text files are now built by `Sitemap\Sitemap` and `TextFiles\TextFiles`, which ask the same `SiteSeo` hooks. `Support\Version` is gone (update scripts compare versions in their base class), the tag class is `Tags\Mt`, and the row action is `DeleteRecords`.
 
 ## 0.23.1 – 2026-10-08
 

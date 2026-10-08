@@ -59,7 +59,8 @@ final class RedirectChangedUris
         $original = $entry->getOriginal();
         $this->forget('entry', (string) $entry->id());
 
-        if (! $this->enabled() || ! $entry->id() || $original === [] || ! $entry->published() || ! $entry->isDirty()) {
+        // A draft's old address was never public, so it needs no redirect, even when the draft is published in the same save.
+        if (! $this->enabled() || ! $entry->id() || $original === [] || ! $entry->published() || ! ($original['published'] ?? true) || ! $entry->isDirty()) {
             return;
         }
 

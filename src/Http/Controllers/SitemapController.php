@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Http\Controllers;
 
 use Carbon\CarbonInterface;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -65,7 +66,31 @@ final class SitemapController
 
         // It is cached only on a host that the install names, because the addresses may come from
         // the Host header (Sites::trustsHost).
-        return Sites::trustsHost($request) ? Cache::remember(self::cacheKey(Site::current()->handle()), self::cachedUntil(), $build) : $build();
+        return Sites::trustsHost($request) ? self::remember(self::cacheKey(Site::current()->handle()), $build) : $build();
+    }
+
+    /**
+     * Returns the cached value under $key, or builds and caches it until
+     * cachedUntil(). The date is only looked up when the value is built, so a
+     * cached sitemap costs one cache read.
+     *
+     * @template T
+     *
+     * @param  Closure(): T  $build
+     * @return T
+     */
+    public static function remember(string $key, Closure $build): mixed
+    {
+        $cached = Cache::get($key);
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $value = $build();
+        Cache::put($key, $value, self::cachedUntil());
+
+        return $value;
     }
 
     /**

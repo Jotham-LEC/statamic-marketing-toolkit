@@ -120,23 +120,24 @@ function draw(data) {
     drawn = { element, toolbar };
 }
 
-document.addEventListener('keydown', (event) => {
-    if (!pressed(event) || typing(event)) return;
-
-    event.preventDefault();
-
-    if (drawn) {
-        drawn.toolbar.toggle();
-    } else if (settings().hidden) {
-        // When the toolbar is hidden, the shortcut brings it back, open.
-        save({ hidden: false, open: true });
-        load();
-    }
-});
-
 function boot() {
     if (!endpoint || window.mtToolbar) return;
     window.mtToolbar = true;
+
+    // Added here, after the check above, so a script loaded twice listens once.
+    document.addEventListener('keydown', (event) => {
+        if (!pressed(event) || typing(event)) return;
+
+        event.preventDefault();
+
+        if (drawn) {
+            drawn.toolbar.toggle();
+        } else if (settings().hidden) {
+            // When the toolbar is hidden, the shortcut brings it back, open.
+            save({ hidden: false, open: true });
+            load();
+        }
+    });
 
     if (!settings().hidden) load();
 }
