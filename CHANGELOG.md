@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.25.0 – 2026-10-08
+
+Generated share cards carry the brand, a logo or the name, and come in the three shapes Google asks for an article's images.
+
+### Added
+- **Generated share cards carry the brand's logo.** Brand → Share cards has a **Logo** field; without one the card takes the publisher logo, or else the name in page titles, in the accent colour. A logo is fitted whole at the top left (or the bottom, with `marketing-toolkit.og.logo_position`), never enlarged past its own pixels, and drawn on a pill when it doesn't stand out from the card's background. SVG is refused, as most hosts can't draw it. See [configuration.md](docs/configuration.md#share-cards-and-images).
+- **Each card comes in 1200×630, 1200×1200 and 1200×900.** The square and 4:3 cards are at the card's address with `.1x1` or `.4x3` before `.png` (`/og/about.1x1.png`, `/og.4x3.png`). `og:image` stays the 1200×630 card.
+- **An article or product without an uploaded image lists its generated card in every shape in its JSON-LD.** Google suggests several shapes for an Article's images.
+
+### Changed
+- **The default card has a new layout.** The brand is at the top, then the title, the description and the section (left out when it would only repeat the site's name). The cached cards are drawn again.
+- **Brand's share-card Picture is drawn.** It was saved but never shown; it is now a square on the right of every card, and the text narrows for it.
+
+### Upgrading
+- **Run `composer update` (or `php please updates:run`) to add the Logo field to Brand, and commit the blueprint it changes.**
+- **A share-card template of your own keeps drawing the landscape card alone.** Its square and 4:3 addresses answer 404, and articles list only its landscape card, until it returns more from `shapes()` and draws `$card->shape`. See [developers.md](docs/developers.md#add-a-share-card-template).
+- **A subclass of `Og\Generator` that overrides `png()` or `card()` needs their new parameter.** Add `Shape $shape = Shape::Landscape`, which PHP requires of an override.
+
 ## 0.24.1 – 2026-10-08
 
 ### Fixed

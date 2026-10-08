@@ -28,6 +28,7 @@ final class AddNewBrandFields extends UpdateScript
         ],
         '0.22.0' => ['feature_toolbar'],
         '0.23.0' => ['title_brand', 'legal_name', 'posthog_ui_host'],
+        '0.25.0' => ['og_logo'],
     ];
 
     /** @var list<string>|null the fields this update brings, as shouldUpdate() found them */

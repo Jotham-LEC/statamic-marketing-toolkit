@@ -354,7 +354,12 @@ return [
     | /og/{uri}.png (or /og.png for the home page) by simonhamp/the-og. Editors
     | change the card's text per entry in the SEO fieldset, or replace it
     | outright with an uploaded image. A collection picks a template with
-    | `og_template`.
+    | `og_template`. Each card comes in three shapes: 1200×630 (the og:image),
+    | 1200×1200 at /og/{uri}.1x1.png and 1200×900 at /og/{uri}.4x3.png.
+    |
+    | The default card carries the brand: Brand's share-card Logo, else the
+    | publisher logo, else the name in page titles. `logo_position` puts it at
+    | the 'top' or the 'bottom' of the card.
     |
     */
 
@@ -364,6 +369,8 @@ return [
         'templates' => [
             'default' => DefaultTemplate::class,
         ],
+
+        'logo_position' => 'top',
 
         'max_age' => 60 * 60 * 24 * 30,
     ],

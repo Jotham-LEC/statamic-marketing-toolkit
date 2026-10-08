@@ -247,5 +247,8 @@ tabs:
             handle: og_accent
             field: { type: color, display: 'marketing-toolkit::fields.brand.og_accent.display', width: 33 }
           -
+            handle: og_logo
+            field: { type: assets, display: 'marketing-toolkit::fields.brand.og_logo.display', instructions: 'marketing-toolkit::fields.brand.og_logo.instructions', max_files: 1, validate: ['mimes:png,jpg,jpeg,webp,gif'] }
+          -
             handle: og_picture
-            field: { type: assets, display: 'marketing-toolkit::fields.brand.og_picture.display', max_files: 1 }
+            field: { type: assets, display: 'marketing-toolkit::fields.brand.og_picture.display', instructions: 'marketing-toolkit::fields.brand.og_picture.instructions', max_files: 1 }

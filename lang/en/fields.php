@@ -365,8 +365,13 @@ return [
         'og_background' => ['display' => 'Background'],
         'og_text' => ['display' => 'Text'],
         'og_accent' => ['display' => 'Accent'],
+        'og_logo' => [
+            'display' => 'Logo',
+            'instructions' => 'Drawn on every generated card. A PNG with a transparent background works best. Without one, the publisher logo is used, or else the site\'s name. SVG isn\'t accepted, because most servers can\'t draw it onto an image.',
+        ],
         'og_picture' => [
             'display' => 'Picture',
+            'instructions' => 'A portrait or product photo, drawn as a square on the right of every generated card.',
         ],
 
         // Crawlers

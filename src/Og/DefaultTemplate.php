@@ -2,15 +2,15 @@
 
 namespace JothamLec\MarketingToolkit\Og;
 
+use JothamLec\MarketingToolkit\Og\Layouts\Branded;
 use SimonHamp\TheOg\BorderPosition;
 use SimonHamp\TheOg\Image;
-use SimonHamp\TheOg\Layout\Layouts\Standard;
 use SimonHamp\TheOg\Theme;
 
 /**
- * Draws the-og's Standard layout in the colours from Brand's Share cards tab. It shows the
- * section at the top, the title, the description, the site name along the bottom, and the
- * picture (a logo or portrait) when one is set.
+ * Draws the Branded layout in the colours from Brand's Share cards tab, in all three shapes: the
+ * brand (the logo, or the name in type), the title, the description, the section, and Brand's
+ * Picture on the right when one is set.
  */
 class DefaultTemplate extends Template
 {
@@ -27,9 +27,9 @@ class DefaultTemplate extends Template
             ->accentColor($card->accent);
 
         $image = (new Image)
-            ->layout(new Standard)
+            ->layout(new Branded($card, (string) config('marketing-toolkit.og.logo_position', 'top')))
             ->theme($theme)
-            ->border(BorderPosition::Bottom, $card->accent, 16)
+            ->border(BorderPosition::Bottom, $card->accent, LogoBox::BORDER)
             ->callToAction($card->label)
             ->title($card->title)
             ->url($card->siteName);
@@ -38,10 +38,16 @@ class DefaultTemplate extends Template
             $image->description($card->description);
         }
 
-        if ($card->picture) {
-            $image->picture($card->picture);
-        }
-
         return $image;
+    }
+
+    public function version(): string
+    {
+        return '2';
+    }
+
+    public function shapes(): array
+    {
+        return [Shape::Landscape, Shape::Square, Shape::Classic];
     }
 }

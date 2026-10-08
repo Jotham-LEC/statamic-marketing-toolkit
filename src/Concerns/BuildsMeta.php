@@ -5,6 +5,7 @@ namespace JothamLec\MarketingToolkit\Concerns;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Meta;
 use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Og\Shape;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Fields;
@@ -198,10 +199,20 @@ trait BuildsMeta
             return null;
         }
 
+        return $this->cardUrl($entry, Shape::Landscape);
+    }
+
+    /**
+     * Returns the address of the entry's card in a shape, such as
+     * /og/fr/a-propos.1x1.png, without checking that it has one (see
+     * generatedImageUrl()).
+     */
+    public function cardUrl(Entry $entry, Shape $shape): string
+    {
         $absolute = (string) $entry->absoluteUrl();
         $path = trim((string) parse_url($absolute, PHP_URL_PATH), '/');
-        $route = $path === '' ? 'og.png' : 'og/'.$path.'.png';
-        $token = $previewed ? '&token='.request()->statamicToken()?->token() : '';
+        $route = ($path === '' ? 'og' : 'og/'.$path).$shape->suffix().'.png';
+        $token = Fields::isPreviewed($entry) ? '&token='.request()->statamicToken()?->token() : '';
 
         return self::domainRoot($absolute).'/'.$route.'?v='.$entry->lastModified()->timestamp.$token;
     }

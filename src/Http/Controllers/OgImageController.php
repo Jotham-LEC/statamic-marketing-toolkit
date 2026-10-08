@@ -6,6 +6,7 @@ use Facades\Statamic\CP\LivePreview;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Og\Shape;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\Features;
 use JothamLec\MarketingToolkit\Support\Fields;
@@ -17,7 +18,8 @@ use Statamic\Structures\Page;
 
 /**
  * Serves /og.png (home) and /og/{path}.png, the generated share card of the
- * published entry at that path on the domain. The meta tags only point here when the entry has no uploaded share
+ * published entry at that path on the domain, and its other shapes at /og.1x1.png,
+ * /og/{path}.1x1.png and the same with `.4x3`, when the entry's template draws them. The meta tags only point here when the entry has no uploaded share
  * image, but the card is served either way so that editors can preview it.
  *
  * In a Live Preview the page's card address carries the preview's `token`. When that token
@@ -30,16 +32,42 @@ final class OgImageController
     {
         throw_unless(Features::on('share_cards') && $generator->available(), NotFoundHttpException::class);
 
-        $entry = $this->entry($request, trim((string) $path, '/'));
+        $path = trim((string) $path, '/');
+        $shape = Shape::Landscape;
+        $entry = null;
+
+        // A path that ends in a shape's suffix is that shape of the page without it, unless only
+        // the whole path is a page (a slug of its own that ends in `.1x1`).
+        if (preg_match('/^(.+)\.(1x1|4x3)$/', $path, $match)) {
+            $entry = $this->entry($request, $match[1]);
+            $shape = $entry ? Shape::fromSuffix($match[2]) : $shape;
+        }
+
+        return $this->card($request, $generator, $seo, $entry ?? $this->entry($request, $path), $shape);
+    }
+
+    /**
+     * Serves the home page's card in another shape, at /og.1x1.png or /og.4x3.png.
+     */
+    public function home(Request $request, Generator $generator, SiteSeo $seo, string $shape): Response
+    {
+        throw_unless(Features::on('share_cards') && $generator->available(), NotFoundHttpException::class);
+
+        return $this->card($request, $generator, $seo, $this->entry($request, ''), Shape::fromSuffix($shape));
+    }
+
+    private function card(Request $request, Generator $generator, SiteSeo $seo, ?EntryContract $entry, Shape $shape): Response
+    {
         $previewed = $entry ? $this->previewed($request, $entry) : null;
         // A protected page is refused, because its card would show its title and text to anyone.
         throw_unless($entry && ($previewed || $entry->status() === 'published') && ! $seo->isProtected($entry), NotFoundHttpException::class);
+        throw_unless($generator->draws($entry, $shape), NotFoundHttpException::class);
 
         if ($previewed) {
-            return new Response($generator->draw($previewed), 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'no-store']);
+            return new Response($generator->draw($previewed, $shape), 200, ['Content-Type' => 'image/png', 'Cache-Control' => 'no-store']);
         }
 
-        return new Response($generator->png($entry), 200, [
+        return new Response($generator->png($entry, $shape), 200, [
             'Content-Type' => 'image/png',
             'Cache-Control' => 'public, max-age='.(int) config('marketing-toolkit.og.max_age'),
         ]);

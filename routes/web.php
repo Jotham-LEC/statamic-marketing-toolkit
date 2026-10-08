@@ -53,5 +53,6 @@ Route::withoutMiddleware([
         }
 
         $get('og.png', OgImageController::class)?->name('og.home');
+        $get('og.{shape}.png', [OgImageController::class, 'home'])?->where('shape', '1x1|4x3')->name('og.home.shape');
         $get('og/{path}.png', OgImageController::class)?->where('path', '.*')->name('og');
     });

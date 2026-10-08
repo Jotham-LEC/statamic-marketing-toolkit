@@ -165,7 +165,20 @@ Setting it up:
 |---|---|---|
 | `og.enabled` | `true` | Generated cards at `/og.png` (home) and `/og/{uri}.png`. |
 | `og.templates` | `['default' => DefaultTemplate::class]` | Card designs by key; see [developers.md](developers.md#add-a-share-card-template). |
+| `og.logo_position` | `'top'` | Where the default card puts the brand: `'top'` or `'bottom'` (left-aligned either way). |
 | `og.max_age` | 30 days | `Cache-Control` max-age of the card images. |
+
+Each generated card comes in three shapes, at the card's address with a suffix:
+
+| Shape | Size | Address |
+|---|---|---|
+| Landscape | 1200×630 | `/og/{uri}.png`, `/og.png`; the page's `og:image` |
+| Square | 1200×1200 | `/og/{uri}.1x1.png`, `/og.1x1.png` |
+| 4:3 | 1200×900 | `/og/{uri}.4x3.png`, `/og.4x3.png` |
+
+The suffix is part of the path, not a query string, because static caches and CDNs often drop query strings. An Article or Product node without an uploaded image lists all three shapes the page's template draws; a template of your own draws the landscape card alone until it lists more ([developers.md](developers.md#add-a-share-card-template)).
+
+The default card carries the brand at the top left: Brand's share-card **Logo**, else the publisher logo, else the name in page titles in the accent colour. A logo is fitted whole in a box 40% of the card's width and 12% of its height and never enlarged past its own pixels; one that would come out shorter than 32 pixels on the landscape card (a very wide wordmark) is left out for the name. SVG logos are refused (most hosts' Imagick can't read SVG); upload a PNG, ideally with a transparent background. A logo that stands out from the card's background by less than 3:1 is drawn on a rounded pill in the text colour (or its complement, whichever contrasts more).
 
 Uploaded share images are cropped to 1200×630 and served as JPEG; for another size, override `imageWidth()` and `imageHeight()` in your `SiteSeo` subclass.
 

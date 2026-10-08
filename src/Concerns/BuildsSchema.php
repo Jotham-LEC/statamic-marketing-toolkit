@@ -4,6 +4,8 @@ namespace JothamLec\MarketingToolkit\Concerns;
 
 use Illuminate\Support\Str;
 use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Og\Shape;
 use JothamLec\MarketingToolkit\SiteSeo;
 use JothamLec\MarketingToolkit\Support\SchemaTypes;
 use JothamLec\MarketingToolkit\Support\Text;
@@ -428,8 +430,9 @@ trait BuildsSchema
 
     /**
      * Returns an article's images. An uploaded image is given in the three
-     * shapes Google asks for (16:9, 4:3, and 1:1), and otherwise the share
-     * image is used.
+     * shapes Google asks for (16:9, 4:3, and 1:1). A generated card is given
+     * in each shape its template draws (1200×630, 4:3 and 1:1), and otherwise
+     * the share image is used.
      *
      * @return list<string>
      *
@@ -447,7 +450,21 @@ trait BuildsSchema
             ];
         }
 
-        return array_filter([$this->image($context)['url'] ?? null]);
+        $entry = $context->entry;
+        $image = $this->image($context)['url'] ?? null;
+
+        // The share image is the generated card: list each shape its template draws.
+        if ($entry && $image !== null && $image === $this->cardUrl($entry, Shape::Landscape)) {
+            $generator = app(Generator::class);
+
+            return collect([Shape::Landscape, Shape::Classic, Shape::Square])
+                ->filter(fn (Shape $shape) => $generator->draws($entry, $shape))
+                ->map(fn (Shape $shape) => $this->cardUrl($entry, $shape))
+                ->values()
+                ->all();
+        }
+
+        return array_filter([$image]);
     }
 
     /**

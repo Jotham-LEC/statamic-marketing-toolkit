@@ -2,6 +2,7 @@
 
 use Illuminate\Testing\TestResponse;
 use JothamLec\MarketingToolkit\Og\Generator;
+use JothamLec\MarketingToolkit\Og\Shape;
 use Statamic\Contracts\Entries\Entry as EntryContract;
 use Statamic\Facades\AssetContainer;
 use Statamic\Facades\Blueprint;
@@ -234,14 +235,14 @@ test('a token for another entry, or a bogus one, gets the saved card', function 
             return true;
         }
 
-        public function png(EntryContract $entry): string
+        public function png(EntryContract $entry, Shape $shape = Shape::Landscape): string
         {
             $this->drawn[] = 'saved: '.$this->card($entry)->title;
 
             return 'png';
         }
 
-        public function draw(EntryContract $entry): string
+        public function draw(EntryContract $entry, Shape $shape = Shape::Landscape): string
         {
             $this->drawn[] = 'preview: '.$this->card($entry)->title;
 

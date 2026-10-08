@@ -105,7 +105,7 @@ Use it to catch broken links. For a missing address that should lead somewhere, 
 
 **Shop tab** (for a site that sells; your developer adds it). The **currency** of your prices; your **return policy** (within so many days, any time, or not accepted, for a country, and/or a link to the policy page); and your **shipping rates**: one row per destination and order value (for example free over RM 300), with the delivery time in days. Search engines show these with your products.
 
-**Share cards tab.** The background, text and accent colours of the generated share pictures, and a logo or portrait to put on every card.
+**Share cards tab.** The background, text and accent colours of the generated share pictures. **Logo**: drawn on every card (a PNG, ideally with a transparent background; not SVG). Without one, the Publisher tab's logo is used, or else the site's name in the accent colour. **Picture**: a portrait or product photo, drawn as a square on the right of every card.
 
 ## Settings
 

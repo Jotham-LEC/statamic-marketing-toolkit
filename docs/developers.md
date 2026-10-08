@@ -131,7 +131,7 @@ See [tracking.md](tracking.md) for how the tags and Consent Mode behave.
 
 ## Add a share-card template
 
-A template turns a `Card` (title, description, label, site name, picture, colours) into a [simonhamp/the-og](https://github.com/simonhamp/the-og) image:
+A template turns a `Card` (title, description, label, site name, picture, colours, the brand's `logo` file or `brandText`, and the `shape` to draw) into a [simonhamp/the-og](https://github.com/simonhamp/the-og) image:
 
 ```php
 namespace App\Og;
@@ -168,7 +168,18 @@ Register it and choose where it's used:
 'collections' => ['essays' => ['og_template' => 'essay']],
 ```
 
-Cards are cached per entry, last-modified time, template, version and text, and served from `/og.png` and `/og/{path}.png` (the page's path from the domain's root, so `/og/fr/a-propos.png` for `/fr/a-propos`) without cookies, so a CDN can cache them.
+A template draws the landscape card (1200×630) unless it lists more shapes; the others answer 404 for it. To draw them, return them from `shapes()` and size your layout from `$card->shape` (`width()`, `height()`). the-og's layouts fix their size in the class, so a shape other than 1200×630 needs an `AbstractLayout` subclass of your own that sets `$width` and `$height`, as `Og\Layouts\Branded` does:
+
+```php
+public function shapes(): array
+{
+    return [Shape::Landscape, Shape::Square, Shape::Classic];
+}
+```
+
+To place the brand as the default card does, `LogoBox::fit($width, $height, $card->shape)` gives the logo's position and size in the card (or null when it would be too small, so you draw `$card->brandText` instead), and `LogoBox::pill($colour, $card->background, $card->text)` says whether it needs a backing. `$card->logo` is a local file that already fits the shape.
+
+Cards are cached per entry, last-modified time, template, version, shape, logo and text, and served from `/og.png` and `/og/{path}.png` (the page's path from the domain's root, so `/og/fr/a-propos.png` for `/fr/a-propos`, and `.1x1.png` or `.4x3.png` for the other shapes) without cookies, so a CDN can cache them.
 
 ## Redirects, 404s and reports from code
 
