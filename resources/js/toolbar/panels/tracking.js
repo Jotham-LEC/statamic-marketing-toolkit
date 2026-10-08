@@ -6,7 +6,7 @@ const SIGNALS = ['ad_storage', 'analytics_storage', 'ad_user_data', 'ad_personal
  * This browser's Consent Mode state, from what the page pushed to
  * dataLayer: the defaults, then each update in order.
  */
-export function consentState() {
+function consentState() {
     const state = {};
 
     for (const item of window.dataLayer ?? []) {

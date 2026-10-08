@@ -119,7 +119,7 @@ class Favicons
         File::deleteDirectory(self::root());
     }
 
-    public static function root(): string
+    private static function root(): string
     {
         return storage_path('app/marketing-toolkit/favicons');
     }

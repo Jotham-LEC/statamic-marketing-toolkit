@@ -11,6 +11,9 @@ return [
 
     // resources/fieldsets/seo.yaml
     'seo' => [
+        'heading' => [
+            'title' => 'Heading',
+        ],
         'seo_preview' => [
             'title' => 'SEO preview',
             'display' => 'Search and share preview',

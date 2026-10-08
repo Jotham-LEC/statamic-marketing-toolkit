@@ -1,4 +1,5 @@
 import { bar, panelsOf } from './bar.js';
+import { fill } from './dom.js';
 import { SHORTCUT, pressed, save, settings } from './settings.js';
 import styles from './styles.css?inline';
 
@@ -106,7 +107,7 @@ function draw(data) {
     const toolbar = bar(root, data, {
         hidden: () => {
             undraw();
-            notice(data.user.labels.hidden.replace(':keys', SHORTCUT));
+            notice(fill(data.user.labels.hidden, { keys: SHORTCUT }));
         },
     });
 

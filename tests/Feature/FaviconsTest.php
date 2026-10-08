@@ -16,6 +16,12 @@ function iconGlobal(string $file, string $bytes, array $values = []): void
     seoGlobal(['favicon' => $file, ...$values]);
 }
 
+/** Where the icons are kept, as Favicons keeps them. */
+function faviconsRoot(): string
+{
+    return storage_path('app/marketing-toolkit/favicons');
+}
+
 function pngSize(string $bytes): array
 {
     return array_slice(getimagesizefromstring($bytes), 0, 2);
@@ -107,9 +113,9 @@ test('saving SEO & brand makes the icons again, under a new version', function (
     $after = app(Favicons::class)->version();
 
     expect($after)->not->toBe($before)
-        ->and(File::exists(Favicons::root().'/default/'.$before))->toBeFalse()
+        ->and(File::exists(faviconsRoot().'/default/'.$before))->toBeFalse()
         // Made on save, before anyone asks.
-        ->and(File::exists(Favicons::root().'/default/'.$after.'/apple-touch-icon.png'))->toBeTrue();
+        ->and(File::exists(faviconsRoot().'/default/'.$after.'/apple-touch-icon.png'))->toBeTrue();
 });
 
 test('the icon links on a page never read the icon files', function () {

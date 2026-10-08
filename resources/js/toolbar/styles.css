@@ -432,8 +432,7 @@ p {
 }
 
 ul.issues,
-ul.rows,
-ul.menu {
+ul.rows {
     margin: 8px 0;
     padding: 0;
     list-style: none;
@@ -478,24 +477,6 @@ ul.menu {
 .links {
     display: flex;
     gap: 12px;
-}
-
-.menu li + li {
-    border-top: 1px solid var(--border);
-}
-
-.menu a,
-.menu button {
-    display: block;
-    width: 100%;
-    padding: 8px 0;
-    text-align: start;
-    color: var(--link);
-}
-
-.menu button:disabled {
-    opacity: 0.6;
-    cursor: progress;
 }
 
 .actions {
@@ -715,8 +696,6 @@ ul.menu {
         display: none;
     }
 
-    .menu a,
-    .menu button,
     .actions a,
     .issues a,
     .rows a,

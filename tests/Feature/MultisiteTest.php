@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
-use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\Actions\DeleteRecords;
 use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Og\Generator;
@@ -230,7 +230,7 @@ describe('redirects', function () {
         foreach ([$other, $everywhere] as $redirect) {
             $this->get(cp_route('mt.redirects.edit', $redirect))->assertNotFound();
             $this->patchJson(cp_route('mt.redirects.update', $redirect), $form(['source' => $redirect->source, 'site' => 'cothinking']))->assertNotFound();
-            $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
+            $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertNotFound();
         }
 
         $this->postJson(cp_route('mt.redirects.store'), $form(['site' => 'default']))->assertJsonValidationErrors('site');
@@ -244,7 +244,7 @@ describe('redirects', function () {
 
         $this->get(cp_route('mt.redirects.edit', $theirs))->assertOk();
         $this->patchJson(cp_route('mt.redirects.update', $theirs), $form(['source' => '/theirs', 'target' => '/a2', 'site' => 'cothinking']))->assertOk();
-        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$theirs->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
+        $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteRecords::handle(), 'selections' => [$theirs->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
 
         // A row for every site (no site) is refused, as for another site.
         $csv = "source,target,status,active,site\n/mine,/1,301,1,cothinking\n/not-mine,/2,301,1,default\n/everyone,/3,301,1,\n/everywhere,/4,301,1,\n";

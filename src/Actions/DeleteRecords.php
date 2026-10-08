@@ -10,7 +10,7 @@ use Statamic\Actions\Action;
 /**
  * Deletes redirects, or rows of the 404 log, from their listings.
  */
-final class DeleteSeoRecords extends Action
+final class DeleteRecords extends Action
 {
     protected $dangerous = true;
 

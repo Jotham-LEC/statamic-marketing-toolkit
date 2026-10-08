@@ -18,7 +18,7 @@ use Statamic\Facades\Site;
  */
 final class TextFileController
 {
-    public const string LLMS_CACHE_KEY = 'mt:llms';
+    private const string LLMS_CACHE_KEY = 'mt:llms';
 
     public function llms(Request $request, SiteSeo $seo): Response
     {

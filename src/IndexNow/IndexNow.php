@@ -49,7 +49,7 @@ class IndexNow
     /**
      * @return list<string>
      */
-    public function queued(): array
+    private function queued(): array
     {
         return array_keys($this->urls);
     }

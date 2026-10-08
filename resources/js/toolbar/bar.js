@@ -1,4 +1,4 @@
-import { h, safe, tone } from './dom.js';
+import { fill, h, safe, tone } from './dom.js';
 import { icon } from './icons.js';
 import more from './panels/more.js';
 import preview from './panels/preview.js';
@@ -74,7 +74,7 @@ export function bar(root, data, hooks) {
         { type: 'button', class: 'toggle' + (page.missing ? ' missing' : ''), 'aria-controls': 'mt-tray', 'aria-expanded': 'false', 'aria-busy': pending ? 'true' : null },
         icon('mark'),
         badge,
-        h('span', { class: 'sr' }, t.open, score != null ? '. ' + t.score.replace(':score', score) : ''),
+        h('span', { class: 'sr' }, t.open, score != null ? '. ' + fill(t.score, { score }) : ''),
         h('span', { class: 'closing', 'aria-hidden': 'true' }, t.minimise),
     );
 

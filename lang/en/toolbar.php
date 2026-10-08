@@ -49,7 +49,6 @@ return [
         'refresh_cache' => 'Refresh this page’s cache',
         'cache_refreshed' => 'This page’s cache was cleared, so the next visit stores a fresh copy.',
         'cache_failed' => 'This page’s cache couldn’t be cleared. Try again from the control panel.',
-        'toolbar_settings' => 'Toolbar settings',
         'settings_note' => 'These settings are kept in this browser.',
         'corner' => 'Corner',
         'bottom_left' => 'Bottom left',

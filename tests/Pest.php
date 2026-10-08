@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use JothamLec\MarketingToolkit\Commands\Install;
 use JothamLec\MarketingToolkit\Context;
 use JothamLec\MarketingToolkit\Cp\Navigation;
+use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Meta;
 use JothamLec\MarketingToolkit\Og\Generator;
 use JothamLec\MarketingToolkit\Reports\ExternalLinkChecker;
@@ -233,6 +234,16 @@ function publisherOf(array $values): array
     seoGlobal($values);
 
     return collect(metaFor(entryIn('pages', 'about'))->graph)->firstWhere('@id', 'https://example.test/#publisher');
+}
+
+/**
+ * The addresses IndexNow will send when the request ends.
+ *
+ * @return list<string>
+ */
+function queuedForIndexNow(): array
+{
+    return (fn () => $this->queued())->call(app(IndexNow::class));
 }
 
 /**

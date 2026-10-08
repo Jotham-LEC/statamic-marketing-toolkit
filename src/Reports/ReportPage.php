@@ -41,14 +41,6 @@ class ReportPage extends Model
         ];
     }
 
-    /**
-     * @return BelongsTo<Report, $this>
-     */
-    public function report(): BelongsTo
-    {
-        return $this->belongsTo(Report::class);
-    }
-
     public function facts(): PageFacts
     {
         return PageFacts::fromArray($this->facts ?? []);

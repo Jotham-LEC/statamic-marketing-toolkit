@@ -4,7 +4,7 @@ namespace JothamLec\MarketingToolkit\Cp;
 
 use Illuminate\Support\Collection;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
-use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\Actions\DeleteRecords;
 use Statamic\Actions\Action;
 use Statamic\Facades\User;
 
@@ -23,7 +23,7 @@ final class RecordActions
     /**
      * @var list<class-string<Action>>
      */
-    public const array ACTIONS = [DeleteSeoRecords::class, CreateRedirect::class];
+    public const array ACTIONS = [DeleteRecords::class, CreateRedirect::class];
 
     /**
      * @param  Collection<int, mixed>  $items

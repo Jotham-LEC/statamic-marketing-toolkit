@@ -89,7 +89,7 @@ describe('IndexNow', function () {
         event(new JobProcessed('redis', Mockery::mock(Job::class)));
 
         Http::assertSent(fn (HttpRequest $request) => $request['urlList'] === ['https://example.test/about']);
-        expect(app(IndexNow::class)->queued())->toBe([]);
+        expect(queuedForIndexNow())->toBe([]);
     });
 
     test('serves its key, and stays quiet outside production or when turned off', function () {

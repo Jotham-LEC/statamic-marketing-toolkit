@@ -1,6 +1,5 @@
 <?php
 
-use JothamLec\MarketingToolkit\IndexNow\IndexNow;
 use JothamLec\MarketingToolkit\Reports\Runner;
 use JothamLec\MarketingToolkit\SiteSeo;
 
@@ -17,7 +16,7 @@ test('a protected page is kept out of the sitemap, llms.txt and IndexNow, and ha
     $members = entryIn('pages', 'members', ['description' => 'The board minutes.', 'protect' => 'logged_in']);
 
     expect(app(SiteSeo::class)->isProtected($members))->toBeTrue()
-        ->and(app(IndexNow::class)->queued())->toBe(['https://example.test/about'])
+        ->and(queuedForIndexNow())->toBe(['https://example.test/about'])
         ->and(app(SiteSeo::class)->generatedImageUrl($members))->toBeNull()
         ->and(metaFor($members, '/members')->image)->toBeNull();
 

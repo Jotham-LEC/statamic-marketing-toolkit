@@ -21,7 +21,7 @@ export const safe = (url) => (typeof url === 'string' && /^(https?:\/\/|\/(?!\/)
 
 export const link = (url, text, attrs = {}) => (safe(url) ? h('a', { href: safe(url), ...attrs }, text) : null);
 
-export const p = (text, attrs = {}) => h('p', attrs, text);
+const p = (text, attrs = {}) => h('p', attrs, text);
 
 /** Sentences, one paragraph each. */
 export const say = (messages, attrs = {}) => (messages ?? []).map((message) => p(message, attrs));

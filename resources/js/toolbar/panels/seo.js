@@ -1,11 +1,11 @@
-import { h, link, say, tone } from '../dom.js';
+import { fill, h, link, say, tone } from '../dom.js';
 
 export default function seo(data, t) {
     const { seo } = data;
 
     return [
         seo.score != null
-            ? h('p', { class: 'score' }, h('span', { class: 'badge big ' + tone(seo.score), 'aria-hidden': 'true' }, String(seo.score)), h('span', { class: 'sr' }, t.score.replace(':score', seo.score)))
+            ? h('p', { class: 'score' }, h('span', { class: 'badge big ' + tone(seo.score), 'aria-hidden': 'true' }, String(seo.score)), h('span', { class: 'sr' }, fill(t.score, { score: seo.score })))
             : null,
         say(seo.messages),
         seo.issues.length

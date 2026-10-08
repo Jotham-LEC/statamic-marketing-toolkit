@@ -14,7 +14,7 @@ final class Heading extends Fieldtype
 {
     protected static $handle = 'mt_heading';
 
-    protected static $title = 'Heading';
+    protected static $title = 'marketing-toolkit::fields.seo.heading.title';
 
     protected $categories = ['special'];
 

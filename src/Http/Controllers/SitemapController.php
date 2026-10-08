@@ -24,7 +24,7 @@ use Statamic\Facades\Site;
  */
 final class SitemapController
 {
-    public const string CACHE_KEY = 'mt:sitemap';
+    private const string CACHE_KEY = 'mt:sitemap';
 
     public function index(Request $request, SiteSeo $seo): Response
     {

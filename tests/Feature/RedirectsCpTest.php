@@ -3,7 +3,7 @@
 use Illuminate\Http\UploadedFile;
 use Inertia\Testing\AssertableInertia;
 use JothamLec\MarketingToolkit\Actions\CreateRedirect;
-use JothamLec\MarketingToolkit\Actions\DeleteSeoRecords;
+use JothamLec\MarketingToolkit\Actions\DeleteRecords;
 use JothamLec\MarketingToolkit\NotFound\MissingPath;
 use JothamLec\MarketingToolkit\Redirects\Redirect;
 use Statamic\Actions\Action;
@@ -168,8 +168,8 @@ test('another addon\'s action that cannot handle our rows does not break the lis
     $redirect = Redirect::query()->create(['source' => '/old', 'target' => '/new']);
     $row = MissingPath::query()->create(['path' => '/miss', 'hits' => 1, 'first_seen_at' => now(), 'last_seen_at' => now()]);
 
-    expect($this->getJson(cp_route('mt.redirects.listing'))->assertOk()->json('data.0.actions.*.handle'))->toBe([DeleteSeoRecords::handle()])
-        ->and($this->getJson(cp_route('mt.404s.listing'))->assertOk()->json('data.0.actions.*.handle'))->toBe([DeleteSeoRecords::handle(), CreateRedirect::handle()]);
+    expect($this->getJson(cp_route('mt.redirects.listing'))->assertOk()->json('data.0.actions.*.handle'))->toBe([DeleteRecords::handle()])
+        ->and($this->getJson(cp_route('mt.404s.listing'))->assertOk()->json('data.0.actions.*.handle'))->toBe([DeleteRecords::handle(), CreateRedirect::handle()]);
 
     $this->postJson(cp_route('mt.actions.bulk'), ['selections' => [$redirect->id], 'context' => ['type' => 'redirects']])->assertOk();
     $this->postJson(cp_route('mt.actions.bulk'), ['selections' => [$row->id], 'context' => ['type' => '404s']])->assertOk();
@@ -234,10 +234,10 @@ test('the 404 log listing, newest first, with a "Create redirect" action per row
     $this->get(cp_route('mt.404s.index'))->assertInertia(fn (AssertableInertia $page) => $page->component('marketing-toolkit::NotFound', false));
     $listing = $this->getJson(cp_route('mt.404s.listing'));
     expect($listing->json('data.*.path'))->toBe(['/new-miss', '/old-miss'])
-        ->and($listing->json('data.0.actions.*.handle'))->toContain(CreateRedirect::handle(), DeleteSeoRecords::handle());
+        ->and($listing->json('data.0.actions.*.handle'))->toContain(CreateRedirect::handle(), DeleteRecords::handle());
 
     $actions = $this->postJson(cp_route('mt.actions.bulk'), ['selections' => [$old->id], 'context' => ['type' => '404s']])->assertOk()->json('*.handle');
-    expect($actions)->toContain(CreateRedirect::handle(), DeleteSeoRecords::handle());
+    expect($actions)->toContain(CreateRedirect::handle(), DeleteRecords::handle());
 
     $this->postJson(cp_route('mt.actions.run'), ['action' => CreateRedirect::handle(), 'selections' => [$old->id], 'context' => ['type' => '404s'], 'values' => []])
         ->assertOk()
@@ -251,8 +251,8 @@ test('deleting redirects and 404 rows through the listing action', function () {
 
     $this->get('/old')->assertRedirect('https://example.test/new');
 
-    $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
-    $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])->assertOk();
+    $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertOk();
+    $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteRecords::handle(), 'selections' => [$row->id], 'context' => ['type' => '404s'], 'values' => []])->assertOk();
 
     expect(Redirect::query()->count())->toBe(0)->and(MissingPath::query()->count())->toBe(0);
     $this->get('/old')->assertNotFound();
@@ -268,7 +268,7 @@ test('redirects need "manage marketing toolkit redirects", the 404 log "view mar
     $this->getJson(cp_route('mt.redirects.listing'))->assertForbidden();
     $this->postJson(cp_route('mt.redirects.store'), ['source' => '/a', 'target' => '/b', 'status' => '301'])->assertForbidden();
     $this->getJson(cp_route('mt.redirects.export'))->assertForbidden();
-    $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteSeoRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertForbidden();
+    $this->postJson(cp_route('mt.actions.run'), ['action' => DeleteRecords::handle(), 'selections' => [$redirect->id], 'context' => ['type' => 'redirects'], 'values' => []])->assertForbidden();
     $this->get(cp_route('mt.404s.index'))->assertOk();
 });
 

@@ -37,7 +37,8 @@ final class PreviewController
 
         abort_unless($content instanceof Entry && Features::on('share_cards') && $generator->available(), 404);
 
-        $png = Sites::as($content->locale(), fn () => $generator->template($content)->image($generator->card($content))->toString());
+        // card() works the card out on the entry's site, as the public card's route does.
+        $png = $generator->template($content)->image($generator->card($content))->toString();
 
         return new Response($png, 200, [
             'Content-Type' => 'image/png',

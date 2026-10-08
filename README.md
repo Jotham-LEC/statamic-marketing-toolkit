@@ -38,7 +38,7 @@ The preview updates as you type, for Google and for shares on Facebook, LinkedIn
 
 ## Requirements
 
-- **PHP 8.3+** with `curl`, `dom`, `mbstring`, and `openssl`.
+- **PHP 8.3+** with `curl` and `dom`, and the `mbstring` and `openssl` that Laravel itself requires.
 - **Statamic 6.34+**. Core is enough; multi-site needs Statamic Pro, as Statamic itself does.
 - **A database** Laravel can migrate, even on a flat-file site, for redirects, the 404 log and reports. SQLite is fine.
 - **A serializing cache store**: `file`, `redis`, `database`, or `memcached`, not `array`. Automatic redirects compare an entry with the copy loaded before it was edited.
