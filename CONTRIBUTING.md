@@ -31,7 +31,7 @@ The suite runs on SQLite. To run it on Postgres, point it at an empty database: 
 ## Database and data changes
 
 - Migrations that have shipped stay as they are: never rename, move or edit one, since sites have already run it.
-- A new migration's date is later than the last one's, so it runs after them (`php artisan make:migration` uses today's date, which is usually enough).
+- A new migration is dated `2026_10_13` or later. Some shipped migrations carry dates ahead of their release, and Laravel runs migrations in the order of their file names, so a new one must sort after all of them. Check `ls database/migrations | tail -1` before naming one.
 - A migration changes tables only. A change to sites' content or settings (globals, blueprints, addon settings) is an update script: a subclass of Statamic's `UpdateScript` in `src/UpdateScripts/`, which Statamic finds there and runs on `composer update` (or `php please updates:run`), on the developer's machine, so the change is committed with the update. Statamic asks every script's `shouldUpdate()` on every update of the addon, so:
   - `shouldUpdate()` is true only for a site that still needs the change: from the version it is updating from (`isUpdatingTo('x.y.z')`, or `Support\Version::before($oldVersion, 'x.y.z')`), or from something only the old version left behind, which `update()` removes. Never `return true`: a change the developer undoes would be made again on each update.
   - `update()` changes only what the addon itself wrote (its tags, its namespaces, its fields), never what merely looks like it: the Brand global is `seo` too, and another package may publish a `config/seo.php`.
@@ -39,8 +39,21 @@ The suite runs on SQLite. To run it on Postgres, point it at an empty database: 
   - A field added to `resources/install` is listed in `AddNewBrandFields::FIELDS` under the version that brings it; a test fails until it is.
 - The one exception is `carry_over_co_seo_settings`, a migration because Statamic doesn't run update scripts for a package that changed its name.
 
+## Changelog
+
+Each version in [CHANGELOG.md](CHANGELOG.md) has a heading `## X.Y.Z – YYYY-MM-DD`, an optional paragraph that sums it up, and only these sections:
+
+- `### Added`: new features.
+- `### Changed`: changes to how existing features behave.
+- `### Fixed`: bug fixes.
+- `### Upgrading`: what a site must do, or what it will notice, after updating.
+
+Every bullet starts with one bold sentence that stands on its own, followed by the detail. The Marketplace's release notes show only that bold sentence, with a **New** badge for Added and Changed and a **Fix** badge for Fixed (see `scripts/release-notes.php`). `ReleaseNotesTest` fails when a version from 0.24.0 on uses another heading.
+
 ## Release
 
-1. Note the change in [CHANGELOG.md](CHANGELOG.md), with an **Upgrading** list for anything a site must do.
+1. Note the change in [CHANGELOG.md](CHANGELOG.md), with an **Upgrading** list for anything a site must do. Check the Marketplace notes with `php scripts/release-notes.php X.Y.Z`.
 2. `npm run build` and commit `resources/dist`.
 3. `git tag -a vX.Y.Z -m vX.Y.Z && git push --follow-tags`. Sites update with `composer update jotham-lec/statamic-marketing-toolkit`; the Marketplace picks the tag up from Packagist.
+4. Check that the tag has a GitHub Release: the `Release` workflow creates it from the CHANGELOG. If the workflow failed, fix the CHANGELOG and create the release by hand (`php scripts/release-notes.php X.Y.Z > notes.md && gh release create vX.Y.Z --title X.Y.Z --notes-file notes.md`) before the Marketplace sees the tag: it keeps the first notes it reads.
+5. Within a day, check the version's Release Notes tab on the Marketplace.

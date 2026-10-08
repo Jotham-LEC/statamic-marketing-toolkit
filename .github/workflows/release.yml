@@ -1,0 +1,35 @@
+name: Release
+
+# A pushed tag gets its GitHub Release at once, with notes built from the
+# CHANGELOG. The Statamic Marketplace shows that body as the version's release
+# notes, and keeps the first body it sees, so it must be right from the start.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      # Fails, and so creates no release, when the CHANGELOG has no section for the tag.
+      - name: Release notes
+        run: php scripts/release-notes.php "$GITHUB_REF_NAME" > notes.md
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          prerelease=""
+          case "$version" in *-beta*|*-rc*|*-alpha*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" --title "$version" --notes-file notes.md --verify-tag $prerelease
