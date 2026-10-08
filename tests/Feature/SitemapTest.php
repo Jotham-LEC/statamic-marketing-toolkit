@@ -237,3 +237,64 @@ test('with a site at a relative URL, a request on another Host is answered but n
     $this->get('http://evil.test/sitemap.xml')->assertDontSee('https://example.test/about');
     expect(Cache::has(SitemapController::cacheKey('default')))->toBeTrue();
 });
+
+/**
+ * A site's own rules for the sitemap and the text files, as a subclass
+ * overrides them, protected hooks included.
+ */
+class SiteOwnTextFiles extends SiteSeo
+{
+    public function inSitemap(Statamic\Contracts\Entries\Entry|TermContract $content): bool
+    {
+        return $content->slug() !== 'secret' && parent::inSitemap($content);
+    }
+
+    public function robotsTxt(): string
+    {
+        return "User-agent: *\nAllow: /\n";
+    }
+
+    protected function llmsPerCollection(): int
+    {
+        return 1;
+    }
+
+    protected function hiddenOutsideProduction(): bool
+    {
+        return true;
+    }
+}
+
+test('a subclass\'s inSitemap() decides the sitemap and llms.txt', function () {
+    app()->bind(SiteSeo::class, SiteOwnTextFiles::class);
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    entryIn('pages', 'secret');
+
+    expect(sitemapLocs($this->get('https://example.test/sitemap.xml')->getContent()))->toBe(['https://example.test/about'])
+        ->and($this->get('https://example.test/llms.txt')->getContent())->not->toContain('secret');
+});
+
+test('a subclass\'s robotsTxt() is served', function () {
+    app()->bind(SiteSeo::class, SiteOwnTextFiles::class);
+
+    expect($this->get('https://example.test/robots.txt')->getContent())->toBe("User-agent: *\nAllow: /\n");
+});
+
+test('a subclass\'s protected llmsPerCollection() and hiddenOutsideProduction() are asked', function () {
+    app()->bind(SiteSeo::class, SiteOwnTextFiles::class);
+    seoGlobal([]);
+    entryIn('pages', 'about');
+    entryIn('pages', 'team');
+
+    expect(substr_count(app(SiteSeo::class)->llmsTxt(), '- ['))->toBe(1);
+
+    // SiteSeo::robotsTxt() asks hiddenOutsideProduction(), which this subclass says is true.
+    expect((new class extends SiteOwnTextFiles
+    {
+        public function robotsTxt(): string
+        {
+            return SiteSeo::robotsTxt();
+        }
+    })->robotsTxt())->toBe("User-agent: *\nDisallow: /\n");
+});

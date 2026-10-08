@@ -130,13 +130,44 @@ class Runner
             return $report;
         }
 
-        return self::stepLock($report, self::STEP_LOCK_SECONDS)
-            // Read again once the lock is held: a step that just ended may have finished it.
-            ->get(fn () => $report->refresh()->isRunning() ? Sites::as($report->site, fn () => $this->stepInSite($report)) : $report)
-            ?: $report->refresh();
+        $stepped = self::stepLock($report, self::STEP_LOCK_SECONDS)->get(fn () => $this->stepIfRunning($report));
+
+        // False: another process holds the step; the report is as that process leaves it.
+        return $stepped ?: $report->refresh();
     }
 
-    private function stepInSite(Report $report): Report
+    /**
+     * Steps the report, if it is still running once the lock is held: a step
+     * that just ended may have finished it.
+     */
+    private function stepIfRunning(Report $report): Report
+    {
+        if (! $report->refresh()->isRunning()) {
+            return $report;
+        }
+
+        return $this->onReportSite($report, fn () => $this->checkNextPages($report));
+    }
+
+    /**
+     * Runs $work with the report's site as the current one, so the pages, the
+     * sitemap, the Brand global and the links it follows are that site's.
+     *
+     * @template T
+     *
+     * @param  \Closure(): T  $work
+     * @return T
+     */
+    private function onReportSite(Report $report, \Closure $work): mixed
+    {
+        return Sites::as($report->site, $work);
+    }
+
+    /**
+     * Renders and reads the next chunk of pages, then finishes the report if
+     * none are left.
+     */
+    private function checkNextPages(Report $report): Report
     {
         $pages = $report->pages()->where('checked', false)->orderBy('id')->limit(max(1, $report->settings()->int('chunk_size')))->get();
         $until = now()->addSeconds(self::STEP_SECONDS);
@@ -152,9 +183,9 @@ class Runner
                 $facts = new PageFacts(status: 404, error: 'marketing-toolkit::reports.messages.page_deleted');
             } else {
                 $rendered = $this->renderer->render($content);
-                $facts = $rendered['status'] === 200 && $rendered['error'] === null
-                    ? $this->inspector->inspect($rendered['html'])
-                    : new PageFacts(status: $rendered['status'], error: $rendered['error'], exception: $rendered['exception'] ?? null);
+                $facts = $rendered->ok()
+                    ? $this->inspector->inspect($rendered->html)
+                    : new PageFacts(status: $rendered->status, error: $rendered->error, exception: $rendered->exception);
             }
 
             $broken = $report->settings()->ruleEnabled(ExternalLinks::handle()) && $facts->externalLinks !== []
@@ -260,7 +291,7 @@ class Runner
 
     public function finish(Report $report): void
     {
-        Sites::as($report->site, fn () => $this->finishInSite($report));
+        $this->onReportSite($report, fn () => $this->finishInSite($report));
     }
 
     private function finishInSite(Report $report): void
@@ -277,67 +308,67 @@ class Runner
             }
         });
 
-        $summary = collect($rules)->mapWithKeys(fn (Rule $rule) => [$rule::handle() => [
-            'label' => $rule->label(), 'weight' => $rule->weight(), 'fail' => 0, 'warn' => 0,
-        ]])->all();
-        $scores = [];
-        $counts = ['scored' => 0, 'noindex' => 0, 'errors' => 0];
+        $totals = new SiteTotals($rules);
 
-        $report->pages()->lazyById(200)->each(function (ReportPage $page) use ($rules, $site, &$summary, &$scores, &$counts) {
-            $facts = $page->facts();
-
-            if (! $facts->rendered()) {
-                $counts['errors']++;
-                $result = match (true) {
-                    $facts->error === null => Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]),
-                    $facts->exception !== null => Result::fail($facts->error, ['exception' => $facts->exception]),
-                    default => Result::fail($facts->error),
-                };
-                $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
-                $scores[] = 0;
-
-                return;
-            }
-
-            $applicable = array_filter($rules, fn (Rule $rule) => ! $facts->noindex() || $rule->appliesToNoindex());
-            $results = [];
-            $earned = $possible = 0;
-
-            foreach ($applicable as $rule) {
-                $result = $rule->check($page->url, $facts, $site);
-                $results[$rule::handle()] = $result->toArray();
-                $earned += $rule->weight() * $result->value();
-                $possible += $rule->weight();
-
-                if ($result->status !== Result::PASS) {
-                    $summary[$rule::handle()][$result->status]++;
-                }
-            }
-
-            // A page search engines are told to skip is listed, not scored.
-            $score = $facts->noindex() || $possible === 0 ? null : (int) round(100 * $earned / $possible);
-            $facts->noindex() ? $counts['noindex']++ : $counts['scored']++;
-
-            if ($score !== null) {
-                $scores[] = $score;
-            }
-
-            $flagged = collect($results)->reject(fn ($result) => $result['status'] === Result::PASS)
-                ->map(fn ($result, $handle) => $handle.':'.$result['status'])->implode(',');
-
-            $page->update(['results' => $results, 'score' => $score, 'failing' => $flagged === '' ? null : ','.$flagged.',']);
-        });
+        $report->pages()->lazyById(200)->each(fn (ReportPage $page) => $this->score($page, $rules, $site, $totals));
 
         // Only a report still running: one marked failed meanwhile (a step that timed out) stays failed.
         Report::query()->whereKey($report->id)->where('status', Report::RUNNING)->update([
             'status' => Report::DONE,
-            'score' => $scores === [] ? null : (int) round(array_sum($scores) / count($scores)),
-            'summary' => json_encode(['rules' => $summary, ...$counts]),
+            'score' => $totals->score(),
+            'summary' => json_encode($totals->summary()),
             'finished_at' => now(),
             'updated_at' => now(),
         ]);
 
         $this->prune($settings->int('keep_reports'), $report->site);
+    }
+
+    /**
+     * Runs the checks on one page, stores its results and score, and adds
+     * them to the site's totals. A page that didn't render fails the
+     * `render` check alone and scores zero.
+     *
+     * @param  list<Rule>  $rules
+     */
+    private function score(ReportPage $page, array $rules, SiteFacts $site, SiteTotals $totals): void
+    {
+        $facts = $page->facts();
+
+        if (! $facts->rendered()) {
+            $result = match (true) {
+                $facts->error === null => Result::fail('marketing-toolkit::reports.messages.status', ['status' => $facts->status]),
+                $facts->exception !== null => Result::fail($facts->error, ['exception' => $facts->exception]),
+                default => Result::fail($facts->error),
+            };
+            $page->update(['results' => ['render' => $result->toArray()], 'score' => 0, 'failing' => ',render:fail,']);
+            $totals->addError();
+
+            return;
+        }
+
+        $results = [];
+        $earned = $possible = 0;
+
+        foreach ($rules as $rule) {
+            if ($facts->noindex() && ! $rule->appliesToNoindex()) {
+                continue;
+            }
+
+            $result = $rule->check($page->url, $facts, $site);
+            $results[$rule::handle()] = $result->toArray();
+            $earned += $rule->weight() * $result->value();
+            $possible += $rule->weight();
+        }
+
+        // A page search engines are told to skip is listed, not scored.
+        $score = $facts->noindex() || $possible === 0 ? null : (int) round(100 * $earned / $possible);
+        $totals->addPage($results, $score, $facts->noindex());
+
+        $flagged = collect($results)->reject(fn ($result) => $result['status'] === Result::PASS)
+            ->map(fn ($result, $handle) => $handle.':'.$result['status'])->implode(',');
+
+        $page->update(['results' => $results, 'score' => $score, 'failing' => $flagged === '' ? null : ','.$flagged.',']);
     }
 
     private function prune(int $keep, ?string $site): void

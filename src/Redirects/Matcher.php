@@ -158,36 +158,99 @@ class Matcher
     }
 
     /**
+     * The rules in the three forms match() reads: `exact` and `folded` look a
+     * path up directly; `wildcards` are tried in turn.
+     *
      * @param  Collection<int, Redirect>  $redirects
      * @param  ?string  $site  the site they are matched on: its own rules win over those for every site
      * @return array{exact: array<string, array<string, mixed>>, folded: array<string, array<string, mixed>>, wildcards: list<array<string, mixed>>}
      */
     private static function compile(Collection $redirects, ?string $site = null): array
     {
-        $ignoresCase = Redirect::ignoresCase();
-        $own = fn (Redirect $redirect) => $site !== null && $redirect->site === $site ? 1 : 0;
-        $rule = fn (Redirect $redirect) => ['id' => $redirect->id, 'status' => $redirect->status, 'target' => $redirect->target, 'own' => $own($redirect)];
-
         [$wildcards, $exact] = $redirects->partition(fn (Redirect $redirect) => $redirect->isWildcard());
 
         return [
-            // Normalized again for sources saved before they were decoded on save.
-            // The site's own rules last, so they overwrite those for every site.
-            'exact' => $exact->sortBy($own)->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => $rule($redirect)])->all(),
-            // Of sources that differ only in case (saved before case was ignored), the oldest; the site's own winning.
-            'folded' => $ignoresCase
-                ? $exact->sortBy(fn (Redirect $redirect) => [$own($redirect), -$redirect->id])->mapWithKeys(fn (Redirect $redirect) => [Redirect::key(Redirect::normalize($redirect->source)) => $rule($redirect)])->all()
-                : [],
-            // The most specific (longest) source wins when several match; at the same length, the site's own.
-            'wildcards' => $wildcards
-                ->sortByDesc(fn (Redirect $redirect) => [strlen($redirect->source), $own($redirect)])
-                ->map(fn (Redirect $redirect) => [
-                    ...$rule($redirect),
-                    ...self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
-                ])
-                ->values()
-                ->all(),
+            'exact' => self::exactMap($exact, $site),
+            'folded' => Redirect::ignoresCase() ? self::foldedMap($exact, $site) : [],
+            'wildcards' => self::wildcardList($wildcards, $site),
         ];
+    }
+
+    /**
+     * The rules without a `*`, by their source as stored:
+     * `['/old-page' => rule, '/about' => rule]`. Where a rule for every site
+     * and the site's own rule share a source, the site's own is added last,
+     * so it is the one kept.
+     *
+     * @param  Collection<int, Redirect>  $redirects
+     * @return array<string, array<string, mixed>>
+     */
+    private static function exactMap(Collection $redirects, ?string $site): array
+    {
+        return $redirects
+            ->sortBy(fn (Redirect $redirect) => self::isOwn($redirect, $site))
+            // Normalized again for sources saved before they were decoded on save.
+            ->mapWithKeys(fn (Redirect $redirect) => [Redirect::normalize($redirect->source) => self::rule($redirect, $site)])
+            ->all();
+    }
+
+    /**
+     * The rules without a `*`, by their source case-folded, for matching in
+     * any letter case: `/About-Us` and `/ABOUT-US` are both `['/about-us' =>
+     * rule]`. Of sources that differ only in case (saved before case was
+     * ignored), the oldest is kept, and the site's own wins over one for
+     * every site.
+     *
+     * @param  Collection<int, Redirect>  $redirects
+     * @return array<string, array<string, mixed>>
+     */
+    private static function foldedMap(Collection $redirects, ?string $site): array
+    {
+        return $redirects
+            ->sortBy(fn (Redirect $redirect) => [self::isOwn($redirect, $site), -$redirect->id])
+            ->mapWithKeys(fn (Redirect $redirect) => [Redirect::key(Redirect::normalize($redirect->source)) => self::rule($redirect, $site)])
+            ->all();
+    }
+
+    /**
+     * The rules with a `*`, each with its pattern, the longest source first:
+     * when several match, the most specific wins, and at the same length, the
+     * site's own. `/blog/*` becomes the rule with the pattern
+     * `#^(.*)/golb/$#`, matched against the path read backwards (see
+     * pattern()): `/blog/hello` read backwards is `olleh/golb/`, which
+     * matches with `olleh`, so `$1` is `hello`.
+     *
+     * @param  Collection<int, Redirect>  $redirects
+     * @return list<array<string, mixed>>
+     */
+    private static function wildcardList(Collection $redirects, ?string $site): array
+    {
+        $ignoresCase = Redirect::ignoresCase();
+
+        return $redirects
+            ->sortByDesc(fn (Redirect $redirect) => [strlen($redirect->source), self::isOwn($redirect, $site)])
+            ->map(fn (Redirect $redirect) => [
+                ...self::rule($redirect, $site),
+                ...self::pattern(Redirect::normalize($redirect->source), $ignoresCase),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * What the matcher keeps of a rule. `own`: 1 for a rule of the site it
+     * is matched on, 0 for one for every site.
+     *
+     * @return array{id: int, status: int, target: ?string, own: int}
+     */
+    private static function rule(Redirect $redirect, ?string $site): array
+    {
+        return ['id' => $redirect->id, 'status' => $redirect->status, 'target' => $redirect->target, 'own' => self::isOwn($redirect, $site)];
+    }
+
+    private static function isOwn(Redirect $redirect, ?string $site): int
+    {
+        return $site !== null && $redirect->site === $site ? 1 : 0;
     }
 
     /**

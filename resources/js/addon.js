@@ -49,58 +49,69 @@ function referenceFor(payload) {
 }
 
 /**
+ * Asks whether to leave a redirect from the old address to the new one.
+ * Resolves with 'add', 'skip', or 'cancel' (the dialog was closed, or "not
+ * yet"). The first answer counts: a double click doesn't answer twice.
+ */
+function askRedirect(from, to) {
+    return new Promise((resolve) => {
+        const modal = components.append('mt-redirect-confirm', { props: { from, to } });
+        let answered = false;
+        const answer = (choice) => {
+            if (answered) return;
+            answered = true;
+            modal.destroy();
+            resolve(choice);
+        };
+
+        modal.on('add', () => answer('add'));
+        modal.on('skip', () => answer('skip'));
+        modal.on('cancel', () => answer('cancel'));
+    });
+}
+
+/**
  * Before an entry or term form saves: if its address will change, ask whether
  * to leave a 301 behind. The server reads the answer when the save arrives;
  * without one (a save from code), it adds the redirect.
  */
-function confirmRedirect(payload) {
+async function confirmRedirect(payload) {
     const axios = useAxios();
     const reference = referenceFor(payload);
     const { automaticRedirects, urls } = config.get('marketingToolkit') ?? {};
 
     // Automatic redirects switched off: nothing to ask.
-    if (!reference || !automaticRedirects) return Promise.resolve();
+    if (!reference || !automaticRedirects) return;
 
-    return axios
-        .post(urls.redirectCheck, { reference, values: payload.values })
-        .then(({ data }) => {
-            if (!data.changes) return;
+    let check;
 
-            return new Promise((resolve, reject) => {
-                const modal = components.append('mt-redirect-confirm', { props: { from: data.from, to: data.to } });
-                // The first answer counts: a double click doesn't answer twice.
-                let settled = false;
-                const settle = () => {
-                    if (settled) return false;
-                    settled = true;
-                    modal.destroy();
-                    return true;
-                };
-                const answer = (create) => {
-                    if (!settle()) return;
-
-                    // A failed answer leaves the default: the redirect is added. The save
-                    // goes ahead, so say so when that isn't what was chosen.
-                    axios.post(urls.redirectChoice, { reference, create }).then(resolve, () => {
-                        if (!create) toast.error(__('marketing-toolkit::cp.confirm.choice_failed'), { duration: 10000 });
-                        resolve();
-                    });
-                };
-
-                modal.on('add', () => answer(true));
-                modal.on('skip', () => answer(false));
-                // Closed, or "not yet": nothing is saved; the next save asks again.
-                // PipelineStopped is how Statamic's save stops quietly; anything
-                // else it reports as "Something went wrong".
-                modal.on('cancel', () => {
-                    if (!settle()) return;
-                    toast.info(__('marketing-toolkit::cp.confirm.not_saved'));
-                    reject(new PipelineStopped());
-                });
-            });
-        })
+    try {
+        check = (await axios.post(urls.redirectCheck, { reference, values: payload.values })).data;
+    } catch {
         // A failed check never blocks a save; the server adds the redirect by default.
-        .catch((error) => (error instanceof PipelineStopped ? Promise.reject(error) : undefined));
+        return;
+    }
+
+    if (!check.changes) return;
+
+    const choice = await askRedirect(check.from, check.to);
+
+    if (choice === 'cancel') {
+        // Nothing is saved; the next save asks again. PipelineStopped is how Statamic's
+        // save stops quietly; anything else it reports as "Something went wrong".
+        toast.info(__('marketing-toolkit::cp.confirm.not_saved'));
+        throw new PipelineStopped();
+    }
+
+    const create = choice === 'add';
+
+    try {
+        await axios.post(urls.redirectChoice, { reference, create });
+    } catch {
+        // A failed answer leaves the default: the redirect is added. The save goes
+        // ahead, so say so when that isn't what was chosen.
+        if (!create) toast.error(__('marketing-toolkit::cp.confirm.choice_failed'), { duration: 10000 });
+    }
 }
 
 Statamic.booting(() => {

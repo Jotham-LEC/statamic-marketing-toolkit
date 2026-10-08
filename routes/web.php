@@ -34,10 +34,11 @@ Route::withoutMiddleware([
         // Registered whatever the config says, so cached routes follow a module switched on
         // or off later: each controller answers 404 while its module is off. A file of the
         // same name in public/ wins, since the web server serves it before Laravel runs, and
-        // so does a route of the site's own for the address (its own sitemap.xml, say).
-        $get = function (string $uri, array|string $action) {
-            return array_key_exists($uri, Route::getRoutes()->get('GET')) ? null : Route::get($uri, $action);
-        };
+        // so does a route of the site's own for the address (its own sitemap.xml, say):
+        // $get registers a route only for an address the site hasn't taken, and returns
+        // null for one it has, which the `?->` after each call then skips.
+        $taken = fn (string $uri) => array_key_exists($uri, Route::getRoutes()->get('GET'));
+        $get = fn (string $uri, array|string $action) => $taken($uri) ? null : Route::get($uri, $action);
 
         $get('sitemap.xml', [SitemapController::class, 'index'])?->name('sitemap');
         $get('sitemap_{page}.xml', [SitemapController::class, 'page'])?->whereNumber('page')->name('sitemap.page');

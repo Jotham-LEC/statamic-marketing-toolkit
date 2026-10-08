@@ -32,10 +32,8 @@ class Renderer
      * class, not its text: the report is shown to anyone who may view reports,
      * and a query exception's text holds SQL and connection details. The full
      * error goes to the log.
-     *
-     * @return array{status: int, html: string, error: ?string, exception?: string}
      */
-    public function render(Entry|Term $content): array
+    public function render(Entry|Term $content): RenderedPage
     {
         $request = Request::create((string) $content->absoluteUrl(), 'GET', server: ['HTTP_USER_AGENT' => 'jotham-lec/statamic-marketing-toolkit report']);
         $previous = app('request');
@@ -55,13 +53,13 @@ class Renderer
         try {
             $response = $content->toResponse($request);
 
-            return ['status' => $response->getStatusCode(), 'html' => (string) $response->getContent(), 'error' => null];
+            return new RenderedPage($response->getStatusCode(), (string) $response->getContent());
         } catch (HttpExceptionInterface $e) {
-            return ['status' => $e->getStatusCode(), 'html' => '', 'error' => null];
+            return new RenderedPage($e->getStatusCode());
         } catch (Throwable $e) {
             report($e);
 
-            return ['status' => 500, 'html' => '', 'error' => 'marketing-toolkit::reports.messages.render_failed', 'exception' => class_basename($e)];
+            return new RenderedPage(500, error: 'marketing-toolkit::reports.messages.render_failed', exception: class_basename($e));
         } finally {
             app()->instance('request', $previous);
             $cascade->withRequest($previous);

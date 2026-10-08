@@ -1,10 +1,13 @@
 <script setup>
 import { Badge } from '@statamic/cms/ui';
+import { band } from '../shared/score.js';
+
+const COLORS = { good: 'green', fair: 'amber', poor: 'red' };
 
 defineProps({ value: { type: Number, default: null } });
 </script>
 
 <template>
-    <Badge v-if="value !== null" :text="value" :color="value >= 90 ? 'green' : value >= 70 ? 'amber' : 'red'" class="tabular-nums" />
+    <Badge v-if="value !== null" :text="value" :color="COLORS[band(value)]" class="tabular-nums" />
     <span v-else class="text-sm text-gray-500 dark:text-gray-400">—</span>
 </template>

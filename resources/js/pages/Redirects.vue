@@ -16,7 +16,7 @@ const props = defineProps({
 
 const { busy, send } = useRequests(__('marketing-toolkit::cp.redirects.import_failed'));
 const file = ref(null);
-const listingKey = ref(0);
+const listing = ref(null);
 
 async function importCsv(event) {
     const chosen = event.target.files[0];
@@ -33,7 +33,7 @@ async function importCsv(event) {
     data.errors.length
         ? toast.error(__('marketing-toolkit::cp.redirects.skipped', { summary, count: data.errors.length, errors: data.errors.join(' ') }), { duration: 15000 })
         : toast.success(summary);
-    listingKey.value++;
+    listing.value?.refresh();
 }
 </script>
 
@@ -50,7 +50,7 @@ async function importCsv(event) {
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{{ __('marketing-toolkit::cp.redirects.intro') }}</p>
 
     <Listing
-        :key="listingKey"
+        ref="listing"
         :url="listingUrl"
         :action-url="actionUrl"
         :action-context="{ type: 'redirects' }"

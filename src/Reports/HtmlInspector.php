@@ -16,7 +16,7 @@ class HtmlInspector
 {
     public function __construct(private LinkChecker $links) {}
 
-    public function inspect(string $html, int $status = 200): PageFacts
+    public function inspect(string $html): PageFacts
     {
         $document = new DOMDocument;
         $previous = libxml_use_internal_errors(true);
@@ -35,11 +35,11 @@ class HtmlInspector
             }
         }
 
-        [$broken, $redirected, $internal, $external] = $this->links($xpath);
+        $links = $this->links($xpath);
         [$jsonLd, $jsonLdErrors] = $this->jsonLd($xpath);
 
         return new PageFacts(
-            status: $status,
+            status: 200,
             title: $this->text($xpath, '//head/title'),
             description: $this->attribute($xpath, '//head/meta[@name="description"]', 'content'),
             h1s: array_values(array_map(fn ($h1) => trim(preg_replace('/\s+/', ' ', $h1->textContent)), iterator_to_array($xpath->query('//body//h1')))),
@@ -47,10 +47,10 @@ class HtmlInspector
             robots: $this->attribute($xpath, '//head/meta[@name="robots"]', 'content'),
             images: $images->length,
             imagesWithoutAlt: $imagesWithoutAlt,
-            brokenLinks: $broken,
-            redirectedLinks: $redirected,
-            internalLinks: $internal,
-            externalLinks: $external,
+            brokenLinks: $links->broken,
+            redirectedLinks: $links->redirected,
+            internalLinks: $links->internal,
+            externalLinks: $links->external,
             ogImage: $this->attribute($xpath, '//head/meta[@property="og:image"]', 'content'),
             jsonLd: $jsonLd,
             jsonLdErrors: $jsonLdErrors,
@@ -60,10 +60,8 @@ class HtmlInspector
     /**
      * The page's links: broken and redirected paths on this site, every path
      * on this site it links to, and its links to other sites.
-     *
-     * @return array{0: list<string>, 1: list<string>, 2: list<string>, 3: list<string>}
      */
-    private function links(DOMXPath $xpath): array
+    private function links(DOMXPath $xpath): PageLinks
     {
         // The report's site: the Runner makes it the current one.
         $host = parse_url(Site::current()->absoluteUrl(), PHP_URL_HOST);
@@ -105,7 +103,9 @@ class HtmlInspector
             };
         }
 
-        return array_map(fn (array $links) => array_values(array_unique($links)), [$broken, $redirected, $internal, $external]);
+        $once = fn (array $links) => array_values(array_unique($links));
+
+        return new PageLinks($once($broken), $once($redirected), $once($internal), $once($external));
     }
 
     /**

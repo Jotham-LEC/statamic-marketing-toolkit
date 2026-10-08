@@ -3,6 +3,7 @@
 namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Cp\Listing;
@@ -49,7 +50,7 @@ final class NotFoundController
                 'referrer' => __('marketing-toolkit::cp.listing.last_linked_from'),
             ],
             ['path', 'referrer'],
-            fn (MissingPath $row) => [
+            fn (Collection $rows) => $rows->map(fn (MissingPath $row) => [
                 'id' => $row->id,
                 // None: logged before there was more than one site.
                 'site' => $row->site === null ? '—' : ($sites[$row->site] ?? $row->site),
@@ -59,7 +60,7 @@ final class NotFoundController
                 'first_seen_at' => $row->first_seen_at->toIso8601String(),
                 'last_seen_at' => $row->last_seen_at->toIso8601String(),
                 'actions' => $actions,
-            ],
+            ]),
             defaultOrder: 'desc',
         );
     }

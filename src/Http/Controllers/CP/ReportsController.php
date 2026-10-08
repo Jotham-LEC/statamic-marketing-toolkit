@@ -183,8 +183,6 @@ final class ReportsController
         $this->authorizeSite($report);
 
         $labels = $this->labels($report);
-        /** @var array<int, string> $editUrls report page id => edit URL, filled by preload */
-        $editUrls = [];
         $query = $report->pages()->getQuery();
 
         // Only a known check's name gets into the LIKE pattern. Its `_` is a LIKE
@@ -198,33 +196,48 @@ final class ReportsController
             $request,
             ['score' => __('marketing-toolkit::reports.cp.score'), 'title' => __('marketing-toolkit::reports.cp.page'), 'in_sitemap' => __('marketing-toolkit::reports.cp.in_sitemap')],
             ['title', 'url'],
-            // Not an arrow function: it must see $editUrls once preload has filled it.
-            function (ReportPage $page) use ($labels, &$editUrls) {
-                return [
-                    'id' => $page->id,
-                    'title' => $page->title ?: $page->url,
-                    'url' => $page->url,
-                    'path' => parse_url($page->url, PHP_URL_PATH) ?: '/',
-                    'score' => $page->score,
-                    'in_sitemap' => $page->in_sitemap,
-                    'noindex' => $page->facts()->noindex(),
-                    'issues' => collect($page->results ?? [])
-                        ->reject(fn ($result) => $result['status'] === 'pass')
-                        ->map(fn ($result, $handle) => [
-                            'label' => $labels[$handle] ?? $handle,
-                            'status' => $result['status'],
-                            'message' => Result::translate($result['message'], $result['params'] ?? []),
-                        ])
-                        ->sortBy(fn ($issue) => $issue['status'] === 'fail' ? 0 : 1)
-                        ->values()
-                        ->all(),
-                    'edit_url' => $editUrls[$page->id] ?? null,
-                ];
-            },
-            preload: function ($pages) use (&$editUrls) {
+            function (Collection $pages) use ($labels) {
+                // Looked up for the whole page of rows at once.
                 $editUrls = $this->editUrls($pages);
+                $rows = collect();
+
+                foreach ($pages as $page) {
+                    $rows->push([
+                        'id' => $page->id,
+                        'title' => $page->title ?: $page->url,
+                        'url' => $page->url,
+                        'path' => parse_url($page->url, PHP_URL_PATH) ?: '/',
+                        'score' => $page->score,
+                        'in_sitemap' => $page->in_sitemap,
+                        'noindex' => $page->facts()->noindex(),
+                        'issues' => $this->issues($page, $labels),
+                        'edit_url' => $editUrls[$page->id] ?? null,
+                    ]);
+                }
+
+                return $rows;
             },
         );
+    }
+
+    /**
+     * A page's failed and warned checks, the failures first.
+     *
+     * @param  array<string, string>  $labels  check => its name
+     * @return list<array{label: string, status: string, message: string}>
+     */
+    private function issues(ReportPage $page, array $labels): array
+    {
+        return collect($page->results ?? [])
+            ->reject(fn ($result) => $result['status'] === 'pass')
+            ->map(fn ($result, $handle) => [
+                'label' => $labels[$handle] ?? $handle,
+                'status' => $result['status'],
+                'message' => Result::translate($result['message'], $result['params'] ?? []),
+            ])
+            ->sortBy(fn ($issue) => $issue['status'] === 'fail' ? 0 : 1)
+            ->values()
+            ->all();
     }
 
     /**

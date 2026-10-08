@@ -4,6 +4,7 @@ namespace JothamLec\MarketingToolkit\Http\Controllers\CP;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use JothamLec\MarketingToolkit\Cp\Listing;
@@ -61,7 +62,7 @@ final class RedirectsController
                 'hits' => __('marketing-toolkit::cp.listing.hits'), 'last_hit_at' => __('marketing-toolkit::cp.listing.last_used'),
             ],
             ['source', 'target'],
-            fn (Redirect $redirect) => [
+            fn (Collection $redirects) => $redirects->map(fn (Redirect $redirect) => [
                 'id' => $redirect->id,
                 'site' => $redirect->site === null ? __('marketing-toolkit::cp.listing.all_sites') : ($sites[$redirect->site] ?? $redirect->site),
                 'source' => $redirect->source,
@@ -73,7 +74,7 @@ final class RedirectsController
                 'last_hit_at' => $redirect->last_hit_at?->toIso8601String(),
                 'edit_url' => cp_route('mt.redirects.edit', $redirect),
                 'actions' => $actions,
-            ],
+            ]),
         );
     }
 

@@ -1,0 +1,165 @@
+<?php
+
+namespace JothamLec\MarketingToolkit\TextFiles;
+
+use Closure;
+use JothamLec\MarketingToolkit\Context;
+use JothamLec\MarketingToolkit\Settings;
+use JothamLec\MarketingToolkit\Sitemap\Sitemap;
+use JothamLec\MarketingToolkit\SiteSeo;
+use JothamLec\MarketingToolkit\Support\Features;
+use JothamLec\MarketingToolkit\Support\Sites;
+use JothamLec\MarketingToolkit\Support\Text;
+use Statamic\Contracts\Entries\Entry;
+use Statamic\Facades\Entry as Entries;
+use Statamic\Facades\Site;
+
+/**
+ * robots.txt, llms.txt and ads.txt. SiteSeo's robotsTxt(), llmsTxt() and
+ * adsTxt() call these; a site overrides those, not this class.
+ */
+final class TextFiles
+{
+    public function __construct(private Settings $settings, private Sitemap $sitemap) {}
+
+    /**
+     * robots.txt: the paths the Brand global disallows (the control panel
+     * unless it names others), the AI crawlers it turns away, its extra
+     * lines, and the sitemap. Everything is disallowed on a copy of the site
+     * that is kept out of search engines ($hidden).
+     */
+    public function robots(bool $hidden, string $sitemapUrl): string
+    {
+        if ($hidden) {
+            return "User-agent: *\nDisallow: /\n";
+        }
+
+        $lines = ['User-agent: *'];
+
+        $disallow = $this->settings->list('robots_disallow') ?: ['/'.trim((string) config('statamic.cp.route'), '/').'/'];
+
+        foreach ($disallow as $path) {
+            $lines[] = 'Disallow: '.$path;
+        }
+
+        array_push($lines, ...$this->aiCrawlerRules());
+
+        if ($extra = $this->settings->string('robots_extra')) {
+            $lines[] = '';
+            $lines[] = trim($extra);
+        }
+
+        if (Features::on('sitemap')) {
+            $lines[] = '';
+            $lines[] = 'Sitemap: '.$sitemapUrl;
+        }
+
+        return implode("\n", $lines)."\n";
+    }
+
+    /**
+     * /llms.txt (llmstxt.org): the site's name and description, then, per
+     * collection the sitemap lists, its pages as Markdown links with their
+     * descriptions, the most recently changed first. It is for AI assistants
+     * that read a site's summary before its pages. llms.txt is only read at a
+     * domain's root, so, like the sitemap, it lists every site on the domain:
+     * a site under a folder (/fr/) gets its own sections, named after it.
+     *
+     * @param  int  $perCollection  the most pages listed per collection
+     * @param  Closure(Context): ?string  $describe  a page's description
+     */
+    public function llms(SiteSeo $seo, int $perCollection, Closure $describe): string
+    {
+        $lines = ['# '.$this->settings->siteName(), ''];
+
+        if ($description = $this->settings->string('default_description')) {
+            $lines = [...$lines, '> '.Text::plain($description), ''];
+        }
+
+        $sites = $this->sitemap->sites();
+
+        foreach ($sites as $site) {
+            $sections = Sites::as($site, fn () => $this->llmsSections($seo, $perCollection, $describe, named: count($sites) > 1));
+            $lines = [...$lines, ...$sections];
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * /ads.txt: the lines in Marketing settings → Crawlers, for a site that
+     * sells ad space; null when there are none.
+     */
+    public function ads(): ?string
+    {
+        $text = trim((string) $this->settings->string('ads_txt'));
+
+        return $text === '' ? null : $text."\n";
+    }
+
+    /**
+     * The current site's sections of llms.txt, one per collection, each
+     * named with the site when the domain has several.
+     *
+     * @param  Closure(Context): ?string  $describe
+     * @return list<string>
+     */
+    private function llmsSections(SiteSeo $seo, int $perCollection, Closure $describe, bool $named): array
+    {
+        $lines = [];
+        $site = Site::current();
+        $collections = $this->sitemap->collections([$site->handle()])->sortBy(fn ($collection) => $collection->title());
+
+        foreach ($collections as $collection) {
+            $entries = Entries::query()
+                ->where('collection', $collection->handle())
+                ->where('site', $site->handle())
+                ->whereStatus('published')
+                ->get()
+                ->filter(fn (Entry $entry) => $seo->inSitemap($entry))
+                ->sortByDesc(fn (Entry $entry) => $entry->lastModified()?->timestamp)
+                ->take($perCollection);
+
+            if ($entries->isEmpty()) {
+                continue;
+            }
+
+            $lines[] = '## '.$collection->title().($named ? ' ('.$site->name().')' : '');
+            $lines[] = '';
+
+            foreach ($entries as $entry) {
+                $description = $describe(Context::make($entry));
+                $description = $description === null ? null : Text::limit(Text::plain($description), 200);
+                $title = str_replace(['[', ']'], ['(', ')'], (string) $entry->value('title'));
+
+                $lines[] = '- ['.$title.']('.$entry->absoluteUrl().')'.($description ? ': '.$description : '');
+            }
+
+            $lines[] = '';
+        }
+
+        return $lines;
+    }
+
+    /**
+     * robots.txt groups for the AI crawlers the Brand global turns away:
+     * those that gather training data, and those that index for AI search
+     * answers. Fetchers a person sends (ChatGPT-User, Perplexity-User) don't
+     * all read robots.txt, so they aren't listed.
+     *
+     * @return list<string>
+     */
+    private function aiCrawlerRules(): array
+    {
+        $agents = [
+            ...($this->settings->bool('allow_ai_training', true) ? [] : SiteSeo::AI_TRAINING_AGENTS),
+            ...($this->settings->bool('allow_ai_search', true) ? [] : SiteSeo::AI_SEARCH_AGENTS),
+        ];
+
+        if ($agents === []) {
+            return [];
+        }
+
+        return ['', ...array_map(fn (string $agent) => 'User-agent: '.$agent, $agents), 'Disallow: /'];
+    }
+}

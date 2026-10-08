@@ -32,5 +32,5 @@ export const fill = (text, values) => Object.entries(values).reduce((out, [key, 
 /** "a, b and c". */
 export const list = (items, and) => (items.length < 2 ? items.join('') : items.slice(0, -1).join(', ') + ' ' + and + ' ' + items.at(-1));
 
-/** Green from 90, amber from 70, red below, as the control panel's Score badge. */
-export const tone = (score) => (score >= 90 ? 'good' : score >= 70 ? 'fair' : 'poor');
+/** A score's band, as the control panel's Score badge colours it. */
+export { band as tone } from '../shared/score.js';

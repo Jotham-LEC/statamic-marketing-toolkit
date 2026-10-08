@@ -160,27 +160,61 @@ trait BuildsSchema
     {
         $currency = $this->settings->string('currency');
 
-        $conditions = collect($this->settings->rows('shipping_rates'))
-            ->filter(fn (array $row) => filled($row['country'] ?? null) && is_numeric($row['rate'] ?? null) && $currency)
-            ->map(fn (array $row) => array_filter([
-                '@type' => 'ShippingConditions',
-                'shippingDestination' => array_filter(['@type' => 'DefinedRegion', 'addressCountry' => $row['country'], 'addressRegion' => $row['region'] ?? null]),
-                'orderValue' => is_numeric($row['min_order'] ?? null) || is_numeric($row['max_order'] ?? null) ? array_filter([
-                    '@type' => 'MonetaryAmount',
-                    'minValue' => is_numeric($row['min_order'] ?? null) ? (float) $row['min_order'] : null,
-                    'maxValue' => is_numeric($row['max_order'] ?? null) ? (float) $row['max_order'] : null,
-                    'currency' => $currency,
-                ], fn ($value) => $value !== null) : null,
-                'shippingRate' => ['@type' => 'MonetaryAmount', 'value' => (float) $row['rate'], 'currency' => $currency],
-                'transitTime' => is_numeric($row['min_days'] ?? null) && is_numeric($row['max_days'] ?? null) ? [
-                    '@type' => 'ServicePeriod',
-                    'duration' => ['@type' => 'QuantitativeValue', 'minValue' => (int) $row['min_days'], 'maxValue' => (int) $row['max_days'], 'unitCode' => 'DAY'],
-                ] : null,
-            ]))
-            ->values()
-            ->all();
+        // A rate means nothing without its currency.
+        if ($currency === null) {
+            return null;
+        }
+
+        $conditions = [];
+
+        foreach ($this->settings->rows('shipping_rates') as $row) {
+            if (filled($row['country'] ?? null) && is_numeric($row['rate'] ?? null)) {
+                $conditions[] = $this->shippingConditions($row, $currency);
+            }
+        }
 
         return $conditions === [] ? null : ['@type' => 'ShippingService', 'shippingConditions' => $conditions];
+    }
+
+    /**
+     * One row of the shipping rates grid as a ShippingConditions node.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    protected function shippingConditions(array $row, string $currency): array
+    {
+        $number = fn (string $key) => is_numeric($row[$key] ?? null) ? (float) $row[$key] : null;
+
+        // For orders between two values, when the row gives either.
+        $orderValue = null;
+
+        if ($number('min_order') !== null || $number('max_order') !== null) {
+            $orderValue = array_filter([
+                '@type' => 'MonetaryAmount',
+                'minValue' => $number('min_order'),
+                'maxValue' => $number('max_order'),
+                'currency' => $currency,
+            ], fn ($value) => $value !== null);
+        }
+
+        // Days on the way, when the row gives both ends.
+        $transitTime = null;
+
+        if ($number('min_days') !== null && $number('max_days') !== null) {
+            $transitTime = [
+                '@type' => 'ServicePeriod',
+                'duration' => ['@type' => 'QuantitativeValue', 'minValue' => (int) $row['min_days'], 'maxValue' => (int) $row['max_days'], 'unitCode' => 'DAY'],
+            ];
+        }
+
+        return array_filter([
+            '@type' => 'ShippingConditions',
+            'shippingDestination' => array_filter(['@type' => 'DefinedRegion', 'addressCountry' => $row['country'], 'addressRegion' => $row['region'] ?? null]),
+            'orderValue' => $orderValue,
+            'shippingRate' => ['@type' => 'MonetaryAmount', 'value' => (float) $row['rate'], 'currency' => $currency],
+            'transitTime' => $transitTime,
+        ]);
     }
 
     /**
