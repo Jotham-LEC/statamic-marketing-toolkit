@@ -186,7 +186,7 @@ test('with the toolbar off the endpoint answers 404, and a foreign address 422',
 test('a user who may only use the control panel gets the bar and the basics, and nothing behind another permission', function () {
     config(['statamic.static_caching.strategy' => 'half']);
     reportWith(Entry::findByUri('/about'));
-    $this->actingAs(cpUser());
+    $this->actingAs(cpUser(['view pages entries']));
 
     toolbarFor('/about')->assertOk()
         ->assertJsonPath('page.type', 'entry')
@@ -200,6 +200,37 @@ test('a user who may only use the control panel gets the bar and the basics, and
         ->assertJsonPath('more.cache', false)
         ->assertJsonPath('user.color_mode', 'auto')
         ->assertJsonPath('user.labels.open', 'Open the Marketing Toolkit toolbar');
+});
+
+test('content the user may not view in the control panel is no content here: not its title, status, SEO or report', function () {
+    entryIn('pages', 'secret-plan')->published(false)->save();
+    reportWith(Entry::findByUri('/about'));
+    $this->actingAs(cpUser(['view marketing toolkit', 'manage marketing toolkit redirects']));
+
+    foreach (['/secret-plan', '/about'] as $url) {
+        toolbarFor($url)->assertOk()
+            ->assertJsonPath('page.type', null)
+            ->assertJsonPath('page.title', null)
+            ->assertJsonPath('page.status', null)
+            ->assertJsonPath('seo', null)
+            ->assertJsonPath('preview', null);
+    }
+});
+
+test('on a site the user may not work on, the toolbar shows nothing of that site: its content, report, redirects or tracking', function () {
+    multilang();
+    $about = Entry::findByUri('/about');
+    reportWith(translationOf($about, 'fr', 'a-propos'), site: 'fr');
+    $this->actingAs(cpUser(['view marketing toolkit', 'manage marketing toolkit redirects', 'view pages entries', 'access default site']));
+
+    toolbarFor('https://example.test/fr/a-propos')->assertOk()
+        ->assertJsonPath('site.handle', 'fr')
+        ->assertJsonPath('page.title', null)
+        ->assertJsonPath('seo', null)
+        ->assertJsonPath('redirects', null)
+        ->assertJsonPath('tracking', null);
+
+    toolbarFor('/about')->assertOk()->assertJsonPath('page.title', 'About');
 });
 
 test('the toolbar takes the user\'s control panel theme, with its references filled in and nothing that could break out of a style', function () {
@@ -334,7 +365,7 @@ test('redirects to this page, and one from its address that never applies', func
     Redirect::query()->create(['source' => '/about-us', 'target' => '/about', 'hits' => 4]);
     Redirect::query()->create(['source' => '/company', 'target' => 'https://example.test/about', 'hits' => 2]);
     Redirect::query()->create(['source' => '/about', 'target' => '/elsewhere']);
-    $this->actingAs(cpUser(['manage marketing toolkit redirects']));
+    $this->actingAs(cpUser(['manage marketing toolkit redirects', 'view pages entries']));
 
     toolbarFor('/about')->assertOk()
         ->assertJsonPath('redirects.messages', [

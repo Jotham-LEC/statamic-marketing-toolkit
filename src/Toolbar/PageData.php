@@ -49,15 +49,21 @@ final class PageData
 
     private SiteObject $site;
 
+    /** Whether the user may work on the page's site: its report, redirects, 404s and tracking are that site's. */
+    private bool $viewsSite;
+
     public function __construct(
         private User $user,
         private string $url,
         private ?int $status,
     ) {
         $this->site = Site::findByUrl($url) ?? Site::current();
+        $this->viewsSite = $user->can('view', $this->site);
         $found = Data::findByRequestUrl($url);
         $found = $found instanceof Page ? $found->entry() : $found;
-        $this->content = $found instanceof Entry || $found instanceof Term ? $found : null;
+        // Content the user may not view in the control panel (another collection's, another site's, a draft there)
+        // is no content here: its title, status and SEO stay as private as on its edit screen.
+        $this->content = ($found instanceof Entry || $found instanceof Term) && $this->viewsSite && $user->can('view', $found) ? $found : null;
         $this->path = Uris::normalizePath($url);
     }
 
@@ -66,7 +72,7 @@ final class PageData
      */
     public function toArray(): array
     {
-        $view = $this->user->can(Permissions::VIEW);
+        $view = $this->viewsSite && $this->user->can(Permissions::VIEW);
         $report = $view && $this->content ? $this->report() : null;
 
         return [
@@ -139,7 +145,7 @@ final class PageData
             return in_array($this->status, [404, 410], true);
         }
 
-        return $this->content === null && MissingPath::query()->ofSite(Sites::scope($this->site->handle()))->where('path', $this->path)->exists();
+        return $this->content === null && $this->viewsSite && MissingPath::query()->ofSite(Sites::scope($this->site->handle()))->where('path', $this->path)->exists();
     }
 
     private function isDraft(): bool
@@ -334,8 +340,8 @@ final class PageData
      */
     private function redirects(): ?array
     {
-        $manage = Features::on('redirects') && $this->user->can(Permissions::REDIRECTS);
-        $view = Features::on('not_found') && $this->user->can(Permissions::VIEW);
+        $manage = $this->viewsSite && Features::on('redirects') && $this->user->can(Permissions::REDIRECTS);
+        $view = $this->viewsSite && Features::on('not_found') && $this->user->can(Permissions::VIEW);
 
         if (! $manage && ! $view) {
             return null;

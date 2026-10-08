@@ -259,7 +259,7 @@ The Search Console property is kept here too (`search_console_property`, and `se
 | `manage marketing toolkit redirects` | Create, edit and delete redirects, import and export them, delete 404 rows, and the "add a redirect?" question when saving. |
 | `run marketing toolkit reports` | Start a report. |
 
-The front-end toolbar shows for anyone with `access cp`, and each of its panels asks the permission above that its screen asks; **Refresh this page's cache** asks Statamic's `access cache utility`.
+The front-end toolbar shows for anyone with `access cp`, and each of its panels asks the permission above that its screen asks; **Refresh this page's cache** asks Statamic's `access cache utility`. It shows a page's entry or term (its title, status, SEO and report) only to someone who may view it in the control panel (Statamic's `view {collection} entries` or `view {taxonomy} terms`, on a site they may access), and a site's report, redirects, 404s and tracking only on a site they may access.
 
 ## Commands
 
