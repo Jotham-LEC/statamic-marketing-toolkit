@@ -45,13 +45,36 @@ const forget = () => {
     store(null);
 };
 
+let sheet = null;
+
+/*
+ * The styles as a constructed stylesheet the shadow root adopts: built through
+ * the CSSOM, which a Content Security Policy doesn't govern, so a `style-src`
+ * without 'unsafe-inline' (a nonce-only one) still lets the toolbar be drawn.
+ * Browsers without constructable stylesheets (Safari before 16.4) get a
+ * <style>, which such a policy blocks.
+ */
+function styled(root) {
+    if ('adoptedStyleSheets' in ShadowRoot.prototype && 'replaceSync' in CSSStyleSheet.prototype) {
+        if (!sheet) {
+            sheet = new CSSStyleSheet();
+            sheet.replaceSync(styles);
+        }
+        root.adoptedStyleSheets = [sheet];
+
+        return;
+    }
+
+    const style = document.createElement('style');
+    style.textContent = styles;
+    root.append(style);
+}
+
 function host() {
     const element = document.createElement('div');
     element.id = 'mt-toolbar';
     const root = element.attachShadow({ mode: 'open' });
-    const style = document.createElement('style');
-    style.textContent = styles;
-    root.append(style);
+    styled(root);
     document.body.append(element);
 
     return { element, root };
