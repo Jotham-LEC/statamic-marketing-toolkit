@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.23.0 – 2026-10-08
+
+Titles, the publisher and PostHog fit sites that already have a brand, fields or a proxy of their own, and the 404 log and redirects keep one row per address on every database.
+
+### Added
+- **`title_fields`**, per collection or taxonomy: fields tried before the title for `<title>` and `og:title`, such as the `meta_title` or `seo_title` a site kept from another SEO addon. The site name is still added, as to the title; the SEO fields' own title still replaces the whole title. A name with dots is a field in a Replicator's sets, as for `description_fields`. See [configuration.md](docs/configuration.md#collections).
+- **Name in page titles** (Brand tab): a shorter name for the end of titles ("About · Acme" on a site named "Acme Industries Worldwide"). Empty, titles end with the site's name, as before; `og:site_name`, the WebSite node, llms.txt and the breadcrumbs keep the site's name.
+- **Legal name** (Publisher tab): the organisation's `legalName`, where it differs from its name.
+- **PostHog app address** (Tracking tab, `MT_POSTHOG_UI_HOST`): with a reverse proxy as PostHog's host, PostHog's app (`https://eu.posthog.com`), as `ui_host`, so its toolbar and links work, as PostHog asks. On PostHog's own hosts it is worked out, as before.
+
+### Changed
+- **"Other names" and "Area served" can be lists**, so a publisher can have several (`alternateName` and `areaServed` as arrays, which schema.org allows). New installs get List fields; an existing blueprint keeps its Text fields, and both are read. One item still goes out as a text, so markup with one doesn't change.
+- **"Founded" can be a year alone** (`2014`), or a month (`2014-03`), or a day. New installs get a Text field, as a date field turned a year the organisation gives into an invented day; an existing Date field keeps working.
+
+### Fixed
+- **The 404 log keeps one row per path, and redirects one rule per address, on a single site.** The unique index on the site and the path doesn't apply to rows without a site (every row on a single site): MySQL, MariaDB, Postgres and SQLite all count each empty site as different. Two requests missing the same path at once logged it twice, splitting its hits. A second unique index now treats an empty site as one value.
+
+### Upgrading
+- **Run `php artisan migrate`.** It merges 404 paths already logged twice (their hits added up), then adds the index; on MySQL and MariaDB it adds a generated column, `site_key`, to `mt_redirects` and `mt_404s` for it. **It deletes no redirect**: if two redirects for every site share a source, it stops before changing anything and names them. Keep one of each under Marketing → Redirects, then migrate again.
+- **`composer update` (or `php please updates:run`) adds the new fields**: Name in page titles and Legal name to Brand, PostHog app address to Marketing settings. It changes nothing else in your blueprints. Commit the files it lists.
+- **To allow several other names or areas, or a year alone for Founded**, change those fields' types in the Brand blueprint yourself (List, List, Text): saved values carry over. See [upgrading.md](docs/upgrading.md#from-022-brand-fields-and-one-row-per-address).
+- **Code that reads `publisher_alternate_name` or `area_served`** from the Brand global may get a list where the field is a List; `Settings::strings()` reads either shape.
+
 ## 0.22.5 – 2026-10-08
 
 ### Fixed
